@@ -10,11 +10,26 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-17-phase2-prereqs-design.md`
 
+## Execution batching
+
+Tasks are implemented in two batches, each gated once at the end rather than per task:
+
+- **Batch 1 — Task 1.** Domain layer only. Gate: `scripts/check` at Task 1 Step 7.
+- **Batch 2 — Tasks 2, 3, 4, 5.** The `defaultJurisdiction` → registry → page → provider chain. No gate between tasks; single `scripts/check` at Task 5 Step 7, covering all four.
+- **Task 6** is the branch-level verification, review, and PR.
+
+The targeted `npx vitest run <file>` steps inside each task stay — they are the red/green
+mechanism of TDD, not a redundant gate. What is batched is the full lint + typecheck + suite run.
+
+Consequence to accept knowingly: a type error introduced in Task 2 surfaces at the end of Task 5,
+not immediately. The tasks are small and sequential enough that this is a good trade, but when the
+batch-2 gate fails, check the earlier tasks' files first — not just the last one edited.
+
 ## Global Constraints
 
 - Branch is `claude/phase2-prereqs`, already created off `main`. Never commit to `main`.
 - Conventional commits. Every commit message ends with the repo's `Co-Authored-By:` / `Claude-Session:` trailers used by the existing history.
-- `scripts/check` (eslint + `tsc --noEmit` + changed-file vitest) must pass before each commit. Never invent raw stack commands — the scripts contract is the interface.
+- `scripts/check` (eslint + `tsc --noEmit` + changed-file vitest) must pass at each batch gate. Never invent raw stack commands — the scripts contract is the interface.
 - No user-facing copy changes. No new keys in `messages/en.json` or `messages/fr.json`. This is a refactor; every rendered string stays identical.
 - **No computed figure may change**, with exactly one intended exception: Toronto with `elsewhere: true` and `dpPct < 20` loses a phantom $1,116 municipal rebate. If any other number moves, stop — something is wrong.
 - The `norma.inputs.v1` localStorage blob keeps its key, field names, and value types. No migration, no version bump.
@@ -437,9 +452,9 @@ export const AFFORDABILITY_DEFAULTS: AffordabilityFormState = slice(AFFORDABILIT
 Run: `npx vitest run src/lib/shared-inputs.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Run the full gate and commit**
+- [ ] **Step 5: Commit**
 
-Run: `scripts/check`, then:
+No full gate here — batch 2 is gated once at Task 5 Step 7.
 
 ```bash
 git add src/lib/shared-inputs.ts src/lib/shared-inputs.test.ts
@@ -524,11 +539,13 @@ Change the hook call:
 Run: `npx vitest run "src/app/[locale]/affordability/page.test.tsx"`
 Expected: PASS — the same tests, still green, now against the registry. Unchanged output either side of the move is the whole proof.
 
-- [ ] **Step 5: Run the full gate and commit**
+- [ ] **Step 5: Commit**
 
-Run: `scripts/check`
+No full gate here — batch 2 is gated once at Task 5 Step 7. The page no longer exports `AFFORDABILITY_KEYS`, `DEFAULT_AFFORDABILITY_STATE`, or `AffordabilityFormState`; any straggling importer surfaces as a `tsc` error at that gate. Grep now if you want it sooner:
 
-Confirm `tsc` catches nothing: the page no longer exports `AFFORDABILITY_KEYS`, `DEFAULT_AFFORDABILITY_STATE`, or `AffordabilityFormState`, so any other importer of those would fail here. There should be none.
+```bash
+grep -rn "DEFAULT_AFFORDABILITY_STATE\|AFFORDABILITY_KEYS" src/ | grep -v "shared-inputs"
+```
 
 ```bash
 git add "src/app/[locale]/affordability"
@@ -689,9 +706,12 @@ and delete the now-unused `getJurisdiction` import (`import { getJurisdiction } 
 Run: `npx vitest run`
 Expected: PASS, whole suite.
 
-- [ ] **Step 7: Run the full gate and commit**
+- [ ] **Step 7: Batch 2 gate, then commit**
 
 Run: `scripts/check`
+
+This is the single gate for Tasks 2–5. If it fails, the cause may sit in any of the four tasks —
+check `shared-inputs.ts` and `jurisdictions/index.ts` before assuming it is the provider.
 
 ```bash
 git add src/hooks src/components/jurisdiction-picker.tsx src/components/jurisdiction-picker.test.tsx "src/app/[locale]/affordability/page.tsx"
