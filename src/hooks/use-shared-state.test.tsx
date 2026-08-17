@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { useSharedState } from "./use-shared-state";
@@ -50,20 +50,39 @@ describe("useSharedState", () => {
   });
 
   it("never transiently writes default values to localStorage when hydrating pre-existing data, even under React StrictMode", async () => {
-    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ price: 700000, jurId: "toronto" }));
-    const setItemSpy = vi.spyOn(window.localStorage, "setItem");
+    const calls: Array<[string, string]> = [];
+    const store = new Map<string, string>();
+    const trackedStorage: Storage = {
+      getItem: (key) => (store.has(key) ? store.get(key)! : null),
+      setItem: (key, value) => {
+        calls.push([key, value]);
+        store.set(key, value);
+      },
+      removeItem: (key) => store.delete(key),
+      clear: () => store.clear(),
+      key: () => null,
+      get length() {
+        return store.size;
+      },
+    };
+    trackedStorage.setItem("norma.inputs.v1", JSON.stringify({ price: 700000, jurId: "toronto" }));
+    calls.length = 0; // don't count our own seed write above
 
-    const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS), { wrapper: StrictMode });
+    const originalLocalStorage = window.localStorage;
+    Object.defineProperty(window, "localStorage", { value: trackedStorage, configurable: true });
 
-    await waitFor(() => expect(result.current[0].price).toBe(700000));
+    try {
+      const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS), { wrapper: StrictMode });
+      await waitFor(() => expect(result.current[0].price).toBe(700000));
 
-    const wroteDefaults = setItemSpy.mock.calls.some(([key, value]) => {
-      if (key !== "norma.inputs.v1") return false;
-      const parsed = JSON.parse(value as string);
-      return parsed.price === DEFAULTS.price && parsed.jurId === DEFAULTS.jurId;
-    });
-    expect(wroteDefaults).toBe(false);
-
-    setItemSpy.mockRestore();
+      const wroteDefaults = calls.some(([key, value]) => {
+        if (key !== "norma.inputs.v1") return false;
+        const parsed = JSON.parse(value);
+        return parsed.price === DEFAULTS.price && parsed.jurId === DEFAULTS.jurId;
+      });
+      expect(wroteDefaults).toBe(false);
+    } finally {
+      Object.defineProperty(window, "localStorage", { value: originalLocalStorage, configurable: true });
+    }
   });
 });
