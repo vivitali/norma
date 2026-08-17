@@ -60,8 +60,13 @@ export function useSharedState<T extends Record<string, unknown>>(
     }
   }, [allowlist]);
 
+  const skipFirstPersist = useRef(true);
   useEffect(() => {
     if (!hydrated.current) return;
+    if (skipFirstPersist.current) {
+      skipFirstPersist.current = false;
+      return;
+    }
     writeStore(allowlist, state);
   }, [allowlist, state]);
 

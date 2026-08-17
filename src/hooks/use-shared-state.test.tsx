@@ -47,4 +47,41 @@ describe("useSharedState", () => {
     act(() => result.current[1]({ price: 600000 }));
     expect(result.current[0]).toEqual({ price: 600000, jurId: "winnipeg" });
   });
+
+  it("does not transiently overwrite hydrated values with defaults on first mount", async () => {
+    // Pre-seed localStorage with non-default values
+    const stored = { price: 750000, jurId: "montreal" };
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify(stored));
+
+    // Spy on all setItem calls to record what gets written
+    const writes: string[] = [];
+    const originalSetItem = window.localStorage.setItem;
+    window.localStorage.setItem = (key: string, value: string) => {
+      if (key === "norma.inputs.v1") writes.push(value);
+      originalSetItem.call(window.localStorage, key, value);
+    };
+
+    try {
+      const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS));
+
+      // Wait for hydration to complete
+      await waitFor(() => expect(result.current[0].price).toBe(750000));
+
+      // Verify final state is hydrated values
+      expect(result.current[0]).toEqual(stored);
+
+      // Verify no write ever contained only the defaults
+      // (would indicate stale write during mount)
+      const defaultsJson = JSON.stringify(DEFAULTS);
+      for (const write of writes) {
+        const written = JSON.parse(write);
+        // Check if this write contained the exact defaults (which would be the bug)
+        const hasDefaultPrice = written.price === DEFAULTS.price;
+        const hasDefaultJurId = written.jurId === DEFAULTS.jurId;
+        expect(!(hasDefaultPrice && hasDefaultJurId)).toBe(true);
+      }
+    } finally {
+      window.localStorage.setItem = originalSetItem;
+    }
+  });
 });
