@@ -29,5 +29,26 @@
     "yt": "Yukon",
     "nt": "Territoires du Nord-Ouest",
     "nu": "Nunavut"
+  },
+  "Affordability": {
+    "heading": "Que pouvez-vous vraiment vous permettre?",
+    "subheading": "Deux chiffres, côte à côte : ce qu'un prêteur approuverait, et ce qui correspond vraiment à votre budget.",
+    "income1": "Votre revenu annuel",
+    "income2": "Revenu annuel du coacheteur",
+    "otherIncome": "Autre revenu annuel",
+    "debts": "Paiements de dettes mensuels",
+    "price": "Prix d'achat envisagé",
+    "dpPct": "Mise de fonds (% du prix)",
+    "amortYears": "Amortissement (années)",
+    "contractRate": "Taux hypothécaire (%)",
+    "comfortCeiling": "Votre budget logement mensuel réel",
+    "insuranceAnnual": "Assurance habitation (annuelle)",
+    "utilities": "Services publics (mensuel)",
+    "condoFee": "Frais de copropriété (mensuel)",
+    "ptype": "Type de propriété",
+    "ptypeHouse": "Maison existante",
+    "ptypeCondo": "Condo existant",
+    "ptypeNewbuild": "Construction neuve",
+    "ftb": "Acheteur d'une première habitation"
   }
 }

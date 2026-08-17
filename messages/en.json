@@ -29,5 +29,26 @@
     "yt": "Yukon",
     "nt": "Northwest Territories",
     "nu": "Nunavut"
+  },
+  "Affordability": {
+    "heading": "What can you actually afford?",
+    "subheading": "Two numbers, side by side: what a lender would approve, and what actually fits your budget.",
+    "income1": "Your annual income",
+    "income2": "Co-buyer's annual income",
+    "otherIncome": "Other annual income",
+    "debts": "Monthly debt payments",
+    "price": "Purchase price you're considering",
+    "dpPct": "Down payment (% of price)",
+    "amortYears": "Amortization (years)",
+    "contractRate": "Mortgage rate (%)",
+    "comfortCeiling": "Your real monthly housing budget",
+    "insuranceAnnual": "Home insurance (annual)",
+    "utilities": "Utilities (monthly)",
+    "condoFee": "Condo/strata fee (monthly)",
+    "ptype": "Property type",
+    "ptypeHouse": "Resale house",
+    "ptypeCondo": "Resale condo",
+    "ptypeNewbuild": "New build",
+    "ftb": "First-time buyer"
   }
 }
