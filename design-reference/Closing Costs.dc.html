@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<script src="hbt-data.js"></script>
+<script src="hbt-engine.js"></script>
+<style>
+:root{
+--s0:#F7F5F1;--s1:#FFFFFF;--s2:#EFECE5;--s3:#E5E1D7;
+--br:#DCD7CC;--brh:#EAE6DD;--brs:#C6BFB1;
+--tx:#17191C;--tx2:#565A5F;--tx3:#888C92;
+--ac:#22375C;--ac2:#3B5C92;--acbg:#E7ECF4;--acbr:#C3CFE2;
+--pass:#1A6B45;--passbg:#E3EFE8;--passbr:#BEDBCB;
+--caut:#87590A;--cautbg:#F6EEDC;--cautbr:#E3D3AE;
+--blk:#8D2A2A;--blkbg:#F6E7E5;--blkbr:#E5C4C0;
+--def:#455A6C;--defbg:#E8EDF1;--defbr:#C8D3DC;
+--shadow:0 1px 2px rgba(23,25,28,.05);
+--bgL:var(--s2);--fgL:var(--tx3);--fwL:400;--bgP:var(--s1);--bdP:var(--br);--fgP:var(--tx2);--bgC:var(--s1);--bdC:var(--br);--fgC:var(--tx);--bgD:var(--s2);--fgD:var(--tx2);--fwD:400;--bgT:var(--s1);--bdT:var(--br);--fgT:var(--tx2);--fwT:400;--dotT:var(--br);--bgV:var(--s2);--fgV:var(--tx3);--fwV:400;--ftbBg:var(--s1);--ftbBr:var(--br);--ftbTr:var(--brs);--ftbX:2px;--ftbFg:var(--tx2);--cBg:var(--s0);--cBr:var(--br);--cAccent:var(--brs);--cFg:var(--tx2);--cChipBg:var(--s2);--tagBg:var(--s2);--tagFg:var(--tx3);--inBg:var(--s0);--inBr:var(--br);--inFg:var(--tx);--rowBg:transparent;--rowFw:400;--diffFg:var(--tx3);--cmpBg:var(--s1);--cmpFg:var(--ac);--bgA:var(--s2);--fgA:var(--tx2);--fwA:400;--kBg:var(--s0);--kBr:var(--br);--kFg:var(--tx2);
+}
+[data-theme="dark"]{
+--s0:#121417;--s1:#191C20;--s2:#21252A;--s3:#2A2F35;
+--br:#2F343B;--brh:#262A30;--brs:#3D434B;
+--tx:#EBE9E4;--tx2:#A3A8AE;--tx3:#767B82;
+--ac:#93B3E0;--ac2:#AEC7EC;--acbg:#1C2632;--acbr:#2C3B4D;
+--pass:#6AC497;--passbg:#152620;--passbr:#26473700;
+--caut:#DFAB4C;--cautbg:#292213;--cautbr:#463A1E;
+--blk:#EA8D8D;--blkbg:#2A1919;--blkbr:#4A2C2C;
+--def:#A0B4C5;--defbg:#1A2128;--defbr:#2C3742;
+--shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#E8E5DF;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:2px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;display:block}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--brs);border-radius:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:18px;width:8px;border-radius:1px;background:var(--ac);border:0;margin-top:-8px}
+input[type=range]::-moz-range-track{height:3px;background:var(--brs)}
+input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;background:var(--ac);border:0}
+@keyframes cbPulse{0%{background:var(--acbg)}100%{background:transparent}}
+[data-screen-label$="phone"] button{min-height:44px}
+[data-screen-label$="phone"] a{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+[data-screen-label$="phone"] input{min-height:44px}
+[data-screen-label$="phone"] input[type=range]{min-height:0;height:44px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+.dvT{padding:36px 40px 30px;border-bottom:1px solid rgba(0,0,0,.08)}
+.dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dvId{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#17191C;color:#fff;border-radius:3px;text-decoration:none}
+.dvOid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#17191C;border-radius:3px;text-decoration:none}
+.dvName{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#17191C}
+.dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+.dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#22375C;color:#fff}
+.dvNote{max-width:820px;font:400 12.5px/1.65 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
+.dvNote b{color:rgba(0,0,0,.85);font-weight:600}
+.dvNext{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dvT" id="t1">
+<div class="dvH"><a class="dvId" href="#t1">1</a><span class="dvName">Closing costs — the jurisdiction engine</span></div>
+<p class="dvNote">Round one, because it is the screen that proves the location system. Everything below is driven by a <b>jurisdiction record</b> — no rule string is hard-coded in the view, so the closing-costs table is a renderer over a list of line items rather than a fixed set of rows. Change the location chip and watch line items appear, disappear and change their labels: Toronto stacks a municipal tax on the provincial one and taxes the CMHC premium in cash; Calgary has no transfer tax at all and shows a land-titles registration fee instead; Winnipeg has the tax but <b>no first-time buyer rebate</b>, stated plainly rather than omitted. Thirteen provinces and territories are selectable; the eight you picked carry verified city figures, the rest render exact provincial rules with a banner over provincial-average local costs. Behaviour is Radix-shaped (roving focus, ARIA-labelled sliders, in-place disclosure, nothing behind a modal) on a token layer that owes shadcn nothing visually — IBM Plex Sans and Mono, 2–3px radii, warm off-white, one slate-blue accent, semantic colour reserved for state. Manitoba and federal rule values are now taken from the <b>Reference Data</b> tab of your Winnipeg model, dated 16 Aug 2026 — which caught a real error in my first pass: <b>Manitoba removed PST on CMHC premiums in 2020</b>, so that line no longer renders in Winnipeg at all. The model's <b>Closing Costs</b> tab also contributed the cash check at the foot of the screen: available funds against net cash at closing, with surplus, shortfall and months of saving to close the gap. Figures outside Manitoba remain best-knowledge placeholders and are flagged verify-before-ship.</p>
+<div class="dvOpts">
+
+<div class="dvOpt" id="1a">
+<div class="dvLab"><a class="dvOid" href="#1a">1a</a>Desktop ≥1024 px — light</div>
+<div data-theme="{{ themeA }}" data-screen-label="Closing costs · desktop" style="width:1180px;background:var(--s0);color:var(--tx);border:1px solid var(--br);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
+
+  <header style="display:flex;align-items:center;gap:16px;padding:0 22px;height:56px;background:var(--s1);border-bottom:1px solid var(--br)">
+    <div style="display:flex;align-items:baseline;gap:8px;flex:1;min-width:0">
+      <span style="font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.brand }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap">{{ s.noServer }}</span>
+    </div>
+    <button onClick="{{ togglePicker }}" aria-haspopup="listbox" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border:1px solid var(--br);border-radius:3px;max-width:340px">
+      <span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--ac);flex:none"></span>
+      <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ chip.city }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">{{ chip.code }}</span>
+      <span aria-hidden="true" style="color:var(--tx3);font-size:11px">·</span>
+      <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ chip.country }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--tx3);margin-left:2px">▾</span>
+    </button>
+    <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+      <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+        <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgL:{{ lg.bgL }};--fgL:{{ lg.fgL }};--fwL:{{ lg.fwL }};padding:5px 9px;font-size:11.5px;white-space:nowrap;background:var(--bgL);color:var(--fgL);font-weight:var(--fwL)" style-hover="background:var(--brh)">{{ lg.name }}</button>
+      </sc-for>
+    </div>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:30px;height:28px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--tx2)" style-hover="background:var(--brh)">{{ themeIconA }}</button>
+  </header>
+
+  <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:var(--s1);border-bottom:1px solid var(--br);padding:18px 22px 20px">
+      <div style="display:grid;grid-template-columns:300px 1fr;gap:28px">
+        <div>
+          <div style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">{{ s.provinceTerritory }}</div>
+          <div role="listbox" style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            <sc-for list="{{ provOpts }}" as="p" hint-placeholder-count="13">
+              <button role="option" aria-selected="{{ p.on }}" onClick="{{ p.pick }}" style="--bgP:{{ p.bgP }};--bdP:{{ p.bdP }};--fgP:{{ p.fgP }};text-align:left;padding:6px 8px;font-size:12px;line-height:1.25;border:1px solid var(--bdP);border-radius:2px;background:var(--bgP);color:var(--fgP)" style-hover="border-color:var(--brs)">{{ p.name }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">{{ s.municipality }}</div>
+          <div role="listbox" style="display:flex;flex-direction:column;gap:4px;max-width:460px">
+            <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="3">
+              <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--bgC:{{ c.bgC }};--bdC:{{ c.bdC }};--fgC:{{ c.fgC }};display:flex;align-items:baseline;gap:10px;text-align:left;padding:8px 10px;border:1px solid var(--bdC);border-radius:2px;background:var(--bgC)" style-hover="border-color:var(--brs)">
+                <span style="font-size:13px;font-weight:500;color:var(--fgC)">{{ c.name }}</span>
+                <span style="font-size:11px;color:var(--tx3);margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ c.tag }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <p style="margin:12px 0 0;font-size:11.5px;line-height:1.55;color:var(--tx3);max-width:460px">{{ s.detectNote }}</p>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="padding:22px 22px 0;display:flex;align-items:flex-end;gap:20px">
+    <div style="flex:1;min-width:0">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:6px">{{ s.deepDive }}</div>
+      <h1 style="margin:0 0 6px;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.02em">{{ s.title }}</h1>
+      <p style="margin:0;font-size:14px;line-height:1.5;color:var(--tx2);max-width:620px;text-wrap:pretty">{{ s.subtitle }}</p>
+    </div>
+    <div style="display:flex;gap:8px;flex:none">
+      <button onClick="{{ toggleCompare }}" style="--cmpBg:{{ cmpBg }};--cmpFg:{{ cmpFg }};padding:7px 12px;font-size:12px;font-weight:500;border:1px solid var(--acbr);border-radius:3px;background:var(--cmpBg);color:var(--cmpFg);white-space:nowrap" style-hover="border-color:var(--ac2)">{{ compareLabel }}</button>
+      <button style="padding:7px 12px;font-size:12px;border:1px solid var(--br);border-radius:3px;background:var(--s1);color:var(--tx2);white-space:nowrap" style-hover="background:var(--s2)">{{ s.print }}</button>
+    </div>
+  </div>
+
+  <sc-if value="{{ showNoCityBanner }}" hint-placeholder-val="{{ false }}">
+    <div style="margin:18px 22px 0;display:flex;gap:11px;padding:11px 13px;background:var(--cautbg);border:1px solid var(--cautbr);border-left:3px solid var(--caut);border-radius:2px">
+      <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--caut);flex:none;line-height:1.5">!</span>
+      <p style="margin:0;font-size:12px;line-height:1.55;color:var(--caut);max-width:900px;text-wrap:pretty">{{ s.noCityData }}</p>
+    </div>
+  </sc-if>
+
+  <div style="margin:20px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:16px 18px">
+    <div style="display:grid;grid-template-columns:1.25fr 1.5fr 1fr;gap:26px;align-items:start">
+      <div>
+        <label style="display:flex;align-items:baseline;gap:8px;margin-bottom:9px">
+          <span style="font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--tx2)">{{ s.price }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);margin-left:auto;white-space:nowrap">{{ priceTag }}</span>
+        </label>
+        <input type="number" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" style="width:100%;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px;margin-bottom:2px">
+        <input type="range" min="150000" max="2200000" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" aria-valuetext="{{ priceFmt }}">
+        <div style="position:relative;height:31px;margin-top:-2px">
+          <div style="position:absolute;left:0;top:15px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ priceMin }}</div>
+          <div style="position:absolute;left:{{ benchPos }};transform:translateX(-50%);display:flex;flex-direction:column;align-items:center">
+            <div aria-hidden="true" style="width:1px;height:5px;background:var(--ac2);margin-top:-6px"></div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ac);white-space:nowrap">{{ benchLabel }}</div>
+          </div>
+          <div style="position:absolute;right:0;top:15px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ priceMax }}</div>
+        </div>
+      </div>
+
+      <div>
+        <label style="display:flex;align-items:baseline;gap:8px;margin-bottom:9px">
+          <span style="font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--tx2)">{{ s.downPayment }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx);margin-left:auto">{{ dpFmt }}</span>
+        </label>
+        <div role="group" aria-label="{{ s.downPayment }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden;margin-bottom:9px">
+          <sc-for list="{{ dpOpts }}" as="d" hint-placeholder-count="5">
+            <button onClick="{{ d.pick }}" aria-pressed="{{ d.on }}" style="--bgD:{{ d.bgD }};--fgD:{{ d.fgD }};--fwD:{{ d.fwD }};flex:1;padding:6px 4px;font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bgD);color:var(--fgD);font-weight:var(--fwD);white-space:nowrap" style-hover="background:var(--brh)">{{ d.label }}</button>
+          </sc-for>
+        </div>
+        <div style="position:relative">
+          <input type="range" min="5" max="35" step="0.5" value="{{ dpPct }}" onChange="{{ onDp }}" aria-label="{{ s.downPayment }}" aria-valuetext="{{ dpFmt }}">
+          <div aria-hidden="true" style="position:absolute;left:50%;top:2px;width:1px;height:18px;background:var(--ac);pointer-events:none"></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:7px;margin-top:1px">
+          <span aria-hidden="true" style="width:1px;height:11px;background:var(--ac);margin-left:calc(50% - 1px);flex:none"></span>
+          <span style="font-size:11px;line-height:1.35;color:var(--ac);font-weight:500;text-wrap:pretty">{{ s.noCmhcAbove }}</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:13px">
+        <div>
+          <div style="font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--tx2);margin-bottom:7px">{{ s.propertyType }}</div>
+          <div role="group" style="display:flex;flex-direction:column;gap:3px">
+            <sc-for list="{{ typeOpts }}" as="ty" hint-placeholder-count="3">
+              <button onClick="{{ ty.pick }}" aria-pressed="{{ ty.on }}" style="--bgT:{{ ty.bgT }};--bdT:{{ ty.bdT }};--fgT:{{ ty.fgT }};--fwT:{{ ty.fwT }};--dotT:{{ ty.dotT }};display:flex;align-items:center;gap:8px;text-align:left;padding:5px 8px;border:1px solid var(--bdT);border-radius:2px;background:var(--bgT);font-size:12px;color:var(--fgT);font-weight:var(--fwT)" style-hover="border-color:var(--brs)">
+                <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:var(--dotT);flex:none"></span>{{ ty.label }}
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--tx2);margin-bottom:7px">{{ s.ftb }}</div>
+          <button onClick="{{ toggleFtb }}" role="switch" aria-checked="{{ ftb }}" style="--ftbBg:{{ ftbBg }};--ftbBr:{{ ftbBr }};--ftbTr:{{ ftbTr }};--ftbX:{{ ftbX }};--ftbFg:{{ ftbFg }};display:flex;align-items:center;gap:9px;padding:5px 9px 5px 5px;border:1px solid var(--ftbBr);border-radius:2px;background:var(--ftbBg);width:100%">
+            <span aria-hidden="true" style="width:26px;height:15px;border-radius:2px;background:var(--ftbTr);position:relative;flex:none">
+              <span style="position:absolute;top:2px;left:var(--ftbX);width:11px;height:11px;border-radius:1px;background:var(--s1);transition:left .14s ease"></span>
+            </span>
+            <span style="font-size:12px;font-weight:500;color:var(--ftbFg)">{{ ftbLabel }}</span>
+          </button>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--tx2);margin-bottom:7px">{{ s.amort }}</div>
+          <div role="group" aria-label="{{ s.amort }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden">
+            <sc-for list="{{ amortOpts }}" as="am" hint-placeholder-count="2">
+              <button onClick="{{ am.pick }}" aria-pressed="{{ am.on }}" style="--bgA:{{ am.bg }};--fgA:{{ am.fg }};--fwA:{{ am.fw }};flex:1;padding:6px 4px;font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--bgA);color:var(--fgA);font-weight:var(--fwA);white-space:nowrap">{{ am.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="margin:14px 0 0;padding-top:12px;border-top:1px solid var(--brh);font-size:11.5px;line-height:1.5;color:var(--tx3)">{{ insNote }}</p>
+  </div>
+
+  <div style="margin:16px 22px 0;display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:12px">
+    <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:14px 15px">
+      <div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:8px">{{ s.downPaymentRow }}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;letter-spacing:-.02em">{{ dpAmt }}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:5px">{{ dpPctLine }}</div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:14px 15px">
+      <div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:8px">{{ s.closingCosts }}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;letter-spacing:-.02em">{{ ccAmt }}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:5px">{{ ccPctLine }}</div>
+    </div>
+    <div style="background:var(--acbg);border:1px solid var(--acbr);border-radius:3px;padding:14px 15px;animation:cbPulse .7s ease-out" key="{{ pulseKey }}">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--ac)">{{ s.cashTotal }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ac2);margin-left:auto;white-space:nowrap">{{ locTag }}</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:7px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:600;letter-spacing:-.02em;color:var(--ac)">{{ cashAmt }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ac2)">CAD</span>
+      </div>
+      <div aria-hidden="true" style="display:flex;height:5px;margin-top:9px;border-radius:1px;overflow:hidden;background:var(--acbr)">
+        <span style="width:{{ splitW }};background:var(--ac)"></span>
+        <span style="flex:1;background:var(--ac2);opacity:.55"></span>
+      </div>
+      <div style="font-size:11px;color:var(--ac);margin-top:6px;line-height:1.4">{{ s.separateNote }}</div>
+    </div>
+  </div>
+
+  <div style="margin:20px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+      <span style="font-size:13px;font-weight:600">{{ tableTitle }}</span>
+      <span style="font-size:11.5px;color:var(--tx3);margin-left:auto">{{ s.editable }}</span>
+    </div>
+
+    <sc-if value="{{ compare }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:grid;grid-template-columns:1fr 130px 130px 120px;gap:0;padding:9px 16px;border-bottom:1px solid var(--br);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3)">
+          <span>{{ s.lineItem }}</span>
+          <span style="text-align:right;color:var(--ac);font-weight:600">{{ cmpNameA }}</span>
+          <span style="text-align:right;font-weight:600">{{ cmpNameB }}</span>
+          <span style="text-align:right">{{ s.difference }}</span>
+        </div>
+        <sc-for list="{{ cmpRows }}" as="r" hint-placeholder-count="10">
+          <div style="--rowBg:{{ r.rowBg }};--rowFw:{{ r.rowFw }};--diffFg:{{ r.diffFg }};display:grid;grid-template-columns:1fr 130px 130px 120px;padding:9px 16px;border-bottom:1px solid var(--brh);background:var(--rowBg)">
+            <span style="font-size:12.5px;line-height:1.4;padding-right:14px;font-weight:var(--rowFw)">{{ r.label }}</span>
+            <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ac)">{{ r.a }}</span>
+            <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px">{{ r.b }}</span>
+            <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--diffFg)">{{ r.d }}</span>
+          </div>
+        </sc-for>
+        <p style="margin:0;padding:12px 16px;font-size:11.5px;color:var(--tx3)">{{ s.sameHouse }}</p>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ single }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+          <div>
+            <div style="display:flex;align-items:baseline;gap:10px;padding:11px 16px 7px;background:var(--s0);border-bottom:1px solid var(--brh)">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);font-weight:600">{{ g.title }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2);margin-left:auto">{{ g.total }}</span>
+            </div>
+            <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="5">
+              <div style="border-bottom:1px solid var(--brh)">
+                <div style="display:grid;grid-template-columns:1fr 190px;gap:14px;align-items:center;padding:9px 16px">
+                  <div style="min-width:0">
+                    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                      <button onClick="{{ r.toggleEx }}" aria-expanded="{{ r.exOpen }}" style="font-size:13px;line-height:1.4;text-align:left;border-bottom:1px dotted var(--brs);padding:0;color:var(--tx)" style-hover="border-bottom-color:var(--ac)">{{ r.label }}</button>
+                      <sc-if value="{{ showTags }}" hint-placeholder-val="{{ true }}">
+                        <span style="--tagBg:{{ r.tagBg }};--tagFg:{{ r.tagFg }};font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 5px;border-radius:2px;background:var(--tagBg);color:var(--tagFg);white-space:nowrap">{{ r.tag }}</span>
+                      </sc-if>
+                      <sc-if value="{{ r.hasBrackets }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ r.toggleBr }}" aria-expanded="{{ r.brOpen }}" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ac);padding:0">{{ r.brLabel }}</button>
+                      </sc-if>
+                    </div>
+                    <sc-if value="{{ r.note }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;gap:6px;margin-top:5px;align-items:baseline">
+                        <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--caut)">!</span>
+                        <span style="font-size:11.5px;line-height:1.45;color:var(--caut)">{{ r.note }}</span>
+                      </div>
+                    </sc-if>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+                    <input type="number" value="{{ r.amount }}" onChange="{{ r.onEdit }}" aria-label="{{ r.label }}" style="--inBg:{{ r.inBg }};--inBr:{{ r.inBr }};--inFg:{{ r.inFg }};width:110px;padding:5px 7px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--inBg);border:1px solid var(--inBr);border-radius:2px;color:var(--inFg)">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;min-width:52px;text-align:right;color:var(--tx3)">{{ r.pctOfPrice }}</span>
+                  </div>
+                </div>
+                <sc-if value="{{ r.exOpen }}" hint-placeholder-val="{{ false }}">
+                  <p style="margin:0;padding:0 16px 11px 16px;font-size:12px;line-height:1.6;color:var(--tx2);max-width:760px;text-wrap:pretty">{{ r.ex }}</p>
+                </sc-if>
+                <sc-if value="{{ r.brOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:2px 16px 13px 16px">
+                    <div style="display:flex;height:11px;border-radius:1px;overflow:hidden;border:1px solid var(--brs)">
+                      <sc-for list="{{ r.brRows }}" as="b" hint-placeholder-count="4">
+                        <span aria-hidden="true" style="width:{{ b.w }};background:var(--ac2)"></span>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:3px;margin-top:8px">
+                      <sc-for list="{{ r.brRows }}" as="b" hint-placeholder-count="4">
+                        <div style="display:flex;align-items:baseline;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+                          <span aria-hidden="true" style="width:8px;height:8px;border-radius:1px;background:var(--ac2);flex:none"></span>
+                          <span>{{ b.rate }}</span>
+                          <span style="color:var(--tx3)">{{ b.range }}</span>
+                          <span style="margin-left:auto;color:var(--tx)">{{ b.amt }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;background:var(--s2)">
+          <span style="font-size:13px;font-weight:600">{{ s.closingCosts }}</span>
+          <span style="font-size:11.5px;color:var(--tx3)">{{ ccPctLine }}</span>
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600">{{ ccAmt }}</span>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="margin:20px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+    <div style="display:flex;align-items:flex-end;gap:16px;padding:14px 16px;border-bottom:1px solid var(--br)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;margin-bottom:3px">{{ s.creditsTitle }}</div>
+        <div style="font-size:11.5px;color:var(--tx3);line-height:1.45">{{ s.creditsSub }}</div>
+      </div>
+      <div role="group" aria-label="{{ s.creditsTitle }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden;flex:none">
+        <sc-for list="{{ viewOpts }}" as="v" hint-placeholder-count="2">
+          <button onClick="{{ v.pick }}" aria-pressed="{{ v.on }}" style="--bgV:{{ v.bgV }};--fgV:{{ v.fgV }};--fwV:{{ v.fwV }};padding:6px 11px;font-size:11.5px;background:var(--bgV);color:var(--fgV);font-weight:var(--fwV);white-space:nowrap" style-hover="background:var(--brh)">{{ v.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <sc-if value="{{ viewGrouped }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <div style="padding:15px 16px;border-right:1px solid var(--br)">
+          <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:3px">
+            <span aria-hidden="true" style="width:9px;height:9px;border-radius:1px;background:var(--pass);flex:none"></span>
+            <span style="font-size:12.5px;font-weight:600;color:var(--pass)">{{ s.grpAtClosing }}</span>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);margin:0 0 12px 18px">{{ s.grpAtClosingWhen }}</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ closingCredits }}" as="c" hint-placeholder-count="2">
+              <div style="--cBg:{{ c.cBg }};--cBr:{{ c.cBr }};--cAccent:{{ c.cAccent }};--cFg:{{ c.cFg }};--cChipBg:{{ c.cChipBg }};border:1px solid var(--cBr);border-left:3px solid var(--cAccent);border-radius:2px;background:var(--cBg);padding:10px 12px">
+                <div style="display:flex;align-items:baseline;gap:10px">
+                  <span style="font-size:12.5px;line-height:1.4;font-weight:500;flex:1;color:var(--cFg)">{{ c.label }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--cFg);white-space:nowrap">{{ c.amount }}</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:7px;margin-top:6px">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 5px;border-radius:2px;background:var(--cChipBg);color:var(--cFg);white-space:nowrap">{{ c.state }}</span>
+                  <span style="font-size:11.5px;line-height:1.45;color:var(--cFg);opacity:.9;text-wrap:pretty">{{ c.why }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-top:14px;padding-top:11px;border-top:1px solid var(--brh)">
+            <span style="font-size:11.5px;color:var(--tx2);line-height:1.4;text-wrap:pretty">{{ s.netCash }}</span>
+            <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;white-space:nowrap">{{ netCashAmt }}</span>
+          </div>
+        </div>
+        <div style="padding:15px 16px;background:var(--defbg)">
+          <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:3px">
+            <span aria-hidden="true" style="width:9px;height:9px;border-radius:1px;border:1.5px dashed var(--def);flex:none"></span>
+            <span style="font-size:12.5px;font-weight:600;color:var(--def)">{{ s.grpLater }}</span>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);margin:0 0 12px 18px;line-height:1.4">{{ s.grpLaterWhen }}</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ laterCredits }}" as="c" hint-placeholder-count="2">
+              <div style="border:1px dashed var(--defbr);border-radius:2px;background:var(--s1);padding:10px 12px">
+                <div style="display:flex;align-items:baseline;gap:10px">
+                  <button onClick="{{ c.toggleEx }}" aria-expanded="{{ c.exOpen }}" style="font-size:12.5px;line-height:1.4;font-weight:500;flex:1;text-align:left;border-bottom:1px dotted var(--brs);color:var(--tx)">{{ c.label }}</button>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;white-space:nowrap;color:var(--def)">{{ c.amount }}</span>
+                </div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--def);margin-top:6px">{{ c.when }}</div>
+                <sc-if value="{{ c.exOpen }}" hint-placeholder-val="{{ false }}">
+                  <p style="margin:8px 0 0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ c.ex }}</p>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-top:14px;padding-top:11px;border-top:1px solid var(--defbr)">
+            <span style="font-size:11.5px;color:var(--tx2);line-height:1.4">{{ laterTotalLabel }}</span>
+            <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--def);white-space:nowrap">{{ laterTotal }}</span>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ viewTimeline }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:22px 22px 18px">
+        <div style="position:relative;height:34px;margin-bottom:6px">
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:16px;height:1px;background:var(--brs)"></div>
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:16px;height:3px;width:34%;background:var(--pass)"></div>
+          <div aria-hidden="true" style="position:absolute;left:34%;top:9px;bottom:9px;border-left:1px dashed var(--defbr)"></div>
+          <div style="position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px">
+            <span style="font-size:11.5px;font-weight:600;color:var(--pass);white-space:nowrap">{{ tlNow }}</span>
+            <span aria-hidden="true" style="width:9px;height:9px;border-radius:50%;background:var(--pass);margin-left:1px"></span>
+          </div>
+          <div style="position:absolute;left:34%;top:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px;transform:translateX(2px)">
+            <span style="font-size:11.5px;font-weight:600;color:var(--def);white-space:nowrap">{{ tlLater }}</span>
+            <span aria-hidden="true" style="width:9px;height:9px;border-radius:50%;background:var(--s1);border:2px dashed var(--def);box-sizing:content-box;margin-left:-1px"></span>
+          </div>
+          <div style="position:absolute;right:0;top:19px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">{{ tlEnd }}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:34% 1fr;gap:0">
+          <div style="padding-right:22px;display:flex;flex-direction:column;gap:7px">
+            <sc-for list="{{ closingCredits }}" as="c" hint-placeholder-count="2">
+              <div style="--cBg:{{ c.cBg }};--cBr:{{ c.cBr }};--cAccent:{{ c.cAccent }};--cFg:{{ c.cFg }};--cChipBg:{{ c.cChipBg }};border:1px solid var(--cBr);border-left:3px solid var(--cAccent);border-radius:2px;background:var(--cBg);padding:9px 11px">
+                <div style="display:flex;align-items:baseline;gap:8px">
+                  <span style="font-size:12px;line-height:1.35;font-weight:500;flex:1;color:var(--cFg)">{{ c.label }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;color:var(--cFg);white-space:nowrap">{{ c.amount }}</span>
+                </div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--cFg);opacity:.85;margin-top:5px">{{ c.state }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;padding-top:9px;border-top:1px solid var(--brh)">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3)">{{ s.netCash }}</span>
+              <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;white-space:nowrap">{{ netCashAmt }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;padding-left:2px">
+            <sc-for list="{{ laterCredits }}" as="c" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:11px">
+                <span aria-hidden="true" style="width:{{ c.tlW }};height:22px;border:1px dashed var(--defbr);border-left:3px solid var(--def);border-radius:2px;background:var(--defbg);flex:none"></span>
+                <span style="font-size:12px;line-height:1.35;color:var(--tx2);flex:1;min-width:0">{{ c.label }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;color:var(--def);white-space:nowrap">{{ c.amount }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);white-space:nowrap;min-width:96px;text-align:right">{{ c.when }}</span>
+              </div>
+            </sc-for>
+            <p style="margin:6px 0 0;font-size:11.5px;line-height:1.5;color:var(--tx3);max-width:520px;text-wrap:pretty">{{ s.grpLaterWhen }}</p>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="margin:20px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--br)">
+      <div style="font-size:13px;font-weight:600;margin-bottom:3px">{{ s.cashCheck }}</div>
+      <div style="font-size:11.5px;color:var(--tx3);line-height:1.45">{{ s.cashCheckSub }}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:0;align-items:stretch">
+      <div style="padding:14px 16px;border-right:1px solid var(--brh)">
+        <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:8px;line-height:1.35">{{ s.available }}</label>
+        <input type="number" value="{{ funds }}" onChange="{{ onFunds }}" aria-label="{{ s.available }}" style="width:100%;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+      </div>
+      <div style="padding:14px 16px;border-right:1px solid var(--brh)">
+        <label style="display:block;font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:8px;line-height:1.35">{{ s.monthlySavings }}</label>
+        <input type="number" value="{{ save }}" onChange="{{ onSave }}" aria-label="{{ s.monthlySavings }}" style="width:100%;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+      </div>
+      <div style="--kBg:{{ cash.bg }};--kBr:{{ cash.br }};--kFg:{{ cash.fg }};padding:14px 16px;background:var(--kBg)">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+          <span aria-hidden="true" style="width:17px;height:17px;border-radius:2px;border:1.5px solid var(--kFg);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--kFg);flex:none">{{ cash.icon }}</span>
+          <span style="font-size:12.5px;font-weight:600;color:var(--kFg)">{{ cash.word }}</span>
+          <span style="font-size:11.5px;color:var(--kFg);opacity:.85">{{ cash.gapLabel }}</span>
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--kFg);white-space:nowrap">{{ cash.gapAmt }}</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--kFg);line-height:1.5;text-wrap:pretty">{{ cash.note }}</div>
+        <sc-if value="{{ cash.short }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px;padding-top:9px;border-top:1px solid var(--kBr)">
+            <span style="font-size:11.5px;color:var(--kFg);line-height:1.35">{{ s.monthsToClose }}</span>
+            <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--kFg)">{{ cash.months }}</span>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:20px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:15px 16px">
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:11px">
+      <span style="font-size:12.5px;font-weight:600">{{ s.sourcesTitle }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ sourcesFilter }}</span>
+      <sc-if value="{{ showVerifyFlag }}" hint-placeholder-val="{{ true }}">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr);margin-left:auto">{{ s.unverifiedFlag }}</span>
+      </sc-if>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 22px">
+      <sc-for list="{{ sources }}" as="src" hint-placeholder-count="6">
+        <div style="display:flex;align-items:baseline;gap:9px;padding:5px 0;border-bottom:1px solid var(--brh)">
+          <span style="font-size:11.5px;line-height:1.4;color:var(--tx2);flex:1;min-width:0">{{ src.label }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap">{{ src.date }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:13px 0 0;font-size:11.5px;line-height:1.6;color:var(--tx3);max-width:900px;text-wrap:pretty">{{ s.disclaimer }}</p>
+  </div>
+
+  <div style="height:22px"></div>
+</div>
+</div>
+
+<div class="dvOpt" id="1b">
+<div class="dvLab"><a class="dvOid" href="#1b">1b</a>Phone 390 px — dark, mobile card equivalent</div>
+<div data-theme="{{ themeB }}" data-screen-label="Closing costs · phone" style="width:430px;padding:20px;background:#0B0C0E;border-radius:44px;border:1px solid rgba(255,255,255,.09);box-shadow:0 2px 14px rgba(0,0,0,.28)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--s0);color:var(--tx);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+      <span>9:41</span><span style="margin-left:auto;letter-spacing:.12em">•••</span>
+    </div>
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--br)">
+      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--s2);border:1px solid var(--br);border-radius:3px;min-width:0">
+        <span aria-hidden="true" style="width:4px;height:4px;border-radius:50%;background:var(--ac);flex:none"></span>
+        <span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.short }}</span>
+        <span aria-hidden="true" style="font-size:8px;color:var(--tx3)">▾</span>
+      </button>
+      <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-left:auto">
+        <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgL:{{ lg.bgL }};--fgL:{{ lg.fgL }};--fwL:{{ lg.fwL }};padding:4px 6px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--bgL);color:var(--fgL);font-weight:var(--fwL)">{{ lg.abbr }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx2);flex:none">{{ themeIconB }}</button>
+    </header>
+    <div style="flex:1;overflow:auto;padding:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:5px">{{ s.deepDive }}</div>
+      <h2 style="margin:0 0 5px;font-size:22px;line-height:1.12;font-weight:600;letter-spacing:-.02em">{{ s.title }}</h2>
+      <p style="margin:0 0 14px;font-size:13px;line-height:1.45;color:var(--tx2);text-wrap:pretty">{{ s.subtitle }}</p>
+
+      <div style="background:var(--acbg);border:1px solid var(--acbr);border-radius:3px;padding:13px 14px;margin-bottom:12px;animation:cbPulse .7s ease-out" key="{{ pulseKey }}">
+        <div style="font-size:11.5px;font-weight:600;color:var(--ac);margin-bottom:7px;line-height:1.35">{{ s.cashTotal }}</div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:27px;font-weight:600;letter-spacing:-.02em;color:var(--ac)">{{ cashAmt }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ac2)">CAD</span>
+        </div>
+        <div aria-hidden="true" style="display:flex;height:6px;margin-top:10px;border-radius:1px;overflow:hidden;background:var(--acbr)">
+          <span style="width:{{ splitW }};background:var(--ac)"></span>
+          <span style="flex:1;background:var(--ac2);opacity:.55"></span>
+        </div>
+        <div style="display:flex;gap:14px;margin-top:9px">
+          <div style="flex:1">
+            <div style="font-size:10.5px;color:var(--ac2);margin-bottom:2px">{{ s.downPaymentRow }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--ac)">{{ dpAmt }}</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10.5px;color:var(--ac2);margin-bottom:2px">{{ s.closingCosts }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--ac)">{{ ccAmt }}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--ac);margin-top:9px;line-height:1.4">{{ s.separateNote }}</div>
+      </div>
+
+      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px 13px;margin-bottom:12px">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+          <span style="font-size:11.5px;font-weight:600;color:var(--tx2)">{{ s.downPayment }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-left:auto">{{ dpFmt }}</span>
+        </div>
+        <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden">
+          <sc-for list="{{ dpOpts }}" as="d" hint-placeholder-count="5">
+            <button onClick="{{ d.pick }}" aria-pressed="{{ d.on }}" style="--bgD:{{ d.bgD }};--fgD:{{ d.fgD }};--fwD:{{ d.fwD }};flex:1;min-height:44px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--bgD);color:var(--fgD);font-weight:var(--fwD)">{{ d.label }}</button>
+          </sc-for>
+        </div>
+        <div style="position:relative;margin-top:8px">
+          <input type="range" min="5" max="35" step="0.5" value="{{ dpPct }}" onChange="{{ onDp }}" aria-label="{{ s.downPayment }}" aria-valuetext="{{ dpFmt }}">
+          <div aria-hidden="true" style="position:absolute;left:50%;top:2px;width:1px;height:18px;background:var(--ac);pointer-events:none"></div>
+        </div>
+        <div style="font-size:11px;line-height:1.35;color:var(--ac);font-weight:500;margin-top:2px">{{ s.noCmhcAbove }}</div>
+      </div>
+
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);font-weight:600;margin:0 0 8px">{{ s.grpGov }}</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        <sc-for list="{{ govRows }}" as="r" hint-placeholder-count="3">
+          <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:11px 12px">
+            <div style="display:flex;align-items:baseline;gap:9px">
+              <span style="font-size:12.5px;line-height:1.4;font-weight:500;flex:1">{{ r.label }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;white-space:nowrap">{{ r.amount }}</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:7px;margin-top:6px">
+              <sc-if value="{{ showTags }}" hint-placeholder-val="{{ true }}">
+                <span style="--tagBg:{{ r.tagBg }};--tagFg:{{ r.tagFg }};font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 5px;border-radius:2px;background:var(--tagBg);color:var(--tagFg)">{{ r.tag }}</span>
+              </sc-if>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ r.pctOfPrice }} {{ s.ofPrice }}</span>
+            </div>
+            <sc-if value="{{ r.note }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8px;padding:8px 9px;background:var(--cautbg);border:1px solid var(--cautbr);border-left:3px solid var(--caut);border-radius:2px;font-size:11.5px;line-height:1.45;color:var(--caut);text-wrap:pretty">{{ r.note }}</div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin:0 0 9px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);font-weight:600">{{ s.creditsTitle }}</span>
+        <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden;margin-left:auto">
+          <sc-for list="{{ viewOpts }}" as="v" hint-placeholder-count="2">
+            <button onClick="{{ v.pick }}" aria-pressed="{{ v.on }}" style="--bgV:{{ v.bgV }};--fgV:{{ v.fgV }};--fwV:{{ v.fwV }};padding:5px 9px;font-size:11px;background:var(--bgV);color:var(--fgV);font-weight:var(--fwV);white-space:nowrap">{{ v.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{ viewGrouped }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:14px">
+          <div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+              <span aria-hidden="true" style="width:9px;height:9px;border-radius:1px;background:var(--pass);flex:none"></span>
+              <span style="font-size:12px;font-weight:600;color:var(--pass);line-height:1.35">{{ s.grpAtClosing }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <sc-for list="{{ closingCredits }}" as="c" hint-placeholder-count="2">
+                <div style="--cBg:{{ c.cBg }};--cBr:{{ c.cBr }};--cAccent:{{ c.cAccent }};--cFg:{{ c.cFg }};--cChipBg:{{ c.cChipBg }};border:1px solid var(--cBr);border-left:3px solid var(--cAccent);border-radius:2px;background:var(--cBg);padding:10px 11px">
+                  <div style="display:flex;align-items:baseline;gap:9px">
+                    <span style="font-size:12px;line-height:1.35;font-weight:500;flex:1;color:var(--cFg)">{{ c.label }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;color:var(--cFg);white-space:nowrap">{{ c.amount }}</span>
+                  </div>
+                  <div style="font-size:11px;line-height:1.45;color:var(--cFg);opacity:.9;margin-top:5px;text-wrap:pretty">{{ c.why }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+              <span aria-hidden="true" style="width:9px;height:9px;border-radius:1px;border:1.5px dashed var(--def);flex:none"></span>
+              <span style="font-size:12px;font-weight:600;color:var(--def);line-height:1.35">{{ s.grpLater }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <sc-for list="{{ laterCredits }}" as="c" hint-placeholder-count="2">
+                <div style="border:1px dashed var(--defbr);border-radius:2px;background:var(--defbg);padding:10px 11px">
+                  <div style="display:flex;align-items:baseline;gap:9px">
+                    <span style="font-size:12px;line-height:1.35;flex:1">{{ c.label }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;color:var(--def);white-space:nowrap">{{ c.amount }}</span>
+                  </div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--def);margin-top:5px">{{ c.when }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ viewTimeline }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-bottom:14px">
+          <div style="display:flex">
+            <div style="width:26px;flex:none;display:flex;flex-direction:column;align-items:center;padding-top:4px">
+              <span aria-hidden="true" style="width:9px;height:9px;border-radius:50%;background:var(--pass);flex:none"></span>
+              <span aria-hidden="true" style="width:3px;flex:1;background:var(--pass);margin:3px 0"></span>
+            </div>
+            <div style="flex:1;min-width:0;padding-bottom:14px">
+              <div style="font-size:12px;font-weight:600;color:var(--pass);margin-bottom:7px;line-height:1.3">{{ tlNow }}</div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <sc-for list="{{ closingCredits }}" as="c" hint-placeholder-count="2">
+                  <div style="--cBg:{{ c.cBg }};--cBr:{{ c.cBr }};--cAccent:{{ c.cAccent }};--cFg:{{ c.cFg }};--cChipBg:{{ c.cChipBg }};border:1px solid var(--cBr);border-left:3px solid var(--cAccent);border-radius:2px;background:var(--cBg);padding:9px 10px">
+                    <div style="display:flex;align-items:baseline;gap:8px">
+                      <span style="font-size:11.5px;line-height:1.35;font-weight:500;flex:1;color:var(--cFg)">{{ c.label }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--cFg);white-space:nowrap">{{ c.amount }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex">
+            <div style="width:26px;flex:none;display:flex;flex-direction:column;align-items:center">
+              <span aria-hidden="true" style="width:9px;height:9px;border-radius:50%;background:var(--s0);border:2px dashed var(--def);box-sizing:content-box"></span>
+              <span aria-hidden="true" style="width:0;flex:1;border-left:2px dashed var(--defbr);margin:3px 0"></span>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:600;color:var(--def);margin-bottom:2px;line-height:1.3">{{ tlLater }}</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);margin-bottom:7px">{{ tlEnd }}</div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <sc-for list="{{ laterCredits }}" as="c" hint-placeholder-count="2">
+                  <div style="border:1px dashed var(--defbr);border-radius:2px;background:var(--defbg);padding:9px 10px">
+                    <div style="display:flex;align-items:baseline;gap:8px">
+                      <span style="font-size:11.5px;line-height:1.35;flex:1">{{ c.label }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--def);white-space:nowrap">{{ c.amount }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="--kBg:{{ cash.bg }};--kBr:{{ cash.br }};--kFg:{{ cash.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:12px 13px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+          <span aria-hidden="true" style="width:17px;height:17px;border-radius:2px;border:1.5px solid var(--kFg);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--kFg);flex:none">{{ cash.icon }}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--kFg)">{{ cash.word }}</span>
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--kFg)">{{ cash.gapAmt }}</span>
+        </div>
+        <div style="font-size:11px;color:var(--kFg);line-height:1.45;text-wrap:pretty">{{ cash.line }}</div>
+        <sc-if value="{{ cash.short }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--kBr)">
+            <span style="font-size:11px;color:var(--kFg);line-height:1.3">{{ s.monthsToClose }}</span>
+            <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--kFg)">{{ cash.months }}</span>
+          </div>
+        </sc-if>
+      </div>
+      <div style="padding:11px 12px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px">{{ sourcesFilter }}</div>
+        <p style="margin:0;font-size:11px;line-height:1.55;color:var(--tx3);text-wrap:pretty">{{ s.disclaimer }}</p>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+    <div style="padding:10px 14px 14px;border-top:1px solid var(--br);background:var(--s1)">
+      <button style="width:100%;min-height:46px;background:var(--ac);color:var(--s1);border-radius:3px;font-size:14px;font-weight:600" style-hover="opacity:.92">{{ s.adjust }}</button>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dvNext">Try next: "build the Affordability tab — lender ceiling vs comfortable" · "now Rent vs Buy with the crossover year" · "the 5/10/20/25 Scenarios comparison" · "the RRSP–HBP play with the 90-day warning"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1700,&quot;height&quot;:1400},&quot;startJurisdiction&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;toronto&quot;,&quot;ottawa&quot;,&quot;vancouver&quot;,&quot;halifax&quot;,&quot;winnipeg&quot;,&quot;montreal&quot;,&quot;calgary&quot;,&quot;saskatoon&quot;,&quot;nb&quot;,&quot;nl&quot;,&quot;pe&quot;,&quot;yt&quot;,&quot;nt&quot;,&quot;nu&quot;],&quot;default&quot;:&quot;toronto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Jurisdiction on load&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Français&quot;,&quot;Українська&quot;,&quot;Español&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Language on load&quot;},&quot;startCreditView&quot;:{&quot;editor&quot;:&quot;radio&quot;,&quot;options&quot;:[&quot;grouped&quot;,&quot;timeline&quot;],&quot;default&quot;:&quot;grouped&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Credit timing view&quot;},&quot;showProvenanceTags&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Review&quot;,&quot;label&quot;:&quot;Show exact / estimate / yours tags&quot;},&quot;showVerifyFlag&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Review&quot;,&quot;label&quot;:&quot;Show verify-before-ship flag&quot;}}">
+class Component extends DCLogic {
+  state = {
+    ready: false, lang: 0, themeA: 'light', themeB: 'dark',
+    jurId: 'toronto', cmpId: 'calgary', compare: false, elsewhere: false,
+    price: 0, priceTouched: false, dpPct: 10, ptype: 'house', ftb: true,
+    pickerOpen: false, provSel: 'ON', creditView: 'grouped',
+    amortYears: 30, funds: 50000, save: 1200,
+    edits: {}, openEx: null, openBr: null, pulse: 0
+  };
+
+  componentDidMount() {
+    const go = () => {
+      const D = window.CIBTH_DATA; if (!D || !window.CIBTH_ENGINE) return false;
+      const p = this.props || {};
+      const jid = D.jur.some(x => x.id === p.startJurisdiction) ? p.startJurisdiction : 'toronto';
+      const li = ['English', 'Français', 'Українська', 'Español'].indexOf(p.startLang);
+      const rec = D.jur.find(x => x.id === jid);
+      this.setState({
+        ready: true, jurId: jid, provSel: rec.prov, elsewhere: !rec.city,
+        lang: li < 0 ? 0 : li,
+        creditView: p.startCreditView === 'timeline' ? 'timeline' : 'grouped',
+        price: rec.bench.house
+      });
+      const shared = window.CIBTH_ENGINE.loadShared();
+      if (Object.keys(shared).length) this.setState(shared);
+      window.CIBTH_ENGINE.onSharedChange(v => this.setState(v));
+      return true;
+    };
+    if (!go()) { const iv = setInterval(() => { if (go()) clearInterval(iv); }, 30); this._iv = iv; window.addEventListener('cibth-data', go); window.addEventListener('cibth-engine', go); }
+  }
+  componentWillUnmount() { if (this._iv) clearInterval(this._iv); }
+  componentDidUpdate() { if (this.state.ready) window.CIBTH_ENGINE.saveShared(this.state); }
+
+  /* ---------- helpers ---------- */
+  bench(D, jurId, ptype) { const j = D.jur.find(x => x.id === jurId); return j ? j.bench[ptype] : 600000; }
+  L() { return ['en-CA', 'fr-CA', 'uk-UA', 'es-ES'][this.state.lang]; }
+  money(n, dp) { return window.CIBTH_ENGINE.money(n, this.L(), this.state.lang !== 0, dp); }
+  pct(n, d) {
+    const v = new Intl.NumberFormat(this.L(), { minimumFractionDigits: d == null ? 0 : d, maximumFractionDigits: d == null ? 1 : d }).format(n);
+    return this.state.lang === 0 ? v + '%' : v + '\u202f%';
+  }
+  date(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat(this.L(), { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d));
+  }
+  tr(key) { const D = window.CIBTH_DATA; const row = D.t[key]; return row ? row[this.state.lang] : key; }
+
+  bracketTax(price, brackets) { return window.CIBTH_ENGINE.bracketTax(price, brackets); }
+
+  /* ---------- one jurisdiction -> one full result (mechanics live in hbt-engine.js) ---------- */
+  compute(jurId, elsewhere) {
+    const D = window.CIBTH_DATA, F = D.federal, E = window.CIBTH_ENGINE;
+    const j = D.jur.find(x => x.id === jurId) || D.jur[0];
+    const st = this.state;
+    const price = st.price || j.bench[st.ptype];
+    const o = { price, dpPct: st.dpPct, ftb: st.ftb, ptype: st.ptype, amortYears: st.amortYears, elsewhere };
+    const L = E.buildLines(j, F, o);
+    const C = E.credits(j, F, o, L.gov);
+
+    const apply = (arr, g) => arr.map(r => {
+      const id = g + ':' + r.key + ':' + jurId;
+      const e = st.edits[id];
+      return Object.assign({}, r, { id, amount: e == null ? r.amount : e, edited: e != null });
+    });
+    const G = { gov: apply(L.gov, 'gov'), pro: apply(L.pro, 'pro'), adj: apply(L.adj, 'adj') };
+    const sum = a => a.reduce((t, r) => t + r.amount, 0);
+    const closingTotal = sum(G.gov) + sum(G.pro) + sum(G.adj);
+    const closingCreditTotal = C.atClosing.reduce((t, c) => t + c.amount, 0);
+    const laterTotal = C.later.reduce((t, c) => t + c.amount, 0);
+
+    return {
+      j, price, down: L.fin.down, loan: L.fin.loan, premium: L.fin.premium, premRate: L.fin.premRate,
+      insured: L.fin.insured, G, closingTotal, atClosing: C.atClosing, later: C.later,
+      closingCreditTotal, laterTotal,
+      cash: L.fin.down + closingTotal, net: L.fin.down + closingTotal - closingCreditTotal
+    };
+  }
+
+  /* ---------- row -> template shape ---------- */
+  rowVals(r, price, gkey) {
+    const st = this.state, D = window.CIBTH_DATA;
+    const exOpen = st.openEx === r.id, brOpen = st.openBr === r.id;
+    const tag = r.edited ? this.tr('yours') : r.exact ? this.tr('exact') : this.tr('estimate');
+    return {
+      id: r.id, label: this.tr(r.key), amount: Math.round(r.amount),
+      tag, tagBg: r.edited ? 'var(--acbg)' : r.exact ? 'var(--passbg)' : 'var(--s2)',
+      tagFg: r.edited ? 'var(--ac)' : r.exact ? 'var(--pass)' : 'var(--tx3)',
+      inBg: r.edited ? 'var(--acbg)' : 'var(--s0)', inBr: r.edited ? 'var(--acbr)' : 'var(--br)',
+      inFg: r.edited ? 'var(--ac)' : 'var(--tx)',
+      pctOfPrice: this.pct(r.amount / price * 100, 2),
+      note: r.cashOnly ? this.tr('premiumTaxWhy') : false,
+      ex: r.ex ? this.tr(r.ex) : '', exOpen,
+      toggleEx: () => this.setState(s => ({ openEx: s.openEx === r.id ? null : r.id })),
+      hasBrackets: !!(r.parts && r.parts.length > 1), brOpen,
+      brLabel: brOpen ? this.tr('hideBrackets') : this.tr('showBrackets'),
+      toggleBr: () => this.setState(s => ({ openBr: s.openBr === r.id ? null : r.id })),
+      brRows: (r.parts || []).map(p => ({
+        w: ((p.to - p.from) / price * 100).toFixed(2) + '%',
+        rate: this.pct(p.rate * 100, 1),
+        range: p.from === 0 ? this.tr('onFirst') + ' ' + this.money(p.to) : this.tr('onPortion') + ' ' + this.money(p.from) + ' ' + this.tr('to') + ' ' + this.money(p.to),
+        amt: this.money(p.amt)
+      })),
+      bandBg: 'var(--ac2)',
+      onEdit: e => { const v = parseFloat(e.target.value); this.setState(s => ({ edits: Object.assign({}, s.edits, { [r.id]: isNaN(v) ? 0 : v }) })); }
+    };
+  }
+
+  creditVals(c, later) {
+    const st = this.state;
+    const id = 'cr:' + c.key;
+    const zero = c.amount <= 0;
+    const stateLabel = { applied: this.tr('rebApplied'), capped: this.tr('rebPartial'), phasedOut: this.tr('rebPartial'), none: this.tr('rebNone'), ftbOnly: this.tr('ftbOnly') }[c.st] || '';
+    let why = '';
+    if (c.st === 'none') why = this.noRebateCopy();
+    else if (c.st === 'capped' && c.kind === 'cap') why = this.tr('rebCapped') + ' ' + this.money(c.cap);
+    else if (c.st === 'capped' || c.st === 'phasedOut') why = this.tr('rebPhaseWhy');
+    else if (c.st === 'ftbOnly') why = this.tr('turnOnFtb');
+    const good = !zero;
+    return {
+      label: this.tr(c.key),
+      amount: zero ? (this.state.lang === 0 ? '—' : '—') : '−\u2009' + this.money(c.amount),
+      state: stateLabel, why,
+      cBg: good ? 'var(--passbg)' : 'var(--s0)',
+      cBr: good ? 'var(--passbr)' : 'var(--br)',
+      cAccent: good ? 'var(--pass)' : 'var(--brs)',
+      cFg: good ? 'var(--pass)' : 'var(--tx2)',
+      cChipBg: good ? 'var(--s1)' : 'var(--s2)',
+      cFg2: 'var(--def)',
+      when: later ? this.laterWhen() : this.tr('grpAtClosingWhen'),
+      ex: c.ex ? this.tr(c.ex) : '',
+      exOpen: st.openEx === id,
+      toggleEx: () => this.setState(s => ({ openEx: s.openEx === id ? null : id })),
+      tlW: Math.max(18, Math.min(120, c.amount / 30)) + 'px'
+    };
+  }
+
+  noRebateCopy() {
+    const D = window.CIBTH_DATA, j = D.jur.find(x => x.id === this.state.jurId);
+    const prov = D.P[j.prov][this.state.lang];
+    const noTax = (j.rebates[0] || {}).noTax;
+    return [
+      noTax ? prov + ' charges no transfer tax, so there is nothing to rebate. An identical purchase in Ontario would return up to $4,000 at closing.'
+            : prov + ' offers no first-time buyer rebate on this tax. Its absence is information: an identical purchase in Ontario would return up to $4,000 at closing.',
+      noTax ? prov + ' n\u2019impose aucune taxe de mutation, donc rien \u00e0 rembourser. Un achat identique en Ontario rapporterait jusqu\u2019\u00e0 4\u202f000\u202f$ \u00e0 la cl\u00f4ture.'
+            : prov + ' n\u2019offre aucun remboursement pour premi\u00e8re habitation sur cette taxe. Cette absence est une information\u202f: un achat identique en Ontario rapporterait jusqu\u2019\u00e0 4\u202f000\u202f$ \u00e0 la cl\u00f4ture.',
+      noTax ? prov + ' \u043d\u0435 \u0441\u0442\u044f\u0433\u0443\u0454 \u043f\u043e\u0434\u0430\u0442\u043a\u0443 \u043d\u0430 \u043f\u0435\u0440\u0435\u0434\u0430\u0447\u0443, \u0442\u043e\u043c\u0443 \u043f\u043e\u0432\u0435\u0440\u0442\u0430\u0442\u0438 \u043d\u0456\u0447\u043e\u0433\u043e. \u0422\u0430\u043a\u0430 \u0441\u0430\u043c\u0430 \u043a\u0443\u043f\u0456\u0432\u043b\u044f \u0432 \u041e\u043d\u0442\u0430\u0440\u0456\u043e \u043f\u043e\u0432\u0435\u0440\u043d\u0443\u043b\u0430 \u0431\u0438 \u0434\u043e 4\u202f000\u202f$ \u043f\u0440\u0438 \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u0456.'
+            : prov + ' \u043d\u0435 \u043d\u0430\u0434\u0430\u0454 \u043f\u043e\u0432\u0435\u0440\u043d\u0435\u043d\u043d\u044f \u0434\u043b\u044f \u043f\u043e\u043a\u0443\u043f\u0446\u0456\u0432 \u043f\u0435\u0440\u0448\u043e\u0433\u043e \u0436\u0438\u0442\u043b\u0430 \u0437\u0430 \u0446\u0438\u043c \u043f\u043e\u0434\u0430\u0442\u043a\u043e\u043c. \u0426\u044f \u0432\u0456\u0434\u0441\u0443\u0442\u043d\u0456\u0441\u0442\u044c \u2014 \u0442\u0435\u0436 \u0456\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0456\u044f: \u0442\u0430\u043a\u0430 \u0441\u0430\u043c\u0430 \u043a\u0443\u043f\u0456\u0432\u043b\u044f \u0432 \u041e\u043d\u0442\u0430\u0440\u0456\u043e \u043f\u043e\u0432\u0435\u0440\u043d\u0443\u043b\u0430 \u0431\u0438 \u0434\u043e 4\u202f000\u202f$ \u043f\u0440\u0438 \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u0456.',
+      noTax ? prov + ' no cobra impuesto de transmisi\u00f3n, as\u00ed que no hay nada que reembolsar. Una compra id\u00e9ntica en Ontario devolver\u00eda hasta 4\u202f000\u202f$ en el cierre.'
+            : prov + ' no ofrece reembolso para primera vivienda sobre este impuesto. Su ausencia es informaci\u00f3n: una compra id\u00e9ntica en Ontario devolver\u00eda hasta 4\u202f000\u202f$ en el cierre.'
+    ][this.state.lang];
+  }
+
+  laterWhen() { return ['Next tax return', 'Prochaine d\u00e9claration', '\u041d\u0430\u0441\u0442\u0443\u043f\u043d\u0430 \u0434\u0435\u043a\u043b\u0430\u0440\u0430\u0446\u0456\u044f', 'Pr\u00f3xima declaraci\u00f3n'][this.state.lang]; }
+
+  renderVals() {
+    const st = this.state;
+    if (!st.ready || !window.CIBTH_DATA) return { themeA: st.themeA, themeB: st.themeB, single: true, viewGrouped: true };
+    const D = window.CIBTH_DATA, F = D.federal, lang = st.lang;
+    const T = k => this.tr(k);
+    const s = {}; for (const k in D.t) s[k] = D.t[k][lang];
+    s.detectNote = ['We never detect your location silently. Pick it, or ask us to detect it and confirm what we found before it is applied.', 'Nous ne d\u00e9tectons jamais votre position en silence. Choisissez-la, ou demandez-nous de la d\u00e9tecter et confirmez ce que nous avons trouv\u00e9 avant son application.', '\u041c\u0438 \u043d\u0456\u043a\u043e\u043b\u0438 \u043d\u0435 \u0432\u0438\u0437\u043d\u0430\u0447\u0430\u0454\u043c\u043e \u0432\u0430\u0448\u0435 \u043c\u0456\u0441\u0446\u0435 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e. \u0412\u0438\u0431\u0435\u0440\u0456\u0442\u044c \u0439\u043e\u0433\u043e \u0430\u0431\u043e \u043f\u043e\u043f\u0440\u043e\u0441\u0456\u0442\u044c \u0432\u0438\u0437\u043d\u0430\u0447\u0438\u0442\u0438 \u0439 \u043f\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0456\u0442\u044c \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442.', 'Nunca detectamos su ubicaci\u00f3n en silencio. Eleg\u00edrla, o p\u00eddanos detectarla y confirme lo encontrado antes de aplicarla.'][lang];
+
+    const R = this.compute(st.jurId, st.elsewhere);
+    const j = R.j, price = R.price;
+
+    const langNames = ['English', 'Fran\u00e7ais', '\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430', 'Espa\u00f1ol'];
+    const langAbbr = ['EN', 'FR', 'UK', 'ES'];
+    const langs = langNames.map((n, i) => ({
+      name: n, abbr: langAbbr[i], on: i === lang ? 'true' : 'false', pick: () => this.setState({ lang: i }),
+      bgL: i === lang ? 'var(--s1)' : 'var(--s2)', fgL: i === lang ? 'var(--tx)' : 'var(--tx3)', fwL: i === lang ? '600' : '400'
+    }));
+
+    const provCodes = Object.keys(D.P).sort((a, b) => D.P[a][lang].localeCompare(D.P[b][lang], this.L()));
+    const provOpts = provCodes.map(code => {
+      const on = code === st.provSel;
+      return {
+        name: D.P[code][lang], on: on ? 'true' : 'false',
+        pick: () => {
+          const first = D.jur.find(x => x.prov === code);
+          this.setState({ provSel: code, jurId: first.id, elsewhere: !first.city, priceTouched: st.priceTouched, price: st.priceTouched ? st.price : first.bench[st.ptype], pulse: st.pulse + 1, edits: {}, openBr: null, openEx: null });
+        }
+      };
+    });
+    const inProv = D.jur.filter(x => x.prov === st.provSel);
+    const cityOpts = inProv.filter(x => x.city).map(x => ({
+      name: D.C[x.city][lang], tag: x.cityData ? T('verified') + ' \u00b7 ' + this.date(D.verified) : T('estimate'),
+      on: (x.id === st.jurId && !st.elsewhere) ? 'true' : 'false',
+      bgC: (x.id === st.jurId && !st.elsewhere) ? 'var(--acbg)' : 'var(--s1)',
+      bdC: (x.id === st.jurId && !st.elsewhere) ? 'var(--acbr)' : 'var(--br)',
+      fgC: (x.id === st.jurId && !st.elsewhere) ? 'var(--ac)' : 'var(--tx)',
+      pick: () => this.setState({ jurId: x.id, elsewhere: false, price: st.priceTouched ? st.price : x.bench[st.ptype], pickerOpen: false, pulse: st.pulse + 1, edits: {}, openBr: null, openEx: null })
+    }));
+    const elseRec = inProv.find(x => !x.city) || inProv[inProv.length - 1];
+    cityOpts.push({
+      name: s.elsewhereIn + ' ' + D.P[st.provSel][lang], tag: T('estimate'),
+      on: st.elsewhere ? 'true' : 'false',
+      bgC: st.elsewhere ? 'var(--acbg)' : 'var(--s1)', bdC: st.elsewhere ? 'var(--acbr)' : 'var(--br)', fgC: st.elsewhere ? 'var(--ac)' : 'var(--tx)',
+      pick: () => this.setState({ jurId: elseRec.id, elsewhere: true, price: st.priceTouched ? st.price : elseRec.bench[st.ptype], pickerOpen: false, pulse: st.pulse + 1, edits: {}, openBr: null, openEx: null })
+    });
+    provOpts.forEach(p => { p.bgP = p.on === 'true' ? 'var(--acbg)' : 'var(--s1)'; p.bdP = p.on === 'true' ? 'var(--acbr)' : 'var(--br)'; p.fgP = p.on === 'true' ? 'var(--ac)' : 'var(--tx2)'; });
+
+    const cityLabel = st.elsewhere ? (s.elsewhereIn + ' ' + D.P[j.prov][lang]) : (j.city ? D.C[j.city][lang] : D.P[j.prov][lang]);
+    const country = ['Canada', 'Canada', '\u041a\u0430\u043d\u0430\u0434\u0430', 'Canad\u00e1'][lang];
+
+    const dpOpts = [5, 10, 20, 25].map(v => ({
+      label: this.pct(v), on: st.dpPct === v ? 'true' : 'false',
+      bgD: st.dpPct === v ? (v >= 20 ? 'var(--acbg)' : 'var(--s1)') : 'var(--s2)',
+      fgD: st.dpPct === v ? 'var(--ac)' : 'var(--tx2)', fwD: st.dpPct === v ? '600' : '400',
+      pick: () => this.setState({ dpPct: v })
+    }));
+    const isCustom = ![5, 10, 20, 25].includes(st.dpPct);
+    dpOpts.push({ label: s.custom, on: isCustom ? 'true' : 'false', bgD: isCustom ? 'var(--s1)' : 'var(--s2)', fgD: isCustom ? 'var(--ac)' : 'var(--tx3)', fwD: isCustom ? '600' : '400', pick: () => this.setState({ dpPct: 15 }) });
+
+    const typeOpts = [['house', s.house], ['condo', s.condo], ['newbuild', s.newbuild]].map(([v, lb]) => ({
+      label: lb, on: st.ptype === v ? 'true' : 'false',
+      bgT: st.ptype === v ? 'var(--acbg)' : 'var(--s1)', bdT: st.ptype === v ? 'var(--acbr)' : 'var(--br)',
+      fgT: st.ptype === v ? 'var(--ac)' : 'var(--tx2)', fwT: st.ptype === v ? '600' : '400',
+      dotT: st.ptype === v ? 'var(--ac)' : 'var(--br)',
+      pick: () => this.setState({ ptype: v, price: st.priceTouched ? st.price : j.bench[v] })
+    }));
+
+    const amortOpts = [25, 30].map(v => ({
+      label: v + '\u2009' + ['yr', 'ans', '\u0440.', 'a\u00f1os'][lang], on: st.amortYears === v ? 'true' : 'false',
+      bg: st.amortYears === v ? 'var(--s1)' : 'var(--s2)', fg: st.amortYears === v ? 'var(--ac)' : 'var(--tx2)', fw: st.amortYears === v ? '600' : '400',
+      pick: () => this.setState({ amortYears: v })
+    }));
+
+    const gap = st.funds - R.net;
+    const tight = gap >= 0 && gap < R.net * 0.10;
+    const cashSt = gap < 0 ? 'short' : tight ? 'tight' : 'pass';
+    const cash = {
+      short: gap < 0,
+      icon: cashSt === 'pass' ? '\u2713' : cashSt === 'tight' ? '!' : '\u00d7',
+      word: cashSt === 'pass' ? s.stPass : cashSt === 'tight' ? s.stTight : s.stShort,
+      note: cashSt === 'pass' ? s.passNote : cashSt === 'tight' ? s.tightNote : s.shortNote,
+      gapLabel: gap < 0 ? '' : s.surplusLabel,
+      line: (gap < 0 ? '' : s.surplusLabel + ' \u00b7 ') + (cashSt === 'pass' ? s.passNote : cashSt === 'tight' ? s.tightNote : s.shortNote),
+      gapAmt: this.money(Math.abs(gap)),
+      months: st.save > 0 ? String(Math.ceil(-gap / st.save)) : '\u2014',
+      bg: cashSt === 'pass' ? 'var(--passbg)' : cashSt === 'tight' ? 'var(--cautbg)' : 'var(--blkbg)',
+      br: cashSt === 'pass' ? 'var(--passbr)' : cashSt === 'tight' ? 'var(--cautbr)' : 'var(--blkbr)',
+      fg: cashSt === 'pass' ? 'var(--pass)' : cashSt === 'tight' ? 'var(--caut)' : 'var(--blk)'
+    };
+
+    const viewOpts = [['grouped', ['Grouped', 'Group\u00e9', '\u0413\u0440\u0443\u043f\u0430\u043c\u0438', 'Agrupado'][lang]], ['timeline', ['Timeline', 'Chronologie', '\u0425\u0440\u043e\u043d\u043e\u043b\u043e\u0433\u0456\u044f', 'Cronolog\u00eda'][lang]]].map(([v, lb]) => ({
+      label: lb, on: st.creditView === v ? 'true' : 'false',
+      bgV: st.creditView === v ? 'var(--s1)' : 'var(--s2)', fgV: st.creditView === v ? 'var(--tx)' : 'var(--tx3)', fwV: st.creditView === v ? '600' : '400',
+      pick: () => this.setState({ creditView: v })
+    }));
+
+    const groups = [
+      { title: s.grpGov, rows: R.G.gov.map(r => this.rowVals(r, price, 'gov')), total: this.money(R.G.gov.reduce((t, r) => t + r.amount, 0)) },
+      { title: s.grpPro, rows: R.G.pro.map(r => this.rowVals(r, price, 'pro')), total: this.money(R.G.pro.reduce((t, r) => t + r.amount, 0)) },
+      { title: s.grpAdj, rows: R.G.adj.map(r => this.rowVals(r, price, 'adj')), total: this.money(R.G.adj.reduce((t, r) => t + r.amount, 0)) }
+    ];
+    groups.forEach(g => g.rows.forEach(r => { r.rowBg = 'transparent'; }));
+
+    /* compare column */
+    let cmpRows = [], cmpNameA = '', cmpNameB = '';
+    if (st.compare) {
+      const B = this.compute(st.cmpId, false);
+      const nameOf = r => (r.j.city ? D.C[r.j.city][lang] : D.P[r.j.prov][lang]) + ', ' + r.j.prov;
+      cmpNameA = nameOf(R); cmpNameB = nameOf(B);
+      const keys = [];
+      const push = (label, a, b, bold) => keys.push({ label, a: (a == null || a === 0) ? '—' : this.money(a), b: (b == null || b === 0) ? '—' : this.money(b), d: (a || 0) - (b || 0) === 0 ? '—' : (((a || 0) - (b || 0)) > 0 ? '+' : '−') + this.money(Math.abs((a || 0) - (b || 0))), diffFg: (a || 0) > (b || 0) ? 'var(--blk)' : (a || 0) < (b || 0) ? 'var(--pass)' : 'var(--tx3)', rowFw: bold ? '600' : '400', rowBg: bold ? 'var(--s0)' : 'transparent' });
+      const allKeys = [];
+      [R, B].forEach(r => r.G.gov.forEach(x => { if (!allKeys.includes(x.key)) allKeys.push(x.key); }));
+      allKeys.forEach(k => {
+        const a = R.G.gov.find(x => x.key === k), b = B.G.gov.find(x => x.key === k);
+        push(T(k), a ? a.amount : null, b ? b.amount : null);
+      });
+      push(s.grpPro, R.G.pro.reduce((t, r) => t + r.amount, 0), B.G.pro.reduce((t, r) => t + r.amount, 0));
+      push(s.grpAdj, R.G.adj.reduce((t, r) => t + r.amount, 0), B.G.adj.reduce((t, r) => t + r.amount, 0));
+      push(s.closingCosts, R.closingTotal, B.closingTotal, true);
+      push(s.grpAtClosing, -R.closingCreditTotal, -B.closingCreditTotal);
+      push(s.cashTotal, R.net, B.net, true);
+      cmpRows = keys;
+    }
+
+    const sources = [];
+    const add = (label, date) => sources.push({ label, date: this.date(date) });
+    const provName = D.P[j.prov][lang];
+    add(T('li_lttProv').replace(/—.*/, '').trim() + ' \u00b7 ' + j.orgs.transfer, D.verified);
+    if (j.orgs.muni) add(T('li_lttMuni').replace(/—.*/, '').trim() + ' \u00b7 ' + j.orgs.muni, D.verified);
+    if (j.orgs.premTax) add(T('li_premTax') + ' \u00b7 ' + j.orgs.premTax, D.verified);
+    add(T('cr_lttRebateProv') + ' \u00b7 ' + j.orgs.rebate, D.verified);
+    add(s.cmhcPremium + ' \u00b7 CMHC / SCHL', D.verified);
+    add(['Minimum qualifying rate, Guideline B-20 \u00b7 OSFI / BSIF', 'Taux admissible minimal, ligne directrice B-20 \u00b7 BSIF', '\u041c\u0456\u043d\u0456\u043c\u0430\u043b\u044c\u043d\u0430 \u043a\u0432\u0430\u043b\u0456\u0444\u0456\u043a\u0430\u0446\u0456\u0439\u043d\u0430 \u0441\u0442\u0430\u0432\u043a\u0430, B-20 \u00b7 OSFI', 'Tasa m\u00ednima de calificaci\u00f3n, Directriz B-20 \u00b7 OSFI'][lang], D.verified);
+    add(T('cr_gstFthb') + ' \u00b7 Canada Revenue Agency, Bill C-4', '2026-03-12');
+    add(provName + ' \u00b7 ' + j.orgs.market, '2026-07-31');
+
+    const splitPct = R.cash > 0 ? (R.down / R.cash * 100) : 0;
+    const benchPos = Math.max(4, Math.min(96, (j.bench[st.ptype] - 150000) / (2200000 - 150000) * 100));
+
+    return {
+      s, langs, provOpts, cityOpts, groups, cmpRows, cmpNameA, cmpNameB, sources, dpOpts, typeOpts, viewOpts, amortOpts, cash,
+      funds: st.funds, save: st.save,
+      onFunds: e => { const v = parseFloat(e.target.value); this.setState({ funds: isNaN(v) ? 0 : v }); },
+      onSave: e => { const v = parseFloat(e.target.value); this.setState({ save: isNaN(v) ? 0 : v }); },
+      themeA: st.themeA, themeB: st.themeB,
+      themeIconA: st.themeA === 'dark' ? '\u25d1' : '\u25cb',
+      themeIconB: st.themeB === 'dark' ? '\u25d1' : '\u25cb',
+      toggleThemeA: () => this.setState(x => ({ themeA: x.themeA === 'dark' ? 'light' : 'dark' })),
+      toggleThemeB: () => this.setState(x => ({ themeB: x.themeB === 'dark' ? 'light' : 'dark' })),
+      pickerOpen: st.pickerOpen, togglePicker: () => this.setState(x => ({ pickerOpen: !x.pickerOpen })),
+      chip: { city: cityLabel, code: j.prov, country, short: cityLabel + ', ' + j.prov },
+      showNoCityBanner: !j.cityData || st.elsewhere,
+      compare: st.compare, single: !st.compare,
+      compareLabel: st.compare ? s.stopCompare : s.compare,
+      cmpBg: st.compare ? 'var(--acbg)' : 'var(--s1)', cmpFg: st.compare ? 'var(--ac)' : 'var(--ac)',
+      toggleCompare: () => this.setState(x => ({ compare: !x.compare })),
+      price: Math.round(price), priceFmt: this.money(price),
+      onPrice: e => { const v = parseFloat(e.target.value); this.setState({ price: isNaN(v) ? 0 : v, priceTouched: true }); },
+      priceMin: this.money(150000), priceMax: this.money(2200000),
+      benchPos: benchPos.toFixed(1) + '%',
+      benchLabel: (st.ptype === 'condo' ? s.condo : st.ptype === 'newbuild' ? s.newbuild : s.house) + ' \u00b7 ' + this.money(j.bench[st.ptype]),
+      priceTag: (j.city ? D.C[j.city][lang] : provName) + ' \u00b7 ' + this.date('2026-07-31'),
+      dpPct: st.dpPct, dpFmt: this.pct(st.dpPct, 1) + ' \u00b7 ' + this.money(R.down),
+      onDp: e => this.setState({ dpPct: parseFloat(e.target.value) }),
+      ftb: st.ftb ? 'true' : 'false', ftbLabel: st.ftb ? s.yes : s.no,
+      toggleFtb: () => this.setState(x => ({ ftb: !x.ftb })),
+      ftbBg: st.ftb ? 'var(--acbg)' : 'var(--s1)', ftbBr: st.ftb ? 'var(--acbr)' : 'var(--br)',
+      ftbTr: st.ftb ? 'var(--ac)' : 'var(--brs)', ftbX: st.ftb ? '13px' : '2px', ftbFg: st.ftb ? 'var(--ac)' : 'var(--tx2)',
+      insNote: R.insured
+        ? s.insuredNote + '  ' + s.cmhcPremium + ': ' + this.money(R.premium) + ' (' + this.pct(R.premRate * 100, 2) + ') \u2014 ' + s.addedToLoan + '. ' + s.mortgageAmount + ': ' + this.money(R.loan) + '. ' + (st.amortYears > 25 ? s.amortNote : '')
+        : s.uninsuredNote + '  ' + s.mortgageAmount + ': ' + this.money(R.loan) + '.',
+      dpAmt: this.money(R.down), ccAmt: this.money(R.closingTotal), cashAmt: this.money(R.cash),
+      dpPctLine: this.pct(st.dpPct, 1) + ' ' + s.ofPrice,
+      ccPctLine: this.pct(R.closingTotal / price * 100, 2) + ' ' + s.ofPrice,
+      splitW: splitPct.toFixed(1) + '%',
+      locTag: s.locTagTpl.replace('{city}', j.city ? D.C[j.city][lang] : provName),
+      pulseKey: 'p' + st.pulse + st.jurId,
+      tableTitle: s.title + ' \u2014 ' + cityLabel,
+      viewGrouped: st.creditView === 'grouped', viewTimeline: st.creditView === 'timeline',
+      closingCredits: R.atClosing.map(c => this.creditVals(c, false)),
+      laterCredits: R.later.map(c => this.creditVals(c, true)),
+      netCashAmt: this.money(R.net), laterTotal: '−\u2009' + this.money(R.laterTotal),
+      laterTotalLabel: ['Total arriving later', 'Total \u00e0 recevoir plus tard', '\u0423\u0441\u044c\u043e\u0433\u043e \u043f\u043e\u0437\u043d\u0456\u0448\u0435', 'Total que llega despu\u00e9s'][lang],
+      tlNow: ['Closing day', 'Jour de la cl\u00f4ture', '\u0414\u0435\u043d\u044c \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u044f', 'D\u00eda del cierre'][lang],
+      tlLater: this.laterWhen(),
+      tlEnd: ['+4 to +14 months', '+4 \u00e0 +14 mois', '+4 \u0434\u043e +14 \u043c\u0456\u0441\u044f\u0446\u0456\u0432', '+4 a +14 meses'][lang],
+      sourcesFilter: s.sourcesForTpl.replace('{prov}', provName) + ' \u00b7 ' + s.lastVerified + ' ' + this.date(D.verified),
+      showTags: (this.props || {}).showProvenanceTags !== false,
+      showVerifyFlag: (this.props || {}).showVerifyFlag !== false
+    };
+  }
+}
+
+</script>
+</body>
+</html>
+

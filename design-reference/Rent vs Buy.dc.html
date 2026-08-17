@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<script src="hbt-data.js"></script>
+<script src="hbt-engine.js"></script>
+<style>
+:root{
+--s0:#F7F5F1;--s1:#FFFFFF;--s2:#EFECE5;--s3:#E5E1D7;
+--br:#DCD7CC;--brh:#EAE6DD;--brs:#C6BFB1;
+--tx:#17191C;--tx2:#565A5F;--tx3:#888C92;
+--ac:#22375C;--ac2:#3B5C92;--acbg:#E7ECF4;--acbr:#C3CFE2;
+--pass:#1A6B45;--passbg:#E3EFE8;--passbr:#BEDBCB;
+--caut:#87590A;--cautbg:#F6EEDC;--cautbr:#E3D3AE;
+--blk:#8D2A2A;--blkbg:#F6E7E5;--blkbr:#E5C4C0;
+--def:#455A6C;--defbg:#E8EDF1;--defbr:#C8D3DC;
+--bgS:var(--s2);--fgS:var(--tx3);--fwS:400;
+--kBg:var(--s0);--kBr:var(--br);--kFg:var(--tx2);
+--rowFw:400;--rowFg:var(--tx);
+}
+[data-theme="dark"]{
+--s0:#121417;--s1:#191C20;--s2:#21252A;--s3:#2A2F35;
+--br:#2F343B;--brh:#262A30;--brs:#3D434B;
+--tx:#EBE9E4;--tx2:#A3A8AE;--tx3:#767B82;
+--ac:#93B3E0;--ac2:#AEC7EC;--acbg:#1C2632;--acbr:#2C3B4D;
+--pass:#6AC497;--passbg:#152620;--passbr:#264737;
+--caut:#DFAB4C;--cautbg:#292213;--cautbr:#463A1E;
+--blk:#EA8D8D;--blkbg:#2A1919;--blkbr:#4A2C2C;
+--def:#A0B4C5;--defbg:#1A2128;--defbr:#2C3742;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#E8E5DF;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:2px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;display:block}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--brs)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:18px;width:8px;border-radius:1px;background:var(--ac);border:0;margin-top:-8px}
+input[type=range]::-moz-range-track{height:3px;background:var(--brs)}
+input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;background:var(--ac);border:0}
+@keyframes rbPulse{0%{background:var(--acbg)}100%{background:transparent}}
+[data-screen-label$="phone"] button{min-height:44px}
+[data-screen-label$="phone"] a{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+[data-screen-label$="phone"] input{min-height:44px}
+[data-screen-label$="phone"] input[type=range]{min-height:0;height:44px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+.dvT{padding:36px 40px 30px}
+.dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dvId{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#17191C;color:#fff;border-radius:3px;text-decoration:none}
+.dvOid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#17191C;border-radius:3px;text-decoration:none}
+.dvName{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#17191C}
+.dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+.dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#22375C;color:#fff}
+.dvNote{max-width:840px;font:400 12.5px/1.65 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
+.dvNote b{color:rgba(0,0,0,.85);font-weight:600}
+.dvNext{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dvT" id="t4">
+<div class="dvH"><a class="dvId" href="#t4">4</a><span class="dvName">Rent vs Buy — 40 years, crossover annotated on the plot</span></div>
+<p class="dvNote">Extended from your 15-year table to 40, which forced a real change to the model: <b>the mortgage gets discharged part-way through.</b> The schedule now runs monthly rather than annually, so at year 25 or 30 the payment stops, owner outlay drops by the full principal-and-interest amount, and the buy line visibly steepens. A 15-year horizon never had to model that. The payoff year is marked on the chart for exactly that reason. Everything else is your tab: capital deployed up front is the fair starting point for both paths — the buyer sinks it into the house, the renter invests it — and the two switches are yours, <b>investing the monthly difference</b> (on by default, the factor most calculators quietly omit) and <b>appreciation</b> (off runs the flat-market test). The crossover year is annotated directly on the plot rather than living in a caption, because that number is the answer. Depth 2 adds the verdict by holding period and the switch explanations; depth 3 adds the full 40-row schedule and both lists of what the model does not capture — the ones that favour buying and the ones that favour renting.</p>
+<div class="dvOpts">
+
+<div class="dvOpt" id="4a">
+<div class="dvLab"><a class="dvOid" href="#4a">4a</a>Desktop ≥1024 px — light</div>
+<div data-theme="{{ themeA }}" data-screen-label="Rent vs Buy · desktop" style="width:1180px;background:var(--s0);color:var(--tx);border:1px solid var(--br);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
+
+  <header style="display:flex;align-items:center;gap:14px;padding:0 22px;height:56px;background:var(--s1);border-bottom:1px solid var(--br)">
+    <span style="font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">{{ s.brand }}</span>
+    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+      <span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--ac);flex:none"></span>
+      <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ chip.city }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">{{ chip.code }}</span>
+      <span aria-hidden="true" style="color:var(--tx3);font-size:11px">·</span>
+      <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ chip.country }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--tx3)">▾</span>
+    </button>
+    <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+      <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+        <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:5px 9px;font-size:11.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.name }}</button>
+      </sc-for>
+    </div>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:30px;height:28px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--tx2)">{{ themeIconA }}</button>
+  </header>
+
+  <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:var(--s1);border-bottom:1px solid var(--br);padding:16px 22px 18px">
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">{{ s.municipality }}</div>
+      <div role="listbox" style="display:flex;flex-wrap:wrap;gap:5px">
+        <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="8">
+          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg);color:var(--kFg)">
+            <span style="font-size:12.5px;font-weight:500">{{ c.name }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ c.code }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="padding:20px 22px 0;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:330px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:6px">{{ s.rbEyebrow }}</div>
+      <h1 style="margin:0 0 6px;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.02em">{{ s.rbTitle }}</h1>
+      <p style="margin:0;font-size:14px;line-height:1.5;color:var(--tx2);max-width:540px;text-wrap:pretty">{{ s.rbSub }}</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)">{{ s.depth }}</span>
+        <div role="group" aria-label="{{ s.depth }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+          <sc-for list="{{ depthOpts }}" as="dp" hint-placeholder-count="3">
+            <button onClick="{{ dp.pick }}" aria-pressed="{{ dp.on }}" style="--bgS:{{ dp.bg }};--fgS:{{ dp.fg }};--fwS:{{ dp.fw }};display:flex;align-items:center;gap:7px;padding:6px 12px;font-size:12px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+              <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;opacity:.7">{{ dp.n }}</span>{{ dp.label }}
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)">{{ s.jump }}</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+          <sc-for list="{{ jumpLinks }}" as="jl" hint-placeholder-count="4">
+            <a href="{{ jl.href }}" style="font-size:11px;padding:4px 8px;border:1px solid var(--br);border-radius:2px;background:var(--s1);color:var(--ac);text-decoration:none;white-space:nowrap">{{ jl.label }}</a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="verdict" style="margin:18px 22px 0;scroll-margin-top:12px">
+    <div style="--kBg:{{ verdict.bg }};--kBr:{{ verdict.br }};--kFg:{{ verdict.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:18px 20px;animation:rbPulse .7s ease-out" key="{{ pulseKey }}">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600">{{ verdict.tag }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ locTag }}</span>
+      </div>
+      <p style="margin:0 0 8px;font-size:25px;line-height:1.24;font-weight:600;letter-spacing:-.018em;color:var(--kFg);max-width:920px;text-wrap:pretty">{{ verdict.head }}</p>
+      <p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--tx2);max-width:840px;text-wrap:pretty">{{ verdict.sub }}</p>
+    </div>
+  </div>
+
+  <div id="chart" style="margin:14px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
+    <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px 12px;border-bottom:1px solid var(--br);flex-wrap:wrap">
+      <sc-for list="{{ switches }}" as="sw" hint-placeholder-count="2">
+        <button onClick="{{ sw.toggle }}" role="switch" aria-checked="{{ sw.on }}" style="--kBg:{{ sw.bg }};--kBr:{{ sw.br }};--kFg:{{ sw.fg }};display:flex;align-items:flex-start;gap:10px;flex:1;min-width:300px;text-align:left;padding:10px 12px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg)">
+          <span aria-hidden="true" style="width:28px;height:16px;border-radius:2px;background:{{ sw.track }};position:relative;flex:none;margin-top:1px">
+            <span style="position:absolute;top:2px;left:{{ sw.x }};width:12px;height:12px;border-radius:1px;background:var(--s1);transition:left .14s ease"></span>
+          </span>
+          <span style="min-width:0">
+            <span style="display:block;font-size:12.5px;font-weight:600;color:var(--kFg);line-height:1.35;margin-bottom:3px">{{ sw.label }}</span>
+            <span style="display:block;font-size:11.5px;line-height:1.5;color:var(--tx2);text-wrap:pretty">{{ sw.note }}</span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="padding:12px 18px 6px">
+      <div role="img" aria-label="{{ chartAlt }}" style="position:relative;width:1100px;height:352px">
+        <svg width="1100" height="352" viewBox="0 0 1100 352" aria-hidden="true" focusable="false" style="position:absolute;left:0;top:0;display:block">
+          <sc-for list="{{ grid }}" as="gl" hint-placeholder-count="5">
+            <line x1="70" y1="{{ gl.y }}" x2="1010" y2="{{ gl.y }}" stroke="{{ gl.stroke }}" stroke-width="1"></line>
+          </sc-for>
+          <sc-for list="{{ xTicks }}" as="xt" hint-placeholder-count="9">
+            <line x1="{{ xt.x }}" y1="302" x2="{{ xt.x }}" y2="307" stroke="var(--brs)" stroke-width="1"></line>
+          </sc-for>
+          <sc-for list="{{ regions }}" as="rg" hint-placeholder-count="2">
+            <path d="{{ rg.d }}" fill="{{ rg.fill }}" fill-opacity="{{ rg.opacity }}" stroke="none"></path>
+          </sc-for>
+          <sc-if value="{{ payoff }}" hint-placeholder-val="{{ false }}">
+            <line x1="{{ payoff.x }}" y1="30" x2="{{ payoff.x }}" y2="302" stroke="var(--brs)" stroke-width="1" stroke-dasharray="2 4"></line>
+          </sc-if>
+          <polyline points="{{ rentPts }}" fill="none" stroke="var(--def)" stroke-width="2" stroke-linejoin="round"></polyline>
+          <polyline points="{{ buyPts }}" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round"></polyline>
+          <sc-if value="{{ horizon }}" hint-placeholder-val="{{ true }}">
+            <g>
+              <line x1="{{ horizon.x }}" y1="30" x2="{{ horizon.x }}" y2="302" stroke="var(--tx)" stroke-width="1"></line>
+              <circle cx="{{ horizon.x }}" cy="{{ horizon.buyY }}" r="3.5" fill="var(--ac)"></circle>
+              <circle cx="{{ horizon.x }}" cy="{{ horizon.rentY }}" r="3.5" fill="var(--def)"></circle>
+            </g>
+          </sc-if>
+          <sc-if value="{{ cross }}" hint-placeholder-val="{{ true }}">
+            <g>
+              <line x1="{{ cross.x }}" y1="{{ cross.y }}" x2="{{ cross.x }}" y2="302" stroke="var(--pass)" stroke-width="1.5" stroke-dasharray="3 3"></line>
+              <circle cx="{{ cross.x }}" cy="{{ cross.y }}" r="5" fill="var(--s1)" stroke="var(--pass)" stroke-width="2.5"></circle>
+            </g>
+          </sc-if>
+        </svg>
+        <sc-for list="{{ grid }}" as="gl" hint-placeholder-count="5">
+          <div style="position:absolute;left:0;top:{{ gl.top }};width:62px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);line-height:1">{{ gl.label }}</div>
+        </sc-for>
+        <sc-for list="{{ xTicks }}" as="xt" hint-placeholder-count="9">
+          <div style="position:absolute;left:{{ xt.left }};top:313px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);line-height:1">{{ xt.label }}</div>
+        </sc-for>
+        <div style="position:absolute;left:1010px;top:334px;transform:translateX(-100%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);line-height:1;white-space:nowrap">{{ s.yearsAxis }}</div>
+        <sc-if value="{{ payoff }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;left:{{ payoff.left }};top:16px;transform:{{ payoff.tf }};font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);white-space:nowrap;line-height:1">{{ payoff.label }}</div>
+        </sc-if>
+        <div style="position:absolute;left:{{ horizon.left }};top:2px;transform:{{ horizon.tf }};font-size:11px;font-weight:600;color:var(--tx);white-space:nowrap;line-height:1">{{ horizon.label }}</div>
+        <sc-if value="{{ cross }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;left:{{ cross.left }};top:{{ cross.top }};transform:{{ cross.tf }};background:var(--passbg);border:1px solid var(--passbr);border-radius:2px;padding:6px 9px;white-space:nowrap">
+            <div style="font-size:11.5px;font-weight:700;color:var(--pass);line-height:1.25">{{ cross.line1 }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pass);line-height:1.3;margin-top:2px">{{ cross.line2 }}</div>
+          </div>
+        </sc-if>
+        <div style="position:absolute;left:1016px;top:{{ endLabels.buyTop }};line-height:1.25">
+          <div style="font-size:12px;font-weight:700;color:var(--ac);white-space:nowrap">{{ s.buyWord }}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ac);white-space:nowrap">{{ endLabels.buy }}</div>
+        </div>
+        <div style="position:absolute;left:1016px;top:{{ endLabels.rentTop }};line-height:1.25">
+          <div style="font-size:12px;font-weight:700;color:var(--def);white-space:nowrap">{{ s.rentWord }}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--def);white-space:nowrap">{{ endLabels.rent }}</div>
+        </div>
+      </div>
+            <p style="margin:2px 0 10px;font-size:11.5px;line-height:1.55;color:var(--tx3);max-width:960px;text-wrap:pretty">{{ chartAlt }}</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;border-top:1px solid var(--br)">
+      <sc-for list="{{ dials }}" as="dl" hint-placeholder-count="4">
+        <div style="padding:12px 14px;border-right:1px solid var(--brh)">
+          <label style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+            <span style="font-size:11.5px;color:var(--tx2);line-height:1.3">{{ dl.label }}</span>
+            <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;color:{{ dl.valueFg }};white-space:nowrap">{{ dl.display }}</span>
+          </label>
+          <sc-if value="{{ dl.isRange }}" hint-placeholder-val="{{ true }}">
+            <input type="range" min="{{ dl.min }}" max="{{ dl.max }}" step="{{ dl.step }}" value="{{ dl.value }}" onChange="{{ dl.onChange }}" aria-label="{{ dl.label }}" aria-valuetext="{{ dl.display }}">
+          </sc-if>
+          <sc-if value="{{ dl.isChoice }}" hint-placeholder-val="{{ false }}">
+            <div role="group" style="display:flex;flex-direction:column;gap:3px">
+              <sc-for list="{{ dl.choices }}" as="ch" hint-placeholder-count="4">
+                <button onClick="{{ ch.pick }}" aria-pressed="{{ ch.on }}" style="--bgS:{{ ch.bg }};--fgS:{{ ch.fg }};--fwS:{{ ch.fw }};display:flex;align-items:baseline;gap:8px;text-align:left;padding:4px 7px;border:1px solid {{ ch.brd }};border-radius:2px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+                  <span style="font-size:11px;line-height:1.3;flex:1;min-width:0">{{ ch.label }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ ch.value }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <sc-if value="{{ showWhy }}" hint-placeholder-val="{{ false }}">
+    <div id="horizons" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
+      <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+        <span style="font-size:13px;font-weight:600">{{ s.byHorizon }}</span>
+        <span style="font-size:11.5px;color:var(--tx3)">{{ s.byHorizonNote }}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1.15fr 1.15fr 1.15fr 1fr;padding:8px 16px;border-bottom:1px solid var(--br);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3)">
+        <span>{{ s.holdFor }}</span>
+        <span style="text-align:right">{{ s.buyWealth }}</span>
+        <span style="text-align:right">{{ s.rentWealth }}</span>
+        <span style="text-align:right">{{ s.advantage }}</span>
+        <span style="text-align:right">{{ s.winner }}</span>
+      </div>
+      <sc-for list="{{ horizonRows }}" as="hr" hint-placeholder-count="9">
+        <div style="--kBg:{{ hr.bg }};--rowFw:{{ hr.fw }};display:grid;grid-template-columns:1fr 1.15fr 1.15fr 1.15fr 1fr;padding:7px 16px;border-bottom:1px solid var(--brh);background:var(--kBg)">
+          <span style="font-size:12.5px;font-weight:var(--rowFw)">{{ hr.years }}</span>
+          <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ac)">{{ hr.buy }}</span>
+          <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--def)">{{ hr.rent }}</span>
+          <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;color:{{ hr.advFg }}">{{ hr.adv }}</span>
+          <span style="text-align:right;font-size:11.5px;font-weight:600;color:{{ hr.advFg }}">{{ hr.winner }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showMath }}" hint-placeholder-val="{{ false }}">
+    <div id="schedule" style="margin:16px 22px 0;scroll-margin-top:12px">
+      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+        <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+          <span style="font-size:13px;font-weight:600">{{ s.schedule }}</span>
+          <span style="font-size:11.5px;color:var(--tx3)">{{ setupLine }}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:44px repeat(7,1fr);padding:8px 16px;border-bottom:1px solid var(--br);font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3)">
+          <span>{{ s.yr }}</span>
+          <sc-for list="{{ schedCols }}" as="sh" hint-placeholder-count="7">
+            <span style="text-align:right;line-height:1.3">{{ sh }}</span>
+          </sc-for>
+        </div>
+        <div style="max-height:340px;overflow:auto">
+          <sc-for list="{{ schedule }}" as="sr" hint-placeholder-count="40">
+            <div style="--kBg:{{ sr.bg }};display:grid;grid-template-columns:44px repeat(7,1fr);padding:5px 16px;border-bottom:1px solid var(--brh);background:var(--kBg)">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--tx3)">{{ sr.t }}</span>
+              <sc-for list="{{ sr.cells }}" as="sc" hint-placeholder-count="7">
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ sc.fg }}">{{ sc.text }}</span>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+        <sc-for list="{{ caveats }}" as="cv" hint-placeholder-count="2">
+          <div style="--kBg:{{ cv.bg }};--kBr:{{ cv.br }};--kFg:{{ cv.fg }};padding:14px 16px;background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px">
+            <div style="font-size:12.5px;font-weight:600;color:var(--kFg);margin-bottom:9px;line-height:1.35">{{ cv.title }}</div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <sc-for list="{{ cv.items }}" as="it" hint-placeholder-count="4">
+                <div style="display:flex;gap:8px;align-items:baseline">
+                  <span aria-hidden="true" style="width:4px;height:4px;border-radius:50%;background:var(--kFg);flex:none;margin-top:6px"></span>
+                  <span style="font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ it }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div id="inputs" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+      <span style="font-size:12.5px;font-weight:600">{{ s.adjust }}</span>
+      <span style="font-size:11.5px;color:var(--tx3)">{{ s.sharedNote }}</span>
+    </div>
+    <div style="padding:14px 16px;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:16px;align-items:start">
+      <div>
+        <label style="display:flex;align-items:baseline;font-size:11.5px;color:var(--tx2);margin-bottom:5px">{{ s.price }}
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ priceTag }}</span>
+        </label>
+        <input type="number" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" style="width:100%;padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+        <input type="range" min="150000" max="2200000" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" aria-valuetext="{{ priceFmt }}">
+      </div>
+      <sc-for list="{{ fields }}" as="fd" hint-placeholder-count="4">
+        <div>
+          <label style="display:block;font-size:11.5px;color:var(--tx2);margin-bottom:5px;line-height:1.3;min-height:30px">{{ fd.label }}</label>
+          <input type="number" step="{{ fd.step }}" value="{{ fd.value }}" onChange="{{ fd.onChange }}" aria-label="{{ fd.label }}" style="width:100%;padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:14px;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px;padding:0 16px 14px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ s.downPayment }}</span>
+        <div role="group" aria-label="{{ s.downPayment }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden">
+          <sc-for list="{{ dpOpts }}" as="d" hint-placeholder-count="4">
+            <button onClick="{{ d.pick }}" aria-pressed="{{ d.on }}" style="--bgS:{{ d.bg }};--fgS:{{ d.fg }};--fwS:{{ d.fw }};padding:5px 12px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ d.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ s.amort }}</span>
+        <div role="group" aria-label="{{ s.amort }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden">
+          <sc-for list="{{ amortOpts }}" as="am" hint-placeholder-count="2">
+            <button onClick="{{ am.pick }}" aria-pressed="{{ am.on }}" style="--bgS:{{ am.bg }};--fgS:{{ am.fg }};--fwS:{{ am.fw }};padding:5px 12px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ am.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <button onClick="{{ toggleFtb }}" role="switch" aria-checked="{{ ftb }}" style="--kBg:{{ ftbBg }};--kBr:{{ ftbBr }};--kFg:{{ ftbFg }};display:flex;align-items:center;gap:9px;padding:5px 10px 5px 5px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg)">
+        <span aria-hidden="true" style="width:26px;height:15px;border-radius:2px;background:{{ ftbTrack }};position:relative;flex:none">
+          <span style="position:absolute;top:2px;left:{{ ftbX }};width:11px;height:11px;border-radius:1px;background:var(--s1);transition:left .14s ease"></span>
+        </span>
+        <span style="font-size:12px;font-weight:500;color:var(--kFg);white-space:nowrap">{{ s.ftb }}</span>
+      </button>
+      <span style="font-size:11.5px;color:var(--tx3);margin-left:auto;line-height:1.45;max-width:430px;text-wrap:pretty">{{ leverNote }}</span>
+    </div>
+  </div>
+
+  <div style="margin:16px 22px 22px;padding:13px 16px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.5;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);flex:1;min-width:0">{{ sourcesLine }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr)">{{ s.unverifiedFlag }}</span>
+    </div>
+    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--tx3);max-width:940px;text-wrap:pretty">{{ s.disclaimer }}</p>
+  </div>
+</div>
+</div>
+
+<div class="dvOpt" id="4b">
+<div class="dvLab"><a class="dvOid" href="#4b">4b</a>Phone 390 px — dark</div>
+<div data-theme="{{ themeB }}" data-screen-label="Rent vs Buy · phone" style="width:430px;padding:20px;background:#0B0C0E;border-radius:44px;border:1px solid rgba(255,255,255,.09);box-shadow:0 2px 14px rgba(0,0,0,.28)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--s0);color:var(--tx);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+      <span>9:41</span><span style="margin-left:auto;letter-spacing:.12em">•••</span>
+    </div>
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--br)">
+      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--s2);border:1px solid var(--br);border-radius:3px;min-width:0">
+        <span aria-hidden="true" style="width:4px;height:4px;border-radius:50%;background:var(--ac);flex:none"></span>
+        <span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.short }}</span>
+        <span aria-hidden="true" style="font-size:8px;color:var(--tx3)">▾</span>
+      </button>
+      <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-left:auto">
+        <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 6px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx2);flex:none">{{ themeIconB }}</button>
+    </header>
+
+    <div style="flex:1;overflow:auto;padding:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:5px">{{ s.rbEyebrow }}</div>
+      <h2 style="margin:0 0 12px;font-size:22px;line-height:1.12;font-weight:600;letter-spacing:-.02em">{{ s.rbTitle }}</h2>
+
+      <div style="--kBg:{{ verdict.bg }};--kBr:{{ verdict.br }};--kFg:{{ verdict.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:13px 14px;margin-bottom:12px;animation:rbPulse .7s ease-out" key="{{ pulseKey }}">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:7px">{{ verdict.tag }}</div>
+        <p style="margin:0 0 7px;font-size:17px;line-height:1.3;font-weight:600;color:var(--kFg);text-wrap:pretty">{{ verdict.head }}</p>
+        <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ verdict.sub }}</p>
+      </div>
+
+      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px 12px 8px;margin-bottom:12px">
+        <div role="img" aria-label="{{ chartAlt }}" style="position:relative;width:330px;height:216px">
+          <svg width="330" height="216" viewBox="0 0 330 216" aria-hidden="true" focusable="false" style="position:absolute;left:0;top:0;display:block">
+            <sc-for list="{{ mGrid }}" as="gl" hint-placeholder-count="3">
+              <line x1="6" y1="{{ gl.y }}" x2="330" y2="{{ gl.y }}" stroke="{{ gl.stroke }}" stroke-width="1"></line>
+            </sc-for>
+            <sc-for list="{{ mRegions }}" as="rg" hint-placeholder-count="2">
+              <path d="{{ rg.d }}" fill="{{ rg.fill }}" fill-opacity="{{ rg.opacity }}" stroke="none"></path>
+            </sc-for>
+            <sc-if value="{{ mHorizon }}" hint-placeholder-val="{{ true }}">
+              <line x1="{{ mHorizon.x }}" y1="14" x2="{{ mHorizon.x }}" y2="188" stroke="var(--tx)" stroke-width="1"></line>
+            </sc-if>
+            <polyline points="{{ mRentPts }}" fill="none" stroke="var(--def)" stroke-width="1.8" stroke-linejoin="round"></polyline>
+            <polyline points="{{ mBuyPts }}" fill="none" stroke="var(--ac)" stroke-width="2.2" stroke-linejoin="round"></polyline>
+            <sc-if value="{{ mCross }}" hint-placeholder-val="{{ true }}">
+              <g>
+                <line x1="{{ mCross.x }}" y1="{{ mCross.y }}" x2="{{ mCross.x }}" y2="188" stroke="var(--pass)" stroke-width="1.4" stroke-dasharray="3 3"></line>
+                <circle cx="{{ mCross.x }}" cy="{{ mCross.y }}" r="4" fill="var(--s1)" stroke="var(--pass)" stroke-width="2"></circle>
+              </g>
+            </sc-if>
+          </svg>
+          <sc-for list="{{ mXTicks }}" as="xt" hint-placeholder-count="5">
+            <div style="position:absolute;left:{{ xt.left }};top:196px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);line-height:1">{{ xt.label }}</div>
+          </sc-for>
+          <sc-if value="{{ mCross }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;left:{{ mCross.left }};top:{{ mCross.top }};transform:{{ mCross.tf }};font-size:10.5px;font-weight:700;color:var(--pass);white-space:nowrap;line-height:1">{{ mCross.label }}</div>
+          </sc-if>
+        </div>
+                <div style="display:flex;gap:12px;margin-top:4px">
+          <div style="flex:1">
+            <div style="font-size:10.5px;color:var(--ac);margin-bottom:2px">{{ s.buyWord }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ac)">{{ endLabels.buy }}</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10.5px;color:var(--def);margin-bottom:2px">{{ s.rentWord }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--def)">{{ endLabels.rent }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <sc-for list="{{ switches }}" as="sw" hint-placeholder-count="2">
+          <button onClick="{{ sw.toggle }}" role="switch" aria-checked="{{ sw.on }}" style="--kBg:{{ sw.bg }};--kBr:{{ sw.br }};--kFg:{{ sw.fg }};display:flex;align-items:flex-start;gap:10px;text-align:left;min-height:44px;padding:10px 11px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg)">
+            <span aria-hidden="true" style="width:28px;height:16px;border-radius:2px;background:{{ sw.track }};position:relative;flex:none;margin-top:1px">
+              <span style="position:absolute;top:2px;left:{{ sw.x }};width:12px;height:12px;border-radius:1px;background:var(--s1);transition:left .14s ease"></span>
+            </span>
+            <span style="min-width:0">
+              <span style="display:block;font-size:12px;font-weight:600;color:var(--kFg);line-height:1.35;margin-bottom:3px">{{ sw.label }}</span>
+              <span style="display:block;font-size:11px;line-height:1.45;color:var(--tx2);text-wrap:pretty">{{ sw.note }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px;margin-bottom:12px">
+        <div style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">{{ s.downPayment }}</div>
+        <div role="group" aria-label="{{ s.downPayment }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden;margin-bottom:10px">
+          <sc-for list="{{ dpOpts }}" as="d" hint-placeholder-count="4">
+            <button onClick="{{ d.pick }}" aria-pressed="{{ d.on }}" style="--bgS:{{ d.bg }};--fgS:{{ d.fg }};--fwS:{{ d.fw }};flex:1;min-height:44px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ d.label }}</button>
+          </sc-for>
+        </div>
+        <div style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">{{ s.amort }}</div>
+        <div role="group" aria-label="{{ s.amort }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden;margin-bottom:14px">
+          <sc-for list="{{ amortOpts }}" as="am" hint-placeholder-count="2">
+            <button onClick="{{ am.pick }}" aria-pressed="{{ am.on }}" style="--bgS:{{ am.bg }};--fgS:{{ am.fg }};--fwS:{{ am.fw }};flex:1;min-height:44px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ am.label }}</button>
+          </sc-for>
+        </div>
+        <sc-for list="{{ dials }}" as="dl" hint-placeholder-count="4">
+          <div style="margin-bottom:12px">
+            <label style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+              <span style="font-size:11.5px;color:var(--tx2);line-height:1.3">{{ dl.label }}</span>
+              <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;color:{{ dl.valueFg }}">{{ dl.display }}</span>
+            </label>
+            <sc-if value="{{ dl.isRange }}" hint-placeholder-val="{{ true }}">
+              <input type="range" min="{{ dl.min }}" max="{{ dl.max }}" step="{{ dl.step }}" value="{{ dl.value }}" onChange="{{ dl.onChange }}" aria-label="{{ dl.label }}" aria-valuetext="{{ dl.display }}">
+            </sc-if>
+            <sc-if value="{{ dl.isChoice }}" hint-placeholder-val="{{ false }}">
+              <div role="group" style="display:flex;flex-wrap:wrap;gap:4px">
+                <sc-for list="{{ dl.choices }}" as="ch" hint-placeholder-count="4">
+                  <button onClick="{{ ch.pick }}" aria-pressed="{{ ch.on }}" style="--bgS:{{ ch.bg }};--fgS:{{ ch.fg }};--fwS:{{ ch.fw }};display:flex;align-items:baseline;gap:6px;padding:5px 8px;border:1px solid {{ ch.brd }};border-radius:2px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+                    <span style="font-size:11px">{{ ch.label }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ ch.value }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ showWhy }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-bottom:12px">
+          <div style="padding:11px 12px;border-bottom:1px solid var(--br);font-size:12.5px;font-weight:600">{{ s.byHorizon }}</div>
+          <sc-for list="{{ horizonRows }}" as="hr" hint-placeholder-count="9">
+            <div style="--kBg:{{ hr.bg }};--rowFw:{{ hr.fw }};display:flex;align-items:baseline;gap:9px;padding:7px 12px;border-bottom:1px solid var(--brh);background:var(--kBg)">
+              <span style="font-size:12px;font-weight:var(--rowFw);flex:none;min-width:64px">{{ hr.years }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:{{ hr.advFg }};margin-left:auto">{{ hr.adv }}</span>
+              <span style="font-size:11px;font-weight:600;color:{{ hr.advFg }};flex:none;min-width:40px;text-align:right">{{ hr.winner }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <div style="height:6px"></div>
+    </div>
+
+    <div style="border-top:1px solid var(--br);background:var(--s1);padding:9px 12px 13px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);flex:none">{{ s.depth }}</span>
+        <div role="group" aria-label="{{ s.depth }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;flex:1">
+          <sc-for list="{{ depthOpts }}" as="dp" hint-placeholder-count="3">
+            <button onClick="{{ dp.pick }}" aria-pressed="{{ dp.on }}" style="--bgS:{{ dp.bg }};--fgS:{{ dp.fg }};--fwS:{{ dp.fw }};flex:1;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS);white-space:nowrap;padding:0 4px">{{ dp.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dvNext">Try next: "turn appreciation off and tell me what happens" · "set my horizon to 7 years" · "now Down Payment sources with the waterfall" · "show 4a in French"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1700,&quot;height&quot;:1500},&quot;startDepth&quot;:{&quot;editor&quot;:&quot;radio&quot;,&quot;options&quot;:[&quot;answer&quot;,&quot;why&quot;,&quot;math&quot;],&quot;default&quot;:&quot;answer&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Detail level on load&quot;},&quot;startHolding&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:10,&quot;min&quot;:1,&quot;max&quot;:40,&quot;step&quot;:1,&quot;unit&quot;:&quot;yr&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Holding period on load&quot;},&quot;startJurisdiction&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;winnipeg&quot;,&quot;toronto&quot;,&quot;ottawa&quot;,&quot;vancouver&quot;,&quot;halifax&quot;,&quot;montreal&quot;,&quot;calgary&quot;,&quot;saskatoon&quot;],&quot;default&quot;:&quot;winnipeg&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;City on load&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Français&quot;,&quot;Українська&quot;,&quot;Español&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Language on load&quot;}}">
+class Component extends DCLogic {
+  YEARS = 40;
+
+  state = {
+    ready: false, lang: 0, themeA: 'light', themeB: 'dark',
+    jurId: 'winnipeg', pickerOpen: false, depth: 0,
+    price: 0, priceTouched: false, dpPct: 10, amortYears: 30, ftb: true, ptype: 'house',
+    insuranceAnnual: 1500, utilities: 300, condoFee: 0,
+    rent: 0, rentTouched: false, rentInflation: 3, holding: 10,
+    apprKey: 'shelter', apprCustom: 3.1, retKey: 'balanced',
+    investDiff: true, appreciationOn: true, pulse: 0
+  };
+
+  componentDidMount() {
+    const go = () => {
+      const D = window.CIBTH_DATA; if (!D || !window.CIBTH_ENGINE) return false;
+      const p = this.props || {};
+      const jid = D.jur.some(x => x.id === p.startJurisdiction) ? p.startJurisdiction : 'winnipeg';
+      const li = ['English', 'Français', 'Українська', 'Español'].indexOf(p.startLang);
+      const di = ['answer', 'why', 'math'].indexOf(p.startDepth);
+      const rec = D.jur.find(x => x.id === jid);
+      this.setState({ ready: true, jurId: jid, lang: li < 0 ? 0 : li, depth: di < 0 ? 0 : di,
+        price: rec.bench.house, rent: rec.rent || 1500, holding: p.startHolding || 10 });
+      const shared = window.CIBTH_ENGINE.loadShared();
+      if (Object.keys(shared).length) this.setState(shared);
+      window.CIBTH_ENGINE.onSharedChange(v => this.setState(v));
+      return true;
+    };
+    if (!go()) { const iv = setInterval(() => { if (go()) clearInterval(iv); }, 30); this._iv = iv;
+      window.addEventListener('cibth-data', go); window.addEventListener('cibth-engine', go); }
+  }
+  componentWillUnmount() { if (this._iv) clearInterval(this._iv); }
+  componentDidUpdate() { if (this.state.ready) window.CIBTH_ENGINE.saveShared(this.state); }
+
+  L() { return ['en-CA', 'fr-CA', 'uk-UA', 'es-ES'][this.state.lang]; }
+  money(n, dp) { return window.CIBTH_ENGINE.money(n, this.L(), this.state.lang !== 0, dp); }
+  short(n) {
+    const a = Math.abs(n), sign = n < 0 ? '\u2212\u2009' : '';
+    const nf = (v, d) => new Intl.NumberFormat(this.L(), { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+    const unit = ['M', 'M', '\u043c\u043b\u043d', 'M'][this.state.lang];
+    const kUnit = ['k', 'k', '\u0442\u0438\u0441', 'k'][this.state.lang];
+    let body;
+    if (a >= 1000000) body = nf(a / 1000000, a >= 10000000 ? 1 : 2) + '\u2009' + unit;
+    else if (a >= 1000) body = nf(Math.round(a / 1000), 0) + '\u2009' + kUnit;
+    else body = nf(Math.round(a), 0);
+    return sign + (this.state.lang === 0 ? '$' + body : body + '\u00a0$');
+  }
+  pct(n, d) {
+    const v = new Intl.NumberFormat(this.L(), { minimumFractionDigits: d == null ? 0 : d, maximumFractionDigits: d == null ? 1 : d }).format(n);
+    return this.state.lang === 0 ? v + '%' : v + '\u202f%';
+  }
+  date(iso) { const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat(this.L(), { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d)); }
+
+  S = {
+    rbEyebrow: ['Deep dive 3/5', 'Analyse détaillée 3/5', 'Детальний розбір 3/5', 'Análisis detallado 3/5'],
+    rbTitle: ['Rent versus buy', 'Louer ou acheter', 'Орендувати чи купувати', 'Alquilar o comprar'],
+    rbSub: ['Buying is not better or worse in the abstract. It depends almost entirely on how long you stay.', 'Acheter n’est ni meilleur ni pire dans l’abstrait. Cela dépend presque entièrement de la durée de votre séjour.', 'Купівля не є кращою чи гіршою абстрактно. Усе залежить від того, як довго ви залишитесь.', 'Comprar no es mejor ni peor en abstracto. Depende casi por completo de cuánto tiempo se quede.'],
+    depth: ['Detail', 'Détail', 'Деталізація', 'Detalle'],
+    d1: ['The answer', 'La réponse', 'Відповідь', 'La respuesta'],
+    d2: ['Why', 'Pourquoi', 'Чому', 'Por qué'],
+    d3: ['The math', 'Le calcul', 'Розрахунок', 'El cálculo'],
+    jump: ['Jump to', 'Aller à', 'Перейти до', 'Ir a'],
+    buyWord: ['Buy', 'Acheter', 'Купівля', 'Comprar'],
+    rentWord: ['Rent', 'Louer', 'Оренда', 'Alquilar'],
+    yearsAxis: ['Years held', 'Années de détention', 'Років володіння', 'Años de tenencia'],
+    yr: ['Yr', 'An', 'Рік', 'Año'],
+    crossLabel: ['Buying pulls ahead', 'L’achat prend l’avantage', 'Купівля виходить вперед', 'Comprar toma la delantera'],
+    crossYear: ['year {n}', 'année {n}', 'рік {n}', 'año {n}'],
+    neverAhead: ['Buying never pulls ahead within 40 years', 'L’achat ne prend jamais l’avantage en 40 ans', 'Купівля не виходить вперед за 40 років', 'Comprar nunca toma la delantera en 40 años'],
+    payoffLabel: ['Mortgage discharged, year {n}', 'Prêt remboursé, année {n}', 'Іпотеку закрито, рік {n}', 'Hipoteca liquidada, año {n}'],
+    horizonLabel: ['Your horizon: {n} years', 'Votre horizon\u202f: {n} ans', 'Ваш горизонт: {n} років', 'Su horizonte: {n} años'],
+    swInvest: ['Assume the renter invests the monthly difference', 'Supposer que le locataire investit l’écart mensuel', 'Вважати, що орендар інвестує щомісячну різницю', 'Suponer que el inquilino invierte la diferencia mensual'],
+    swInvestOn: ['On: whichever side pays less each month banks the difference and invests it. This is the honest comparison, and the factor most calculators quietly omit.', 'Activé\u202f: celui qui paie moins chaque mois place l’écart. C’est la comparaison honnête, et le facteur que la plupart des calculateurs passent sous silence.', 'Увімкнено: та сторона, що платить менше, інвестує різницю. Це честне порівняння — і фактор, який більшість калькуляторів тихо пропускає.', 'Activado: quien paga menos cada mes invierte la diferencia. Es la comparación honesta, y el factor que la mayoría de calculadoras omite.'],
+    swInvestOff: ['Off: the difference is simply spent. That is what most people actually do — but it is an assumption about behaviour, not arithmetic.', 'Désactivé\u202f: l’écart est simplement dépensé. C’est ce que font la plupart des gens — mais c’est une hypothèse de comportement, non de calcul.', 'Вимкнено: різницю просто витрачають. Так і робить більшість — але це припущення про поведінку, а не арифметика.', 'Desactivado: la diferencia se gasta. Es lo que hace la mayoría, pero es un supuesto sobre el comportamiento, no aritmética.'],
+    swAppr: ['Assume the home appreciates', 'Supposer que la propriété s’apprécie', 'Вважати, що житло зростає в ціні', 'Suponer que la vivienda se aprecia'],
+    swApprOn: ['On: you are forecasting the housing market, which nobody does reliably. Growth is applied to value, property tax and maintenance alike.', 'Activé\u202f: vous prévoyez le marché immobilier, ce que personne ne réussit de façon fiable. La croissance s’applique à la valeur, aux taxes et à l’entretien.', 'Увімкнено: ви прогнозуєте ринок житла, що надійно не вдається нікому. Зростання застосовується і до вартості, і до податку, і до обслуговування.', 'Activado: está pronosticando el mercado inmobiliario, algo que nadie hace de forma fiable. El crecimiento se aplica al valor, al impuesto y al mantenimiento.'],
+    swApprOff: ['Off: the flat-market test. If buying only wins with this on, you are betting on price growth rather than buying a place to live.', 'Désactivé\u202f: le test du marché plat. Si l’achat ne gagne qu’avec cette option activée, vous pariez sur la hausse des prix plutôt que d’acheter un logement.', 'Вимкнено: тест плоского ринку. Якщо купівля виграє лише з увімкненим зростанням, ви ставите на ціни, а не купуєте житло.', 'Desactivado: la prueba de mercado plano. Si comprar solo gana con esto activado, está apostando a la subida de precios, no comprando un hogar.'],
+    dHolding: ['How long you expect to stay', 'Combien de temps vous comptez rester', 'Скільки ви плануєте залишитись', 'Cuánto tiempo espera quedarse'],
+    leverNote: ['Down payment sets the loan, whether CMHC insurance applies, and which contract rate you get. Amortization sets the payoff year marked on the chart.', 'La mise de fonds d\u00e9termine le pr\u00eat, l\u2019application de l\u2019assurance SCHL et le taux obtenu. L\u2019amortissement d\u00e9termine l\u2019ann\u00e9e de remboursement indiqu\u00e9e sur le graphique.', '\u0412\u043d\u0435\u0441\u043e\u043a \u0432\u0438\u0437\u043d\u0430\u0447\u0430\u0454 \u0440\u043e\u0437\u043c\u0456\u0440 \u043a\u0440\u0435\u0434\u0438\u0442\u0443, \u043f\u043e\u0442\u0440\u0435\u0431\u0443 \u0441\u0442\u0440\u0430\u0445\u0443\u0432\u0430\u043d\u043d\u044f CMHC \u0456 \u0432\u0430\u0448\u0443 \u0441\u0442\u0430\u0432\u043a\u0443. \u0410\u043c\u043e\u0440\u0442\u0438\u0437\u0430\u0446\u0456\u044f \u0432\u0438\u0437\u043d\u0430\u0447\u0430\u0454 \u0440\u0456\u043a \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u044f \u0456\u043f\u043e\u0442\u0435\u043a\u0438 \u043d\u0430 \u0433\u0440\u0430\u0444\u0456\u043a\u0443.', 'El pago inicial determina el pr\u00e9stamo, si aplica el seguro CMHC y qu\u00e9 tasa obtiene. La amortizaci\u00f3n determina el a\u00f1o de liquidaci\u00f3n marcado en el gr\u00e1fico.'],
+    dRent: ['Rent you are comparing against, monthly', 'Loyer de comparaison, mensuel', 'Оренда для порівняння, місячно', 'Alquiler de comparación, mensual'],
+    rentTag: ['Typical for {city} — change it if you know yours', 'Typique pour {city} — modifiez-le si vous connaissez le vôtre', 'Типово для {city} — змініть, якщо знаєте своє', 'Típico en {city} — cámbielo si conoce el suyo'],
+    dAppr: ['Appreciation assumption', 'Hypothèse d’appréciation', 'Припущення щодо зростання', 'Supuesto de apreciación'],
+    dRet: ['Investment return assumption', 'Hypothèse de rendement', 'Припущення щодо дохідності', 'Supuesto de rendimiento'],
+    years: ['years', 'ans', 'років', 'años'],
+    apprInflation: ['Inflation', 'Inflation', 'Інфляція', 'Inflación'],
+    apprShelter: ['FP Canada shelter growth', 'Croissance du coût du logement, FP Canada', 'Зростання витрат на житло, FP Canada', 'Crecimiento del coste de vivienda, FP Canada'],
+    apprCity: ['{city}, actual year over year', '{city}, réel sur un an', '{city}, фактично рік до року', '{city}, real interanual'],
+    apprFlat: ['Flat market stress test', 'Test du marché plat', 'Тест плоского ринку', 'Prueba de mercado plano'],
+    retCash: ['Cash and high-interest savings', 'Liquidités et épargne à intérêt élevé', 'Готівка та високодохідні ощадні', 'Efectivo y ahorro de alto interés'],
+    retBalanced: ['Balanced 60/40, net of fees', 'Équilibré 60/40, net de frais', 'Збалансований 60/40, після витрат', 'Equilibrado 60/40, neto de comisiones'],
+    retGrowth: ['Growth portfolio, net', 'Portefeuille de croissance, net', 'Портфель зростання, після витрат', 'Cartera de crecimiento, neta'],
+    vBuy: ['Buying wins for your horizon.', 'Acheter est gagnant pour votre horizon.', 'Для вашого горизонту виграє купівля.', 'Comprar gana para su horizonte.'],
+    vRent: ['Renting wins for your horizon.', 'Louer est gagnant pour votre horizon.', 'Для вашого горизонту виграє оренда.', 'Alquilar gana para su horizonte.'],
+    vBuySub: ['You plan to stay {hold} years and buying pulls ahead in year {cross}. By year {hold} you are {amt} better off owning.', 'Vous comptez rester {hold} ans et l’achat prend l’avantage l’année {cross}. À l’année {hold}, vous êtes plus riche de {amt} en achetant.', 'Ви плануєте залишитись {hold} років, а купівля виходить вперед на {cross}-й рік. До {hold}-го року ви на {amt} у виграші.', 'Planea quedarse {hold} años y comprar toma la delantera en el año {cross}. Para el año {hold} está {amt} mejor comprando.'],
+    vRentSub: ['You plan to stay {hold} years but buying does not pull ahead until year {cross}. At your horizon renting leaves you {amt} better off.', 'Vous comptez rester {hold} ans, mais l’achat ne prend l’avantage qu’à l’année {cross}. À votre horizon, louer vous laisse plus riche de {amt}.', 'Ви плануєте залишитись {hold} років, але купівля виходить вперед лише на {cross}-й рік. На вашому горизонті оренда дає на {amt} більше.', 'Planea quedarse {hold} años, pero comprar no toma la delantera hasta el año {cross}. En su horizonte, alquilar le deja {amt} mejor.'],
+    vNeverSub: ['On these assumptions buying does not catch up within 40 years. At your {hold}-year horizon renting leaves you {amt} better off.', 'Selon ces hypothèses, l’achat ne rattrape pas son retard en 40 ans. À votre horizon de {hold} ans, louer vous laisse plus riche de {amt}.', 'За цих припущень купівля не наздоганяє й за 40 років. На вашому горизонті {hold} років оренда дає на {amt} більше.', 'Con estos supuestos, comprar no alcanza en 40 años. En su horizonte de {hold} años, alquilar le deja {amt} mejor.'],
+    vFlatGood: ['And this holds with appreciation switched off — buying stands up on shelter costs and forced savings alone. That is genuinely good news.', 'Et cela tient même sans appréciation — l’achat se justifie par les coûts de logement et l’épargne forcée seuls. C’est une vraie bonne nouvelle.', 'І це справедливо навіть без зростання цін — купівля тримається на витратах на житло та примусових заощадженнях. Це справді добра новина.', 'Y esto se mantiene sin apreciación: comprar se sostiene solo con los costes de vivienda y el ahorro forzoso. Es una buena noticia real.'],
+    vApprOnly: ['Note that this depends on appreciation. Switch it off and renting wins — which means you would be betting on price growth, not buying shelter.', 'Notez que cela dépend de l’appréciation. Désactivez-la et louer gagne — vous parieriez donc sur la hausse des prix, non sur un logement.', 'Зауважте: це залежить від зростання цін. Вимкніть його — і виграє оренда. Тобто ви ставили б на ціни, а не купували житло.', 'Tenga en cuenta que esto depende de la apreciación. Desactívela y gana alquilar, lo que significa que apostaría a la subida de precios, no a la vivienda.'],
+    byHorizon: ['The verdict by holding period', 'Le verdict selon la durée de détention', 'Висновок за терміном володіння', 'El veredicto según el periodo de tenencia'],
+    byHorizonNote: ['The break-even is the only number that matters here.', 'Le seuil de rentabilité est le seul chiffre qui compte ici.', 'Тут важлива лише точка беззбитковості.', 'El punto de equilibrio es la única cifra que importa aquí.'],
+    holdFor: ['Hold for', 'Détention', 'Термін володіння', 'Tenencia'],
+    buyWealth: ['Buy wealth', 'Patrimoine en achetant', 'Капітал при купівлі', 'Patrimonio comprando'],
+    rentWealth: ['Rent wealth', 'Patrimoine en louant', 'Капітал при оренді', 'Patrimonio alquilando'],
+    advantage: ['Advantage of buying', 'Avantage de l’achat', 'Перевага купівлі', 'Ventaja de comprar'],
+    winner: ['Winner', 'Gagnant', 'Виграє', 'Gana'],
+    schedule: ['Year by year, 40 years', 'Année par année, 40 ans', 'Рік за роком, 40 років', 'Año por año, 40 años'],
+    cOwner: ['Owner outlay', 'Sorties du proprio', 'Витрати власника', 'Desembolso del dueño'],
+    cRenter: ['Renter outlay', 'Sorties du locataire', 'Витрати орендаря', 'Desembolso del inquilino'],
+    cBalance: ['Mortgage balance', 'Solde du prêt', 'Залишок іпотеки', 'Saldo hipotecario'],
+    cEquity: ['Home equity, net of selling cost', 'Valeur nette, après frais de vente', 'Власний капітал, після витрат на продаж', 'Patrimonio neto, tras costes de venta'],
+    cBuyW: ['Buy wealth', 'Patrimoine achat', 'Капітал купівлі', 'Patrimonio compra'],
+    cRentW: ['Rent wealth', 'Patrimoine location', 'Капітал оренди', 'Patrimonio alquiler'],
+    cAdv: ['Advantage', 'Avantage', 'Перевага', 'Ventaja'],
+    favBuy: ['Not captured, and these favour buying', 'Non pris en compte, en faveur de l’achat', 'Не враховано — на користь купівлі', 'No recogido, y favorece comprar'],
+    favRent: ['Not captured, and these favour renting', 'Non pris en compte, en faveur de la location', 'Не враховано — на користь оренди', 'No recogido, y favorece alquilar'],
+    fb1: ['In Canada, gains on a principal residence are 100% tax-free. Investment gains are not. If the return above is a pre-tax figure, this comparison is unfairly tilted toward renting.', 'Au Canada, les gains sur une résidence principale sont libres d’impôt à 100\u202f%. Les gains de placement ne le sont pas. Si le rendement ci-dessus est avant impôt, la comparaison penche injustement vers la location.', 'У Канаді дохід від основного житла на 100\u202f% не оподатковується. Інвестиційний — оподатковується. Якщо дохідність вище подано до податків, порівняння несправедливо схиляється до оренди.', 'En Canadá, las ganancias sobre la vivienda principal están 100\u202f% libres de impuestos. Las de inversión no. Si el rendimiento anterior es antes de impuestos, la comparación se inclina injustamente hacia el alquiler.'],
+    fb2: ['Forced savings. A mortgage payment is compulsory; investing the difference is optional, and most people do not sustain it for ten years. The model assumes perfect discipline from the renter.', 'Épargne forcée. Un paiement hypothécaire est obligatoire\u202f; investir l’écart est optionnel, et peu de gens s’y tiennent dix ans. Le modèle suppose une discipline parfaite du locataire.', 'Примусові заощадження. Платіж за іпотекою обов’язковий; інвестувати різницю — ні, і мало хто витримує це десять років. Модель припускає ідеальну дисципліну орендаря.', 'Ahorro forzoso. La cuota hipotecaria es obligatoria; invertir la diferencia es opcional, y pocos lo mantienen diez años. El modelo supone disciplina perfecta del inquilino.'],
+    fb3: ['Security of tenure, freedom to renovate, and no landlord risk. Real, but not financial.', 'Sécurité d’occupation, liberté de rénover, aucun risque de propriétaire. Réel, mais non financier.', 'Захищеність проживання, свобода ремонту, відсутність ризику орендодавця. Реально, але не фінансово.', 'Seguridad de tenencia, libertad para renovar y sin riesgo de propietario. Real, pero no financiero.'],
+    fb4: ['A mortgage is leverage. You control the whole asset having put down a fraction of its value.', 'Un prêt hypothécaire est un levier. Vous contrôlez l’actif entier en n’ayant versé qu’une fraction de sa valeur.', 'Іпотека — це кредитне плече. Ви контролюєте весь актив, внісши лише частину його вартості.', 'Una hipoteca es apalancamiento. Controla el activo completo habiendo aportado una fracción de su valor.'],
+    fr1: ['Liquidity and mobility. Selling costs roughly 5% and takes months.', 'Liquidité et mobilité. Vendre coûte environ 5\u202f% et prend des mois.', 'Ліквідність і мобільність. Продаж коштує близько 5\u202f% і триває місяці.', 'Liquidez y movilidad. Vender cuesta cerca del 5\u202f% y lleva meses.'],
+    fr2: ['Concentration risk. A house is one undiversified asset in one city.', 'Risque de concentration. Une maison est un actif unique, non diversifié, dans une seule ville.', 'Ризик концентрації. Дім — це один недиверсифікований актив в одному місті.', 'Riesgo de concentración. Una casa es un único activo no diversificado en una sola ciudad.'],
+    fr3: ['Special assessments, major repairs, and the risk that maintenance exceeds the 1% a year reserve.', 'Cotisations spéciales, réparations majeures, et le risque que l’entretien dépasse la réserve de 1\u202f% par an.', 'Спеціальні збори, капітальні ремонти та ризик, що обслуговування перевищить резерв 1\u202f% на рік.', 'Cuotas extraordinarias, reparaciones mayores y el riesgo de que el mantenimiento supere la reserva del 1\u202f% anual.'],
+    setupLine: ['Capital deployed up front {up} \u00b7 mortgage {mort} at {rate} \u00b7 payment {pay} a month', 'Capital engagé au départ {up} \u00b7 prêt {mort} à {rate} \u00b7 paiement {pay} par mois', 'Початковий капітал {up} \u00b7 іпотека {mort} під {rate} \u00b7 платіж {pay} на місяць', 'Capital inicial {up} \u00b7 hipoteca {mort} al {rate} \u00b7 pago {pay} al mes'],
+    adjust: ['Adjust your numbers', 'Ajuster vos chiffres', 'Змінити свої дані', 'Ajustar sus cifras'],
+    sharedNote: ['Shared with the other screens and kept in this browser only \u2014 never sent to a server.', 'Partag\u00e9 avec les autres \u00e9crans et conserv\u00e9 dans ce navigateur seulement \u2014 jamais envoy\u00e9 \u00e0 un serveur.', '\u0421\u043f\u0456\u043b\u044c\u043d\u0456 \u0437 \u0456\u043d\u0448\u0438\u043c\u0438 \u0435\u043a\u0440\u0430\u043d\u0430\u043c\u0438 \u0439 \u0437\u0431\u0435\u0440\u0456\u0433\u0430\u044e\u0442\u044c\u0441\u044f \u043b\u0438\u0448\u0435 \u0432 \u0446\u044c\u043e\u043c\u0443 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0456 \u2014 \u043d\u0456\u043a\u043e\u043b\u0438 \u043d\u0435 \u043d\u0430\u0434\u0441\u0438\u043b\u0430\u044e\u0442\u044c\u0441\u044f \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440.', 'Compartido con las otras pantallas y guardado solo en este navegador \u2014 nunca se env\u00eda a un servidor.'],
+    fRentInf: ['Rent inflation, annual', 'Inflation du loyer, annuelle', 'Зростання оренди, річне', 'Inflación del alquiler, anual'],
+    fInsurance: ['Home insurance, annual', 'Assurance habitation, annuelle', 'Страхування житла, річне', 'Seguro de hogar, anual'],
+    fUtilities: ['Utilities and heat, monthly', 'Services et chauffage, mensuel', 'Комунальні та опалення, місячно', 'Servicios y calefacción, mensual'],
+    fCondo: ['Condo fee, monthly', 'Frais de condo, mensuel', 'Внесок за кондо, місячно', 'Cuota de condominio, mensual'],
+    altText: ['Line chart of wealth over 40 years. Buying starts behind because the down payment and closing costs are sunk, and ends at {buy}. Renting starts ahead because that capital stays invested, and ends at {rent}. {crossSentence}', 'Graphique du patrimoine sur 40 ans. L’achat commence en retard car la mise de fonds et les frais de clôture sont engagés, et termine à {buy}. La location commence en avance car ce capital reste investi, et termine à {rent}. {crossSentence}', 'Лінійний графік капіталу за 40 років. Купівля починає позаду, бо внесок і витрати на закриття вкладені, і завершує на {buy}. Оренда починає попереду, бо цей капітал лишається інвестованим, і завершує на {rent}. {crossSentence}', 'Gráfico de patrimonio a 40 años. Comprar empieza por detrás porque la entrada y los gastos de cierre están hundidos, y acaba en {buy}. Alquilar empieza por delante porque ese capital sigue invertido, y acaba en {rent}. {crossSentence}'],
+    altCross: ['The two lines cross in year {n}.', 'Les deux courbes se croisent l’année {n}.', 'Лінії перетинаються на {n}-й рік.', 'Las dos líneas se cruzan en el año {n}.'],
+    altNoCross: ['The lines do not cross within 40 years.', 'Les courbes ne se croisent pas en 40 ans.', 'За 40 років лінії не перетинаються.', 'Las líneas no se cruzan en 40 años.']
+  };
+
+  renderVals() {
+    const st = this.state;
+    if (!st.ready || !window.CIBTH_DATA || !window.CIBTH_ENGINE) return { themeA: st.themeA, themeB: st.themeB, showWhy: false, showMath: false };
+    const D = window.CIBTH_DATA, F = D.federal, E = window.CIBTH_ENGINE, lang = st.lang;
+    const s = {}; for (const k in D.t) s[k] = D.t[k][lang];
+    for (const k in this.S) s[k] = this.S[k][lang];
+
+    const j = D.jur.find(x => x.id === st.jurId) || D.jur[0];
+    const price = st.price || j.bench[st.ptype];
+    const cityName = D.C[j.city] ? D.C[j.city][lang] : D.P[j.prov][lang];
+
+    const apprOpts = [
+      { key: 'inflation', label: s.apprInflation, v: F.appreciation.inflation },
+      { key: 'shelter', label: s.apprShelter, v: F.appreciation.shelter },
+      { key: 'city', label: s.apprCity.replace('{city}', cityName), v: j.yoy == null ? F.appreciation.shelter : j.yoy },
+      { key: 'flat', label: s.apprFlat, v: 0 }
+    ];
+    const retOpts = [
+      { key: 'cash', label: s.retCash, v: F.investReturn.cash },
+      { key: 'balanced', label: s.retBalanced, v: F.investReturn.balanced },
+      { key: 'growth', label: s.retGrowth, v: F.investReturn.growth }
+    ];
+    const appr = (apprOpts.find(o => o.key === st.apprKey) || apprOpts[1]).v;
+    const ret = (retOpts.find(o => o.key === st.retKey) || retOpts[1]).v;
+
+    const opts = {
+      price, dpPct: st.dpPct, amortYears: st.amortYears, ftb: st.ftb, ptype: st.ptype, elsewhere: false,
+      insuranceAnnual: st.insuranceAnnual, utilities: st.utilities, condoFee: st.condoFee,
+      rent: st.rent, rentInflation: st.rentInflation / 100, appreciation: appr, investReturn: ret,
+      appreciationOn: st.appreciationOn, investDiff: st.investDiff, years: this.YEARS
+    };
+    const M = E.rentVsBuy(j, F, opts);
+    /* the flat-market counterfactual, so the verdict can say whether the answer needs growth */
+    const flat = st.appreciationOn ? E.rentVsBuy(j, F, Object.assign({}, opts, { appreciationOn: false })) : M;
+
+    const rows = M.rows;
+    const hold = Math.max(1, Math.min(this.YEARS, st.holding));
+    const atHold = rows[hold - 1];
+    const cross = M.breakEven;
+    const buyWins = atHold.adv > 0;
+
+    let vSub;
+    const fill = (tpl, map) => Object.keys(map).reduce((acc, k) => acc.split('{' + k + '}').join(map[k]), tpl);
+    if (cross == null) vSub = fill(s.vNeverSub, { hold: String(hold), amt: this.money(Math.abs(atHold.adv)) });
+    else if (buyWins) vSub = fill(s.vBuySub, { hold: String(hold), cross: String(cross), amt: this.money(atHold.adv) });
+    else vSub = fill(s.vRentSub, { hold: String(hold), cross: String(cross), amt: this.money(Math.abs(atHold.adv)) });
+    if (buyWins) {
+      const flatWins = flat.rows[hold - 1].adv > 0;
+      vSub += ' ' + (flatWins ? s.vFlatGood : s.vApprOnly);
+    }
+    const verdict = buyWins
+      ? { tag: s.buyWord, head: s.vBuy, sub: vSub, fg: 'var(--pass)', bg: 'var(--passbg)', br: 'var(--passbr)' }
+      : { tag: s.rentWord, head: s.vRent, sub: vSub, fg: 'var(--def)', bg: 'var(--defbg)', br: 'var(--defbr)' };
+
+    /* ---------- chart geometry, computed in data space then mapped once ---------- */
+    const build = (W, H, padL, padR, padT, padB) => {
+      const innerW = W - padL - padR, innerH = H - padT - padB;
+      let lo = 0, hi = 0;
+      for (const r of rows) { lo = Math.min(lo, r.buyW, r.rentW); hi = Math.max(hi, r.buyW, r.rentW); }
+      const span = (hi - lo) || 1;
+      const x = t => padL + (t - 1) / (this.YEARS - 1) * innerW;
+      const y = v => padT + (hi - v) / span * innerH;
+      const pts = key => rows.map(r => x(r.t).toFixed(1) + ',' + y(r[key]).toFixed(1)).join(' ');
+      /* the region between the lines, split at the crossover so each side can carry its own meaning */
+      const seg = (a, b) => {
+        if (b < a) return null;
+        const fwd = [], back = [];
+        for (let t = a; t <= b; t++) { const r = rows[t - 1]; fwd.push(x(t).toFixed(1) + ' ' + y(r.buyW).toFixed(1)); }
+        for (let t = b; t >= a; t--) { const r = rows[t - 1]; back.push(x(t).toFixed(1) + ' ' + y(r.rentW).toFixed(1)); }
+        return 'M' + fwd.join(' L') + ' L' + back.join(' L') + ' Z';
+      };
+      const regions = [];
+      const c = cross == null ? this.YEARS : cross;
+      const rentAhead = seg(1, Math.min(this.YEARS, c));
+      if (rentAhead) regions.push({ d: rentAhead, fill: 'var(--def)', opacity: '0.13' });
+      if (cross != null && cross < this.YEARS) {
+        const buyAhead = seg(cross, this.YEARS);
+        if (buyAhead) regions.push({ d: buyAhead, fill: 'var(--pass)', opacity: '0.16' });
+      }
+      const gridVals = [];
+      for (let k = 0; k <= 4; k++) gridVals.push(lo + span * k / 4);
+      const grid = gridVals.map(v => ({
+        y: y(v).toFixed(1), top: (y(v) - 5).toFixed(1) + 'px', label: this.short(v),
+        stroke: Math.abs(v) < span * 0.002 ? 'var(--brs)' : 'var(--brh)'
+      }));
+      return { x, y, pts, regions, grid, lo, hi, span, innerW };
+    };
+
+    const g = build(1100, 348, 76, 90, 26, 46);
+    const last = rows[this.YEARS - 1];
+
+    const xTicks = [];
+    for (let t = 1; t <= this.YEARS; t += 5) xTicks.push({ x: g.x(t).toFixed(1), left: g.x(t).toFixed(1) + 'px', label: String(t) });
+    if (xTicks[xTicks.length - 1].label !== String(this.YEARS)) xTicks.push({ x: g.x(this.YEARS).toFixed(1), left: g.x(this.YEARS).toFixed(1) + 'px', label: String(this.YEARS) });
+
+    const crossVis = cross == null ? false : (() => {
+      const cx = g.x(cross), cy = g.y(rows[cross - 1].buyW);
+      const right = cross <= this.YEARS * 0.62;
+      return {
+        x: cx.toFixed(1), y: cy.toFixed(1),
+        left: (right ? cx + 12 : cx - 12).toFixed(1) + 'px', top: (cy - 12).toFixed(1) + 'px',
+        tf: right ? 'translateY(-100%)' : 'translate(-100%,-100%)',
+        line1: s.crossLabel, line2: s.crossYear.replace('{n}', String(cross)) + ' \u00b7 ' + this.short(rows[cross - 1].buyW)
+      };
+    })();
+
+    const hx = g.x(hold);
+    const hRight = hold <= this.YEARS * 0.7;
+    const horizon = { x: hx.toFixed(1), buyY: g.y(atHold.buyW).toFixed(1), rentY: g.y(atHold.rentW).toFixed(1),
+      left: (hRight ? hx + 6 : hx - 6).toFixed(1) + 'px', tf: hRight ? 'none' : 'translateX(-100%)',
+      label: s.horizonLabel.replace('{n}', String(hold)) };
+
+    const payoff = M.payoffYear == null || M.payoffYear >= this.YEARS ? false : (() => {
+      const px = g.x(M.payoffYear);
+      const right = M.payoffYear <= this.YEARS * 0.7;
+      return { x: px.toFixed(1), left: (right ? px + 6 : px - 6).toFixed(1) + 'px', tf: right ? 'none' : 'translateX(-100%)',
+        label: s.payoffLabel.replace('{n}', String(M.payoffYear)) };
+    })();
+
+    const buyEndY = g.y(last.buyW), rentEndY = g.y(last.rentW);
+    const apart = Math.abs(buyEndY - rentEndY) < 30;
+    const nudge = apart ? 15 : 0;
+    const endLabels = {
+      buyTop: (buyEndY - 14 - (buyEndY <= rentEndY ? nudge : -nudge)).toFixed(1) + 'px',
+      rentTop: (rentEndY - 14 - (rentEndY < buyEndY ? nudge : -nudge)).toFixed(1) + 'px',
+      buy: this.short(last.buyW), rent: this.short(last.rentW)
+    };
+
+    const mg = build(330, 216, 10, 12, 14, 28);
+    const mXTicks = [1, 10, 20, 30, 40].map(t => ({ x: mg.x(t).toFixed(1), left: mg.x(t).toFixed(1) + 'px', label: String(t) }));
+    const mLast = rows[this.YEARS - 1];
+
+    const chartAlt = s.altText
+      .replace('{buy}', this.money(last.buyW)).replace('{rent}', this.money(last.rentW))
+      .replace('{crossSentence}', cross == null ? s.altNoCross : s.altCross.replace('{n}', String(cross)));
+
+    /* ---------- switches ---------- */
+    const switches = [
+      { label: s.swInvest, note: st.investDiff ? s.swInvestOn : s.swInvestOff, on: st.investDiff ? 'true' : 'false',
+        bg: st.investDiff ? 'var(--acbg)' : 'var(--s0)', br: st.investDiff ? 'var(--acbr)' : 'var(--br)',
+        fg: st.investDiff ? 'var(--ac)' : 'var(--tx2)', track: st.investDiff ? 'var(--ac)' : 'var(--brs)',
+        x: st.investDiff ? '14px' : '2px', toggle: () => this.setState(x => ({ investDiff: !x.investDiff })) },
+      { label: s.swAppr, note: st.appreciationOn ? s.swApprOn : s.swApprOff, on: st.appreciationOn ? 'true' : 'false',
+        bg: st.appreciationOn ? 'var(--acbg)' : 'var(--cautbg)', br: st.appreciationOn ? 'var(--acbr)' : 'var(--cautbr)',
+        fg: st.appreciationOn ? 'var(--ac)' : 'var(--caut)', track: st.appreciationOn ? 'var(--ac)' : 'var(--caut)',
+        x: st.appreciationOn ? '14px' : '2px', toggle: () => this.setState(x => ({ appreciationOn: !x.appreciationOn })) }
+    ];
+
+    /* ---------- dials ---------- */
+    const choiceStyle = on => ({ bg: on ? 'var(--acbg)' : 'var(--s1)', fg: on ? 'var(--ac)' : 'var(--tx2)', fw: on ? '600' : '400', brd: on ? 'var(--acbr)' : 'var(--br)' });
+    const dials = [
+      { label: s.dHolding, display: hold + '\u2009' + s.years, valueFg: 'var(--caut)', isRange: true, isChoice: false,
+        min: '1', max: String(this.YEARS), step: '1', value: hold,
+        onChange: e => this.setState({ holding: parseInt(e.target.value, 10) }) },
+      { label: st.rentTouched ? s.dRent : s.rentTag.replace('{city}', cityName), display: this.money(st.rent), valueFg: st.rentTouched ? 'var(--tx)' : 'var(--ac)', isRange: true, isChoice: false,
+        min: '600', max: '5000', step: '25', value: st.rent,
+        onChange: e => this.setState({ rent: parseFloat(e.target.value), rentTouched: true }) },
+      { label: s.dAppr, display: this.pct(appr * 100, 1), valueFg: st.appreciationOn ? 'var(--tx)' : 'var(--caut)', isRange: false, isChoice: true,
+        choices: apprOpts.map(o => Object.assign({ label: o.label, value: this.pct(o.v * 100, 1), on: st.apprKey === o.key ? 'true' : 'false',
+          pick: () => this.setState({ apprKey: o.key, appreciationOn: o.key !== 'flat' }) }, choiceStyle(st.apprKey === o.key))) },
+      { label: s.dRet, display: this.pct(ret * 100, 1), valueFg: 'var(--tx)', isRange: false, isChoice: true,
+        choices: retOpts.map(o => Object.assign({ label: o.label, value: this.pct(o.v * 100, 1), on: st.retKey === o.key ? 'true' : 'false',
+          pick: () => this.setState({ retKey: o.key }) }, choiceStyle(st.retKey === o.key))) }
+    ];
+
+    /* ---------- verdict by holding period ---------- */
+    const horizonRows = [3, 5, 7, 10, 15, 20, 25, 30, 40].map(n => {
+      const r = rows[Math.min(this.YEARS, n) - 1];
+      const good = r.adv > 0;
+      return { years: n + '\u2009' + s.years, buy: this.short(r.buyW), rent: this.short(r.rentW),
+        adv: (r.adv > 0 ? '+\u2009' : '\u2212\u2009') + this.short(Math.abs(r.adv)).replace(/^[\u2212]\u2009/, ''),
+        advFg: good ? 'var(--pass)' : 'var(--def)', winner: good ? s.buyWord : s.rentWord,
+        bg: n === hold ? 'var(--cautbg)' : 'transparent', fw: n === hold ? '600' : '400' };
+    });
+
+    /* ---------- full schedule ---------- */
+    const schedCols = [s.cOwner, s.cRenter, s.cBalance, s.cEquity, s.cBuyW, s.cRentW, s.cAdv];
+    const schedule = rows.map(r => ({
+      t: String(r.t),
+      bg: r.t === hold ? 'var(--cautbg)' : (cross != null && r.t === cross ? 'var(--passbg)' : (r.t === M.payoffYear ? 'var(--acbg)' : 'transparent')),
+      cells: [
+        { text: this.short(r.ownerOutlay), fg: 'var(--tx2)' },
+        { text: this.short(r.renterOutlay), fg: 'var(--tx2)' },
+        { text: r.balance === 0 ? '\u2014' : this.short(r.balance), fg: r.balance === 0 ? 'var(--pass)' : 'var(--tx2)' },
+        { text: this.short(r.equity), fg: 'var(--tx2)' },
+        { text: this.short(r.buyW), fg: 'var(--ac)' },
+        { text: this.short(r.rentW), fg: 'var(--def)' },
+        { text: (r.adv > 0 ? '+\u2009' : '\u2212\u2009') + this.short(Math.abs(r.adv)).replace(/^[\u2212]\u2009/, ''), fg: r.adv > 0 ? 'var(--pass)' : 'var(--def)' }
+      ]
+    }));
+
+    const caveats = [
+      { title: s.favBuy, items: [s.fb1, s.fb2, s.fb3, s.fb4], fg: 'var(--pass)', bg: 'var(--passbg)', br: 'var(--passbr)' },
+      { title: s.favRent, items: [s.fr1, s.fr2, s.fr3], fg: 'var(--def)', bg: 'var(--defbg)', br: 'var(--defbr)' }
+    ];
+
+    const depthOpts = [s.d1, s.d2, s.d3].map((lb, i) => ({
+      label: lb, n: String(i + 1), on: st.depth === i ? 'true' : 'false',
+      bg: st.depth === i ? 'var(--s1)' : 'var(--s2)', fg: st.depth === i ? 'var(--ac)' : 'var(--tx3)', fw: st.depth === i ? '600' : '400',
+      pick: () => this.setState({ depth: i })
+    }));
+    const jumpLinks = [{ href: '#verdict', label: s.d1 }, { href: '#chart', label: s.rbTitle }];
+    if (st.depth >= 1) jumpLinks.push({ href: '#horizons', label: s.byHorizon });
+    if (st.depth >= 2) jumpLinks.push({ href: '#schedule', label: s.schedule });
+    jumpLinks.push({ href: '#inputs', label: s.adjust });
+
+    const langs = ['English', 'Français', 'Українська', 'Español'].map((n, i) => ({
+      name: n, abbr: ['EN', 'FR', 'UK', 'ES'][i], on: i === lang ? 'true' : 'false',
+      pick: () => this.setState({ lang: i }),
+      bg: i === lang ? 'var(--s1)' : 'var(--s2)', fg: i === lang ? 'var(--tx)' : 'var(--tx3)', fw: i === lang ? '600' : '400'
+    }));
+    const cityOpts = D.jur.filter(x => x.city).map(x => ({
+      name: D.C[x.city][lang], code: x.prov, on: x.id === st.jurId ? 'true' : 'false',
+      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--s1)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--tx)',
+      brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--br)',
+      pick: () => this.setState({ jurId: x.id, pickerOpen: false, pulse: st.pulse + 1,
+        price: st.priceTouched ? st.price : x.bench[st.ptype], rent: st.rentTouched ? st.rent : (x.rent || st.rent) })
+    }));
+    const dpOpts = [5, 10, 20, 25].map(v => ({
+      label: this.pct(v), on: st.dpPct === v ? 'true' : 'false',
+      bg: st.dpPct === v ? 'var(--s1)' : 'var(--s2)', fg: st.dpPct === v ? 'var(--ac)' : 'var(--tx2)', fw: st.dpPct === v ? '600' : '400',
+      pick: () => this.setState({ dpPct: v })
+    }));
+    const amortOpts = [25, 30].map(v => ({
+      label: v + '\u2009' + ['yr', 'ans', '\u0440.', 'a\u00f1os'][lang], on: st.amortYears === v ? 'true' : 'false',
+      bg: st.amortYears === v ? 'var(--s1)' : 'var(--s2)', fg: st.amortYears === v ? 'var(--ac)' : 'var(--tx2)', fw: st.amortYears === v ? '600' : '400',
+      pick: () => this.setState({ amortYears: v })
+    }));
+    const fields = [
+      { label: s.fRentInf, step: '0.5', value: st.rentInflation, onChange: e => { const v = parseFloat(e.target.value); this.setState({ rentInflation: isNaN(v) ? 0 : v }); } },
+      { label: s.fInsurance, step: '50', value: st.insuranceAnnual, onChange: e => { const v = parseFloat(e.target.value); this.setState({ insuranceAnnual: isNaN(v) ? 0 : v }); } },
+      { label: s.fUtilities, step: '10', value: st.utilities, onChange: e => { const v = parseFloat(e.target.value); this.setState({ utilities: isNaN(v) ? 0 : v }); } },
+      { label: s.fCondo, step: '25', value: st.condoFee, onChange: e => { const v = parseFloat(e.target.value); this.setState({ condoFee: isNaN(v) ? 0 : v }); } }
+    ];
+
+    return {
+      s, langs, cityOpts, depthOpts, jumpLinks, switches, dials, horizonRows, schedule, schedCols, caveats, verdict,
+      dpOpts, amortOpts, leverNote: s.leverNote,
+      ftb: st.ftb ? 'true' : 'false', toggleFtb: () => this.setState(x => ({ ftb: !x.ftb })),
+      ftbBg: st.ftb ? 'var(--acbg)' : 'var(--s1)', ftbBr: st.ftb ? 'var(--acbr)' : 'var(--br)',
+      ftbFg: st.ftb ? 'var(--ac)' : 'var(--tx2)', ftbTrack: st.ftb ? 'var(--ac)' : 'var(--brs)', ftbX: st.ftb ? '13px' : '2px',
+      themeA: st.themeA, themeB: st.themeB,
+      themeIconA: st.themeA === 'dark' ? '\u25d1' : '\u25cb', themeIconB: st.themeB === 'dark' ? '\u25d1' : '\u25cb',
+      toggleThemeA: () => this.setState(x => ({ themeA: x.themeA === 'dark' ? 'light' : 'dark' })),
+      toggleThemeB: () => this.setState(x => ({ themeB: x.themeB === 'dark' ? 'light' : 'dark' })),
+      pickerOpen: st.pickerOpen, togglePicker: () => this.setState(x => ({ pickerOpen: !x.pickerOpen })),
+      chip: { city: cityName, code: j.prov, country: ['Canada', 'Canada', '\u041a\u0430\u043d\u0430\u0434\u0430', 'Canad\u00e1'][lang], short: cityName + ', ' + j.prov },
+      locTag: s.locTagTpl.replace('{city}', cityName) + ' \u00b7 ' + this.date(D.verified),
+      showWhy: st.depth >= 1, showMath: st.depth >= 2,
+      grid: g.grid, xTicks, regions: g.regions, buyPts: g.pts('buyW'), rentPts: g.pts('rentW'),
+      cross: crossVis, horizon, payoff, endLabels, chartAlt,
+      mGrid: mg.grid, mRegions: mg.regions, mBuyPts: mg.pts('buyW'), mRentPts: mg.pts('rentW'), mXTicks,
+      mCross: cross == null ? false : (() => {
+        const cx = mg.x(cross), cy = mg.y(rows[cross - 1].buyW), right = cross <= this.YEARS * 0.6;
+        return { x: cx.toFixed(1), y: cy.toFixed(1),
+          left: (right ? cx + 7 : cx - 7).toFixed(1) + 'px', top: (cy - 9).toFixed(1) + 'px',
+          tf: right ? 'translateY(-100%)' : 'translate(-100%,-100%)',
+          label: s.crossYear.replace('{n}', String(cross)) };
+      })(),
+      mHorizon: { x: mg.x(hold).toFixed(1) },
+
+      setupLine: s.setupLine.replace('{up}', this.money(M.upFront)).replace('{mort}', this.money(M.fin.loan))
+        .replace('{rate}', this.pct(M.rate, 2)).replace('{pay}', this.money(M.pay)),
+      price: Math.round(price), priceFmt: this.money(price),
+      onPrice: e => { const v = parseFloat(e.target.value); this.setState({ price: isNaN(v) ? 0 : v, priceTouched: true }); },
+      priceTag: cityName + ' \u00b7 ' + this.money(j.bench[st.ptype]),
+      fields,
+      pulseKey: 'p' + st.pulse + st.jurId,
+      sourcesLine: s.sourcesForTpl.replace('{prov}', D.P[j.prov][lang]) + ' \u00b7 ' + s.lastVerified + ' ' + this.date(D.verified) + ' \u00b7 FP Canada 2026 \u00b7 CMHC / SCHL \u00b7 ' + j.orgs.market
+    };
+  }
+}
+
+</script>
+</body>
+</html>
+

@@ -35,13 +35,31 @@ Implement → invoke `reviewer` subagent on the diff → fix → repeat until ap
 
 Not yet configured. No CI reviewer workflow installed yet either — add `.github/workflows/claude-review.yml` when ready (needs `ANTHROPIC_API_KEY` secret or the GitHub Claude app).
 
-## Open product decisions (resolve before building UI beyond the placeholder)
+## Open product decisions
 
-1. **Affordability formula.** Net income (not gross) minus real carrying costs (property tax, insurance, condo/strata fees, utilities, maintenance reserve) minus a stress-test margin. This formula is the whole product — write it down as a spec before implementing.
-2. **Scope: homebuying only, or rent too?** Land transfer tax / rebates (ON + Toronto municipal LTT, BC PTT, QC "welcome tax", AB/SK none) differ sharply by province; rent control regimes are a separate, differently-shaped rules set. Decides the data model.
-3. **Monetization** — explicitly undecided (see README `## Status`). Don't bake "always free" into copy, architecture, or feature gating.
+1. **Affordability formula** — resolved for Phase 1. Two ceilings, computed side by side: a
+   bank-style GDS/TDS-qualified ceiling, and a real-carrying-cost "comfort" ceiling (net income
+   minus property tax, insurance, condo/strata fees, utilities, maintenance reserve, minus a
+   stress-test margin). See `docs/superpowers/specs/2026-08-17-phase1-affordability-design.md`.
+2. **Scope: homebuying only, or rent too?** — resolved: buy first (Phase 1 = domain layer + Home +
+   Affordability), rent-vs-buy and the other 6 tool pages (Closing Costs, Down Payment, RRSP-HBP,
+   Amortization, Rent vs Buy, Scenarios) are each a later phase's own spec, built on the same
+   domain layer. See the Phase 1 spec for the full page list and sequencing rationale.
+3. **Monetization** — still explicitly undecided (see README `## Status`). Don't bake "always free"
+   into copy, architecture, or feature gating.
+
+## Prior design work — `design-reference/`
+
+A previous Claude Design session ("Norma" project, claude.ai/design) produced a working prototype:
+a pure calculation engine, a 14-jurisdiction Canadian rules dataset, and 8 designed pages in 4
+languages. It's pulled into this repo at `design-reference/` in Claude Design's own canvas format
+(not runnable React — reference material to port from). Excluded from `eslint.config.mjs`'s
+ignores; not part of the app. Treat it as the source of truth for calculation logic and jurisdiction
+data when porting — see the Phase 1 spec for what's been ported into `src/domain/` and what's still
+pending in `design-reference/` for later phases.
 
 ## Don't
 
-- Don't hardcode province rules inline in components — they're the core data asset and will need a structured, maintainable source (likely per-province JSON/config) once the formula is settled.
-- Don't add a deploy target or CI workflow without asking — both are open decisions above.
+- Don't hardcode province rules inline in components — they live in `src/domain/jurisdictions/*.ts`,
+  one typed file per jurisdiction, ported from `design-reference/hbt-data.js`. See the Phase 1 spec.
+- Don't add a deploy target or CI workflow without asking — monetization (above) is still open.

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<script src="hbt-data.js"></script>
+<script src="hbt-engine.js"></script>
+<style>
+:root{
+--s0:#F7F5F1;--s1:#FFFFFF;--s2:#EFECE5;--s3:#E5E1D7;
+--br:#DCD7CC;--brh:#EAE6DD;--brs:#C6BFB1;
+--tx:#17191C;--tx2:#565A5F;--tx3:#888C92;
+--ac:#22375C;--ac2:#3B5C92;--acbg:#E7ECF4;--acbr:#C3CFE2;
+--pass:#1A6B45;--passbg:#E3EFE8;--passbr:#BEDBCB;
+--caut:#87590A;--cautbg:#F6EEDC;--cautbr:#E3D3AE;
+--blk:#8D2A2A;--blkbg:#F6E7E5;--blkbr:#E5C4C0;
+--def:#455A6C;--defbg:#E8EDF1;--defbr:#C8D3DC;
+--bgS:var(--s2);--fgS:var(--tx3);--fwS:400;
+--kBg:var(--s0);--kBr:var(--br);--kFg:var(--tx2);
+}
+[data-theme="dark"]{
+--s0:#121417;--s1:#191C20;--s2:#21252A;--s3:#2A2F35;
+--br:#2F343B;--brh:#262A30;--brs:#3D434B;
+--tx:#EBE9E4;--tx2:#A3A8AE;--tx3:#767B82;
+--ac:#93B3E0;--ac2:#AEC7EC;--acbg:#1C2632;--acbr:#2C3B4D;
+--pass:#6AC497;--passbg:#152620;--passbr:#264737;
+--caut:#DFAB4C;--cautbg:#292213;--cautbr:#463A1E;
+--blk:#EA8D8D;--blkbg:#2A1919;--blkbr:#4A2C2C;
+--def:#A0B4C5;--defbg:#1A2128;--defbr:#2C3742;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#E8E5DF;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+a{color:var(--ac);text-decoration:none}
+a:hover{color:var(--ac2)}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:2px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;display:block}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--brs)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:20px;width:9px;border-radius:1px;background:var(--caut);border:0;margin-top:-9px}
+input[type=range]::-moz-range-track{height:3px;background:var(--brs)}
+input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;background:var(--caut);border:0}
+@keyframes amPulse{0%{background:var(--acbg)}100%{background:transparent}}
+[data-screen-label$="phone"] button{min-height:44px}
+[data-screen-label$="phone"] a{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+[data-screen-label$="phone"] input{min-height:44px}
+[data-screen-label$="phone"] input[type=range]{min-height:0;height:44px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+.dvT{padding:36px 40px 30px}
+.dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dvId{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#17191C;color:#fff;border-radius:3px;text-decoration:none}
+.dvOid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#17191C;border-radius:3px;text-decoration:none}
+.dvName{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#17191C}
+.dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+.dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#22375C;color:#fff}
+.dvNote{max-width:840px;font:400 12.5px/1.65 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
+.dvNote b{color:rgba(0,0,0,.85);font-weight:600}
+.dvNext{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dvT" id="t7">
+<div class="dvH"><a class="dvId" href="#t7">7</a><span class="dvName">Amortization — built around the renewal cliff</span></div>
+<p class="dvNote">Your Amortization tab, organised around the thing it warns about. Canadians do not lock a rate for the life of the loan: you take a five-year term and renew into whatever rate exists then, which makes <b>renewal risk the largest unmodelled risk in any Canadian mortgage</b> and the one that actually breaks budgets. So the renewal rate is the primary control here, not a footnote — move it and the schedule re-runs from the first renewal onward, recomputing the payment on the remaining balance over the remaining amortization exactly as a lender would, with the unstressed balance kept on the plot as a dotted line so the divergence is shown rather than asserted. The stacked bars are interest and principal per year, which is where the shape of a mortgage lives: at the start almost everything you pay is interest, and the year that flips is annotated on the plot. Term boundaries are marked, because those are the only moments the rate can change.</p>
+<div class="dvOpts">
+
+<div class="dvOpt" id="7a">
+<div class="dvLab"><a class="dvOid" href="#7a">7a</a>Desktop ≥1024 px — renewal stressed two points up</div>
+<div data-theme="{{ themeA }}" data-screen-label="Amortization · desktop" style="width:1180px;background:var(--s0);color:var(--tx);border:1px solid var(--br);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
+
+  <header style="display:flex;align-items:center;gap:14px;padding:0 22px;height:56px;background:var(--s1);border-bottom:1px solid var(--br)">
+    <a href="Home.dc.html" style="font-size:12px;color:var(--tx3);white-space:nowrap">← {{ s.homeLink }}</a>
+    <span style="font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;flex:1;min-width:0">{{ s.brand }}</span>
+    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+      <span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--ac);flex:none"></span>
+      <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ chip.city }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">{{ chip.code }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--tx3)">▾</span>
+    </button>
+    <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+      <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+        <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:5px 9px;font-size:11.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.name }}</button>
+      </sc-for>
+    </div>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--tx2)">{{ themeIconA }}</button>
+  </header>
+
+  <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:var(--s1);border-bottom:1px solid var(--br);padding:16px 22px 18px">
+      <div role="listbox" style="display:flex;flex-wrap:wrap;gap:5px">
+        <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="8">
+          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg);color:var(--kFg)">
+            <span style="font-size:12.5px;font-weight:500">{{ c.name }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ c.code }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="padding:20px 22px 0;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:330px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:6px">{{ s.eyebrow }}</div>
+      <h1 style="margin:0 0 6px;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.02em">{{ s.title }}</h1>
+      <p style="margin:0;font-size:14px;line-height:1.5;color:var(--tx2);max-width:560px;text-wrap:pretty">{{ s.sub }}</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)">{{ s.depth }}</span>
+        <div role="group" aria-label="{{ s.depth }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+          <sc-for list="{{ depthOpts }}" as="dp" hint-placeholder-count="3">
+            <button onClick="{{ dp.pick }}" aria-pressed="{{ dp.on }}" style="--bgS:{{ dp.bg }};--fgS:{{ dp.fg }};--fwS:{{ dp.fw }};display:flex;align-items:center;gap:7px;padding:6px 12px;font-size:12px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+              <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;opacity:.7">{{ dp.n }}</span>{{ dp.label }}
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)">{{ s.jump }}</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+          <sc-for list="{{ jumpLinks }}" as="jl" hint-placeholder-count="4">
+            <a href="{{ jl.href }}" style="font-size:11px;padding:4px 8px;border:1px solid var(--br);border-radius:2px;background:var(--s1);white-space:nowrap">{{ jl.label }}</a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="shock" style="margin:18px 22px 0;scroll-margin-top:12px">
+    <div style="--kBg:{{ shock.bg }};--kBr:{{ shock.br }};--kFg:{{ shock.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:18px 20px;animation:amPulse .7s ease-out" key="{{ pulseKey }}">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600">{{ shock.tag }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ locTag }}</span>
+      </div>
+      <p style="margin:0 0 8px;font-size:25px;line-height:1.24;font-weight:600;letter-spacing:-.018em;color:var(--kFg);max-width:900px;text-wrap:pretty">{{ shock.head }}</p>
+      <p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--tx2);max-width:840px;text-wrap:pretty">{{ shock.sub }}</p>
+    </div>
+  </div>
+
+  <div id="stress" style="margin:14px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
+    <div style="display:grid;grid-template-columns:1.45fr 1fr;gap:0;border-bottom:1px solid var(--br)">
+      <div style="padding:15px 18px;border-right:1px solid var(--brh)">
+        <label style="display:flex;align-items:baseline;gap:10px;margin-bottom:2px">
+          <span style="font-size:12.5px;font-weight:600;color:var(--caut)">{{ s.renewalControl }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--caut);white-space:nowrap">{{ s.keyLever }}</span>
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600;color:var(--caut)">{{ renewalFmt }}</span>
+        </label>
+        <input type="range" min="2" max="12" step="0.05" value="{{ renewalRate }}" onChange="{{ onRenewal }}" aria-label="{{ s.renewalControl }}" aria-valuetext="{{ renewalFmt }}">
+        <div style="position:relative;height:15px">
+          <span style="position:absolute;left:0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ rateMin }}</span>
+          <span style="position:absolute;left:{{ contractPos }};transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ac);white-space:nowrap">{{ contractLabel }}</span>
+          <span style="position:absolute;right:0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ rateMax }}</span>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap">
+          <sc-for list="{{ presets }}" as="pr" hint-placeholder-count="4">
+            <button onClick="{{ pr.pick }}" aria-pressed="{{ pr.on }}" style="--bgS:{{ pr.bg }};--fgS:{{ pr.fg }};--fwS:{{ pr.fw }};display:flex;align-items:baseline;gap:7px;padding:5px 9px;border:1px solid {{ pr.brd }};border-radius:2px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+              <span style="font-size:11.5px">{{ pr.label }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ pr.value }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <p style="margin:11px 0 0;font-size:11.5px;line-height:1.55;color:var(--tx2);max-width:600px;text-wrap:pretty">{{ s.renewalWhy }}</p>
+      </div>
+      <div style="padding:15px 18px">
+        <sc-for list="{{ shockRows }}" as="sr" hint-placeholder-count="6">
+          <div style="--kFg:{{ sr.fg }};display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--brh)">
+            <span style="font-size:12px;color:var(--tx2);flex:1;min-width:0;line-height:1.35;font-weight:{{ sr.fw }}">{{ sr.label }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:{{ sr.fw }};color:var(--kFg);white-space:nowrap">{{ sr.value }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="padding:14px 18px 10px">
+      <div role="img" aria-label="{{ chartAlt }}" style="position:relative;width:1096px;height:292px">
+        <svg width="1096" height="292" viewBox="0 0 1096 292" aria-hidden="true" focusable="false" style="position:absolute;left:0;top:0;display:block">
+          <sc-for list="{{ grid }}" as="gl" hint-placeholder-count="5">
+            <line x1="62" y1="{{ gl.y }}" x2="1030" y2="{{ gl.y }}" stroke="{{ gl.stroke }}" stroke-width="1"></line>
+          </sc-for>
+          <sc-for list="{{ bars }}" as="b" hint-placeholder-count="30">
+            <g>
+              <rect x="{{ b.x }}" y="{{ b.iy }}" width="{{ b.w }}" height="{{ b.ih }}" fill="var(--caut)" fill-opacity="0.5"></rect>
+              <rect x="{{ b.x }}" y="{{ b.py }}" width="{{ b.w }}" height="{{ b.ph }}" fill="var(--ac)" fill-opacity="0.85"></rect>
+            </g>
+          </sc-for>
+          <sc-for list="{{ termLines }}" as="tl" hint-placeholder-count="6">
+            <line x1="{{ tl.x }}" y1="16" x2="{{ tl.x }}" y2="242" stroke="{{ tl.stroke }}" stroke-width="1" stroke-dasharray="3 3"></line>
+          </sc-for>
+          <sc-if value="{{ hasBaseline }}" hint-placeholder-val="{{ false }}">
+            <polyline points="{{ baselinePts }}" fill="none" stroke="var(--tx3)" stroke-width="1.4" stroke-dasharray="4 3"></polyline>
+          </sc-if>
+          <polyline points="{{ balancePts }}" fill="none" stroke="var(--tx)" stroke-width="1.8"></polyline>
+          <sc-if value="{{ flip }}" hint-placeholder-val="{{ true }}">
+            <circle cx="{{ flip.x }}" cy="{{ flip.y }}" r="4.5" fill="var(--s1)" stroke="var(--pass)" stroke-width="2.5"></circle>
+          </sc-if>
+        </svg>
+        <sc-for list="{{ grid }}" as="gl" hint-placeholder-count="5">
+          <div style="position:absolute;left:0;top:{{ gl.top }};width:54px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);line-height:1">{{ gl.label }}</div>
+        </sc-for>
+        <sc-for list="{{ xTicks }}" as="xt" hint-placeholder-count="7">
+          <div style="position:absolute;left:{{ xt.left }};top:250px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);line-height:1">{{ xt.label }}</div>
+        </sc-for>
+        <sc-for list="{{ termLines }}" as="tl" hint-placeholder-count="6">
+          <div style="position:absolute;left:{{ tl.left }};top:2px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:{{ tl.fg }};white-space:nowrap;line-height:1">{{ tl.label }}</div>
+        </sc-for>
+        <sc-if value="{{ flip }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;left:{{ flip.left }};top:{{ flip.top }};transform:{{ flip.tf }};background:var(--passbg);border:1px solid var(--passbr);border-radius:2px;padding:5px 8px;white-space:nowrap">
+            <div style="font-size:11px;font-weight:700;color:var(--pass);line-height:1.25">{{ flip.line1 }}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--pass);line-height:1.3">{{ flip.line2 }}</div>
+          </div>
+        </sc-if>
+        <div style="position:absolute;left:1030px;top:270px;transform:translateX(-100%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);line-height:1;white-space:nowrap">{{ s.yearsAxis }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;padding:6px 0 2px;flex-wrap:wrap">
+        <sc-for list="{{ legend }}" as="lg" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span aria-hidden="true" style="width:11px;height:11px;border-radius:1px;background:{{ lg.swatch }};border:1px solid {{ lg.stroke }};flex:none"></span>
+            <span style="font-size:11.5px;color:var(--tx2)">{{ lg.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx3);max-width:980px;text-wrap:pretty">{{ chartAlt }}</p>
+    </div>
+  </div>
+
+  <sc-if value="{{ showWhy }}" hint-placeholder-val="{{ false }}">
+    <div id="risk" style="margin:16px 22px 0;scroll-margin-top:12px">
+      <div style="display:flex;gap:13px;padding:16px 18px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:3px">
+        <span aria-hidden="true" style="width:22px;height:22px;border-radius:2px;border:2px solid var(--blk);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--blk);flex:none">!</span>
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--blk);margin-bottom:6px;line-height:1.35">{{ s.riskTitle }}</div>
+          <p style="margin:0;font-size:12.5px;line-height:1.6;color:var(--tx2);max-width:900px;text-wrap:pretty">{{ s.riskBody }}</p>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showMath }}" hint-placeholder-val="{{ false }}">
+    <div id="table" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
+      <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+        <span style="font-size:13px;font-weight:600">{{ s.tableTitle }}</span>
+        <span style="font-size:11.5px;color:var(--tx3)">{{ setupLine }}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px repeat(6,1fr);padding:8px 16px;border-bottom:1px solid var(--br);font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3)">
+        <span>{{ s.yr }}</span>
+        <sc-for list="{{ tableCols }}" as="tc" hint-placeholder-count="6">
+          <span style="text-align:right;line-height:1.3">{{ tc }}</span>
+        </sc-for>
+      </div>
+      <div style="max-height:330px;overflow:auto">
+        <sc-for list="{{ tableRows }}" as="r" hint-placeholder-count="30">
+          <div style="--kBg:{{ r.bg }};display:grid;grid-template-columns:44px repeat(6,1fr);padding:5px 16px;border-bottom:1px solid var(--brh);background:var(--kBg)">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--tx3)">{{ r.t }}</span>
+            <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="6">
+              <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ c.fg }}">{{ c.text }}</span>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div id="inputs" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+      <span style="font-size:12.5px;font-weight:600">{{ s.adjust }}</span>
+      <span style="font-size:11.5px;color:var(--tx3)">{{ s.sharedNote }}</span>
+    </div>
+    <div style="padding:14px 16px;display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px">
+        <label style="display:flex;align-items:baseline;font-size:11.5px;color:var(--tx2);margin-bottom:5px">{{ s.price }}
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ priceTag }}</span>
+        </label>
+        <input type="number" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" style="width:100%;padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+        <input type="range" min="150000" max="2200000" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" aria-valuetext="{{ priceFmt }}">
+      </div>
+      <sc-for list="{{ groupsOfControls }}" as="gc" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ gc.label }}</span>
+          <div role="group" aria-label="{{ gc.label }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden">
+            <sc-for list="{{ gc.options }}" as="op" hint-placeholder-count="4">
+              <button onClick="{{ op.pick }}" aria-pressed="{{ op.on }}" style="--bgS:{{ op.bg }};--fgS:{{ op.fg }};--fwS:{{ op.fw }};padding:5px 12px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ op.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="margin:16px 22px 22px;padding:13px 16px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.5;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);flex:1;min-width:0">{{ sourcesLine }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr)">{{ s.unverifiedFlag }}</span>
+    </div>
+    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--tx3);max-width:940px;text-wrap:pretty">{{ s.disclaimer }}</p>
+  </div>
+</div>
+</div>
+
+<div class="dvOpt" id="7b">
+<div class="dvLab"><a class="dvOid" href="#7b">7b</a>Phone 390 px — dark</div>
+<div data-theme="{{ themeB }}" data-screen-label="Amortization · phone" style="width:430px;padding:20px;background:#0B0C0E;border-radius:44px;border:1px solid rgba(255,255,255,.09);box-shadow:0 2px 14px rgba(0,0,0,.28)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--s0);color:var(--tx);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+      <span>9:41</span><span style="margin-left:auto;letter-spacing:.12em">•••</span>
+    </div>
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--br)">
+      <a href="Home.dc.html" style="font-size:12px;color:var(--tx3);flex:none">←</a>
+      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--s2);border:1px solid var(--br);border-radius:3px;min-width:0">
+        <span aria-hidden="true" style="width:4px;height:4px;border-radius:50%;background:var(--ac);flex:none"></span>
+        <span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.short }}</span>
+      </button>
+      <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-left:auto">
+        <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 6px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx2);flex:none">{{ themeIconB }}</button>
+    </header>
+
+    <div style="flex:1;overflow:auto;padding:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:5px">{{ s.eyebrow }}</div>
+      <h2 style="margin:0 0 12px;font-size:22px;line-height:1.12;font-weight:600;letter-spacing:-.02em">{{ s.title }}</h2>
+
+      <div style="--kBg:{{ shock.bg }};--kBr:{{ shock.br }};--kFg:{{ shock.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:13px 14px;margin-bottom:12px;animation:amPulse .7s ease-out" key="{{ pulseKey }}">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:7px">{{ shock.tag }}</div>
+        <p style="margin:0 0 7px;font-size:17px;line-height:1.3;font-weight:600;color:var(--kFg);text-wrap:pretty">{{ shock.head }}</p>
+        <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ shock.sub }}</p>
+      </div>
+
+      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px;margin-bottom:12px">
+        <label style="display:flex;align-items:baseline;gap:9px;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:600;color:var(--caut);line-height:1.3">{{ s.renewalControl }}</span>
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--caut)">{{ renewalFmt }}</span>
+        </label>
+        <input type="range" min="2" max="12" step="0.05" value="{{ renewalRate }}" onChange="{{ onRenewal }}" aria-label="{{ s.renewalControl }}" aria-valuetext="{{ renewalFmt }}">
+        <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+          <sc-for list="{{ presets }}" as="pr" hint-placeholder-count="4">
+            <button onClick="{{ pr.pick }}" aria-pressed="{{ pr.on }}" style="--bgS:{{ pr.bg }};--fgS:{{ pr.fg }};--fwS:{{ pr.fw }};display:flex;align-items:baseline;gap:6px;padding:5px 9px;border:1px solid {{ pr.brd }};border-radius:2px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+              <span style="font-size:11px">{{ pr.label }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ pr.value }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px;margin-bottom:12px">
+        <div role="img" aria-label="{{ chartAlt }}" style="position:relative;width:330px;height:186px">
+          <svg width="330" height="186" viewBox="0 0 330 186" aria-hidden="true" focusable="false" style="position:absolute;left:0;top:0;display:block">
+            <sc-for list="{{ mGrid }}" as="gl" hint-placeholder-count="3">
+              <line x1="0" y1="{{ gl.y }}" x2="330" y2="{{ gl.y }}" stroke="{{ gl.stroke }}" stroke-width="1"></line>
+            </sc-for>
+            <sc-for list="{{ mBars }}" as="b" hint-placeholder-count="30">
+              <g>
+                <rect x="{{ b.x }}" y="{{ b.iy }}" width="{{ b.w }}" height="{{ b.ih }}" fill="var(--caut)" fill-opacity="0.5"></rect>
+                <rect x="{{ b.x }}" y="{{ b.py }}" width="{{ b.w }}" height="{{ b.ph }}" fill="var(--ac)" fill-opacity="0.85"></rect>
+              </g>
+            </sc-for>
+            <sc-for list="{{ mTermLines }}" as="tl" hint-placeholder-count="6">
+              <line x1="{{ tl.x }}" y1="6" x2="{{ tl.x }}" y2="156" stroke="{{ tl.stroke }}" stroke-width="1" stroke-dasharray="3 3"></line>
+            </sc-for>
+            <polyline points="{{ mBalancePts }}" fill="none" stroke="var(--tx)" stroke-width="1.6"></polyline>
+          </svg>
+          <sc-for list="{{ mXTicks }}" as="xt" hint-placeholder-count="4">
+            <div style="position:absolute;left:{{ xt.left }};top:164px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);line-height:1">{{ xt.label }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
+          <sc-for list="{{ legend }}" as="lg" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span aria-hidden="true" style="width:10px;height:10px;border-radius:1px;background:{{ lg.swatch }};border:1px solid {{ lg.stroke }};flex:none"></span>
+              <span style="font-size:10.5px;color:var(--tx2)">{{ lg.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px;margin-bottom:12px">
+        <sc-for list="{{ shockRows }}" as="sr" hint-placeholder-count="6">
+          <div style="--kFg:{{ sr.fg }};display:flex;align-items:baseline;gap:9px;padding:6px 0;border-bottom:1px solid var(--brh)">
+            <span style="font-size:11.5px;color:var(--tx2);flex:1;min-width:0;line-height:1.35;font-weight:{{ sr.fw }}">{{ sr.label }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:{{ sr.fw }};color:var(--kFg);white-space:nowrap">{{ sr.value }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ showWhy }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:11px;padding:12px 13px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:3px;margin-bottom:12px">
+          <span aria-hidden="true" style="width:20px;height:20px;border-radius:2px;border:2px solid var(--blk);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--blk);flex:none">!</span>
+          <div style="min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--blk);margin-bottom:5px;line-height:1.35">{{ s.riskTitle }}</div>
+            <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ s.riskBody }}</p>
+          </div>
+        </div>
+      </sc-if>
+      <div style="height:6px"></div>
+    </div>
+
+    <div style="border-top:1px solid var(--br);background:var(--s1);padding:9px 12px 13px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);flex:none">{{ s.depth }}</span>
+        <div role="group" aria-label="{{ s.depth }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;flex:1">
+          <sc-for list="{{ depthOpts }}" as="dp" hint-placeholder-count="3">
+            <button onClick="{{ dp.pick }}" aria-pressed="{{ dp.on }}" style="--bgS:{{ dp.bg }};--fgS:{{ dp.fg }};--fwS:{{ dp.fw }};flex:1;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS);white-space:nowrap;padding:0 4px">{{ dp.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dvNext">Try next: "stress renewal to 9%" · "now Down Payment sources" · "then the 6-step wizard" · "show 7a in French"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1700,&quot;height&quot;:1400},&quot;startDepth&quot;:{&quot;editor&quot;:&quot;radio&quot;,&quot;options&quot;:[&quot;answer&quot;,&quot;why&quot;,&quot;math&quot;],&quot;default&quot;:&quot;answer&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Detail level on load&quot;},&quot;startJurisdiction&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;winnipeg&quot;,&quot;toronto&quot;,&quot;ottawa&quot;,&quot;vancouver&quot;,&quot;halifax&quot;,&quot;montreal&quot;,&quot;calgary&quot;,&quot;saskatoon&quot;],&quot;default&quot;:&quot;winnipeg&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;City on load&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Français&quot;,&quot;Українська&quot;,&quot;Español&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Language on load&quot;}}">
+class Component extends DCLogic {
+  state = {
+    ready: false, lang: 0, themeA: 'light', themeB: 'dark',
+    jurId: 'winnipeg', pickerOpen: false, depth: 0,
+    price: 0, priceTouched: false, dpPct: 10, amortYears: 30, ftb: true, ptype: 'house',
+    termYears: 5, renewalRate: null, pulse: 0
+  };
+
+  componentDidMount() {
+    const go = () => {
+      const D = window.CIBTH_DATA; if (!D || !window.CIBTH_ENGINE) return false;
+      const p = this.props || {};
+      const jid = D.jur.some(x => x.id === p.startJurisdiction) ? p.startJurisdiction : 'winnipeg';
+      const li = ['English', 'Français', 'Українська', 'Español'].indexOf(p.startLang);
+      const di = ['answer', 'why', 'math'].indexOf(p.startDepth);
+      const rec = D.jur.find(x => x.id === jid);
+      this.setState({ ready: true, jurId: jid, lang: li < 0 ? 0 : li, depth: di < 0 ? 0 : di, price: rec.bench.house });
+      const shared = window.CIBTH_ENGINE.loadShared();
+      if (Object.keys(shared).length) this.setState(shared);
+      window.CIBTH_ENGINE.onSharedChange(v => this.setState(v));
+      return true;
+    };
+    if (!go()) { const iv = setInterval(() => { if (go()) clearInterval(iv); }, 30); this._iv = iv;
+      window.addEventListener('cibth-data', go); window.addEventListener('cibth-engine', go); }
+  }
+  componentWillUnmount() { if (this._iv) clearInterval(this._iv); }
+  componentDidUpdate() { if (this.state.ready) window.CIBTH_ENGINE.saveShared(this.state); }
+
+  L() { return ['en-CA', 'fr-CA', 'uk-UA', 'es-ES'][this.state.lang]; }
+  money(n, dp) { return window.CIBTH_ENGINE.money(n, this.L(), this.state.lang !== 0, dp); }
+  short(n) {
+    const a = Math.abs(n), sign = n < 0 ? '\u2212\u2009' : '';
+    const nf = (v, d) => new Intl.NumberFormat(this.L(), { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+    const unit = ['M', 'M', '\u043c\u043b\u043d', 'M'][this.state.lang];
+    const kUnit = ['k', 'k', '\u0442\u0438\u0441', 'k'][this.state.lang];
+    let body;
+    if (a >= 1000000) body = nf(a / 1000000, 2) + '\u2009' + unit;
+    else if (a >= 1000) body = nf(Math.round(a / 1000), 0) + '\u2009' + kUnit;
+    else body = nf(Math.round(a), 0);
+    return sign + (this.state.lang === 0 ? '$' + body : body + '\u00a0$');
+  }
+  pct(n, d) {
+    const v = new Intl.NumberFormat(this.L(), { minimumFractionDigits: d == null ? 0 : d, maximumFractionDigits: d == null ? 1 : d }).format(n);
+    return this.state.lang === 0 ? v + '%' : v + '\u202f%';
+  }
+  date(iso) { const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat(this.L(), { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d)); }
+
+  S = {
+    homeLink: ['All tools', 'Tous les outils', '\u0423\u0441\u0456 \u0456\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u0438', 'Todas las herramientas'],
+    eyebrow: ['Deep dive 4/5', 'Analyse détaillée 4/5', 'Детальний розбір 4/5', 'Análisis detallado 4/5'],
+    title: ['Amortization and renewal', 'Amortissement et renouvellement', 'Амортизація та переоформлення', 'Amortización y renovación'],
+    sub: ['You do not lock a rate for the life of the loan. You take a term, then renew into whatever rate exists then.', 'Vous ne fixez pas un taux pour la durée du prêt. Vous prenez un terme, puis renouvelez au taux du moment.', 'Ви не фіксуєте ставку на весь термін кредиту. Ви берете строк, а потім переоформлюєте за тією ставкою, що буде.', 'No fija una tasa para toda la vida del préstamo. Toma un plazo y luego renueva a la tasa que exista entonces.'],
+    depth: ['Detail', 'Détail', 'Деталізація', 'Detalle'],
+    d1: ['The answer', 'La réponse', 'Відповідь', 'La respuesta'],
+    d2: ['Why', 'Pourquoi', 'Чому', 'Por qué'],
+    d3: ['The math', 'Le calcul', 'Розрахунок', 'El cálculo'],
+    jump: ['Jump to', 'Aller à', 'Перейти до', 'Ir a'],
+    keyLever: ['Key lever', 'Levier clé', 'Ключовий чинник', 'Palanca clave'],
+    renewalControl: ['Rate you renew into', 'Taux de renouvellement', 'Ставка при переоформленні', 'Tasa de renovación'],
+    renewalWhy: ['Your first term is priced today. Every renewal after it is priced by whatever the market is doing then, and the payment is recalculated on the balance left over the amortization left.', 'Votre premier terme est tarifé aujourd’hui. Chaque renouvellement suivant l’est selon le marché du moment, et le paiement est recalculé sur le solde restant et l’amortissement restant.', 'Перший строк оцінено сьогодні. Кожне наступне переоформлення — за ринком того часу, і платіж перераховують на залишок боргу та залишок амортизації.', 'Su primer plazo se fija hoy. Cada renovación posterior se fija según el mercado de entonces, y el pago se recalcula sobre el saldo y la amortización restantes.'],
+    presetToday: ['Today’s rate', 'Taux du jour', 'Сьогоднішня ставка', 'Tasa de hoy'],
+    presetFloor: ['Stress test floor', 'Plancher du test', 'Поріг стрес-тесту', 'Suelo de la prueba'],
+    presetPlus2: ['Two points up', 'Deux points de plus', 'Плюс два пункти', 'Dos puntos más'],
+    presetPlus4: ['Four points up', 'Quatre points de plus', 'Плюс чотири пункти', 'Cuatro puntos más'],
+    contractNow: ['Your rate now', 'Votre taux actuel', 'Ваша ставка зараз', 'Su tasa ahora'],
+    rPayNow: ['Payment for the first term', 'Paiement du premier terme', 'Платіж за перший строк', 'Pago del primer plazo'],
+    rPayAfter: ['Payment after the first renewal', 'Paiement après le premier renouvellement', 'Платіж після першого переоформлення', 'Pago tras la primera renovación'],
+    rChange: ['Monthly change', 'Variation mensuelle', 'Зміна на місяць', 'Cambio mensual'],
+    rAnnual: ['A year, at the higher payment', 'Par année, au paiement plus élevé', 'На рік за вищим платежем', 'Al año, con el pago mayor'],
+    rInterest: ['Total interest over the loan', 'Intérêts totaux du prêt', 'Усього відсотків за кредит', 'Intereses totales del préstamo'],
+    rExtra: ['Extra interest versus renewing at today’s rate', 'Intérêts additionnels vs renouvellement au taux actuel', 'Додаткові відсотки проти сьогоднішньої ставки', 'Intereses extra frente a renovar a la tasa de hoy'],
+    shockNoneTag: ['No change', 'Aucun changement', 'Без змін', 'Sin cambios'],
+    shockNone: ['At today’s rate your payment never changes.', 'Au taux actuel, votre paiement ne change jamais.', 'За сьогоднішньою ставкою платіж не змінюється.', 'A la tasa de hoy su pago nunca cambia.'],
+    shockNoneSub: ['Which is not the scenario to plan for. Move the renewal rate above your current one and watch what happens at year {n} — that is the risk nobody models.', 'Ce n’est pas le scénario à planifier. Portez le taux de renouvellement au-dessus de l’actuel et observez l’année {n} — c’est le risque que personne ne modélise.', 'Але планувати треба не це. Підніміть ставку переоформлення вище за поточну й подивіться на {n}-й рік — саме цього ризику ніхто не моделює.', 'No es el escenario a planificar. Suba la tasa de renovación por encima de la actual y observe el año {n}: ese es el riesgo que nadie modela.'],
+    shockUpTag: ['Payment shock', 'Choc de paiement', 'Платіжний шок', 'Choque de pago'],
+    shockUp: ['At renewal your payment rises by {amt} a month.', 'Au renouvellement, votre paiement augmente de {amt} par mois.', 'При переоформленні платіж зросте на {amt} на місяць.', 'En la renovación su pago sube {amt} al mes.'],
+    shockUpSub: ['That happens in year {n}, and it is not optional — you renew into the market, not into your budget. Over the loan it costs {extra} in extra interest.', 'Cela survient l’année {n}, et ce n’est pas optionnel — vous renouvelez selon le marché, pas selon votre budget. Sur la durée, cela coûte {extra} d’intérêts additionnels.', 'Це станеться на {n}-й рік, і це не на ваш вибір — ви переоформлюєтеся за ринком, а не за своїм бюджетом. За весь термін це {extra} додаткових відсотків.', 'Ocurre en el año {n}, y no es opcional: renueva según el mercado, no según su presupuesto. En total cuesta {extra} de intereses extra.'],
+    shockDownTag: ['Payment falls', 'Le paiement baisse', 'Платіж падає', 'El pago baja'],
+    shockDown: ['At renewal your payment falls by {amt} a month.', 'Au renouvellement, votre paiement baisse de {amt} par mois.', 'При переоформленні платіж зменшиться на {amt} на місяць.', 'En la renovación su pago baja {amt} al mes.'],
+    shockDownSub: ['Pleasant, but do not budget on it. Rates falling is the scenario you can afford to be wrong about; rates rising is not.', 'Agréable, mais ne budgétez pas là-dessus. Une baisse des taux est le scénario où vous pouvez vous tromper sans danger\u202f; une hausse, non.', 'Приємно, але не плануйте на це. Помилитися щодо падіння ставок безпечно; щодо зростання — ні.', 'Agradable, pero no lo presupueste. Equivocarse con una bajada de tasas es asumible; con una subida, no.'],
+    riskTitle: ['Renewal risk is the largest unmodelled risk in a Canadian mortgage', 'Le risque de renouvellement est le plus grand risque non modélisé d’un prêt canadien', 'Ризик переоформлення — найбільший немодельований ризик канадської іпотеки', 'El riesgo de renovación es el mayor riesgo no modelado de una hipoteca canadiense'],
+    riskBody: ['A stress test at origination checks you could carry the payment at two points above your rate. It is a one-time test, and it does not follow you. At every renewal you re-enter the market with no protection at all, and nobody re-runs the test for you. This is the mechanism that breaks household budgets: not the purchase, the renewal five or ten years later. Plan for the payment you would face at a materially higher rate, and treat any rate below that as good luck rather than a forecast.', 'Le test de résistance à l’origine vérifie que vous pourriez porter le paiement à deux points au-dessus de votre taux. C’est un test unique qui ne vous suit pas. À chaque renouvellement, vous revenez au marché sans aucune protection, et personne ne refait le test pour vous. C’est ce mécanisme qui brise les budgets\u202f: non pas l’achat, mais le renouvellement cinq ou dix ans plus tard. Planifiez le paiement que vous auriez à un taux nettement plus élevé, et considérez tout taux inférieur comme de la chance plutôt qu’une prévision.', 'Стрес-тест при оформленні перевіряє, чи витримаєте ви платіж на два пункти вище вашої ставки. Це одноразова перевірка, і вона за вами не йде. При кожному переоформленні ви повертаєтеся на ринок без жодного захисту, і ніхто не повторює тест за вас. Саме цей механізм руйнує сімейні бюджети — не купівля, а переоформлення через п’ять чи десять років. Плануйте платіж за суттєво вищою ставкою, а будь-яку нижчу вважайте щастям, а не прогнозом.', 'La prueba de resistencia al origen comprueba que podría pagar a dos puntos por encima de su tasa. Es una prueba única y no le acompaña. En cada renovación vuelve al mercado sin ninguna protección, y nadie repite la prueba por usted. Este es el mecanismo que rompe presupuestos: no la compra, sino la renovación cinco o diez años después. Planifique el pago que afrontaría a una tasa notablemente mayor, y considere cualquier tasa inferior como suerte, no como previsión.'],
+    tableTitle: ['Year by year', 'Année par année', 'Рік за роком', 'Año por año'],
+    yr: ['Yr', 'An', 'Рік', 'Año'],
+    cRate: ['Rate', 'Taux', 'Ставка', 'Tasa'],
+    cPayment: ['Monthly payment', 'Paiement mensuel', 'Місячний платіж', 'Pago mensual'],
+    cInterest: ['Interest', 'Intérêts', 'Відсотки', 'Intereses'],
+    cPrincipal: ['Principal', 'Capital', 'Тіло кредиту', 'Capital'],
+    cBalance: ['Balance at year end', 'Solde en fin d’année', 'Залишок на кінець року', 'Saldo a fin de año'],
+    cShare: ['Share going to principal', 'Part vers le capital', 'Частка на тіло кредиту', 'Parte al capital'],
+    legendInterest: ['Interest paid that year', 'Intérêts payés cette année', 'Відсотки за рік', 'Intereses pagados ese año'],
+    legendPrincipal: ['Principal paid that year', 'Capital rembours\u00e9 cette ann\u00e9e', 'Тіло кредиту за рік', 'Capital pagado ese año'],
+    legendBalance: ['Balance outstanding', 'Solde restant', 'Непогашений залишок', 'Saldo pendiente'],
+    legendBaseline: ['Balance at today’s rate', 'Solde au taux actuel', 'Залишок за сьогоднішньою ставкою', 'Saldo a la tasa de hoy'],
+    legendRenewal: ['Renewal, every {n} years', 'Renouvellement, tous les {n} ans', 'Переоформлення, кожні {n} років', 'Renovación, cada {n} años'],
+    flipLabel: ['Principal overtakes interest', 'Le capital dépasse les intérêts', 'Тіло кредиту переганяє відсотки', 'El capital supera a los intereses'],
+    yearWord: ['Year {n}', 'Année {n}', 'Рік {n}', 'Año {n}'],
+    termMark: ['Renewal', 'Renouvellement', 'Переоформлення', 'Renovación'],
+    yearsAxis: ['Years', 'Années', 'Роки', 'Años'],
+    termLabel: ['Term', 'Terme', 'Строк', 'Plazo'],
+    setupLine: ['Mortgage {mort} \u00b7 first term at {rate} \u00b7 renewals at {ren}', 'Prêt {mort} \u00b7 premier terme à {rate} \u00b7 renouvellements à {ren}', 'Іпотека {mort} \u00b7 перший строк за {rate} \u00b7 переоформлення за {ren}', 'Hipoteca {mort} \u00b7 primer plazo al {rate} \u00b7 renovaciones al {ren}'],
+    adjust: ['Adjust your numbers', 'Ajuster vos chiffres', 'Змінити свої дані', 'Ajustar sus cifras'],
+    altText: ['Stacked bars of interest and principal paid each year over {n} years, with the outstanding balance as a line. Interest dominates the early years. {flipSentence} Renewal boundaries are marked every {term} years.', 'Barres empilées des intérêts et du capital payés chaque année sur {n} ans, avec le solde restant en courbe. Les intérêts dominent les premières années. {flipSentence} Les renouvellements sont marqués tous les {term} ans.', 'Складені стовпці відсотків і тіла кредиту за кожен рік протягом {n} років, із залишком боргу у вигляді лінії. У перші роки переважають відсотки. {flipSentence} Межі переоформлення позначено кожні {term} років.', 'Barras apiladas de intereses y capital pagados cada año durante {n} años, con el saldo pendiente como línea. Los intereses dominan los primeros años. {flipSentence} Las renovaciones se marcan cada {term} años.'],
+    altFlip: ['Principal overtakes interest in year {n}.', 'Le capital dépasse les intérêts l’année {n}.', 'Тіло кредиту переганяє відсотки на {n}-й рік.', 'El capital supera a los intereses en el año {n}.'],
+    altNoFlip: ['Interest never falls below principal within the schedule.', 'Les intérêts ne descendent jamais sous le capital dans l’échéancier.', 'У межах графіка відсотки не стають меншими за тіло кредиту.', 'Los intereses nunca caen por debajo del capital en el calendario.']
+  };
+
+  renderVals() {
+    const st = this.state;
+    if (!st.ready || !window.CIBTH_DATA || !window.CIBTH_ENGINE) return { themeA: st.themeA, themeB: st.themeB, showWhy: false, showMath: false };
+    const D = window.CIBTH_DATA, F = D.federal, E = window.CIBTH_ENGINE, lang = st.lang;
+    const s = {}; for (const k in D.t) s[k] = D.t[k][lang];
+    for (const k in this.S) s[k] = this.S[k][lang];
+    const fill = (tpl, map) => Object.keys(map).reduce((a, k) => a.split('{' + k + '}').join(map[k]), tpl);
+
+    const j = D.jur.find(x => x.id === st.jurId) || D.jur[0];
+    const price = st.price || j.bench.house;
+    const cityName = D.C[j.city] ? D.C[j.city][lang] : D.P[j.prov][lang];
+    const contract = (st.dpPct < 20 ? F.rates.insured : F.rates.uninsured) * 100;
+    const renewal = st.renewalRate == null ? contract + 2 : st.renewalRate;
+
+    const opts = { price, dpPct: st.dpPct, amortYears: st.amortYears, termYears: st.termYears, contractRate: contract };
+    const M = E.amortization(j, F, Object.assign({}, opts, { renewalRate: renewal }));
+    const B = E.amortization(j, F, Object.assign({}, opts, { renewalRate: contract }));
+    const rows = M.rows;
+    const firstRenewal = st.termYears + 1;
+    const shockAmt = M.shock;
+    const extraInterest = M.totalInterest - B.totalInterest;
+
+    const shock = Math.abs(shockAmt) < 1
+      ? { tag: s.shockNoneTag, head: s.shockNone, sub: fill(s.shockNoneSub, { n: String(firstRenewal) }),
+          fg: 'var(--def)', bg: 'var(--defbg)', br: 'var(--defbr)' }
+      : shockAmt > 0
+        ? { tag: s.shockUpTag, head: fill(s.shockUp, { amt: this.money(shockAmt) }),
+            sub: fill(s.shockUpSub, { n: String(firstRenewal), extra: this.money(extraInterest) }),
+            fg: 'var(--blk)', bg: 'var(--blkbg)', br: 'var(--blkbr)' }
+        : { tag: s.shockDownTag, head: fill(s.shockDown, { amt: this.money(-shockAmt) }), sub: s.shockDownSub,
+            fg: 'var(--pass)', bg: 'var(--passbg)', br: 'var(--passbr)' };
+
+    const shockRows = [
+      { label: s.rPayNow, value: this.money(M.firstPayment), fg: 'var(--tx)', fw: '400' },
+      { label: s.rPayAfter, value: this.money(M.paymentAfterRenewal), fg: shockAmt > 0 ? 'var(--blk)' : 'var(--tx)', fw: '600' },
+      { label: s.rChange, value: (shockAmt > 0 ? '+\u2009' : shockAmt < 0 ? '\u2212\u2009' : '') + this.money(Math.abs(shockAmt)), fg: shockAmt > 0 ? 'var(--blk)' : shockAmt < 0 ? 'var(--pass)' : 'var(--tx3)', fw: '600' },
+      { label: s.rAnnual, value: this.money(M.paymentAfterRenewal * 12), fg: 'var(--tx2)', fw: '400' },
+      { label: s.rInterest, value: this.money(M.totalInterest), fg: 'var(--tx)', fw: '600' },
+      { label: s.rExtra, value: Math.abs(extraInterest) < 1 ? '\u2014' : (extraInterest > 0 ? '+\u2009' : '\u2212\u2009') + this.money(Math.abs(extraInterest)), fg: extraInterest > 0 ? 'var(--blk)' : 'var(--tx3)', fw: '400' }
+    ];
+
+    /* ---------- chart ---------- */
+    const build = (W, H, padL, padR, padT, padB) => {
+      const innerW = W - padL - padR, innerH = H - padT - padB;
+      let maxFlow = 0, maxBal = 0;
+      for (const r of rows) { maxFlow = Math.max(maxFlow, r.interest + r.principal); maxBal = Math.max(maxBal, r.opening); }
+      const n = rows.length;
+      const slot = innerW / n;
+      const bw = Math.max(2, slot * 0.66);
+      const yFlow = v => padT + (1 - v / (maxFlow || 1)) * innerH;
+      const yBal = v => padT + (1 - v / (maxBal || 1)) * innerH;
+      const xAt = i => padL + slot * i + (slot - bw) / 2;
+      const xMid = t => padL + slot * (t - 1) + slot / 2;
+      const bars = rows.map((r, i) => {
+        const total = r.interest + r.principal;
+        const topY = yFlow(total), baseY = padT + innerH;
+        const h = baseY - topY;
+        const ih = total > 0 ? h * (r.interest / total) : 0;
+        return { x: xAt(i).toFixed(1), w: bw.toFixed(1),
+          iy: topY.toFixed(1), ih: ih.toFixed(1),
+          py: (topY + ih).toFixed(1), ph: Math.max(0, h - ih).toFixed(1) };
+      });
+      const balPts = rows.map(r => xMid(r.t).toFixed(1) + ',' + yBal(r.closing).toFixed(1)).join(' ');
+      const basePts = B.rows.map(r => xMid(r.t).toFixed(1) + ',' + yBal(r.closing).toFixed(1)).join(' ');
+      const grid = [0, 0.25, 0.5, 0.75, 1].map(f => ({
+        y: yFlow(maxFlow * f).toFixed(1), top: (yFlow(maxFlow * f) - 5).toFixed(1) + 'px',
+        label: this.short(maxFlow * f), stroke: f === 0 ? 'var(--brs)' : 'var(--brh)'
+      }));
+      return { bars, balPts, basePts, grid, xMid, yFlow, padT, innerH, maxFlow, n };
+    };
+    const g = build(1096, 292, 62, 66, 16, 50);
+    const mg = build(330, 186, 0, 4, 6, 30);
+
+    const xTicks = [];
+    for (let t = 1; t <= g.n; t += 5) xTicks.push({ left: g.xMid(t).toFixed(1) + 'px', label: String(t) });
+    if (xTicks[xTicks.length - 1].label !== String(g.n)) xTicks.push({ left: g.xMid(g.n).toFixed(1) + 'px', label: String(g.n) });
+    const mXTicks = [1, 10, 20, 30].filter(t => t <= mg.n).map(t => ({ left: mg.xMid(t).toFixed(1) + 'px', label: String(t) }));
+
+    const termLines = [], mTermLines = [];
+    for (let t = st.termYears + 1; t <= g.n; t += st.termYears) {
+      const x = g.xMid(t) - (1096 - 62 - 66) / g.n / 2;
+      const first = t === st.termYears + 1;
+      termLines.push({ x: x.toFixed(1), left: x.toFixed(1) + 'px',
+        stroke: first ? 'var(--caut)' : 'var(--brs)', fg: first ? 'var(--caut)' : 'var(--tx3)',
+        label: first ? s.termMark + ' \u00b7 ' + fill(s.yearWord, { n: String(t) }) : '' });
+      const mx = mg.xMid(t) - (330 - 4) / mg.n / 2;
+      mTermLines.push({ x: mx.toFixed(1), stroke: first ? 'var(--caut)' : 'var(--brs)' });
+    }
+
+    let flipYear = null;
+    for (const r of rows) if (r.principal > r.interest) { flipYear = r.t; break; }
+    const flip = flipYear == null ? false : (() => {
+      const r = rows[flipYear - 1];
+      const fx = g.xMid(flipYear), fy = g.yFlow(r.interest + r.principal);
+      const boxH = 40, pad = 6;
+      const above = fy - pad - boxH >= g.padT;          /* room above the point? */
+      const top = above ? fy - pad : fy + pad;
+      const right = fx < 1096 * 0.62;                    /* keep the box inside the frame */
+      return { x: fx.toFixed(1), y: fy.toFixed(1),
+        left: (right ? fx + 9 : fx - 9).toFixed(1) + 'px', top: top.toFixed(1) + 'px',
+        tf: (above ? 'translateY(-100%)' : 'translateY(0)') + (right ? '' : ' translateX(-100%)'),
+        line1: s.flipLabel, line2: fill(s.yearWord, { n: String(flipYear) }) };
+    })();
+
+    const legend = [
+      { label: s.legendInterest, swatch: 'var(--caut)', stroke: 'var(--caut)' },
+      { label: s.legendPrincipal, swatch: 'var(--ac)', stroke: 'var(--ac)' },
+      { label: s.legendBalance, swatch: 'var(--tx)', stroke: 'var(--tx)' },
+      { label: s.legendBaseline, swatch: 'transparent', stroke: 'var(--tx3)' },
+      { label: fill(s.legendRenewal, { n: String(st.termYears) }), swatch: 'transparent', stroke: 'var(--caut)' }
+    ];
+
+    const chartAlt = fill(s.altText, { n: String(g.n), term: String(st.termYears),
+      flipSentence: flipYear == null ? s.altNoFlip : fill(s.altFlip, { n: String(flipYear) }) });
+
+    /* ---------- presets ---------- */
+    const mk = (label, v) => {
+      const on = Math.abs(renewal - v) < 0.03;
+      return { label, value: this.pct(v, 2), on: on ? 'true' : 'false',
+        bg: on ? 'var(--cautbg)' : 'var(--s1)', fg: on ? 'var(--caut)' : 'var(--tx2)', fw: on ? '600' : '400',
+        brd: on ? 'var(--cautbr)' : 'var(--br)',
+        pick: () => this.setState({ renewalRate: v }) };
+    };
+    const presets = [mk(s.presetToday, contract), mk(s.presetFloor, F.stressTest.floor), mk(s.presetPlus2, contract + 2), mk(s.presetPlus4, contract + 4)];
+
+    /* ---------- table ---------- */
+    const tableCols = [s.cRate, s.cPayment, s.cInterest, s.cPrincipal, s.cBalance, s.cShare];
+    const tableRows = rows.map(r => ({
+      t: String(r.t),
+      bg: r.renewed ? 'var(--cautbg)' : (r.t === flipYear ? 'var(--passbg)' : 'transparent'),
+      cells: [
+        { text: this.pct(r.rate, 2), fg: r.renewed ? 'var(--caut)' : 'var(--tx3)' },
+        { text: this.money(r.payment), fg: 'var(--tx2)' },
+        { text: this.short(r.interest), fg: 'var(--caut)' },
+        { text: this.short(r.principal), fg: 'var(--ac)' },
+        { text: r.closing === 0 ? '\u2014' : this.short(r.closing), fg: r.closing === 0 ? 'var(--pass)' : 'var(--tx)' },
+        { text: this.pct(r.principal / (r.interest + r.principal) * 100, 0), fg: 'var(--tx2)' }
+      ]
+    }));
+
+    /* ---------- controls ---------- */
+    const seg = (label, values, cur, set, fmt) => ({
+      label, options: values.map(v => ({
+        label: fmt(v), on: cur === v ? 'true' : 'false',
+        bg: cur === v ? 'var(--s1)' : 'var(--s2)', fg: cur === v ? 'var(--ac)' : 'var(--tx2)', fw: cur === v ? '600' : '400',
+        pick: () => set(v)
+      }))
+    });
+    const yrWord = ['yr', 'ans', '\u0440.', 'a\u00f1os'][lang];
+    const groupsOfControls = [
+      seg(s.downPayment, [5, 10, 20, 25], st.dpPct, v => this.setState({ dpPct: v }), v => this.pct(v)),
+      seg(s.amort, [25, 30], st.amortYears, v => this.setState({ amortYears: v }), v => v + '\u2009' + yrWord),
+      seg(s.termLabel, [3, 5, 10], st.termYears, v => this.setState({ termYears: v }), v => v + '\u2009' + yrWord)
+    ];
+
+    const depthOpts = [s.d1, s.d2, s.d3].map((lb, i) => ({
+      label: lb, n: String(i + 1), on: st.depth === i ? 'true' : 'false',
+      bg: st.depth === i ? 'var(--s1)' : 'var(--s2)', fg: st.depth === i ? 'var(--ac)' : 'var(--tx3)', fw: st.depth === i ? '600' : '400',
+      pick: () => this.setState({ depth: i })
+    }));
+    const jumpLinks = [{ href: '#shock', label: s.d1 }, { href: '#stress', label: s.renewalControl }];
+    if (st.depth >= 1) jumpLinks.push({ href: '#risk', label: s.riskTitle.split(' ').slice(0, 2).join(' ') });
+    if (st.depth >= 2) jumpLinks.push({ href: '#table', label: s.tableTitle });
+    jumpLinks.push({ href: '#inputs', label: s.adjust });
+
+    const langs = ['English', 'Français', 'Українська', 'Español'].map((n, i) => ({
+      name: n, abbr: ['EN', 'FR', 'UK', 'ES'][i], on: i === lang ? 'true' : 'false',
+      pick: () => this.setState({ lang: i }),
+      bg: i === lang ? 'var(--s1)' : 'var(--s2)', fg: i === lang ? 'var(--tx)' : 'var(--tx3)', fw: i === lang ? '600' : '400'
+    }));
+    const cityOpts = D.jur.filter(x => x.city).map(x => ({
+      name: D.C[x.city][lang], code: x.prov, on: x.id === st.jurId ? 'true' : 'false',
+      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--s1)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--tx)',
+      brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--br)',
+      pick: () => this.setState({ jurId: x.id, pickerOpen: false, pulse: st.pulse + 1, price: st.priceTouched ? st.price : x.bench.house })
+    }));
+
+    return {
+      s, langs, cityOpts, depthOpts, jumpLinks, presets, shock, shockRows, legend, groupsOfControls,
+      bars: g.bars, grid: g.grid, xTicks, termLines, balancePts: g.balPts, baselinePts: g.basePts,
+      hasBaseline: Math.abs(renewal - contract) > 0.03, flip, chartAlt,
+      mBars: mg.bars, mGrid: mg.grid, mXTicks, mTermLines, mBalancePts: mg.balPts,
+      tableCols, tableRows,
+      themeA: st.themeA, themeB: st.themeB,
+      themeIconA: st.themeA === 'dark' ? '\u25d1' : '\u25cb', themeIconB: st.themeB === 'dark' ? '\u25d1' : '\u25cb',
+      toggleThemeA: () => this.setState(x => ({ themeA: x.themeA === 'dark' ? 'light' : 'dark' })),
+      toggleThemeB: () => this.setState(x => ({ themeB: x.themeB === 'dark' ? 'light' : 'dark' })),
+      pickerOpen: st.pickerOpen, togglePicker: () => this.setState(x => ({ pickerOpen: !x.pickerOpen })),
+      chip: { city: cityName, code: j.prov, short: cityName + ', ' + j.prov },
+      locTag: s.locTagTpl.replace('{city}', cityName) + ' \u00b7 ' + this.date(D.verified),
+      showWhy: st.depth >= 1, showMath: st.depth >= 2,
+      renewalRate: renewal, renewalFmt: this.pct(renewal, 2),
+      onRenewal: e => this.setState({ renewalRate: parseFloat(e.target.value) }),
+      rateMin: this.pct(2), rateMax: this.pct(12),
+      contractPos: ((contract - 2) / 10 * 100).toFixed(1) + '%',
+      contractLabel: s.contractNow + ' ' + this.pct(contract, 2),
+      price: Math.round(price), priceFmt: this.money(price),
+      onPrice: e => { const v = parseFloat(e.target.value); this.setState({ price: isNaN(v) ? 0 : v, priceTouched: true }); },
+      priceTag: cityName + ' \u00b7 ' + this.money(j.bench.house),
+      setupLine: fill(s.setupLine, { mort: this.money(M.fin.loan), rate: this.pct(contract, 2), ren: this.pct(renewal, 2) }),
+      pulseKey: 'p' + st.pulse + st.jurId,
+      sourcesLine: s.sourcesForTpl.replace('{prov}', D.P[j.prov][lang]) + ' \u00b7 ' + s.lastVerified + ' ' + this.date(D.verified) + ' \u00b7 CMHC / SCHL \u00b7 OSFI B-20'
+    };
+  }
+}
+
+</script>
+</body>
+</html>
+

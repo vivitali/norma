@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<script src="hbt-data.js"></script>
+<script src="hbt-engine.js"></script>
+<style>
+:root{
+--s0:#F7F5F1;--s1:#FFFFFF;--s2:#EFECE5;--s3:#E5E1D7;
+--br:#DCD7CC;--brh:#EAE6DD;--brs:#C6BFB1;
+--tx:#17191C;--tx2:#565A5F;--tx3:#888C92;
+--ac:#22375C;--ac2:#3B5C92;--acbg:#E7ECF4;--acbr:#C3CFE2;
+--pass:#1A6B45;--passbg:#E3EFE8;--passbr:#BEDBCB;
+--caut:#87590A;--cautbg:#F6EEDC;--cautbr:#E3D3AE;
+--blk:#8D2A2A;--blkbg:#F6E7E5;--blkbr:#E5C4C0;
+--def:#455A6C;--defbg:#E8EDF1;--defbr:#C8D3DC;
+--bgS:var(--s2);--fgS:var(--tx3);--fwS:400;
+--kBg:var(--s0);--kBr:var(--br);--kFg:var(--tx2);
+}
+[data-theme="dark"]{
+--s0:#121417;--s1:#191C20;--s2:#21252A;--s3:#2A2F35;
+--br:#2F343B;--brh:#262A30;--brs:#3D434B;
+--tx:#EBE9E4;--tx2:#A3A8AE;--tx3:#767B82;
+--ac:#93B3E0;--ac2:#AEC7EC;--acbg:#1C2632;--acbr:#2C3B4D;
+--pass:#6AC497;--passbg:#152620;--passbr:#264737;
+--caut:#DFAB4C;--cautbg:#292213;--cautbr:#463A1E;
+--blk:#EA8D8D;--blkbg:#2A1919;--blkbr:#4A2C2C;
+--def:#A0B4C5;--defbg:#1A2128;--defbr:#2C3742;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#E8E5DF;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+a{color:var(--ac);text-decoration:none}
+a:hover{color:var(--ac2)}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:2px}
+@keyframes hbPulse{0%{background:var(--acbg)}100%{background:transparent}}
+[data-screen-label$="phone"] button{min-height:44px}
+[data-screen-label$="phone"] a{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+[data-screen-label$="phone"] input{min-height:44px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+.dvT{padding:36px 40px 30px}
+.dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dvId{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#17191C;color:#fff;border-radius:3px;text-decoration:none}
+.dvOid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#17191C;border-radius:3px;text-decoration:none}
+.dvName{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#17191C}
+.dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+.dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#22375C;color:#fff}
+.dvNote{max-width:840px;font:400 12.5px/1.65 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
+.dvNote b{color:rgba(0,0,0,.85);font-weight:600}
+.dvNext{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dvT" id="t6">
+<div class="dvH"><a class="dvId" href="#t6">6</a><span class="dvName">Home — a hub that answers, not a menu that lists</span></div>
+<p class="dvNote">The page in front of everything, built so each calculator works alone <b>or</b> as part of the full run. Two things make it a hub rather than a table of contents. First, <b>every card carries a live number</b> computed from your city before you have entered anything: <i>"Closing day in Winnipeg — about $16,000"</i> is a reason to tap, <i>"Closing Costs →"</i> is not. Second, the cards have <b>two states in the same provenance vocabulary the tables already use</b> — <i>typical</i> while they run on city defaults, <i>yours</i> once you have been inside, so the hub turns into a dashboard as you go. Nothing is gated: where a tool would sharpen with an input you have not given, the card says which one and takes you to that single question rather than to a six-step wizard. The mode switch sets how much of the product you are using — one errand, or the guided run that fills the shared inputs so every tool sharpens at once — and the depth control inside each tool remains the separate axis of how much detail you want. Location and language sit here so both are chosen once, before any tool opens.</p>
+<div class="dvOpts">
+
+<div class="dvOpt" id="6a">
+<div class="dvLab"><a class="dvOid" href="#6a">6a</a>Desktop ≥1024 px — light, city defaults</div>
+<div data-theme="{{ themeA }}" data-screen-label="Home · desktop" style="width:1180px;background:var(--s0);color:var(--tx);border:1px solid var(--br);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
+
+  <header style="display:flex;align-items:center;gap:14px;padding:0 26px;height:60px;background:var(--s1);border-bottom:1px solid var(--br)">
+    <span style="font-size:14px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;flex:1;min-width:0">{{ s.brand }}</span>
+    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:7px 11px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+      <span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--ac);flex:none"></span>
+      <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ chip.city }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">{{ chip.code }}</span>
+      <span aria-hidden="true" style="color:var(--tx3);font-size:11px">·</span>
+      <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ chip.country }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--tx3)">▾</span>
+    </button>
+    <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+      <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+        <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:6px 10px;font-size:11.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.name }}</button>
+      </sc-for>
+    </div>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--tx2)">{{ themeIconA }}</button>
+  </header>
+
+  <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:var(--s1);border-bottom:1px solid var(--br);padding:16px 26px 18px">
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">{{ s.municipality }}</div>
+      <div role="listbox" style="display:flex;flex-wrap:wrap;gap:5px">
+        <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="8">
+          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:8px 11px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg);color:var(--kFg)">
+            <span style="font-size:12.5px;font-weight:500">{{ c.name }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ c.code }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <p style="margin:12px 0 0;font-size:11.5px;line-height:1.55;color:var(--tx3);max-width:620px">{{ s.detectNote }}</p>
+    </div>
+  </sc-if>
+
+  <div style="padding:34px 26px 0;display:grid;grid-template-columns:1.35fr 1fr;gap:38px;align-items:start">
+    <div>
+      <h1 style="margin:0 0 12px;font-size:44px;line-height:1.06;font-weight:600;letter-spacing:-.03em;max-width:560px;text-wrap:pretty">{{ s.heroQ }}</h1>
+      <p style="margin:0 0 20px;font-size:15.5px;line-height:1.55;color:var(--tx2);max-width:520px;text-wrap:pretty">{{ s.heroSub }}</p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <a href="Affordability.dc.html" style="display:inline-flex;align-items:baseline;gap:10px;padding:13px 20px;background:var(--ac);border-radius:3px;color:var(--s1)">
+          <span style="font-size:15px;font-weight:600">{{ s.startBtn }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.85">{{ s.startMeta }}</span>
+        </a>
+        <span style="font-size:12px;color:var(--tx3);line-height:1.45;max-width:220px;text-wrap:pretty">{{ s.orPick }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-top:22px;padding-top:18px;border-top:1px solid var(--br);max-width:540px">
+        <sc-for list="{{ trust }}" as="tr" hint-placeholder-count="3">
+          <div style="display:flex;gap:9px;align-items:baseline">
+            <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--pass);flex:none;line-height:1.6">✓</span>
+            <span style="font-size:12.5px;line-height:1.5;color:var(--tx2);text-wrap:pretty">{{ tr }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:16px 18px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:13px">
+        <span style="font-size:12.5px;font-weight:600">{{ s.snapshot }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);margin-left:auto;white-space:nowrap">{{ snapshotTag }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <sc-for list="{{ snapshot }}" as="sn" hint-placeholder-count="4">
+          <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--brh)">
+            <span style="font-size:12.5px;color:var(--tx2);flex:1;min-width:0;line-height:1.35">{{ sn.label }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;white-space:nowrap">{{ sn.value }}</span>
+            <span style="--kFg:{{ sn.deltaFg }};font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--kFg);min-width:52px;text-align:right;white-space:nowrap">{{ sn.delta }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:11px 0 0;font-size:11px;line-height:1.5;color:var(--tx3);text-wrap:pretty">{{ s.snapshotNote }}</p>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-end;gap:18px;padding:32px 26px 0;flex-wrap:wrap">
+    <div style="flex:1;min-width:300px">
+      <h2 style="margin:0 0 5px;font-size:19px;line-height:1.2;font-weight:600;letter-spacing:-.015em">{{ modeHeading }}</h2>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:var(--tx2);max-width:640px;text-wrap:pretty">{{ modeSub }}</p>
+    </div>
+    <div role="group" aria-label="{{ s.modeLabel }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;flex:none">
+      <sc-for list="{{ modes }}" as="md" hint-placeholder-count="2">
+        <button onClick="{{ md.pick }}" aria-pressed="{{ md.on }}" style="--bgS:{{ md.bg }};--fgS:{{ md.fg }};--fwS:{{ md.fw }};padding:8px 14px;font-size:12.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ md.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="padding:16px 26px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <sc-for list="{{ cards }}" as="cd" hint-placeholder-count="4">
+      <a href="{{ cd.href }}" style="--kBg:{{ cd.bg }};--kBr:{{ cd.br }};--kFg:{{ cd.fg }};display:block;background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:16px 18px;color:var(--tx)" style-hover="border-color:var(--ac2)">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3)">{{ cd.step }}</span>
+          <span style="font-size:14px;font-weight:600;letter-spacing:-.01em">{{ cd.title }}</span>
+          <span style="--kFg:{{ cd.stateFg }};font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:{{ cd.stateBg }};color:var(--kFg);margin-left:auto;white-space:nowrap">{{ cd.state }}</span>
+        </div>
+        <p style="margin:0 0 12px;font-size:12.5px;line-height:1.5;color:var(--tx2);max-width:440px;text-wrap:pretty">{{ cd.question }}</p>
+        <div style="display:flex;align-items:baseline;gap:9px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;letter-spacing:-.025em;color:var(--kFg)">{{ cd.value }}</span>
+          <span style="font-size:12px;color:var(--tx2);line-height:1.35;text-wrap:pretty">{{ cd.valueLabel }}</span>
+        </div>
+        <sc-if value="{{ cd.missing }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:11px;padding-top:10px;border-top:1px solid var(--kBr)">
+            <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--caut);line-height:1.5">+</span>
+            <span style="font-size:11.5px;line-height:1.45;color:var(--caut);text-wrap:pretty">{{ cd.missing }}</span>
+          </div>
+        </sc-if>
+      </a>
+    </sc-for>
+  </div>
+
+  <div style="margin:14px 26px 0;padding:13px 16px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);flex:none">{{ s.plannedLabel }}</span>
+      <span style="font-size:12px;line-height:1.5;color:var(--tx2);flex:1;min-width:0;text-wrap:pretty">{{ plannedLine }}</span>
+    </div>
+  </div>
+
+  <div style="padding:34px 26px 0">
+    <h2 style="margin:0 0 4px;font-size:19px;line-height:1.2;font-weight:600;letter-spacing:-.015em">{{ s.insightsHeading }}</h2>
+    <p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:var(--tx2);max-width:660px;text-wrap:pretty">{{ s.insightsSub }}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <sc-for list="{{ insights }}" as="ins" hint-placeholder-count="2">
+        <div style="--kBg:{{ ins.bg }};--kBr:{{ ins.br }};--kFg:{{ ins.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:18px 20px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:8px">{{ ins.tag }}</div>
+          <div style="font-size:17px;line-height:1.28;font-weight:600;letter-spacing:-.012em;color:var(--kFg);margin-bottom:12px;text-wrap:pretty">{{ ins.head }}</div>
+          <div style="display:flex;align-items:flex-end;gap:4px;height:56px;margin-bottom:12px">
+            <sc-for list="{{ ins.bars }}" as="bar" hint-placeholder-count="3">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:stretch;gap:5px">
+                <span aria-hidden="true" style="display:block;height:{{ bar.h }};background:{{ bar.fill }};border:1px solid {{ bar.stroke }};border-radius:1px"></span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--tx3);text-align:center;line-height:1.2">{{ bar.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:0;font-size:12.5px;line-height:1.6;color:var(--tx2);text-wrap:pretty">{{ ins.body }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="margin:32px 26px 24px;padding:14px 16px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.5;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);flex:1;min-width:0">{{ sourcesLine }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr)">{{ s.unverifiedFlag }}</span>
+    </div>
+    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--tx3);max-width:940px;text-wrap:pretty">{{ s.disclaimer }}</p>
+  </div>
+</div>
+</div>
+
+<div class="dvOpt" id="6b">
+<div class="dvLab"><a class="dvOid" href="#6b">6b</a>Phone 390 px — dark, one card visited</div>
+<div data-theme="{{ themeB }}" data-screen-label="Home · phone" style="width:430px;padding:20px;background:#0B0C0E;border-radius:44px;border:1px solid rgba(255,255,255,.09);box-shadow:0 2px 14px rgba(0,0,0,.28)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--s0);color:var(--tx);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+      <span>9:41</span><span style="margin-left:auto;letter-spacing:.12em">•••</span>
+    </div>
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--br)">
+      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--s2);border:1px solid var(--br);border-radius:3px;min-width:0">
+        <span aria-hidden="true" style="width:4px;height:4px;border-radius:50%;background:var(--ac);flex:none"></span>
+        <span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.short }}</span>
+        <span aria-hidden="true" style="font-size:8px;color:var(--tx3)">▾</span>
+      </button>
+      <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-left:auto">
+        <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 6px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx2);flex:none">{{ themeIconB }}</button>
+    </header>
+
+    <div style="flex:1;overflow:auto;padding:16px 14px">
+      <h1 style="margin:0 0 10px;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.028em;text-wrap:pretty">{{ s.heroQ }}</h1>
+      <p style="margin:0 0 16px;font-size:13.5px;line-height:1.5;color:var(--tx2);text-wrap:pretty">{{ s.heroSub }}</p>
+      <a href="Affordability.dc.html" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:0 16px;background:var(--ac);border-radius:3px;color:var(--s1);margin-bottom:14px">
+        <span style="font-size:15px;font-weight:600">{{ s.startBtn }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.85">{{ s.startMeta }}</span>
+      </a>
+
+      <div style="display:flex;flex-direction:column;gap:6px;padding:12px 13px;background:var(--s1);border:1px solid var(--br);border-radius:3px;margin-bottom:16px">
+        <sc-for list="{{ trust }}" as="tr" hint-placeholder-count="3">
+          <div style="display:flex;gap:8px;align-items:baseline">
+            <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:700;color:var(--pass);flex:none;line-height:1.6">✓</span>
+            <span style="font-size:11.5px;line-height:1.45;color:var(--tx2);text-wrap:pretty">{{ tr }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);flex:none">{{ s.modeLabel }}</span>
+        <div role="group" aria-label="{{ s.modeLabel }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;flex:1">
+          <sc-for list="{{ modes }}" as="md" hint-placeholder-count="2">
+            <button onClick="{{ md.pick }}" aria-pressed="{{ md.on }}" style="--bgS:{{ md.bg }};--fgS:{{ md.fg }};--fwS:{{ md.fw }};flex:1;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS);padding:0 6px;white-space:nowrap">{{ md.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px">
+        <sc-for list="{{ cards }}" as="cd" hint-placeholder-count="4">
+          <a href="{{ cd.href }}" style="--kBg:{{ cd.bg }};--kBr:{{ cd.br }};--kFg:{{ cd.fg }};display:block;background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:13px 14px;color:var(--tx)">
+            <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:7px">
+              <span style="font-size:13px;font-weight:600;letter-spacing:-.01em">{{ cd.title }}</span>
+              <span style="--kFg:{{ cd.stateFg }};font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 5px;border-radius:2px;background:{{ cd.stateBg }};color:var(--kFg);margin-left:auto;white-space:nowrap">{{ cd.state }}</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;letter-spacing:-.025em;color:var(--kFg)">{{ cd.value }}</span>
+              <span style="font-size:11px;color:var(--tx2);line-height:1.3;text-wrap:pretty">{{ cd.valueLabel }}</span>
+            </div>
+            <sc-if value="{{ cd.missing }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:11px;line-height:1.45;color:var(--caut);text-wrap:pretty">＋ {{ cd.missing }}</div>
+            </sc-if>
+          </a>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ insights }}" as="ins" hint-placeholder-count="2">
+          <div style="--kBg:{{ ins.bg }};--kBr:{{ ins.br }};--kFg:{{ ins.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:14px 15px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:7px">{{ ins.tag }}</div>
+            <div style="font-size:15px;line-height:1.28;font-weight:600;color:var(--kFg);margin-bottom:10px;text-wrap:pretty">{{ ins.head }}</div>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:48px;margin-bottom:10px">
+              <sc-for list="{{ ins.bars }}" as="bar" hint-placeholder-count="3">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:stretch;gap:4px">
+                  <span aria-hidden="true" style="display:block;height:{{ bar.h }};background:{{ bar.fill }};border:1px solid {{ bar.stroke }};border-radius:1px"></span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--tx3);text-align:center;line-height:1.2">{{ bar.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ ins.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dvNext">Try next: "rebuild Amortization with the renewal slider" · "switch the hub to the full-picture mode" · "now the 6-step wizard" · "show 6a in Ukrainian"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1700,&quot;height&quot;:1600},&quot;startMode&quot;:{&quot;editor&quot;:&quot;radio&quot;,&quot;options&quot;:[&quot;one&quot;,&quot;full&quot;],&quot;default&quot;:&quot;one&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Mode on load&quot;},&quot;showVisited&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Show a visited card (yours state)&quot;},&quot;startJurisdiction&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;winnipeg&quot;,&quot;toronto&quot;,&quot;ottawa&quot;,&quot;vancouver&quot;,&quot;halifax&quot;,&quot;montreal&quot;,&quot;calgary&quot;,&quot;saskatoon&quot;],&quot;default&quot;:&quot;winnipeg&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;City on load&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Français&quot;,&quot;Українська&quot;,&quot;Español&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Language on load&quot;}}">
+class Component extends DCLogic {
+  state = {
+    ready: false, lang: 0, themeA: 'light', themeB: 'dark',
+    jurId: 'winnipeg', pickerOpen: false, mode: 'one',
+    price: 0, priceTouched: false, dpPct: 10, amortYears: 30, ftb: true, ptype: 'house',
+    inc1: 75000, inc2: 45000, app2: true, haircut: 0, debts: 550,
+    comfortCeiling: 2700, insuranceAnnual: 1500, utilities: 300, condoFee: 0,
+    funds: 50000, save: 1200, rent: 0, rentInflation: 3, holding: 10,
+    apprKey: 'shelter', retKey: 'balanced', investDiff: true, appreciationOn: true,
+    visited: {}, pulse: 0
+  };
+
+  componentDidMount() {
+    const go = () => {
+      const D = window.CIBTH_DATA; if (!D || !window.CIBTH_ENGINE) return false;
+      const p = this.props || {};
+      const jid = D.jur.some(x => x.id === p.startJurisdiction) ? p.startJurisdiction : 'winnipeg';
+      const li = ['English', 'Français', 'Українська', 'Español'].indexOf(p.startLang);
+      const rec = D.jur.find(x => x.id === jid);
+      this.setState({ ready: true, jurId: jid, lang: li < 0 ? 0 : li,
+        price: rec.bench.house, rent: rec.rent || 1500,
+        mode: p.startMode === 'full' ? 'full' : 'one',
+        visited: p.showVisited === false ? {} : { closing: true } });
+      const shared = window.CIBTH_ENGINE.loadShared();
+      if (Object.keys(shared).length) this.setState(shared);
+      window.CIBTH_ENGINE.onSharedChange(v => this.setState(v));
+      return true;
+    };
+    if (!go()) { const iv = setInterval(() => { if (go()) clearInterval(iv); }, 30); this._iv = iv;
+      window.addEventListener('cibth-data', go); window.addEventListener('cibth-engine', go); }
+  }
+  componentWillUnmount() { if (this._iv) clearInterval(this._iv); }
+  componentDidUpdate() { if (this.state.ready) window.CIBTH_ENGINE.saveShared(this.state); }
+
+  L() { return ['en-CA', 'fr-CA', 'uk-UA', 'es-ES'][this.state.lang]; }
+  money(n, dp) { return window.CIBTH_ENGINE.money(n, this.L(), this.state.lang !== 0, dp); }
+  short(n) {
+    const a = Math.abs(n), sign = n < 0 ? '\u2212\u2009' : '';
+    const nf = (v, d) => new Intl.NumberFormat(this.L(), { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+    const unit = ['M', 'M', '\u043c\u043b\u043d', 'M'][this.state.lang];
+    const kUnit = ['k', 'k', '\u0442\u0438\u0441', 'k'][this.state.lang];
+    let body;
+    if (a >= 1000000) body = nf(a / 1000000, 2) + '\u2009' + unit;
+    else if (a >= 1000) body = nf(Math.round(a / 1000), 0) + '\u2009' + kUnit;
+    else body = nf(Math.round(a), 0);
+    return sign + (this.state.lang === 0 ? '$' + body : body + '\u00a0$');
+  }
+  pct(n, d) {
+    const v = new Intl.NumberFormat(this.L(), { minimumFractionDigits: d == null ? 0 : d, maximumFractionDigits: d == null ? 1 : d }).format(n);
+    return this.state.lang === 0 ? v + '%' : v + '\u202f%';
+  }
+  date(iso) { const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat(this.L(), { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d)); }
+
+  S = {
+    heroQ: ['How much house can you actually afford?', 'Quelle maison pouvez-vous r\u00e9ellement vous permettre\u202f?', '\u042f\u043a\u0435 \u0436\u0438\u0442\u043b\u043e \u0432\u0438 \u0441\u043f\u0440\u0430\u0432\u0434\u0456 \u043c\u043e\u0436\u0435\u0442\u0435 \u0441\u043e\u0431\u0456 \u0434\u043e\u0437\u0432\u043e\u043b\u0438\u0442\u0438?', '\u00bfCu\u00e1nta casa puede permitirse realmente?'],
+    heroSub: ['Every province and territory. Real rules, dated and sourced. Use one tool on its own, or run the whole thing.', 'Chaque province et territoire. De vraies r\u00e8gles, dat\u00e9es et sourc\u00e9es. Utilisez un seul outil, ou faites le parcours complet.', '\u0423\u0441\u0456 \u043f\u0440\u043e\u0432\u0456\u043d\u0446\u0456\u0457 \u0439 \u0442\u0435\u0440\u0438\u0442\u043e\u0440\u0456\u0457. \u0421\u043f\u0440\u0430\u0432\u0436\u043d\u0456 \u043f\u0440\u0430\u0432\u0438\u043b\u0430 \u2014 \u0437 \u0434\u0430\u0442\u0430\u043c\u0438 \u0439 \u0434\u0436\u0435\u0440\u0435\u043b\u0430\u043c\u0438. \u041c\u043e\u0436\u043d\u0430 \u0432\u0437\u044f\u0442\u0438 \u043e\u0434\u0438\u043d \u0456\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442 \u0430\u0431\u043e \u043f\u0440\u043e\u0439\u0442\u0438 \u0432\u0441\u0435.', 'Todas las provincias y territorios. Reglas reales, fechadas y con fuentes. Use una herramienta sola o rec\u00f3rralo todo.'],
+    startBtn: ['Start with what you can carry', 'Commencer par ce que vous pouvez porter', '\u041f\u043e\u0447\u0430\u0442\u0438 \u0437 \u0442\u043e\u0433\u043e, \u0449\u043e \u0432\u0438 \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u0454\u0442\u0435', 'Empiece por lo que puede sostener'],
+    startMeta: ['3 min \u00b7 no signup', '3 min \u00b7 sans inscription', '3 \u0445\u0432 \u00b7 \u0431\u0435\u0437 \u0440\u0435\u0454\u0441\u0442\u0440\u0430\u0446\u0456\u0457', '3 min \u00b7 sin registro'],
+    orPick: ['Or open any tool below on its own \u2014 nothing is locked behind the others.', 'Ou ouvrez n\u2019importe quel outil ci-dessous seul \u2014 rien n\u2019est verrouill\u00e9 derri\u00e8re les autres.', '\u0410\u0431\u043e \u0432\u0456\u0434\u043a\u0440\u0438\u0439\u0442\u0435 \u043b\u044e\u0431\u0438\u0439 \u0456\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442 \u043d\u0438\u0436\u0447\u0435 \u043e\u043a\u0440\u0435\u043c\u043e \u2014 \u043d\u0456\u0447\u043e\u0433\u043e \u043d\u0435 \u0437\u0430\u0431\u043b\u043e\u043a\u043e\u0432\u0430\u043d\u043e.', 'O abra cualquier herramienta de abajo por s\u00ed sola: nada est\u00e1 bloqueado detr\u00e1s de las dem\u00e1s.'],
+    t1: ['No account, no email, nothing stored on a server. Your figures stay in this browser.', 'Aucun compte, aucun courriel, rien sur un serveur. Vos chiffres restent dans ce navigateur.', '\u0411\u0435\u0437 \u0430\u043a\u0430\u0443\u043d\u0442\u0430, \u0431\u0435\u0437 \u0435\u043b\u0435\u043a\u0442\u0440\u043e\u043d\u043d\u043e\u0457 \u043f\u043e\u0448\u0442\u0438, \u043d\u0456\u0447\u043e\u0433\u043e \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0456. \u0412\u0430\u0448\u0456 \u0446\u0438\u0444\u0440\u0438 \u0437\u0430\u043b\u0438\u0448\u0430\u044e\u0442\u044c\u0441\u044f \u0432 \u0446\u044c\u043e\u043c\u0443 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0456.', 'Sin cuenta, sin correo, nada en un servidor. Sus cifras se quedan en este navegador.'],
+    t2: ['Your province\u2019s real rules, not national averages \u2014 every figure dated and sourced.', 'Les vraies r\u00e8gles de votre province, pas des moyennes nationales \u2014 chaque chiffre dat\u00e9 et sourc\u00e9.', '\u0421\u043f\u0440\u0430\u0432\u0436\u043d\u0456 \u043f\u0440\u0430\u0432\u0438\u043b\u0430 \u0432\u0430\u0448\u043e\u0457 \u043f\u0440\u043e\u0432\u0456\u043d\u0446\u0456\u0457, \u0430 \u043d\u0435 \u043d\u0430\u0446\u0456\u043e\u043d\u0430\u043b\u044c\u043d\u0456 \u0441\u0435\u0440\u0435\u0434\u043d\u0456 \u2014 \u043a\u043e\u0436\u043d\u0430 \u0446\u0438\u0444\u0440\u0430 \u0437 \u0434\u0430\u0442\u043e\u044e \u0439 \u0434\u0436\u0435\u0440\u0435\u043b\u043e\u043c.', 'Las reglas reales de su provincia, no promedios nacionales: cada cifra fechada y con fuente.'],
+    t3: ['Free, and we do not sell your data or refer you to anyone.', 'Gratuit, et nous ne vendons pas vos donn\u00e9es ni ne vous r\u00e9f\u00e9rons \u00e0 personne.', '\u0411\u0435\u0437\u043a\u043e\u0448\u0442\u043e\u0432\u043d\u043e; \u043c\u0438 \u043d\u0435 \u043f\u0440\u043e\u0434\u0430\u0454\u043c\u043e \u0432\u0430\u0448\u0456 \u0434\u0430\u043d\u0456 \u0439 \u043d\u0456\u043a\u043e\u043c\u0443 \u0432\u0430\u0441 \u043d\u0435 \u043f\u0435\u0440\u0435\u0434\u0430\u0454\u043c\u043e.', 'Gratis, y no vendemos sus datos ni le derivamos a nadie.'],
+    snapshot: ['Market snapshot', 'Aper\u00e7u du march\u00e9', '\u0417\u0440\u0456\u0437 \u0440\u0438\u043d\u043a\u0443', 'Panorama del mercado'],
+    snapshotNote: ['Benchmark prices and typical rent for the city in the chip above. Change the city and every number on this page follows.', 'Prix de r\u00e9f\u00e9rence et loyer typique pour la ville indiqu\u00e9e ci-dessus. Changez de ville et tous les chiffres de cette page suivent.', '\u0415\u0442\u0430\u043b\u043e\u043d\u043d\u0456 \u0446\u0456\u043d\u0438 \u0439 \u0442\u0438\u043f\u043e\u0432\u0430 \u043e\u0440\u0435\u043d\u0434\u0430 \u0434\u043b\u044f \u043c\u0456\u0441\u0442\u0430 \u0432\u0438\u0449\u0435. \u0417\u043c\u0456\u043d\u0456\u0442\u044c \u043c\u0456\u0441\u0442\u043e \u2014 \u0456 \u0432\u0441\u0456 \u0446\u0438\u0444\u0440\u0438 \u043d\u0430 \u0441\u0442\u043e\u0440\u0456\u043d\u0446\u0456 \u0437\u043c\u0456\u043d\u044f\u0442\u044c\u0441\u044f.', 'Precios de referencia y alquiler t\u00edpico de la ciudad indicada arriba. Cambie la ciudad y todas las cifras de esta p\u00e1gina se ajustan.'],
+    snDetached: ['Detached benchmark', 'R\u00e9f\u00e9rence maison', '\u0415\u0442\u0430\u043b\u043e\u043d: \u0431\u0443\u0434\u0438\u043d\u043e\u043a', 'Referencia casa'],
+    snCondo: ['Condominium', 'Condominium', '\u041a\u0432\u0430\u0440\u0442\u0438\u0440\u0430', 'Condominio'],
+    snRent: ['Typical rent', 'Loyer typique', '\u0422\u0438\u043f\u043e\u0432\u0430 \u043e\u0440\u0435\u043d\u0434\u0430', 'Alquiler t\u00edpico'],
+    snTax: ['Property tax rate', 'Taux de taxe fonci\u00e8re', '\u0421\u0442\u0430\u0432\u043a\u0430 \u043f\u043e\u0434\u0430\u0442\u043a\u0443 \u043d\u0430 \u043c\u0430\u0439\u043d\u043e', 'Tasa del impuesto predial'],
+    modeLabel: ['Mode', 'Mode', '\u0420\u0435\u0436\u0438\u043c', 'Modo'],
+    modeOne: ['One question', 'Une question', '\u041e\u0434\u043d\u0435 \u043f\u0438\u0442\u0430\u043d\u043d\u044f', 'Una pregunta'],
+    modeFull: ['The full picture', 'Le portrait complet', '\u041f\u043e\u0432\u043d\u0430 \u043a\u0430\u0440\u0442\u0438\u043d\u0430', 'El panorama completo'],
+    oneHeading: ['Pick the question you came with', 'Choisissez la question qui vous am\u00e8ne', '\u0412\u0438\u0431\u0435\u0440\u0456\u0442\u044c \u043f\u0438\u0442\u0430\u043d\u043d\u044f, \u0437 \u044f\u043a\u0438\u043c \u0432\u0438 \u043f\u0440\u0438\u0439\u0448\u043b\u0438', 'Elija la pregunta con la que viene'],
+    oneSub: ['Each tool answers on its own using figures typical for your city. Give it more and it sharpens; give it nothing and it still answers.', 'Chaque outil r\u00e9pond seul \u00e0 partir de chiffres typiques pour votre ville. Donnez-lui plus et il s\u2019affine\u202f; ne donnez rien et il r\u00e9pond quand m\u00eame.', '\u041a\u043e\u0436\u0435\u043d \u0456\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0430\u0454 \u0441\u0430\u043c\u043e\u0441\u0442\u0456\u0439\u043d\u043e \u0437\u0430 \u0442\u0438\u043f\u043e\u0432\u0438\u043c\u0438 \u0434\u043b\u044f \u0432\u0430\u0448\u043e\u0433\u043e \u043c\u0456\u0441\u0442\u0430 \u0434\u0430\u043d\u0438\u043c\u0438. \u0414\u0430\u0441\u0442\u0435 \u0431\u0456\u043b\u044c\u0448\u0435 \u2014 \u0431\u0443\u0434\u0435 \u0442\u043e\u0447\u043d\u0456\u0448\u0435; \u043d\u0435 \u0434\u0430\u0441\u0442\u0435 \u043d\u0456\u0447\u043e\u0433\u043e \u2014 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0441\u0442\u044c \u0432\u0441\u0435 \u043e\u0434\u043d\u043e.', 'Cada herramienta responde por s\u00ed sola con cifras t\u00edpicas de su ciudad. D\u00e9le m\u00e1s y se afina; no le d\u00e9 nada y a\u00fan responde.'],
+    fullHeading: ['The guided run, in this order', 'Le parcours guid\u00e9, dans cet ordre', '\u041a\u0435\u0440\u043e\u0432\u0430\u043d\u0438\u0439 \u043f\u0440\u043e\u0445\u0456\u0434, \u0443 \u0442\u0430\u043a\u0456\u0439 \u043f\u043e\u0441\u043b\u0456\u0434\u043e\u0432\u043d\u043e\u0441\u0442\u0456', 'El recorrido guiado, en este orden'],
+    fullSub: ['Each step feeds the next, so answers sharpen as you go. Your inputs are shared across every tool \u2014 change something once and the rest follows.', 'Chaque \u00e9tape alimente la suivante, donc les r\u00e9ponses s\u2019affinent en avan\u00e7ant. Vos donn\u00e9es sont partag\u00e9es entre tous les outils \u2014 modifiez une fois et le reste suit.', '\u041a\u0430\u0436\u0435\u043d \u043a\u0440\u043e\u043a \u0436\u0438\u0432\u0438\u0442\u044c \u043d\u0430\u0441\u0442\u0443\u043f\u043d\u0438\u0439, \u0442\u043e\u043c\u0443 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0456 \u0443\u0442\u043e\u0447\u043d\u044e\u044e\u0442\u044c\u0441\u044f. \u0412\u0430\u0448\u0456 \u0434\u0430\u043d\u0456 \u0441\u043f\u0456\u043b\u044c\u043d\u0456 \u0434\u043b\u044f \u0432\u0441\u0456\u0445 \u0456\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u0456\u0432 \u2014 \u0437\u043c\u0456\u043d\u0456\u0442\u044c \u0440\u0430\u0437, \u0456 \u0440\u0435\u0448\u0442\u0430 \u043f\u0456\u0434\u0442\u044f\u0433\u043d\u0435\u0442\u044c\u0441\u044f.', 'Cada paso alimenta el siguiente, as\u00ed que las respuestas se afinan. Sus datos se comparten entre todas las herramientas: cambie algo una vez y el resto se ajusta.'],
+    stTypical: ['typical', 'typique', '\u0442\u0438\u043f\u043e\u0432\u0435', 't\u00edpico'],
+    stYours: ['yours', 'le v\u00f4tre', '\u0432\u0430\u0448\u0435', 'suyo'],
+    cAffTitle: ['What you can comfortably afford', 'Ce que vous pouvez porter confortablement', '\u0429\u043e \u0432\u0438 \u0441\u043f\u043e\u043a\u0456\u0439\u043d\u043e \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u0454\u0442\u0435', 'Lo que puede permitirse con holgura'],
+    cAffQ: ['A lender will approve more than you can carry. This shows both numbers side by side and treats the comfortable one as the answer.', 'Un pr\u00eateur approuvera plus que ce que vous pouvez porter. Ceci montre les deux chiffres c\u00f4te \u00e0 c\u00f4te et traite le confortable comme la r\u00e9ponse.', '\u041a\u0440\u0435\u0434\u0438\u0442\u043e\u0440 \u0441\u0445\u0432\u0430\u043b\u0438\u0442\u044c \u0431\u0456\u043b\u044c\u0448\u0435, \u043d\u0456\u0436 \u0432\u0438 \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u0454\u0442\u0435. \u0422\u0443\u0442 \u043e\u0431\u0430 \u0447\u0438\u0441\u043b\u0430 \u043f\u043e\u0440\u044f\u0434 \u2014 \u0456 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0434\u044e \u0432\u0432\u0430\u0436\u0430\u0454\u0442\u044c\u0441\u044f \u043a\u043e\u043c\u0444\u043e\u0440\u0442\u043d\u0435.', 'Un prestamista aprobar\u00e1 m\u00e1s de lo que puede sostener. Aqu\u00ed est\u00e1n ambas cifras juntas, y la c\u00f3moda es la respuesta.'],
+    cAffLabel: ['comfortable price, against a lender ceiling of {x}', 'prix confortable, face \u00e0 un plafond de pr\u00eateur de {x}', '\u043a\u043e\u043c\u0444\u043e\u0440\u0442\u043d\u0430 \u0446\u0456\u043d\u0430 \u043f\u0440\u0438 \u043c\u0435\u0436\u0456 \u043a\u0440\u0435\u0434\u0438\u0442\u043e\u0440\u0430 {x}', 'precio c\u00f3modo, frente a un techo del prestamista de {x}'],
+    cCloseTitle: ['What closing day costs', 'Ce que co\u00fbte le jour de la cl\u00f4ture', '\u0421\u043a\u0456\u043b\u044c\u043a\u0438 \u043a\u043e\u0448\u0442\u0443\u0454 \u0434\u0435\u043d\u044c \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u044f', 'Lo que cuesta el d\u00eda del cierre'],
+    cCloseQ: ['Closing costs are separate from the down payment and due the same day. Their size varies enormously by province.', 'Les frais de cl\u00f4ture sont distincts de la mise de fonds et exigibles le m\u00eame jour. Leur ampleur varie \u00e9norm\u00e9ment selon la province.', '\u0412\u0438\u0442\u0440\u0430\u0442\u0438 \u043d\u0430 \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u044f \u2014 \u043e\u043a\u0440\u0435\u043c\u043e \u0432\u0456\u0434 \u0432\u043d\u0435\u0441\u043a\u0443 \u0439 \u0442\u043e\u0433\u043e \u0436 \u0434\u043d\u044f. \u0407\u0445 \u0440\u043e\u0437\u043c\u0456\u0440 \u0434\u0443\u0436\u0435 \u0440\u0456\u0437\u043d\u0438\u0439 \u0437\u0430\u043b\u0435\u0436\u043d\u043e \u0432\u0456\u0434 \u043f\u0440\u043e\u0432\u0456\u043d\u0446\u0456\u0457.', 'Los gastos de cierre son aparte del pago inicial y se pagan el mismo d\u00eda. Su tama\u00f1o var\u00eda enormemente por provincia.'],
+    cCloseLabel: ['cash on the day at {x}, of which {y} is closing costs', 'comptant le jour m\u00eame \u00e0 {x}, dont {y} de frais de cl\u00f4ture', '\u0433\u043e\u0442\u0456\u0432\u043a\u0430 \u0432 \u0434\u0435\u043d\u044c \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u044f \u043f\u0440\u0438 {x}, \u0437 \u044f\u043a\u0438\u0445 {y} \u2014 \u0432\u0438\u0442\u0440\u0430\u0442\u0438 \u043d\u0430 \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u044f', 'efectivo ese d\u00eda a {x}, de los cuales {y} son gastos de cierre'],
+    cScenTitle: ['Which down payment', 'Quelle mise de fonds', '\u042f\u043a\u0438\u0439 \u0432\u043d\u0435\u0441\u043e\u043a', 'Qu\u00e9 pago inicial'],
+    cScenQ: ['Five, ten, twenty or twenty-five percent, compared at your price. The cheapest monthly is rarely the cheapest overall.', 'Cinq, dix, vingt ou vingt-cinq pour cent, compar\u00e9s \u00e0 votre prix. Le paiement mensuel le plus bas est rarement le moins co\u00fbteux au total.', '\u041f\u2019\u044f\u0442\u044c, \u0434\u0435\u0441\u044f\u0442\u044c, \u0434\u0432\u0430\u0434\u0446\u044f\u0442\u044c \u0447\u0438 \u0434\u0432\u0430\u0434\u0446\u044f\u0442\u044c \u043f\u2019\u044f\u0442\u044c \u0432\u0456\u0434\u0441\u043e\u0442\u043a\u0456\u0432 \u2014 \u0437\u0430 \u0432\u0430\u0448\u043e\u044e \u0446\u0456\u043d\u043e\u044e. \u041d\u0430\u0439\u043d\u0438\u0436\u0447\u0438\u0439 \u043c\u0456\u0441\u044f\u0447\u043d\u0438\u0439 \u043f\u043b\u0430\u0442\u0456\u0436 \u0440\u0456\u0434\u043a\u043e \u043d\u0430\u0439\u0434\u0435\u0448\u0435\u0432\u0448\u0438\u0439 \u0437\u0430\u0433\u0430\u043b\u043e\u043c.', 'Cinco, diez, veinte o veinticinco por ciento, comparados a su precio. La cuota m\u00e1s baja rara vez es la m\u00e1s barata en total.'],
+    cScenLabel: ['saved over the mortgage by reaching 20% instead of 5%', '\u00e9conomis\u00e9s sur la dur\u00e9e du pr\u00eat en atteignant 20\u202f% plut\u00f4t que 5\u202f%', '\u0435\u043a\u043e\u043d\u043e\u043c\u0456\u044f \u0437\u0430 \u0442\u0435\u0440\u043c\u0456\u043d \u0456\u043f\u043e\u0442\u0435\u043a\u0438, \u044f\u043a\u0449\u043e \u0432\u043d\u0435\u0441\u0442\u0438 20\u202f%, \u0430 \u043d\u0435 5\u202f%', 'ahorrados en la hipoteca al llegar al 20\u202f% en vez del 5\u202f%'],
+    cRentTitle: ['Rent or buy', 'Louer ou acheter', '\u041e\u0440\u0435\u043d\u0434\u0430 \u0447\u0438 \u043a\u0443\u043f\u0456\u0432\u043b\u044f', 'Alquilar o comprar'],
+    cRentQ: ['Buying is not better in the abstract. Transaction costs are fixed and large, so the answer is a break-even year.', 'Acheter n\u2019est pas meilleur dans l\u2019abstrait. Les frais de transaction sont fixes et \u00e9lev\u00e9s, donc la r\u00e9ponse est une ann\u00e9e de rentabilit\u00e9.', '\u041a\u0443\u043f\u0456\u0432\u043b\u044f \u043d\u0435 \u043a\u0440\u0430\u0449\u0430 \u0430\u0431\u0441\u0442\u0440\u0430\u043a\u0442\u043d\u043e. \u0412\u0438\u0442\u0440\u0430\u0442\u0438 \u043d\u0430 \u0443\u0433\u043e\u0434\u0443 \u0444\u0456\u043a\u0441\u043e\u0432\u0430\u043d\u0456 \u0439 \u0432\u0435\u043b\u0438\u043a\u0456, \u0442\u043e\u043c\u0443 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u044c \u2014 \u0440\u0456\u043a \u0431\u0435\u0437\u0437\u0431\u0438\u0442\u043a\u043e\u0432\u043e\u0441\u0442\u0456.', 'Comprar no es mejor en abstracto. Los costes de transacci\u00f3n son fijos y altos, as\u00ed que la respuesta es un a\u00f1o de equilibrio.'],
+    cRentLabel: ['is when buying pulls ahead, against renting at {x} a month', 'est le moment o\u00f9 l\u2019achat prend l\u2019avantage, face \u00e0 un loyer de {x} par mois', '\u2014 \u043a\u043e\u043b\u0438 \u043a\u0443\u043f\u0456\u0432\u043b\u044f \u0432\u0438\u0445\u043e\u0434\u0438\u0442\u044c \u0432\u043f\u0435\u0440\u0435\u0434 \u043f\u0440\u0438 \u043e\u0440\u0435\u043d\u0434\u0456 {x} \u043d\u0430 \u043c\u0456\u0441\u044f\u0446', 'es cuando comprar toma la delantera, frente a alquilar por {x} al mes'],
+    cRentNever: ['Beyond 40 yr', 'Au-del\u00e0 de 40 ans', '\u041f\u043e\u043d\u0430\u0434 40 \u0440\u043e\u043a\u0456\u0432', 'M\u00e1s de 40 a\u00f1os'],
+    cRentNeverLabel: ['on these assumptions buying never catches up, against renting at {x} a month', 'selon ces hypoth\u00e8ses l\u2019achat ne rattrape jamais, face \u00e0 un loyer de {x} par mois', '\u0437\u0430 \u0446\u0438\u0445 \u043f\u0440\u0438\u043f\u0443\u0449\u0435\u043d\u044c \u043a\u0443\u043f\u0456\u0432\u043b\u044f \u0442\u0430\u043a \u0456 \u043d\u0435 \u043d\u0430\u0437\u0434\u043e\u0433\u0430\u043d\u044f\u0454 \u043f\u0440\u0438 \u043e\u0440\u0435\u043d\u0434\u0456 {x} \u043d\u0430 \u043c\u0456\u0441\u044f\u0446', 'con estos supuestos comprar nunca alcanza, frente a alquilar por {x} al mes'],
+    yearWord: ['Year {n}', 'Ann\u00e9e {n}', '\u0420\u0456\u043a {n}', 'A\u00f1o {n}'],
+    missIncome: ['Add your income and debts to make this yours', 'Ajoutez vos revenus et dettes pour personnaliser', '\u0414\u043e\u0434\u0430\u0439\u0442\u0435 \u0434\u043e\u0445\u0456\u0434 \u0456 \u0431\u043e\u0440\u0433\u0438, \u0449\u043e\u0431 \u0446\u0435 \u0441\u0442\u0430\u043b\u043e \u0432\u0430\u0448\u0438\u043c', 'A\u00f1ada sus ingresos y deudas para personalizarlo'],
+    missFunds: ['Add what you have saved to see if you can cover it', 'Ajoutez votre \u00e9pargne pour voir si vous pouvez couvrir', '\u0414\u043e\u0434\u0430\u0439\u0442\u0435 \u0441\u0432\u043e\u0457 \u0437\u0430\u043e\u0449\u0430\u0434\u0436\u0435\u043d\u043d\u044f, \u0449\u043e\u0431 \u043f\u0435\u0440\u0435\u0432\u0456\u0440\u0438\u0442\u0438', 'A\u00f1ada sus ahorros para ver si puede cubrirlo'],
+    missRent: ['Add your rent and how long you plan to stay', 'Ajoutez votre loyer et la dur\u00e9e pr\u00e9vue', '\u0414\u043e\u0434\u0430\u0439\u0442\u0435 \u0441\u0432\u043e\u044e \u043e\u0440\u0435\u043d\u0434\u0443 \u0439 \u043f\u043b\u0430\u043d\u043e\u0432\u0438\u0439 \u0442\u0435\u0440\u043c\u0456\u043d', 'A\u00f1ada su alquiler y cu\u00e1nto piensa quedarse'],
+    plannedLabel: ['Also planned', 'Aussi pr\u00e9vu', '\u0422\u0430\u043a\u043e\u0436 \u0443 \u043f\u043b\u0430\u043d\u0430\u0445', 'Tambi\u00e9n previsto'],
+    planned: ['Amortization with the renewal cliff \u00b7 Down payment sources and the savings glide path \u00b7 The RRSP to Home Buyers\u2019 Plan play. Each will appear here as a card with its own number once built.', 'Amortissement avec la falaise du renouvellement \u00b7 Sources de la mise de fonds et trajectoire d\u2019\u00e9pargne \u00b7 La strat\u00e9gie REER vers le RAP. Chacun appara\u00eetra ici comme une carte avec son propre chiffre.', '\u0410\u043c\u043e\u0440\u0442\u0438\u0437\u0430\u0446\u0456\u044f \u0437 \u043e\u0431\u0440\u0438\u0432\u043e\u043c \u043f\u0440\u0438 \u043f\u0435\u0440\u0435\u043e\u0444\u043e\u0440\u043c\u043b\u0435\u043d\u043d\u0456 \u00b7 \u0414\u0436\u0435\u0440\u0435\u043b\u0430 \u0432\u043d\u0435\u0441\u043a\u0443 \u0439 \u0433\u0440\u0430\u0444\u0456\u043a \u0437\u0430\u043e\u0449\u0430\u0434\u0436\u0435\u043d\u044c \u00b7 \u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0456\u044f RRSP \u2014 HBP. \u041a\u043e\u0436\u043d\u0438\u0439 \u0437\u2019\u044f\u0432\u0438\u0442\u044c\u0441\u044f \u0442\u0443\u0442 \u044f\u043a \u043a\u0430\u0440\u0442\u043a\u0430 \u0437\u0456 \u0441\u0432\u043e\u0457\u043c \u0447\u0438\u0441\u043b\u043e\u043c.', 'Amortizaci\u00f3n con el precipicio de la renovaci\u00f3n \u00b7 Fuentes del pago inicial y la senda de ahorro \u00b7 La jugada RRSP al Plan de Compradores. Cada uno aparecer\u00e1 aqu\u00ed como tarjeta con su propia cifra.'],
+    insightsHeading: ['Two things worth knowing before you start', 'Deux choses \u00e0 savoir avant de commencer', '\u0414\u0432\u0456 \u0440\u0435\u0447\u0456, \u044f\u043a\u0456 \u0432\u0430\u0440\u0442\u043e \u0437\u043d\u0430\u0442\u0438 \u043f\u0435\u0440\u0435\u0434 \u043f\u043e\u0447\u0430\u0442\u043a\u043e\u043c', 'Dos cosas que conviene saber antes de empezar'],
+    insightsSub: ['They are the reason this exists, and most tools get both of them wrong.', 'Ce sont les raisons d\u2019\u00eatre de cet outil, et la plupart des calculateurs se trompent sur les deux.', '\u0426\u0435 \u0439 \u0454 \u043f\u0440\u0438\u0447\u0438\u043d\u0430 \u0456\u0441\u043d\u0443\u0432\u0430\u043d\u043d\u044f \u0446\u044c\u043e\u0433\u043e \u0456\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u0430, \u0456 \u0431\u0456\u043b\u044c\u0448\u0456\u0441\u0442\u044c \u043a\u0430\u043b\u044c\u043a\u0443\u043b\u044f\u0442\u043e\u0440\u0456\u0432 \u043f\u043e\u043c\u0438\u043b\u044f\u0454\u0442\u044c\u0441\u044f \u0432 \u043e\u0431\u043e\u0445.', 'Son la raz\u00f3n de que esto exista, y la mayor\u00eda de calculadoras se equivocan en ambas.'],
+    i1Tag: ['Insight one', 'Constat un', '\u0406\u0434\u0435\u044f \u043f\u0435\u0440\u0448\u0430', 'Idea uno'],
+    i1Head: ['The lender\u2019s ceiling is not your budget.', 'Le plafond du pr\u00eateur n\u2019est pas votre budget.', '\u041c\u0435\u0436\u0430 \u043a\u0440\u0435\u0434\u0438\u0442\u043e\u0440\u0430 \u2014 \u0446\u0435 \u043d\u0435 \u0432\u0430\u0448 \u0431\u044e\u0434\u0436\u0435\u0442.', 'El techo del prestamista no es su presupuesto.'],
+    i1Body: ['Banks routinely approve thirty to sixty percent more than a household can comfortably carry. Most tools show only the approval number. This one always shows both, at the same weight, and treats the comfortable one as the answer.', 'Les banques approuvent couramment de trente \u00e0 soixante pour cent de plus que ce qu\u2019un m\u00e9nage peut porter confortablement. La plupart des outils n\u2019affichent que le montant approuv\u00e9. Celui-ci affiche toujours les deux, au m\u00eame poids, et traite le confortable comme la r\u00e9ponse.', '\u0411\u0430\u043d\u043a\u0438 \u0437\u0432\u0438\u0447\u0430\u0439\u043d\u043e \u0441\u0445\u0432\u0430\u043b\u044e\u044e\u0442\u044c \u043d\u0430 \u0442\u0440\u0438\u0434\u0446\u044f\u0442\u044c\u2013\u0448\u0456\u0441\u0442\u0434\u0435\u0441\u044f\u0442 \u0432\u0456\u0434\u0441\u043e\u0442\u043a\u0456\u0432 \u0431\u0456\u043b\u044c\u0448\u0435, \u043d\u0456\u0436 \u0440\u043e\u0434\u0438\u043d\u0430 \u0441\u043f\u043e\u043a\u0456\u0439\u043d\u043e \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u0454. \u0411\u0456\u043b\u044c\u0448\u0456\u0441\u0442\u044c \u0456\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u0456\u0432 \u043f\u043e\u043a\u0430\u0437\u0443\u0454 \u043b\u0438\u0448\u0435 \u0441\u0443\u043c\u0443 \u0441\u0445\u0432\u0430\u043b\u0435\u043d\u043d\u044f. \u0426\u0435\u0439 \u0437\u0430\u0432\u0436\u0434\u0438 \u043f\u043e\u043a\u0430\u0437\u0443\u0454 \u043e\u0431\u0430 \u2014 \u043e\u0434\u043d\u0430\u043a\u043e\u0432\u043e \u0432\u0438\u0440\u0430\u0437\u043d\u043e \u2014 \u0456 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0434\u044e \u0432\u0432\u0430\u0436\u0430\u0454 \u043a\u043e\u043c\u0444\u043e\u0440\u0442\u043d\u0435.', 'Los bancos aprueban habitualmente entre un treinta y un sesenta por ciento m\u00e1s de lo que un hogar puede sostener con holgura. La mayor\u00eda de herramientas solo muestran la cifra aprobada. Esta muestra siempre las dos, con el mismo peso, y toma la c\u00f3moda como respuesta.'],
+    i2Tag: ['Insight two', 'Constat deux', '\u0406\u0434\u0435\u044f \u0434\u0440\u0443\u0433\u0430', 'Idea dos'],
+    i2Head: ['Rent versus buy depends on how long you stay.', 'Louer ou acheter d\u00e9pend de la dur\u00e9e de votre s\u00e9jour.', '\u041e\u0440\u0435\u043d\u0434\u0430 \u0447\u0438 \u043a\u0443\u043f\u0456\u0432\u043b\u044f \u2014 \u0446\u0435 \u043f\u0438\u0442\u0430\u043d\u043d\u044f \u0442\u0435\u0440\u043c\u0456\u043d\u0443.', 'Alquilar o comprar depende de cu\u00e1nto se quede.'],
+    i2Body: ['Transaction costs are fixed and large, so buying starts behind and has to catch up. The break-even is typically five to seven years. This tool never says buying is better in the abstract \u2014 it solves for the year the lines cross and compares it to your horizon.', 'Les frais de transaction sont fixes et \u00e9lev\u00e9s, donc l\u2019achat part en retard et doit rattraper. Le seuil de rentabilit\u00e9 est habituellement de cinq \u00e0 sept ans. Cet outil ne dit jamais que l\u2019achat est meilleur dans l\u2019abstrait \u2014 il calcule l\u2019ann\u00e9e du croisement et la compare \u00e0 votre horizon.', '\u0412\u0438\u0442\u0440\u0430\u0442\u0438 \u043d\u0430 \u0443\u0433\u043e\u0434\u0443 \u0444\u0456\u043a\u0441\u043e\u0432\u0430\u043d\u0456 \u0439 \u0432\u0435\u043b\u0438\u043a\u0456, \u0442\u043e\u043c\u0443 \u043a\u0443\u043f\u0456\u0432\u043b\u044f \u0441\u0442\u0430\u0440\u0442\u0443\u0454 \u043f\u043e\u0437\u0430\u0434\u0443 \u0439 \u043c\u0443\u0441\u0438\u0442\u044c \u043d\u0430\u0437\u0434\u043e\u0433\u0430\u043d\u044f\u0442\u0438. \u0411\u0435\u0437\u0437\u0431\u0438\u0442\u043a\u043e\u0432\u0456\u0441\u0442\u044c \u0437\u0430\u0437\u0432\u0438\u0447\u0430\u0439 \u043d\u0430\u0441\u0442\u0430\u0454 \u0447\u0435\u0440\u0435\u0437 \u043f\u2019\u044f\u0442\u044c\u2013\u0441\u0456\u043c \u0440\u043e\u043a\u0456\u0432. \u0426\u0435\u0439 \u0456\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442 \u043d\u0456\u043a\u043e\u043b\u0438 \u043d\u0435 \u043a\u0430\u0436\u0435, \u0449\u043e \u043a\u0443\u043f\u0456\u0432\u043b\u044f \u043a\u0440\u0430\u0449\u0430 \u0430\u0431\u0441\u0442\u0440\u0430\u043a\u0442\u043d\u043e \u2014 \u0432\u0456\u043d \u0448\u0443\u043a\u0430\u0454 \u0440\u0456\u043a \u043f\u0435\u0440\u0435\u0442\u0438\u043d\u0443 \u0439 \u043f\u043e\u0440\u0456\u0432\u043d\u044e\u0454 \u0437 \u0432\u0430\u0448\u0438\u043c \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u043e\u043c.', 'Los costes de transacci\u00f3n son fijos y altos, as\u00ed que comprar empieza por detr\u00e1s y debe recuperar. El equilibrio suele estar entre cinco y siete a\u00f1os. Esta herramienta nunca dice que comprar sea mejor en abstracto: calcula el a\u00f1o del cruce y lo compara con su horizonte.'],
+    barApproved: ['Approved', 'Approuv\u00e9', '\u0421\u0445\u0432\u0430\u043b\u0435\u043d\u043e', 'Aprobado'],
+    barComfort: ['Comfortable', 'Confortable', '\u041a\u043e\u043c\u0444\u043e\u0440\u0442\u043d\u043e', 'C\u00f3modo'],
+    barYr3: ['Yr 3', 'An 3', '\u0420\u0456\u043a 3', 'A\u00f1o 3'],
+    barYr7: ['Yr 7', 'An 7', '\u0420\u0456\u043a 7', 'A\u00f1o 7'],
+    barYr15: ['Yr 15', 'An 15', '\u0420\u0456\u043a 15', 'A\u00f1o 15']
+  };
+
+  renderVals() {
+    const st = this.state;
+    if (!st.ready || !window.CIBTH_DATA || !window.CIBTH_ENGINE) return { themeA: st.themeA, themeB: st.themeB };
+    const D = window.CIBTH_DATA, F = D.federal, E = window.CIBTH_ENGINE, lang = st.lang;
+    const s = {}; for (const k in D.t) s[k] = D.t[k][lang];
+    for (const k in this.S) s[k] = this.S[k][lang];
+
+    const j = D.jur.find(x => x.id === st.jurId) || D.jur[0];
+    const price = st.price || j.bench.house;
+    const cityName = D.C[j.city] ? D.C[j.city][lang] : D.P[j.prov][lang];
+    const base = { price, dpPct: st.dpPct, amortYears: st.amortYears, ftb: st.ftb, ptype: st.ptype, elsewhere: false,
+      insuranceAnnual: st.insuranceAnnual, utilities: st.utilities, condoFee: st.condoFee };
+
+    const A = E.affordability(j, F, Object.assign({}, base, {
+      income1: st.inc1, income2: st.app2 ? st.inc2 : 0, otherIncome: 0, haircut: st.haircut,
+      debts: st.debts, comfortCeiling: st.comfortCeiling,
+      contractRate: (st.dpPct < 20 ? F.rates.insured : F.rates.uninsured) * 100
+    }));
+    const cc = E.closingTotal(j, F, base);
+    const sc5 = E.scenario(j, F, Object.assign({}, base, { dpPct: 5, comfortCeiling: st.comfortCeiling, qualIncome: A.qualIncome, debts: st.debts, funds: st.funds, save: st.save }));
+    const sc20 = E.scenario(j, F, Object.assign({}, base, { dpPct: 20, comfortCeiling: st.comfortCeiling, qualIncome: A.qualIncome, debts: st.debts, funds: st.funds, save: st.save }));
+    const twentySaving = sc5.costOfBorrowing - sc20.costOfBorrowing;
+    const RB = E.rentVsBuy(j, F, Object.assign({}, base, {
+      rent: st.rent || j.rent || 1500, rentInflation: st.rentInflation / 100,
+      appreciation: st.apprKey === 'city'
+        ? (j.yoy == null ? F.appreciation.shelter : j.yoy)
+        : (F.appreciation[st.apprKey] == null ? F.appreciation.shelter : F.appreciation[st.apprKey]),
+      investReturn: F.investReturn[st.retKey] == null ? F.investReturn.balanced : F.investReturn[st.retKey],
+      appreciationOn: st.appreciationOn, investDiff: st.investDiff, years: 40
+    }));
+
+    const AM = E.amortization(j, F, Object.assign({}, base, {
+      termYears: 5, contractRate: (st.dpPct < 20 ? F.rates.insured : F.rates.uninsured) * 100,
+      renewalRate: st.renewalRate == null ? 6.5 : st.renewalRate
+    }));
+    const mRate = E.marginalRate(F, j.prov, st.taxIncome == null ? 68000 : st.taxIncome);
+    const WF = E.waterfall(F, {
+      prov: j.prov, income: st.taxIncome == null ? 68000 : st.taxIncome, need: cc.cash,
+      fhsa: st.fhsa == null ? 12000 : st.fhsa, cash: st.cashSav == null ? 8000 : st.cashSav,
+      rrsp: st.rrsp == null ? 22000 : st.rrsp, tfsa: st.tfsa == null ? 15000 : st.tfsa,
+      gift: st.gift || 0, nonreg: st.nonreg == null ? 6000 : st.nonreg, nonregGain: st.nonregGain == null ? 2200 : st.nonregGain
+    });
+    const HBP = E.hbpPlay(Object.assign({}, F, { hbp: F.hbp || { max: 60000, repayYears: 15, ruleDays: 90 } }), {
+      contribution: st.contribution == null ? 25000 : st.contribution, marginalRate: mRate,
+      withdrawAmount: st.withdrawAmount == null ? 25000 : st.withdrawAmount, investReturn: F.savingsReturn || 0.03
+    });
+    const L3 = {
+      amortTitle: ['Amortization', 'Amortissement', '\u0410\u043c\u043e\u0440\u0442\u0438\u0437\u0430\u0446\u0456\u044f', 'Amortizaci\u00f3n'][lang],
+      amortQ: ['What happens when I renew?', 'Que se passe-t-il au renouvellement\u202f?', '\u0429\u043e \u0431\u0443\u0434\u0435 \u043f\u0440\u0438 \u043f\u0435\u0440\u0435\u043e\u0444\u043e\u0440\u043c\u043b\u0435\u043d\u043d\u0456?', '\u00bfQu\u00e9 pasa al renovar?'][lang],
+      amortLabel: ['more per month from year 6, at {r}', 'de plus par mois d\u00e8s l\u2019an 6, \u00e0 {r}', '\u0431\u0456\u043b\u044c\u0448\u0435 \u0449\u043e\u043c\u0456\u0441\u044f\u0446\u044f \u0437 6-\u0433\u043e \u0440\u043e\u043a\u0443, \u0437\u0430 {r}', 'm\u00e1s al mes desde el a\u00f1o 6, al {r}'][lang],
+      amortMiss: ['Set the rate you expect at renewal', 'Indiquez le taux attendu au renouvellement', '\u0412\u043a\u0430\u0436\u0456\u0442\u044c \u043e\u0447\u0456\u043a\u0443\u0432\u0430\u043d\u0443 \u0441\u0442\u0430\u0432\u043a\u0443 \u043f\u0440\u0438 \u043f\u0435\u0440\u0435\u043e\u0444\u043e\u0440\u043c\u043b\u0435\u043d\u043d\u0456', 'Indique la tasa esperada al renovar'][lang],
+      dpTitle: ['Down payment sources', 'Sources de la mise de fonds', '\u0414\u0436\u0435\u0440\u0435\u043b\u0430 \u0432\u043d\u0435\u0441\u043a\u0443', 'Fuentes del pago inicial'][lang],
+      dpQ: ['Where does the money come from?', 'D\u2019o\u00f9 vient l\u2019argent\u202f?', '\u0417\u0432\u0456\u0434\u043a\u0438 \u0432\u0456\u0437\u044c\u043c\u0443\u0442\u044c\u0441\u044f \u0433\u0440\u043e\u0448\u0456?', '\u00bfDe d\u00f3nde sale el dinero?'][lang],
+      dpLabel: ['still to save, across six accounts', 'encore \u00e0 \u00e9pargner, sur six comptes', '\u0449\u0435 \u043d\u0430\u043a\u043e\u043f\u0438\u0442\u0438, \u043d\u0430 \u0448\u0435\u0441\u0442\u0438 \u0440\u0430\u0445\u0443\u043d\u043a\u0430\u0445', 'por ahorrar, en seis cuentas'][lang],
+      dpLabelOk: ['already covered, across six accounts', 'd\u00e9j\u00e0 couvert, sur six comptes', '\u0432\u0436\u0435 \u043f\u043e\u043a\u0440\u0438\u0442\u043e, \u043d\u0430 \u0448\u0435\u0441\u0442\u0438 \u0440\u0430\u0445\u0443\u043d\u043a\u0430\u0445', 'ya cubierto, en seis cuentas'][lang],
+      dpMiss: ['Enter your account balances', 'Entrez vos soldes de comptes', '\u0412\u0432\u0435\u0434\u0456\u0442\u044c \u0431\u0430\u043b\u0430\u043d\u0441\u0438 \u0440\u0430\u0445\u0443\u043d\u043a\u0456\u0432', 'Introduzca los saldos de sus cuentas'][lang],
+      hbpTitle: ['RRSP \u2192 Home Buyers\u2019 Plan', 'REER \u2192 RAP', 'RRSP \u2192 HBP', 'RRSP \u2192 Plan de Compradores'][lang],
+      hbpQ: ['Should I use my RRSP?', 'Devrais-je utiliser mon REER\u202f?', '\u0427\u0438 \u0432\u0430\u0440\u0442\u043e \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u0430\u0442\u0438 RRSP?', '\u00bfDebo usar mi RRSP?'][lang],
+      hbpLabel: ['refund, if you clear the 90-day rule', 'de remboursement, si vous respectez la r\u00e8gle des 90 jours', '\u0432\u0456\u0434\u0448\u043a\u043e\u0434\u0443\u0432\u0430\u043d\u043d\u044f, \u044f\u043a\u0449\u043e \u0432\u0438\u0442\u0440\u0438\u043c\u0430\u0442\u0438 90 \u0434\u043d\u0456\u0432', 'de reembolso, si cumple la regla de 90 d\u00edas'][lang],
+      hbpMiss: ['Set your contribution and closing dates', 'Indiquez vos dates de cotisation et de cl\u00f4ture', '\u0412\u043a\u0430\u0436\u0456\u0442\u044c \u0434\u0430\u0442\u0438 \u0432\u043d\u0435\u0441\u043a\u0443 \u0442\u0430 \u0437\u0430\u043a\u0440\u0438\u0442\u0442\u044f', 'Indique las fechas de aportaci\u00f3n y cierre'][lang]
+    };
+
+    const fill = (tpl, map) => Object.keys(map).reduce((acc, k) => acc.split('{' + k + '}').join(map[k]), tpl);
+    const vis = k => !!st.visited[k];
+    const tag = k => vis(k)
+      ? { state: s.stYours, stateBg: 'var(--acbg)', stateFg: 'var(--ac)' }
+      : { state: s.stTypical, stateBg: 'var(--s2)', stateFg: 'var(--tx3)' };
+
+    const order = st.mode === 'full'
+      ? ['afford', 'scenarios', 'closing', 'dpsources', 'hbp', 'amort', 'rentbuy']
+      : ['afford', 'closing', 'rentbuy', 'scenarios', 'dpsources', 'amort', 'hbp'];
+    const defs = {
+      afford: { href: 'Affordability.dc.html', title: s.cAffTitle, question: s.cAffQ,
+        value: this.short(A.comfort), valueLabel: fill(s.cAffLabel, { x: this.short(A.ceiling) }),
+        missing: vis('afford') ? false : s.missIncome },
+      closing: { href: 'Closing Costs.dc.html', title: s.cCloseTitle, question: s.cCloseQ,
+        value: this.short(cc.net), valueLabel: fill(s.cCloseLabel, { x: this.short(price), y: this.short(cc.total) }),
+        missing: vis('closing') ? false : s.missFunds },
+      scenarios: { href: 'Scenarios.dc.html', title: s.cScenTitle, question: s.cScenQ,
+        value: this.short(Math.max(0, twentySaving)), valueLabel: s.cScenLabel,
+        missing: vis('scenarios') ? false : s.missFunds },
+      rentbuy: { href: 'Rent vs Buy.dc.html', title: s.cRentTitle, question: s.cRentQ,
+        value: RB.breakEven == null ? s.cRentNever : fill(s.yearWord, { n: String(RB.breakEven) }),
+        valueLabel: fill(RB.breakEven == null ? s.cRentNeverLabel : s.cRentLabel, { x: this.money(st.rent || j.rent || 1500) }),
+        missing: vis('rentbuy') ? false : s.missRent },
+      dpsources: { href: 'Down Payment.dc.html', title: L3.dpTitle, question: L3.dpQ,
+        value: this.short(Math.abs(WF.shortfall)),
+        valueLabel: WF.shortfall > 0.5 ? L3.dpLabel : L3.dpLabelOk,
+        missing: vis('dpsources') ? false : L3.dpMiss },
+      hbp: { href: 'RRSP HBP.dc.html', title: L3.hbpTitle, question: L3.hbpQ,
+        value: this.short(HBP.refund), valueLabel: L3.hbpLabel,
+        missing: vis('hbp') ? false : L3.hbpMiss },
+      amort: { href: 'Amortization.dc.html', title: L3.amortTitle, question: L3.amortQ,
+        value: this.short(Math.max(0, AM.shock)),
+        valueLabel: fill(L3.amortLabel, { r: (st.renewalRate == null ? 6.5 : st.renewalRate) + '%' }),
+        missing: vis('amort') ? false : L3.amortMiss }
+    };
+    const cards = order.map((k, i) => Object.assign({
+      step: (i + 1) + ' / ' + order.length,
+      bg: 'var(--s1)', br: vis(k) ? 'var(--acbr)' : 'var(--br)', fg: 'var(--ac)'
+    }, defs[k], tag(k)));
+
+    const bar = (h, on) => ({ h: h + 'px', fill: on ? 'var(--ac)' : 'var(--s2)', stroke: on ? 'var(--ac)' : 'var(--brs)' });
+    const insights = [
+      { tag: s.i1Tag, head: s.i1Head, body: s.i1Body, fg: 'var(--ac)', bg: 'var(--acbg)', br: 'var(--acbr)',
+        bars: [Object.assign({ label: s.barApproved }, bar(44, false)), Object.assign({ label: s.barComfort }, bar(27, true))] },
+      { tag: s.i2Tag, head: s.i2Head, body: s.i2Body, fg: 'var(--pass)', bg: 'var(--passbg)', br: 'var(--passbr)',
+        bars: [Object.assign({ label: s.barYr3 }, bar(14, false)), Object.assign({ label: s.barYr7 }, bar(28, true)), Object.assign({ label: s.barYr15 }, bar(44, true))] }
+    ];
+    insights[1].bars.forEach((b, i) => { if (i > 0) { b.fill = 'var(--pass)'; b.stroke = 'var(--pass)'; } });
+
+    const yoy = j.yoy == null ? null : j.yoy * 100;
+    const snapshot = [
+      { label: s.snDetached, value: this.money(j.bench.house), delta: yoy == null ? '\u2014' : (yoy >= 0 ? '+' : '\u2212') + this.pct(Math.abs(yoy), 1), deltaFg: yoy == null ? 'var(--tx3)' : (yoy >= 0 ? 'var(--pass)' : 'var(--blk)') },
+      { label: s.snCondo, value: this.money(j.bench.condo), delta: '\u2014', deltaFg: 'var(--tx3)' },
+      { label: s.snRent, value: this.money(j.rent || 1500), delta: '\u2014', deltaFg: 'var(--tx3)' },
+      { label: s.snTax, value: this.pct(j.propTax * 100, 2), delta: '\u2014', deltaFg: 'var(--tx3)' }
+    ];
+
+    const modes = [['one', s.modeOne], ['full', s.modeFull]].map(([k, lb]) => ({
+      label: lb, on: st.mode === k ? 'true' : 'false',
+      bg: st.mode === k ? 'var(--s1)' : 'var(--s2)', fg: st.mode === k ? 'var(--ac)' : 'var(--tx3)', fw: st.mode === k ? '600' : '400',
+      pick: () => this.setState({ mode: k })
+    }));
+    const langs = ['English', 'Français', 'Українська', 'Español'].map((n, i) => ({
+      name: n, abbr: ['EN', 'FR', 'UK', 'ES'][i], on: i === lang ? 'true' : 'false',
+      pick: () => this.setState({ lang: i }),
+      bg: i === lang ? 'var(--s1)' : 'var(--s2)', fg: i === lang ? 'var(--tx)' : 'var(--tx3)', fw: i === lang ? '600' : '400'
+    }));
+    const cityOpts = D.jur.filter(x => x.city).map(x => ({
+      name: D.C[x.city][lang], code: x.prov, on: x.id === st.jurId ? 'true' : 'false',
+      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--s1)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--tx)',
+      brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--br)',
+      pick: () => this.setState({ jurId: x.id, pickerOpen: false, pulse: st.pulse + 1,
+        price: st.priceTouched ? st.price : x.bench.house, rent: x.rent || st.rent })
+    }));
+
+    return {
+      s, langs, cityOpts, modes, cards, insights, snapshot,
+      trust: [s.t1, s.t2, s.t3],
+      themeA: st.themeA, themeB: st.themeB,
+      themeIconA: st.themeA === 'dark' ? '\u25d1' : '\u25cb', themeIconB: st.themeB === 'dark' ? '\u25d1' : '\u25cb',
+      toggleThemeA: () => this.setState(x => ({ themeA: x.themeA === 'dark' ? 'light' : 'dark' })),
+      toggleThemeB: () => this.setState(x => ({ themeB: x.themeB === 'dark' ? 'light' : 'dark' })),
+      pickerOpen: st.pickerOpen, togglePicker: () => this.setState(x => ({ pickerOpen: !x.pickerOpen })),
+      chip: { city: cityName, code: j.prov, country: ['Canada', 'Canada', '\u041a\u0430\u043d\u0430\u0434\u0430', 'Canad\u00e1'][lang], short: cityName + ', ' + j.prov },
+      modeHeading: st.mode === 'full' ? s.fullHeading : s.oneHeading,
+      modeSub: st.mode === 'full' ? s.fullSub : s.oneSub,
+      snapshotTag: s.locTagTpl.replace('{city}', cityName) + ' \u00b7 ' + this.date(D.verified),
+      plannedLine: s.planned,
+      sourcesLine: s.sourcesForTpl.replace('{prov}', D.P[j.prov][lang]) + ' \u00b7 ' + s.lastVerified + ' ' + this.date(D.verified) + ' \u00b7 CMHC / SCHL \u00b7 OSFI B-20 \u00b7 ' + j.orgs.market
+    };
+  }
+}
+
+</script>
+</body>
+</html>
+
