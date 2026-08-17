@@ -1,0 +1,69 @@
+{
+  "Metadata": {
+    "title": "norma",
+    "description": "See what you can genuinely afford, with your province's real rules built in."
+  },
+  "Home": {
+    "heading": "What can you actually afford?",
+    "subheading": "Not what a bank will approve — your province's real tax and cost-of-ownership rules, applied to your real numbers.",
+    "cta": "See what you can afford"
+  },
+  "AppHeader": {
+    "theme": "Theme",
+    "changeLanguage": "Change language",
+    "brand": "norma",
+    "changeLocation": "Change location"
+  },
+  "Jurisdictions": {
+    "toronto": "Toronto",
+    "ottawa": "Ottawa",
+    "vancouver": "Vancouver",
+    "halifax": "Halifax",
+    "winnipeg": "Winnipeg",
+    "montreal": "Montréal",
+    "calgary": "Calgary",
+    "saskatoon": "Saskatoon",
+    "nb": "New Brunswick",
+    "nl": "Newfoundland and Labrador",
+    "pe": "Prince Edward Island",
+    "yt": "Yukon",
+    "nt": "Northwest Territories",
+    "nu": "Nunavut"
+  },
+  "Affordability": {
+    "heading": "What can you actually afford?",
+    "subheading": "Two numbers, side by side: what a lender would approve, and what actually fits your budget.",
+    "income1": "Your annual income",
+    "income2": "Co-buyer's annual income",
+    "otherIncome": "Other annual income",
+    "debts": "Monthly debt payments",
+    "price": "Purchase price you're considering",
+    "dpPct": "Down payment (% of price)",
+    "amortYears": "Amortization (years)",
+    "contractRate": "Mortgage rate (%)",
+    "comfortCeiling": "Your real monthly housing budget",
+    "insuranceAnnual": "Home insurance (annual)",
+    "utilities": "Utilities (monthly)",
+    "condoFee": "Condo/strata fee (monthly)",
+    "ptype": "Property type",
+    "ptypeHouse": "Resale house",
+    "ptypeCondo": "Resale condo",
+    "ptypeNewbuild": "New build",
+    "ftb": "First-time buyer",
+    "ceiling": "What a lender would approve",
+    "comfort": "What fits your real budget",
+    "approvalPass": "Within reach at this price",
+    "approvalFail": "Above what a lender would approve",
+    "comfortPass": "Fits your monthly budget",
+    "comfortFail": "Over your monthly budget",
+    "monthlyBreakdown": "Monthly cost at this price",
+    "pi": "Principal and interest",
+    "propTax": "Property tax",
+    "insuranceMonthly": "Home insurance",
+    "maintenance": "Maintenance reserve",
+    "total": "Total",
+    "unverifiedFlag": "Placeholder figures — verify before relying on them",
+    "lastVerified": "Rules last verified",
+    "noCityData": "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates."
+  }
+}

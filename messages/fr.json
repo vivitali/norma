@@ -1,0 +1,69 @@
+{
+  "Metadata": {
+    "title": "norma",
+    "description": "Découvrez ce que vous pouvez vraiment vous permettre, selon les règles réelles de votre province."
+  },
+  "Home": {
+    "heading": "Que pouvez-vous vraiment vous permettre?",
+    "subheading": "Pas ce qu'une banque approuvera — les vraies règles fiscales et les coûts réels de votre province, appliqués à vos vrais chiffres.",
+    "cta": "Voir ce que vous pouvez vous permettre"
+  },
+  "AppHeader": {
+    "theme": "Thème",
+    "changeLanguage": "Changer de langue",
+    "brand": "norma",
+    "changeLocation": "Changer de lieu"
+  },
+  "Jurisdictions": {
+    "toronto": "Toronto",
+    "ottawa": "Ottawa",
+    "vancouver": "Vancouver",
+    "halifax": "Halifax",
+    "winnipeg": "Winnipeg",
+    "montreal": "Montréal",
+    "calgary": "Calgary",
+    "saskatoon": "Saskatoon",
+    "nb": "Nouveau-Brunswick",
+    "nl": "Terre-Neuve-et-Labrador",
+    "pe": "Île-du-Prince-Édouard",
+    "yt": "Yukon",
+    "nt": "Territoires du Nord-Ouest",
+    "nu": "Nunavut"
+  },
+  "Affordability": {
+    "heading": "Que pouvez-vous vraiment vous permettre?",
+    "subheading": "Deux chiffres, côte à côte : ce qu'un prêteur approuverait, et ce qui correspond vraiment à votre budget.",
+    "income1": "Votre revenu annuel",
+    "income2": "Revenu annuel du coacheteur",
+    "otherIncome": "Autre revenu annuel",
+    "debts": "Paiements de dettes mensuels",
+    "price": "Prix d'achat envisagé",
+    "dpPct": "Mise de fonds (% du prix)",
+    "amortYears": "Amortissement (années)",
+    "contractRate": "Taux hypothécaire (%)",
+    "comfortCeiling": "Votre budget logement mensuel réel",
+    "insuranceAnnual": "Assurance habitation (annuelle)",
+    "utilities": "Services publics (mensuel)",
+    "condoFee": "Frais de copropriété (mensuel)",
+    "ptype": "Type de propriété",
+    "ptypeHouse": "Maison existante",
+    "ptypeCondo": "Condo existant",
+    "ptypeNewbuild": "Construction neuve",
+    "ftb": "Acheteur d'une première habitation",
+    "ceiling": "Ce qu'un prêteur approuverait",
+    "comfort": "Ce qui correspond à votre budget réel",
+    "approvalPass": "À votre portée à ce prix",
+    "approvalFail": "Au-dessus de ce qu'un prêteur approuverait",
+    "comfortPass": "Respecte votre budget mensuel",
+    "comfortFail": "Dépasse votre budget mensuel",
+    "monthlyBreakdown": "Coût mensuel à ce prix",
+    "pi": "Capital et intérêts",
+    "propTax": "Taxe foncière",
+    "insuranceMonthly": "Assurance habitation",
+    "maintenance": "Réserve d'entretien",
+    "total": "Total",
+    "unverifiedFlag": "Valeurs provisoires — à vérifier avant de vous y fier",
+    "lastVerified": "Règles vérifiées le",
+    "noCityData": "Aucun chiffre municipal vérifié ici pour l'instant. Les règles provinciales sont exactes; les coûts locaux utilisent des moyennes provinciales et sont des estimations."
+  }
+}

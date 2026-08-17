@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<script src="hbt-data.js"></script>
+<script src="hbt-engine.js"></script>
+<style>
+:root{
+--s0:#F7F5F1;--s1:#FFFFFF;--s2:#EFECE5;--s3:#E5E1D7;
+--br:#DCD7CC;--brh:#EAE6DD;--brs:#C6BFB1;
+--tx:#17191C;--tx2:#565A5F;--tx3:#888C92;
+--ac:#22375C;--ac2:#3B5C92;--acbg:#E7ECF4;--acbr:#C3CFE2;
+--pass:#1A6B45;--passbg:#E3EFE8;--passbr:#BEDBCB;
+--caut:#87590A;--cautbg:#F6EEDC;--cautbr:#E3D3AE;
+--blk:#8D2A2A;--blkbg:#F6E7E5;--blkbr:#E5C4C0;
+--def:#455A6C;--defbg:#E8EDF1;--defbr:#C8D3DC;
+--bgS:var(--s2);--fgS:var(--tx3);--fwS:400;
+--kBg:var(--s0);--kBr:var(--br);--kFg:var(--tx2);
+--cellBg:transparent;--cellFg:var(--tx);--cellFw:400;
+--colBg:var(--s1);--colBr:var(--br);--colFg:var(--tx);
+}
+[data-theme="dark"]{
+--s0:#121417;--s1:#191C20;--s2:#21252A;--s3:#2A2F35;
+--br:#2F343B;--brh:#262A30;--brs:#3D434B;
+--tx:#EBE9E4;--tx2:#A3A8AE;--tx3:#767B82;
+--ac:#93B3E0;--ac2:#AEC7EC;--acbg:#1C2632;--acbr:#2C3B4D;
+--pass:#6AC497;--passbg:#152620;--passbr:#264737;
+--caut:#DFAB4C;--cautbg:#292213;--cautbr:#463A1E;
+--blk:#EA8D8D;--blkbg:#2A1919;--blkbr:#4A2C2C;
+--def:#A0B4C5;--defbg:#1A2128;--defbr:#2C3742;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#E8E5DF;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:2px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;display:block}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--brs)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:18px;width:8px;border-radius:1px;background:var(--ac);border:0;margin-top:-8px}
+input[type=range]::-moz-range-track{height:3px;background:var(--brs)}
+input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;background:var(--ac);border:0}
+@keyframes scPulse{0%{background:var(--acbg)}100%{background:transparent}}
+[data-screen-label$="phone"] button{min-height:44px}
+[data-screen-label$="phone"] a{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+[data-screen-label$="phone"] input{min-height:44px}
+[data-screen-label$="phone"] input[type=range]{min-height:0;height:44px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+.dvT{padding:36px 40px 30px}
+.dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dvId{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#17191C;color:#fff;border-radius:3px;text-decoration:none}
+.dvOid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#17191C;border-radius:3px;text-decoration:none}
+.dvName{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#17191C}
+.dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+.dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#22375C;color:#fff}
+.dvNote{max-width:840px;font:400 12.5px/1.65 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
+.dvNote b{color:rgba(0,0,0,.85);font-weight:600}
+.dvNext{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dvT" id="t3">
+<div class="dvH"><a class="dvId" href="#t3">3</a><span class="dvName">Scenarios — four down payments, three levels of depth, one reference column</span></div>
+<p class="dvNote">Your Scenarios tab, with the depth idea pushed further. <b>The answer</b> is four cards and one recommendation — no table at all, because a table is not an answer. <b>Compare</b> brings up the full grid, and adds the mechanic that makes a wide comparison readable: <b>tap any column header to make it the reference</b>, and every other column switches from absolute figures to differences from it. Comparing 20% against 5% is the question people actually have, and reading it off two columns of absolutes is work. <b>The math</b> adds the derivation rows — loan-to-value, premium rate, contract rate, qualifying rate, stress-tested payment — plus the honest counterweight your notes insist on: above 20% each extra dollar earns exactly the mortgage rate, and since mortgage interest is not deductible in Canada, that rate is the after-tax hurdle. Two corrections to my earlier engine came from this tab: the <b>legal minimum down payment now overrides a lower requested percentage</b>, and closing costs are recomputed per column rather than held constant — in Ontario, Quebec or Saskatchewan the tax on the CMHC premium makes the 5% column cost more cash at closing than the table would otherwise show — while Manitoba, which dropped that tax in 2020, shows no such row at all. On phone the grid becomes a card carousel, never a horizontally-scrolling table.</p>
+<div class="dvOpts">
+
+<div class="dvOpt" id="3a">
+<div class="dvLab"><a class="dvOid" href="#3a">3a</a>Desktop ≥1024 px — Compare depth with 20% as reference</div>
+<div data-theme="{{ themeA }}" data-screen-label="Scenarios · desktop" style="width:1180px;background:var(--s0);color:var(--tx);border:1px solid var(--br);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
+
+  <header style="display:flex;align-items:center;gap:14px;padding:0 22px;height:56px;background:var(--s1);border-bottom:1px solid var(--br)">
+    <span style="font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">{{ s.brand }}</span>
+    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+      <span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--ac);flex:none"></span>
+      <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ chip.city }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">{{ chip.code }}</span>
+      <span aria-hidden="true" style="color:var(--tx3);font-size:11px">·</span>
+      <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ chip.country }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--tx3)">▾</span>
+    </button>
+    <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+      <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+        <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:5px 9px;font-size:11.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.name }}</button>
+      </sc-for>
+    </div>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:30px;height:28px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--tx2)">{{ themeIconA }}</button>
+  </header>
+
+  <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:var(--s1);border-bottom:1px solid var(--br);padding:16px 22px 18px">
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">{{ s.municipality }}</div>
+      <div role="listbox" style="display:flex;flex-wrap:wrap;gap:5px">
+        <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="8">
+          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--colBg:{{ c.bg }};--colFg:{{ c.fg }};--colBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:1px solid var(--colBr);border-radius:2px;background:var(--colBg);color:var(--colFg)">
+            <span style="font-size:12.5px;font-weight:500">{{ c.name }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ c.code }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="padding:20px 22px 0;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap">
+    <div style="flex:1;min-width:330px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:6px">{{ s.scDeep }}</div>
+      <h1 style="margin:0 0 6px;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.02em">{{ s.scTitle }}</h1>
+      <p style="margin:0;font-size:14px;line-height:1.5;color:var(--tx2);max-width:540px;text-wrap:pretty">{{ s.scSub }}</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)">{{ s.depth }}</span>
+        <div role="group" aria-label="{{ s.depth }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+          <sc-for list="{{ depthOpts }}" as="dp" hint-placeholder-count="3">
+            <button onClick="{{ dp.pick }}" aria-pressed="{{ dp.on }}" style="--bgS:{{ dp.bg }};--fgS:{{ dp.fg }};--fwS:{{ dp.fw }};display:flex;align-items:center;gap:7px;padding:6px 12px;font-size:12px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+              <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;opacity:.7">{{ dp.n }}</span>{{ dp.label }}
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)">{{ s.jump }}</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+          <sc-for list="{{ jumpLinks }}" as="jl" hint-placeholder-count="4">
+            <a href="{{ jl.href }}" style="font-size:11px;padding:4px 8px;border:1px solid var(--br);border-radius:2px;background:var(--s1);color:var(--ac);text-decoration:none;white-space:nowrap">{{ jl.label }}</a>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="recommend" style="margin:18px 22px 0;scroll-margin-top:12px">
+    <div style="--kBg:{{ rec.bg }};--kBr:{{ rec.br }};--kFg:{{ rec.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:18px 20px;animation:scPulse .7s ease-out" key="{{ pulseKey }}">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600">{{ rec.tag }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ locTag }}</span>
+      </div>
+      <p style="margin:0 0 8px;font-size:23px;line-height:1.25;font-weight:600;letter-spacing:-.015em;color:var(--kFg);max-width:900px;text-wrap:pretty">{{ rec.head }}</p>
+      <p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--tx2);max-width:820px;text-wrap:pretty">{{ rec.sub }}</p>
+    </div>
+  </div>
+
+  <div id="options" style="margin:14px 22px 0;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:11px;scroll-margin-top:12px">
+    <sc-for list="{{ cards }}" as="cd" hint-placeholder-count="4">
+      <div style="--kBg:{{ cd.bg }};--kBr:{{ cd.br }};--kFg:{{ cd.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;overflow:hidden">
+        <button onClick="{{ cd.setRef }}" aria-pressed="{{ cd.isRef }}" style="display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:11px 13px;border-bottom:1px solid var(--kBr);background:{{ cd.headBg }}">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:var(--kFg)">{{ cd.pct }}</span>
+          <span style="font-size:11.5px;color:var(--kFg);opacity:.85">{{ s.down }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--kFg);margin-left:auto;white-space:nowrap">{{ cd.refTag }}</span>
+        </button>
+        <div style="padding:12px 13px">
+          <div style="font-size:11px;color:var(--tx2);margin-bottom:3px">{{ s.cashAtClosing }}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600;letter-spacing:-.02em;margin-bottom:10px">{{ cd.cash }}</div>
+          <div style="font-size:11px;color:var(--tx2);margin-bottom:3px">{{ s.allIn }}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;margin-bottom:10px">{{ cd.monthly }}</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <sc-for list="{{ cd.flags }}" as="fl" hint-placeholder-count="2">
+              <div style="--kFg:{{ fl.fg }};display:flex;align-items:center;gap:7px">
+                <span aria-hidden="true" style="width:14px;height:14px;border-radius:2px;border:1.5px solid var(--kFg);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:var(--kFg);flex:none">{{ fl.icon }}</span>
+                <span style="font-size:11.5px;color:var(--kFg);line-height:1.35">{{ fl.text }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ cd.savingLine }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:11px;padding-top:9px;border-top:1px solid var(--kBr);font-size:11px;line-height:1.45;color:var(--tx2);text-wrap:pretty">{{ cd.savingLine }}</div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ showTable }}" hint-placeholder-val="{{ false }}">
+    <div id="grid" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
+      <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+        <span style="font-size:13px;font-weight:600">{{ s.gridTitle }}</span>
+        <span style="font-size:11.5px;color:var(--tx3);flex:1;min-width:0">{{ refHint }}</span>
+        <sc-if value="{{ hasRef }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ clearRef }}" style="font-size:11.5px;padding:4px 9px;border:1px solid var(--acbr);border-radius:2px;background:var(--acbg);color:var(--ac);white-space:nowrap">{{ s.showAbsolute }}</button>
+        </sc-if>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;position:sticky;top:0;background:var(--s1);border-bottom:1px solid var(--br);z-index:1">
+        <div style="padding:9px 16px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3)">{{ s.metric }}</div>
+        <sc-for list="{{ cols }}" as="cl" hint-placeholder-count="4">
+          <button onClick="{{ cl.setRef }}" aria-pressed="{{ cl.isRef }}" style="--colBg:{{ cl.bg }};--colFg:{{ cl.fg }};display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:8px 14px 7px;background:var(--colBg);border-left:1px solid var(--brh)">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--colFg)">{{ cl.pct }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--colFg);opacity:.8;white-space:nowrap">{{ cl.tag }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <sc-for list="{{ groups }}" as="g" hint-placeholder-count="5">
+        <div>
+          <div id="{{ g.id }}" style="display:flex;align-items:baseline;gap:10px;padding:10px 16px 7px;background:var(--s0);border-top:1px solid var(--br);border-bottom:1px solid var(--brh);scroll-margin-top:48px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);font-weight:600">{{ g.title }}</span>
+            <span style="font-size:11px;color:var(--tx3)">{{ g.note }}</span>
+          </div>
+          <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="5">
+            <div style="border-bottom:1px solid var(--brh)">
+              <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;align-items:center">
+                <div style="padding:7px 16px">
+                  <button onClick="{{ r.toggle }}" aria-expanded="{{ r.open }}" style="font-size:12.5px;line-height:1.4;text-align:left;color:var(--tx);font-weight:{{ r.labelFw }};border-bottom:1px dotted var(--brs);padding:0">{{ r.label }}</button>
+                </div>
+                <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4">
+                  <div style="--cellBg:{{ c.bg }};--cellFg:{{ c.fg }};--cellFw:{{ c.fw }};padding:7px 14px;text-align:right;background:var(--cellBg);border-left:1px solid var(--brh)">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:var(--cellFw);color:var(--cellFg);white-space:nowrap">{{ c.text }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+                <p style="margin:0;padding:0 16px 10px;font-size:11.5px;line-height:1.6;color:var(--tx2);max-width:800px;text-wrap:pretty">{{ r.why }}</p>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showMath }}" hint-placeholder-val="{{ false }}">
+    <div id="reading" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:16px 18px;scroll-margin-top:12px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">{{ s.howToRead }}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <sc-for list="{{ readNotes }}" as="rn" hint-placeholder-count="4">
+          <div style="--kBg:{{ rn.bg }};--kBr:{{ rn.br }};--kFg:{{ rn.fg }};padding:12px 14px;background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:2px">
+            <div style="font-size:12px;font-weight:600;color:var(--kFg);margin-bottom:5px;line-height:1.35">{{ rn.title }}</div>
+            <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--tx2);text-wrap:pretty">{{ rn.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div id="inputs" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+      <span style="font-size:12.5px;font-weight:600">{{ s.adjust }}</span>
+      <span style="font-size:11.5px;color:var(--tx3)">{{ s.sharedNote }}</span>
+    </div>
+    <div style="padding:14px 16px">
+      <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1fr;gap:16px;align-items:start">
+        <div>
+          <label style="display:flex;align-items:baseline;font-size:11.5px;color:var(--tx2);margin-bottom:5px">{{ s.price }}
+            <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ priceTag }}</span>
+          </label>
+          <input type="number" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" style="width:100%;padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+          <input type="range" min="150000" max="2200000" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" aria-valuetext="{{ priceFmt }}">
+        </div>
+        <sc-for list="{{ fields }}" as="fd" hint-placeholder-count="4">
+          <div>
+            <label style="display:block;font-size:11.5px;color:var(--tx2);margin-bottom:5px;line-height:1.3;min-height:30px">{{ fd.label }}</label>
+            <input type="number" step="{{ fd.step }}" value="{{ fd.value }}" onChange="{{ fd.onChange }}" aria-label="{{ fd.label }}" style="width:100%;padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:14px;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:13px;padding-top:12px;border-top:1px solid var(--brh);flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11.5px;color:var(--tx2)">{{ s.amort }}</span>
+          <div role="group" aria-label="{{ s.amort }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden">
+            <sc-for list="{{ amortOpts }}" as="am" hint-placeholder-count="2">
+              <button onClick="{{ am.pick }}" aria-pressed="{{ am.on }}" style="--bgS:{{ am.bg }};--fgS:{{ am.fg }};--fwS:{{ am.fw }};padding:5px 11px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ am.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <button onClick="{{ toggleFtb }}" role="switch" aria-checked="{{ ftb }}" style="--kBg:{{ ftbBg }};--kBr:{{ ftbBr }};--kFg:{{ ftbFg }};display:flex;align-items:center;gap:9px;padding:5px 10px 5px 5px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg)">
+          <span aria-hidden="true" style="width:26px;height:15px;border-radius:2px;background:{{ ftbTrack }};position:relative;flex:none">
+            <span style="position:absolute;top:2px;left:{{ ftbX }};width:11px;height:11px;border-radius:1px;background:var(--s1);transition:left .14s ease"></span>
+          </span>
+          <span style="font-size:12px;font-weight:500;color:var(--kFg)">{{ s.ftb }}</span>
+        </button>
+        <span style="font-size:11.5px;color:var(--tx3);margin-left:auto;text-align:right;max-width:420px;line-height:1.45;text-wrap:pretty">{{ minDownNote }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:16px 22px 22px;padding:13px 16px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.5;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);flex:1;min-width:0">{{ sourcesLine }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr)">{{ s.unverifiedFlag }}</span>
+    </div>
+    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--tx3);max-width:940px;text-wrap:pretty">{{ s.disclaimer }}</p>
+  </div>
+</div>
+</div>
+
+<div class="dvOpt" id="3b">
+<div class="dvLab"><a class="dvOid" href="#3b">3b</a>Phone 390 px — card carousel, no horizontal table, dark</div>
+<div data-theme="{{ themeB }}" data-screen-label="Scenarios · phone" style="width:430px;padding:20px;background:#0B0C0E;border-radius:44px;border:1px solid rgba(255,255,255,.09);box-shadow:0 2px 14px rgba(0,0,0,.28)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--s0);color:var(--tx);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+      <span>9:41</span><span style="margin-left:auto;letter-spacing:.12em">•••</span>
+    </div>
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--br)">
+      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--s2);border:1px solid var(--br);border-radius:3px;min-width:0">
+        <span aria-hidden="true" style="width:4px;height:4px;border-radius:50%;background:var(--ac);flex:none"></span>
+        <span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.short }}</span>
+        <span aria-hidden="true" style="font-size:8px;color:var(--tx3)">▾</span>
+      </button>
+      <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-left:auto">
+        <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 6px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx2);flex:none">{{ themeIconB }}</button>
+    </header>
+
+    <div style="flex:1;overflow:auto;padding:14px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:5px">{{ s.scDeep }}</div>
+      <h2 style="margin:0 0 12px;font-size:22px;line-height:1.12;font-weight:600;letter-spacing:-.02em">{{ s.scTitle }}</h2>
+
+      <div style="--kBg:{{ rec.bg }};--kBr:{{ rec.br }};--kFg:{{ rec.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:13px 14px;margin-bottom:12px;animation:scPulse .7s ease-out" key="{{ pulseKey }}">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:7px">{{ rec.tag }}</div>
+        <p style="margin:0 0 7px;font-size:16px;line-height:1.3;font-weight:600;color:var(--kFg);text-wrap:pretty">{{ rec.head }}</p>
+        <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ rec.sub }}</p>
+      </div>
+
+      <div role="tablist" aria-label="{{ s.gridTitle }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-bottom:11px">
+        <sc-for list="{{ cols }}" as="cl" hint-placeholder-count="4">
+          <button role="tab" aria-selected="{{ cl.isActive }}" onClick="{{ cl.setActive }}" style="--colBg:{{ cl.mBg }};--colFg:{{ cl.mFg }};flex:1;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--colBg);color:var(--colFg)">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">{{ cl.pct }}</span>
+            <span style="font-size:8.5px;letter-spacing:.04em;text-transform:uppercase;opacity:.8;white-space:nowrap">{{ cl.mTag }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="--kBg:{{ active.bg }};--kBr:{{ active.br }};--kFg:{{ active.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:12px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--kFg)">{{ active.pct }}</span>
+          <span style="font-size:12px;color:var(--kFg);opacity:.85">{{ s.down }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--kFg);margin-left:auto">{{ active.refTag }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px">
+          <sc-for list="{{ active.flags }}" as="fl" hint-placeholder-count="2">
+            <div style="--kFg:{{ fl.fg }};display:flex;align-items:center;gap:8px">
+              <span aria-hidden="true" style="width:16px;height:16px;border-radius:2px;border:1.5px solid var(--kFg);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--kFg);flex:none">{{ fl.icon }}</span>
+              <span style="font-size:12px;color:var(--kFg);line-height:1.35">{{ fl.text }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <sc-for list="{{ active.rows }}" as="mr" hint-placeholder-count="8">
+            <div style="--cellFw:{{ mr.fw }};display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--kBr)">
+              <span style="font-size:11.5px;color:var(--tx2);flex:1;min-width:0;line-height:1.35;font-weight:var(--cellFw)">{{ mr.label }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:var(--cellFw);white-space:nowrap">{{ mr.value }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ active.savingLine }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:11px;padding-top:10px;border-top:1px solid var(--kBr);font-size:11.5px;line-height:1.5;color:var(--tx2);text-wrap:pretty">{{ active.savingLine }}</div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ showMath }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+          <sc-for list="{{ readNotes }}" as="rn" hint-placeholder-count="4">
+            <div style="--kBg:{{ rn.bg }};--kBr:{{ rn.br }};--kFg:{{ rn.fg }};padding:11px 12px;background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:2px">
+              <div style="font-size:11.5px;font-weight:600;color:var(--kFg);margin-bottom:4px;line-height:1.35">{{ rn.title }}</div>
+              <p style="margin:0;font-size:11px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ rn.body }}</p>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <div style="height:6px"></div>
+    </div>
+
+    <div style="border-top:1px solid var(--br);background:var(--s1);padding:9px 12px 13px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);flex:none">{{ s.depth }}</span>
+        <div role="group" aria-label="{{ s.depth }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;flex:1">
+          <sc-for list="{{ depthOpts }}" as="dp" hint-placeholder-count="3">
+            <button onClick="{{ dp.pick }}" aria-pressed="{{ dp.on }}" style="--bgS:{{ dp.bg }};--fgS:{{ dp.fg }};--fwS:{{ dp.fw }};flex:1;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS);white-space:nowrap;padding:0 4px">{{ dp.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dvNext">Try next: "make 5% the reference column" · "now Rent vs Buy with the crossover year" · "apply the depth control to closing costs" · "show 3a in Ukrainian"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1700,&quot;height&quot;:1500},&quot;startDepth&quot;:{&quot;editor&quot;:&quot;radio&quot;,&quot;options&quot;:[&quot;answer&quot;,&quot;compare&quot;,&quot;math&quot;],&quot;default&quot;:&quot;compare&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Detail level on load&quot;},&quot;startJurisdiction&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;winnipeg&quot;,&quot;toronto&quot;,&quot;ottawa&quot;,&quot;vancouver&quot;,&quot;halifax&quot;,&quot;montreal&quot;,&quot;calgary&quot;,&quot;saskatoon&quot;],&quot;default&quot;:&quot;winnipeg&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;City on load&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Français&quot;,&quot;Українська&quot;,&quot;Español&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Language on load&quot;}}">
+class Component extends DCLogic {
+  state = {
+    ready: false, lang: 0, themeA: 'light', themeB: 'dark',
+    jurId: 'winnipeg', pickerOpen: false, depth: 1, refIdx: 2, activeIdx: 2, openRow: null,
+    price: 0, priceTouched: false, amortYears: 30, ftb: true, ptype: 'house',
+    inc1: 75000, inc2: 45000, debts: 550, haircut: 0,
+    comfortCeiling: 2700, insuranceAnnual: 1500, utilities: 300, condoFee: 0,
+    funds: 50000, save: 1200, pulse: 0
+  };
+
+  componentDidMount() {
+    const go = () => {
+      const D = window.CIBTH_DATA; if (!D || !window.CIBTH_ENGINE) return false;
+      const p = this.props || {};
+      const jid = D.jur.some(x => x.id === p.startJurisdiction) ? p.startJurisdiction : 'winnipeg';
+      const li = ['English', 'Français', 'Українська', 'Español'].indexOf(p.startLang);
+      const di = ['answer', 'compare', 'math'].indexOf(p.startDepth);
+      const rec = D.jur.find(x => x.id === jid);
+      this.setState({ ready: true, jurId: jid, lang: li < 0 ? 0 : li, depth: di < 0 ? 1 : di, price: rec.bench.house });
+      const shared = window.CIBTH_ENGINE.loadShared();
+      if (Object.keys(shared).length) this.setState(shared);
+      window.CIBTH_ENGINE.onSharedChange(v => this.setState(v));
+      return true;
+    };
+    if (!go()) { const iv = setInterval(() => { if (go()) clearInterval(iv); }, 30); this._iv = iv;
+      window.addEventListener('cibth-data', go); window.addEventListener('cibth-engine', go); }
+  }
+  componentWillUnmount() { if (this._iv) clearInterval(this._iv); }
+  componentDidUpdate() { if (this.state.ready) window.CIBTH_ENGINE.saveShared(this.state); }
+
+  L() { return ['en-CA', 'fr-CA', 'uk-UA', 'es-ES'][this.state.lang]; }
+  money(n, dp) { return window.CIBTH_ENGINE.money(n, this.L(), this.state.lang !== 0, dp); }
+  signed(n) { return n === 0 ? '\u2014' : (n > 0 ? '+\u2009' : '\u2212\u2009') + this.money(Math.abs(n)); }
+  pct(n, d) {
+    const v = new Intl.NumberFormat(this.L(), { minimumFractionDigits: d == null ? 0 : d, maximumFractionDigits: d == null ? 1 : d }).format(n);
+    return this.state.lang === 0 ? v + '%' : v + '\u202f%';
+  }
+  signedPct(n, d) { return Math.abs(n) < 0.05 ? '\u2014' : (n > 0 ? '+\u2009' : '\u2212\u2009') + this.pct(Math.abs(n), d); }
+  date(iso) { const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat(this.L(), { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d)); }
+
+  S = {
+    scDeep: ['Down payment comparison', 'Comparaison des mises de fonds', 'Порівняння первісних внесків', 'Comparación de pagos iniciales'],
+    scTitle: ['Down payment scenarios', 'Scénarios de mise de fonds', 'Сценарії первісного внеску', 'Escenarios de pago inicial'],
+    scSub: ['Four down payments at the same price. The cheapest monthly is rarely the cheapest overall.', 'Quatre mises de fonds au même prix. Le paiement mensuel le plus bas est rarement le moins coûteux au total.', 'Чотири внески за однією ціною. Найнижчий місячний платіж рідко найдешевший загалом.', 'Cuatro pagos iniciales al mismo precio. La cuota más baja rara vez es la más barata en total.'],
+    depth: ['Detail', 'Détail', 'Деталізація', 'Detalle'],
+    d1: ['The answer', 'La réponse', 'Відповідь', 'La respuesta'],
+    d2: ['Compare', 'Comparer', 'Порівняти', 'Comparar'],
+    d3: ['The math', 'Le calcul', 'Розрахунок', 'El cálculo'],
+    jump: ['Jump to', 'Aller à', 'Перейти до', 'Ir a'],
+    down: ['down', 'de mise de fonds', 'внесок', 'de entrada'],
+    cashAtClosing: ['Cash at closing', 'Comptant à la clôture', 'Готівка при закритті', 'Efectivo en el cierre'],
+    allIn: ['True all-in monthly', 'Mensualité tout compris', 'Реальний місячний платіж', 'Cuota mensual total real'],
+    gridTitle: ['Side by side', 'Côte à côte', 'Пліч-о-пліч', 'Lado a lado'],
+    metric: ['Metric', 'Mesure', 'Показник', 'Métrica'],
+    refHint: ['Tap a column to make it the reference — the others switch to differences from it.', 'Touchez une colonne pour en faire la référence — les autres passent en écarts.', 'Торкніться стовпця, щоб зробити його опорним — решта покаже різницю.', 'Toque una columna para hacerla referencia: las demás pasan a diferencias.'],
+    refIsTpl: ['Showing differences from {pct} down', 'Écarts par rapport à {pct} de mise de fonds', 'Різниця відносно внеску {pct}', 'Diferencias respecto a {pct} de entrada'],
+    showAbsolute: ['Show absolute figures', 'Afficher les montants absolus', 'Показати абсолютні значення', 'Mostrar cifras absolutas'],
+    refTag: ['Reference', 'Référence', 'Опорний', 'Referencia'],
+    recommended: ['Recommended', 'Recommandé', 'Рекомендовано', 'Recomendado'],
+    tapToRef: ['Tap to compare from', 'Comparer depuis', 'Порівняти від', 'Comparar desde'],
+    gMortgage: ['The mortgage', 'Le prêt hypothécaire', 'Іпотека', 'La hipoteca'],
+    gMonthly: ['Monthly cost', 'Coût mensuel', 'Місячна вартість', 'Coste mensual'],
+    gCash: ['Can you fund it?', 'Pouvez-vous le financer\u202f?', 'Чи є на це кошти?', '¿Puede financiarlo?'],
+    gQual: ['Qualification', 'Admissibilité', 'Кваліфікація', 'Calificación'],
+    gLifetime: ['Lifetime cost', 'Coût sur la durée', 'Витрати за весь термін', 'Coste total del préstamo'],
+    gCashNote: ['A cheaper scenario you cannot fund is not an option.', 'Un scénario moins cher que vous ne pouvez financer n’est pas une option.', 'Дешевший сценарій, який ви не можете оплатити, — не варіант.', 'Un escenario más barato que no puede financiar no es una opción.'],
+    gLifeNote: ['Interest plus insurance premium — the full cost of borrowing.', 'Intérêts plus prime d’assurance — le coût total de l’emprunt.', 'Відсотки плюс страхова премія — повна вартість позики.', 'Intereses más prima de seguro: el coste total del préstamo.'],
+    rDownAmt: ['Down payment', 'Mise de fonds', 'Первісний внесок', 'Pago inicial'],
+    rBaseLoan: ['Base mortgage', 'Prêt de base', 'Базова іпотека', 'Hipoteca base'],
+    rLtv: ['Loan-to-value', 'Ratio prêt-valeur', 'Відношення кредиту до вартості', 'Relación préstamo-valor'],
+    rPremRate: ['CMHC premium rate', 'Taux de la prime SCHL', 'Ставка премії CMHC', 'Tasa de la prima CMHC'],
+    rPremAmt: ['CMHC premium', 'Prime SCHL', 'Премія CMHC', 'Prima CMHC'],
+    rTotalMort: ['Total mortgage', 'Prêt total', 'Загальна іпотека', 'Hipoteca total'],
+    rContract: ['Contract rate', 'Taux contractuel', 'Договірна ставка', 'Tasa contractual'],
+    rPi: ['Principal and interest', 'Capital et intérêts', 'Тіло й відсотки', 'Capital e intereses'],
+    rPropTax: ['Property tax', 'Taxes foncières', 'Податок на майно', 'Impuesto predial'],
+    rMaint: ['Maintenance reserve', 'Réserve d’entretien', 'Резерв на обслуговування', 'Reserva de mantenimiento'],
+    rAllIn: ['True all-in monthly', 'Mensualité tout compris', 'Разом на місяць', 'Cuota mensual total'],
+    rVsCeiling: ['Versus your comfort ceiling', 'Par rapport à votre plafond de confort', 'Проти вашої комфортної стелі', 'Frente a su techo de comodidad'],
+    rClosing: ['Closing costs', 'Frais de clôture', 'Витрати на закриття', 'Gastos de cierre'],
+    rPremTax: ['Tax on the CMHC premium', 'Taxe sur la prime SCHL', 'Податок на премію CMHC', 'Impuesto sobre la prima CMHC'],
+    rCash: ['Cash required at closing', 'Comptant requis à la clôture', 'Потрібна готівка при закритті', 'Efectivo necesario en el cierre'],
+    rFunds: ['Your available funds', 'Vos fonds disponibles', 'Ваші доступні кошти', 'Sus fondos disponibles'],
+    rSurplus: ['Surplus or shortfall', 'Excédent ou manque', 'Надлишок або дефіцит', 'Superávit o déficit'],
+    rMonths: ['Months of saving to reach it', 'Mois d’épargne pour y arriver', 'Місяців заощаджень, щоб дійти', 'Meses de ahorro para llegar'],
+    rQualRate: ['Qualifying rate', 'Taux admissible', 'Кваліфікаційна ставка', 'Tasa de calificación'],
+    rStressPay: ['Stress-tested payment', 'Paiement au taux de résistance', 'Платіж за стрес-тестом', 'Pago con prueba de resistencia'],
+    rGds: ['GDS ratio', 'Ratio ABD', 'Коефіцієнт GDS', 'Ratio GDS'],
+    rTds: ['TDS ratio', 'Ratio ATD', 'Коефіцієнт TDS', 'Ratio TDS'],
+    rResult: ['Would a lender approve?', 'Un prêteur approuverait-il\u202f?', 'Чи схвалить кредитор?', '¿Aprobaría un prestamista?'],
+    rInterest: ['Total interest paid', 'Intérêts totaux payés', 'Усього сплачених відсотків', 'Intereses totales pagados'],
+    rBorrowCost: ['Interest plus premium', 'Intérêts plus prime', 'Відсотки плюс премія', 'Intereses más prima'],
+    rExtraCash: ['Extra cash versus 5% down', 'Comptant additionnel vs 5\u202f%', 'Додаткова готівка проти 5\u202f%', 'Efectivo extra frente al 5\u202f%'],
+    rLifeSaving: ['Lifetime saving versus 5% down', 'Économie sur la durée vs 5\u202f%', 'Економія за термін проти 5\u202f%', 'Ahorro total frente al 5\u202f%'],
+    rReturn: ['Return on that extra cash', 'Rendement de ce comptant additionnel', 'Дохідність цієї додаткової готівки', 'Rendimiento de ese efectivo extra'],
+    wPass: ['Pass', 'Réussi', 'Пройдено', 'Cumple'],
+    wFail: ['Declined', 'Refusé', 'Відмова', 'Rechazado'],
+    fQualifies: ['A lender would approve', 'Un prêteur approuverait', 'Кредитор схвалить', 'Un prestamista aprobaría'],
+    fDeclines: ['A lender would decline', 'Un prêteur refuserait', 'Кредитор відмовить', 'Un prestamista rechazaría'],
+    fFundable: ['You can fund it today', 'Vous pouvez le financer aujourd’hui', 'Ви можете це оплатити зараз', 'Puede financiarlo hoy'],
+    fShort: ['Short on cash to close', 'Comptant insuffisant pour clôturer', 'Не вистачає готівки на закриття', 'Falta efectivo para cerrar'],
+    fMonths: ['{n} months of saving away', 'À {n} mois d’épargne', 'За {n} місяців заощаджень', 'A {n} meses de ahorro'],
+    fNoPremium: ['No CMHC premium at all', 'Aucune prime SCHL', 'Без премії CMHC', 'Sin prima CMHC'],
+    fMinimum: ['Below the legal minimum — raised to {p}', 'Sous le minimum légal — porté à {p}', 'Нижче законного мінімуму — підвищено до {p}', 'Por debajo del mínimo legal: elevado a {p}'],
+    howToRead: ['How to read this', 'Comment lire ceci', 'Як це читати', 'Cómo leer esto'],
+    nTwentyTitle: ['Reaching 20% is the strong move', 'Atteindre 20\u202f% est le bon choix', 'Дійти до 20\u202f% — сильний хід', 'Llegar al 20\u202f% es la jugada fuerte'],
+    nTwentyBody: ['It eliminates the insurance premium entirely and typically returns more than 1:1 on the extra cash deployed — guaranteed and tax-free. That is very hard to beat with any investment on a risk-adjusted basis.', 'Cela élimine complètement la prime d’assurance et rapporte généralement plus de 1 pour 1 sur le comptant additionnel — garanti et libre d’impôt. Très difficile à battre par un placement, à risque comparable.', 'Це повністю знімає страхову премію й зазвичай повертає більше ніж 1:1 на вкладену додаткову готівку — гарантовано й без податку. Це дуже важко перевершити будь-якою інвестицією з поправкою на ризик.', 'Elimina por completo la prima de seguro y suele devolver más de 1 a 1 sobre el efectivo extra aportado, garantizado y libre de impuestos. Muy difícil de superar con cualquier inversión ajustada al riesgo.'],
+    nAboveTitle: ['Above 20% is a much weaker case', 'Au-delà de 20\u202f%, l’argument est bien plus faible', 'Понад 20\u202f% — значно слабший аргумент', 'Por encima del 20\u202f% el argumento es mucho más débil'],
+    nAboveBody: ['Each additional dollar earns exactly the mortgage rate, guaranteed. Worth it if you value certainty and a lower payment; not if you are maximising expected wealth.', 'Chaque dollar supplémentaire rapporte exactement le taux hypothécaire, garanti. Intéressant si vous valorisez la certitude et un paiement plus faible\u202f; pas si vous maximisez la richesse espérée.', 'Кожен наступний долар приносить рівно ставку іпотеки — гарантовано. Варто, якщо цінуєте певність і менший платіж; ні, якщо максимізуєте очікуваний капітал.', 'Cada dólar adicional gana exactamente la tasa hipotecaria, garantizado. Vale si valora la certeza y una cuota menor; no si maximiza la riqueza esperada.'],
+    nHurdleTitle: ['The mortgage rate is the after-tax hurdle', 'Le taux hypothécaire est le seuil après impôt', 'Ставка іпотеки — це поріг після податків', 'La tasa hipotecaria es el umbral después de impuestos'],
+    nHurdleBody: ['Mortgage interest is not tax-deductible in Canada, so there is no tax shield to discount it. Compare it against after-tax investment returns, not gross ones.', 'Les intérêts hypothécaires ne sont pas déductibles au Canada, donc aucun bouclier fiscal ne les réduit. Comparez-les à des rendements après impôt, non bruts.', 'Відсотки за іпотекою в Канаді не відносяться на витрати, тож податкового щита немає. Порівнюйте зі дохідністю після податків, а не з валовою.', 'Los intereses hipotecarios no son deducibles en Canadá, así que no hay escudo fiscal. Compárelos con rendimientos después de impuestos, no brutos.'],
+    nOrderTitle: ['Fill tax-advantaged room first', 'Remplissez d’abord vos droits fiscaux', 'Спершу використайте податкові пільги', 'Primero llene el espacio fiscal'],
+    nOrderBody: ['FHSA, then RRSP, then TFSA. Those beat the mortgage rate before any prepayment does, and the FHSA is deductible going in and tax-free coming out.', 'CELIAPP, puis REER, puis CELI. Ils battent le taux hypothécaire avant tout remboursement anticipé, et le CELIAPP est déductible à l’entrée et libre d’impôt à la sortie.', 'FHSA, потім RRSP, потім TFSA. Вони перевершують ставку іпотеки раніше за будь-яке дострокове погашення, а FHSA — вирахування на вході й без податку на виході.', 'FHSA, luego RRSP, luego TFSA. Superan la tasa hipotecaria antes que cualquier prepago, y el FHSA es deducible al entrar y libre de impuestos al salir.'],
+    recTwenty: ['Getting to 20% saves {save} over the life of the mortgage.', 'Atteindre 20\u202f% économise {save} sur la durée du prêt.', 'Дійти до 20\u202f% економить {save} за весь термін іпотеки.', 'Llegar al 20\u202f% ahorra {save} durante la vida de la hipoteca.'],
+    recTwentySub: ['A guaranteed, tax-free return of {ret} on the extra {extra} you put down, and it removes the insurance premium entirely.', 'Un rendement garanti et libre d’impôt de {ret} sur les {extra} additionnels, et cela supprime entièrement la prime d’assurance.', 'Гарантована безподаткова дохідність {ret} на додаткові {extra} — і премія за страхування зникає повністю.', 'Un rendimiento garantizado y libre de impuestos de {ret} sobre los {extra} adicionales, y elimina por completo la prima de seguro.'],
+    recOnly: ['At this price, {p} down is the only option you can fund today.', 'À ce prix, {p} de mise de fonds est la seule option que vous pouvez financer aujourd’hui.', 'За цією ціною {p} внеску — єдиний варіант, який ви можете оплатити зараз.', 'A este precio, {p} de entrada es la única opción que puede financiar hoy.'],
+    recOnlySub: ['Reaching 20% would cost {extra} more at closing — about {n} months of saving at your current rate. It would save {save} over the life of the mortgage.', 'Atteindre 20\u202f% coûterait {extra} de plus à la clôture — environ {n} mois d’épargne à votre rythme. Cela économiserait {save} sur la durée du prêt.', 'Дійти до 20\u202f% коштувало б на {extra} більше при закритті — приблизно {n} місяців заощаджень. Це зекономило б {save} за весь термін.', 'Llegar al 20\u202f% costaría {extra} más en el cierre: unos {n} meses de ahorro. Ahorraría {save} durante la vida de la hipoteca.'],
+    recNoneCash: ['You cannot fund any of these scenarios yet.', 'Vous ne pouvez encore financer aucun de ces scénarios.', 'Поки ви не можете оплатити жоден із цих сценаріїв.', 'Todavía no puede financiar ninguno de estos escenarios.'],
+    recNoneCashSub: ['The lowest option needs {cash} at closing against your {funds}. That is {n} months of saving away — or a lower target price.', 'L’option la plus basse exige {cash} à la clôture contre vos {funds}. Cela représente {n} mois d’épargne — ou un prix cible plus bas.', 'Найдешевший варіант потребує {cash} при закритті проти ваших {funds}. Це {n} місяців заощаджень — або нижча цільова ціна.', 'La opción más baja necesita {cash} en el cierre frente a sus {funds}. Son {n} meses de ahorro, o un precio objetivo más bajo.'],
+    recNoneQual: ['A lender would decline at this price, whatever you put down.', 'Un prêteur refuserait à ce prix, quelle que soit la mise de fonds.', 'За цією ціною кредитор відмовить за будь-якого внеску.', 'Un prestamista rechazaría a este precio, sea cual sea la entrada.'],
+    recNoneQualSub: ['A larger down payment shrinks the loan but not enough to pass. The constraint is income against debt, not the deposit.', 'Une mise de fonds plus élevée réduit le prêt, mais pas assez pour passer. La contrainte est le revenu face aux dettes, pas le dépôt.', 'Більший внесок зменшує кредит, але цього не досить. Обмежує дохід проти боргів, а не сам внесок.', 'Una entrada mayor reduce el préstamo, pero no basta. La restricción es el ingreso frente a la deuda, no el depósito.'],
+    adjust: ['Adjust your numbers', 'Ajuster vos chiffres', 'Змінити свої дані', 'Ajustar sus cifras'],
+    sharedNote: ['Shared with the other screens and kept in this browser only \u2014 never sent to a server.', 'Partag\u00e9 avec les autres \u00e9crans et conserv\u00e9 dans ce navigateur seulement \u2014 jamais envoy\u00e9 \u00e0 un serveur.', '\u0421\u043f\u0456\u043b\u044c\u043d\u0456 \u0437 \u0456\u043d\u0448\u0438\u043c\u0438 \u0435\u043a\u0440\u0430\u043d\u0430\u043c\u0438 \u0439 \u0437\u0431\u0435\u0440\u0456\u0433\u0430\u044e\u0442\u044c\u0441\u044f \u043b\u0438\u0448\u0435 \u0432 \u0446\u044c\u043e\u043c\u0443 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0456 \u2014 \u043d\u0456\u043a\u043e\u043b\u0438 \u043d\u0435 \u043d\u0430\u0434\u0441\u0438\u043b\u0430\u044e\u0442\u044c\u0441\u044f \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440.', 'Compartido con las otras pantallas y guardado solo en este navegador \u2014 nunca se env\u00eda a un servidor.'],
+    fIncome: ['Household income', 'Revenu du ménage', 'Дохід домогосподарства', 'Ingreso del hogar'],
+    fDebts: ['Monthly debts', 'Dettes mensuelles', 'Місячні боргѝ', 'Deudas mensuales'],
+    fCeiling: ['Comfort ceiling', 'Plafond de confort', 'Комфортна стеля', 'Techo de comodidad'],
+    fFunds: ['Funds available', 'Fonds disponibles', 'Доступні кошти', 'Fondos disponibles'],
+    minDownNote: ['The legal minimum is 5% on the first {a} and 10% on the portion above it. At this price that is {b}, so any lower column is raised to meet it.', 'Le minimum légal est de 5\u202f% sur les premiers {a} et 10\u202f% sur la portion au-delà. À ce prix, cela fait {b}\u202f; toute colonne inférieure est relevée.', 'Законний мінімум — 5\u202f% на перші {a} і 10\u202f% на частину вище. За цією ціною це {b}, тож нижчі стовпці підвищено.', 'El mínimo legal es 5\u202f% sobre los primeros {a} y 10\u202f% sobre el resto. A este precio son {b}, así que cualquier columna inferior se eleva.'],
+    whyPremium: ['The premium is a percentage of the loan, set by the loan-to-value band at origination, plus 20 basis points for a 30-year amortization. It is added to the mortgage, so you pay interest on it for the full term.', 'La prime est un pourcentage du prêt, fixé par la tranche prêt-valeur à l’origine, plus 20 points de base pour un amortissement de 30 ans. Elle est ajoutée au prêt, donc vous payez des intérêts dessus pendant toute la durée.', 'Премія — це відсоток від кредиту за смугою LTV на момент видачі, плюс 20 базисних пунктів за 30-річну амортизацію. Її додають до іпотеки, тож ви платите на неї відсотки весь термін.', 'La prima es un porcentaje del préstamo según el tramo préstamo-valor en el origen, más 20 puntos básicos por amortización a 30 años. Se suma a la hipoteca, así que paga intereses sobre ella todo el plazo.'],
+    whyContract: ['Insured mortgages price below uninsured ones, because the lender’s risk is covered. Putting 20% down removes the premium but moves you to the higher rate.', 'Les prêts assurés sont tarifés sous les prêts non assurés, car le risque du prêteur est couvert. Verser 20\u202f% supprime la prime mais vous place au taux plus élevé.', 'Страховані іпотеки дешевші за нестраховані, бо ризик кредитора покритий. Внесок 20\u202f% знімає премію, але переводить вас на вищу ставку.', 'Las hipotecas aseguradas se cotizan por debajo de las no aseguradas, porque el riesgo del prestamista está cubierto. Aportar el 20\u202f% elimina la prima pero le pasa a la tasa más alta.'],
+    whyPremTax: ['Some provinces charge sales tax on the insurance premium. The premium can be financed; the tax on it cannot, so it is cash on closing day and it varies by column.', 'Certaines provinces taxent la prime d’assurance. La prime peut être financée\u202f; la taxe non — elle se paie comptant à la clôture et varie selon la colonne.', 'Деякі провінції оподатковують страхову премію. Премію можна фінансувати, а податок на неї — ні: це готівка в день закриття, і вона різна для кожного стовпця.', 'Algunas provincias gravan la prima de seguro. La prima puede financiarse; el impuesto no, así que es efectivo el día del cierre y varía por columna.'],
+    whyReturn: ['Lifetime saving divided by the extra cash you had to put down. Above 1.0 means every extra dollar returned more than a dollar. It is guaranteed and tax-free, unlike an investment return.', 'Économie sur la durée divisée par le comptant additionnel exigé. Au-dessus de 1,0, chaque dollar additionnel a rapporté plus qu’un dollar. C’est garanti et libre d’impôt, contrairement à un rendement de placement.', 'Економія за термін, поділена на додаткову готівку. Понад 1,0 означає, що кожен додатковий долар повернув більше за долар. Це гарантовано й без податку — на відміну від інвестиції.', 'Ahorro total dividido por el efectivo extra aportado. Por encima de 1,0, cada dólar extra devolvió más de un dólar. Es garantizado y libre de impuestos, a diferencia de una inversión.'],
+    whyVsCeiling: ['Positive means the monthly cost fits inside the ceiling you set. This is the number to anchor on, not the lender’s approval.', 'Positif signifie que le coût mensuel entre dans le plafond que vous avez fixé. C’est ce chiffre qui compte, pas l’approbation du prêteur.', 'Додатне значення означає, що місячна вартість вкладається у вашу стелю. Орієнтуйтеся на це, а не на схвалення кредитора.', 'Positivo significa que el coste mensual cabe en el techo que fijó. Esta es la cifra de referencia, no la aprobación del prestamista.']
+  };
+
+  renderVals() {
+    const st = this.state;
+    if (!st.ready || !window.CIBTH_DATA || !window.CIBTH_ENGINE) return { themeA: st.themeA, themeB: st.themeB, showTable: false, showMath: false };
+    const D = window.CIBTH_DATA, F = D.federal, E = window.CIBTH_ENGINE, lang = st.lang;
+    const s = {}; for (const k in D.t) s[k] = D.t[k][lang];
+    for (const k in this.S) s[k] = this.S[k][lang];
+
+    const j = D.jur.find(x => x.id === st.jurId) || D.jur[0];
+    const price = st.price || j.bench[st.ptype];
+    const qualIncome = (st.inc1 + st.inc2) * (1 - st.haircut / 100);
+    const base = {
+      price, amortYears: st.amortYears, ftb: st.ftb, ptype: st.ptype, elsewhere: false,
+      insuranceAnnual: st.insuranceAnnual, utilities: st.utilities, condoFee: st.condoFee,
+      comfortCeiling: st.comfortCeiling, qualIncome, debts: st.debts, funds: st.funds, save: st.save
+    };
+    const pcts = [5, 10, 20, 25];
+    const R = pcts.map(p => E.scenario(j, F, Object.assign({}, base, { dpPct: p })));
+    const b5 = R[0];
+    R.forEach(r => {
+      r.extraCash = r.down - b5.down;
+      r.lifeSaving = b5.costOfBorrowing - r.costOfBorrowing;
+      r.ret = r.extraCash > 0 ? r.lifeSaving / r.extraCash : 0;
+    });
+    const twenty = R[2];
+    const anyPremiumTax = R.some(r => r.premiumTaxLine > 0);
+
+    /* --- recommendation: a small closed set of states --- */
+    const viable = R.filter(r => r.qualifies && r.fundable);
+    let rec;
+    if (!R.some(r => r.qualifies)) {
+      rec = { tag: s.wFail, head: s.recNoneQual, sub: s.recNoneQualSub, fg: 'var(--blk)', bg: 'var(--blkbg)', br: 'var(--blkbr)' };
+    } else if (viable.length === 0) {
+      const cheapest = R.reduce((a, r) => (r.net < a.net ? r : a), R[0]);
+      rec = { tag: s.wCaution || s.stTight, head: s.recNoneCash,
+        sub: s.recNoneCashSub.replace('{cash}', this.money(cheapest.net)).replace('{funds}', this.money(st.funds)).replace('{n}', cheapest.months == null ? '\u2014' : String(cheapest.months)),
+        fg: 'var(--caut)', bg: 'var(--cautbg)', br: 'var(--cautbr)' };
+    } else if (twenty.qualifies && twenty.fundable) {
+      rec = { tag: s.recommended, head: s.recTwenty.replace('{save}', this.money(twenty.lifeSaving)),
+        sub: s.recTwentySub.replace('{ret}', new Intl.NumberFormat(this.L(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(twenty.ret) + '\u00d7').replace('{extra}', this.money(twenty.extraCash)),
+        fg: 'var(--pass)', bg: 'var(--passbg)', br: 'var(--passbr)' };
+    } else {
+      const only = viable[0];
+      rec = { tag: s.recommended, head: s.recOnly.replace('{p}', this.pct(only.dpPctEff, Number.isInteger(only.dpPctEff) ? 0 : 1)),
+        sub: s.recOnlySub.replace('{extra}', this.money(Math.max(0, twenty.net - only.net))).replace('{n}', twenty.months == null ? '\u2014' : String(twenty.months)).replace('{save}', this.money(Math.max(0, twenty.lifeSaving))),
+        fg: 'var(--ac)', bg: 'var(--acbg)', br: 'var(--acbr)' };
+    }
+
+    /* --- option cards (depth 1 and up) --- */
+    const flagsFor = r => {
+      const f = [];
+      f.push(r.qualifies ? { icon: '\u2713', text: s.fQualifies, fg: 'var(--pass)' } : { icon: '\u00d7', text: s.fDeclines, fg: 'var(--blk)' });
+      f.push(r.fundable
+        ? { icon: '\u2713', text: s.fFundable, fg: 'var(--pass)' }
+        : { icon: '!', text: r.months == null ? s.fShort : s.fMonths.replace('{n}', String(r.months)), fg: 'var(--caut)' });
+      if (r.premium <= 0) f.push({ icon: '\u2713', text: s.fNoPremium, fg: 'var(--pass)' });
+      if (r.belowMinimum) f.push({ icon: '!', text: s.fMinimum.replace('{p}', this.pct(r.dpPctEff, 1)), fg: 'var(--caut)' });
+      return f;
+    };
+    const isRec = r => rec.tag === s.recommended && (
+      (twenty.qualifies && twenty.fundable) ? r === twenty : r === viable[0]);
+
+    const cards = R.map((r, i) => ({
+      pct: this.pct(r.dpPct), cash: this.money(r.net), monthly: this.money(r.monthly.total),
+      flags: flagsFor(r), isRef: st.refIdx === i ? 'true' : 'false',
+      refTag: st.refIdx === i ? s.refTag : (isRec(r) ? s.recommended : ''),
+      bg: isRec(r) ? 'var(--passbg)' : st.refIdx === i ? 'var(--acbg)' : 'var(--s1)',
+      br: isRec(r) ? 'var(--passbr)' : st.refIdx === i ? 'var(--acbr)' : 'var(--br)',
+      fg: isRec(r) ? 'var(--pass)' : st.refIdx === i ? 'var(--ac)' : 'var(--tx)',
+      headBg: st.refIdx === i ? 'var(--acbg)' : 'transparent',
+      savingLine: r.extraCash > 0 && r.lifeSaving > 0
+        ? s.rLifeSaving + ': ' + this.money(r.lifeSaving) + ' \u00b7 ' + new Intl.NumberFormat(this.L(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(r.ret) + '\u00d7'
+        : false,
+      setRef: () => this.setState(x => ({ refIdx: x.refIdx === i ? null : i, activeIdx: i }))
+    }));
+
+    const cols = R.map((r, i) => ({
+      pct: this.pct(r.dpPct),
+      tag: st.refIdx === i ? s.refTag : (r.qualifies && r.fundable ? s.wPass : r.qualifies ? s.fShort : s.wFail),
+      mTag: r.qualifies && r.fundable ? s.wPass : r.qualifies ? '!' : s.wFail,
+      isRef: st.refIdx === i ? 'true' : 'false', isActive: st.activeIdx === i ? 'true' : 'false',
+      bg: st.refIdx === i ? 'var(--acbg)' : 'var(--s1)',
+      fg: st.refIdx === i ? 'var(--ac)' : (r.qualifies && r.fundable ? 'var(--pass)' : r.qualifies ? 'var(--caut)' : 'var(--blk)'),
+      mBg: st.activeIdx === i ? 'var(--s1)' : 'var(--s2)',
+      mFg: st.activeIdx === i ? 'var(--ac)' : 'var(--tx3)',
+      setRef: () => this.setState(x => ({ refIdx: x.refIdx === i ? null : i })),
+      setActive: () => this.setState({ activeIdx: i })
+    }));
+
+    /* --- comparison rows. fmt drives both absolute and delta rendering --- */
+    const ref = st.refIdx == null ? null : R[st.refIdx];
+    const mkRow = (key, label, pick, fmt, opts) => {
+      const o = opts || {};
+      const vals = R.map(pick);
+      const cells = vals.map((v, i) => {
+        const isRefCol = st.refIdx === i;
+        let text;
+        if (fmt === 'text') text = v;
+        else if (ref == null || isRefCol || o.noDelta) {
+          text = fmt === 'pct' ? this.pct(v, o.dp == null ? 1 : o.dp)
+            : fmt === 'ratio' ? new Intl.NumberFormat(this.L(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) + '\u00d7'
+            : fmt === 'int' ? (v == null ? '\u2014' : String(v))
+            : fmt === 'factor' ? v.toFixed(6)
+            : this.money(v);
+        } else {
+          const d = v - pick(ref);
+          text = fmt === 'pct' ? this.signedPct(d, o.dp == null ? 1 : o.dp)
+            : fmt === 'ratio' ? (Math.abs(d) < 0.005 ? '\u2014' : (d > 0 ? '+\u2009' : '\u2212\u2009') + new Intl.NumberFormat(this.L(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(d)) + '\u00d7')
+            : fmt === 'int' ? (d === 0 ? '\u2014' : (d > 0 ? '+' : '\u2212') + Math.abs(d))
+            : fmt === 'factor' ? (d === 0 ? '\u2014' : (d > 0 ? '+' : '\u2212') + Math.abs(d).toFixed(6))
+            : this.signed(d);
+        }
+        let fg = o.strong ? 'var(--tx)' : 'var(--tx2)';
+        if (o.goodHigh || o.goodLow) {
+          if (ref != null && !isRefCol && fmt !== 'text') {
+            const d = v - pick(ref);
+            if (Math.abs(d) > 0.004) fg = (o.goodHigh ? d > 0 : d < 0) ? 'var(--pass)' : 'var(--blk)';
+          } else if (o.signColour) fg = v >= 0 ? 'var(--pass)' : 'var(--blk)';
+        }
+        if (o.stateColour) fg = vals[i] === s.wPass ? 'var(--pass)' : 'var(--blk)';
+        return { text, fg, fw: o.strong ? '600' : '400', bg: isRefCol ? 'var(--acbg)' : 'transparent' };
+      });
+      const open = st.openRow === key;
+      return { label, cells, labelFw: o.strong ? '600' : '400', open,
+        why: o.why || s.refHint,
+        toggle: () => this.setState(x => ({ openRow: x.openRow === key ? null : key })) };
+    };
+
+    const adv = st.depth >= 2;
+    const groups = [];
+    const gMortgage = [
+      mkRow('down', s.rDownAmt, r => r.down, 'money', { strong: true, why: s.minDownNote.replace('{a}', this.money(500000)).replace('{b}', this.money(E.minDown(price))) })
+    ];
+    if (adv) gMortgage.push(mkRow('baseLoan', s.rBaseLoan, r => r.baseLoan, 'money'));
+    if (adv) gMortgage.push(mkRow('ltv', s.rLtv, r => r.ltv * 100, 'pct', { dp: 1 }));
+    if (adv) gMortgage.push(mkRow('premRate', s.rPremRate, r => r.premRate * 100, 'pct', { dp: 2, why: s.whyPremium }));
+    gMortgage.push(mkRow('premAmt', s.rPremAmt, r => r.premium, 'money', { goodLow: true, why: s.whyPremium }));
+    gMortgage.push(mkRow('totalMort', s.rTotalMort, r => r.totalMortgage, 'money', { strong: true }));
+    groups.push({ id: 'g-mortgage', title: s.gMortgage, note: '', rows: gMortgage });
+
+    const gMonthly = [];
+    if (adv) gMonthly.push(mkRow('contract', s.rContract, r => r.contractRate, 'pct', { dp: 2, why: s.whyContract }));
+    gMonthly.push(mkRow('pi', s.rPi, r => r.monthly.pi, 'money'));
+    if (adv) gMonthly.push(mkRow('propTax', s.rPropTax, r => r.monthly.propTax, 'money'));
+    if (adv) gMonthly.push(mkRow('maint', s.rMaint, r => r.monthly.maintenance, 'money'));
+    gMonthly.push(mkRow('allIn', s.rAllIn, r => r.monthly.total, 'money', { strong: true, goodLow: true }));
+    gMonthly.push(mkRow('vsCeiling', s.rVsCeiling, r => r.vsCeiling, 'money', { signColour: true, goodHigh: true, why: s.whyVsCeiling }));
+    groups.push({ id: 'g-monthly', title: s.gMonthly, note: '', rows: gMonthly });
+
+    const gCash = [mkRow('cDown', s.rDownAmt, r => r.down, 'money')];
+    if (anyPremiumTax) gCash.push(mkRow('premTax', s.rPremTax, r => r.premiumTaxLine, 'money', { goodLow: true, why: s.whyPremTax }));
+    gCash.push(mkRow('closing', s.rClosing, r => r.closingTotal, 'money'));
+    gCash.push(mkRow('cash', s.rCash, r => r.net, 'money', { strong: true, goodLow: true }));
+    if (adv) gCash.push(mkRow('funds', s.rFunds, () => st.funds, 'money', { noDelta: true }));
+    gCash.push(mkRow('surplus', s.rSurplus, r => r.surplus, 'money', { signColour: true, goodHigh: true }));
+    gCash.push(mkRow('months', s.rMonths, r => r.months, 'int', { noDelta: true }));
+    groups.push({ id: 'g-cash', title: s.gCash, note: s.gCashNote, rows: gCash });
+
+    const gQual = [];
+    if (adv) gQual.push(mkRow('qualRate', s.rQualRate, r => r.qualRate, 'pct', { dp: 2 }));
+    if (adv) gQual.push(mkRow('stressPay', s.rStressPay, r => r.stressPay, 'money'));
+    gQual.push(mkRow('gds', s.rGds, r => r.gds, 'pct', { dp: 1, goodLow: true }));
+    gQual.push(mkRow('tds', s.rTds, r => r.tds, 'pct', { dp: 1, goodLow: true }));
+    gQual.push(mkRow('result', s.rResult, r => (r.qualifies ? s.wPass : s.wFail), 'text', { strong: true, stateColour: true }));
+    groups.push({ id: 'g-qual', title: s.gQual, note: 'GDS ' + this.pct(F.gds) + ' \u00b7 TDS ' + this.pct(F.tds), rows: gQual });
+
+    const gLife = [
+      mkRow('interest', s.rInterest, r => r.totalInterest, 'money', { goodLow: true }),
+      mkRow('borrowCost', s.rBorrowCost, r => r.costOfBorrowing, 'money', { strong: true, goodLow: true }),
+      mkRow('extraCash', s.rExtraCash, r => r.extraCash, 'money', { noDelta: true }),
+      mkRow('lifeSaving', s.rLifeSaving, r => r.lifeSaving, 'money', { noDelta: true, goodHigh: true, signColour: true }),
+      mkRow('ret', s.rReturn, r => r.ret, 'ratio', { noDelta: true, strong: true, why: s.whyReturn })
+    ];
+    groups.push({ id: 'g-life', title: s.gLifetime, note: s.gLifeNote, rows: gLife });
+
+    /* --- phone: the active column as a stack of rows --- */
+    const a = R[st.activeIdx] || R[2];
+    const mrow = (label, value, strong) => ({ label, value, fw: strong ? '600' : '400' });
+    const activeRows = [
+      mrow(s.rDownAmt, this.money(a.down)),
+      mrow(s.rPremAmt, this.money(a.premium)),
+      mrow(s.rTotalMort, this.money(a.totalMortgage), true),
+      mrow(s.rAllIn, this.money(a.monthly.total), true),
+      mrow(s.rVsCeiling, this.signed(a.vsCeiling)),
+      mrow(s.rCash, this.money(a.net), true),
+      mrow(s.rSurplus, this.signed(a.surplus)),
+      mrow(s.rBorrowCost, this.money(a.costOfBorrowing), true)
+    ];
+    if (st.depth >= 2) {
+      activeRows.push(mrow(s.rLtv, this.pct(a.ltv * 100, 1)));
+      activeRows.push(mrow(s.rContract, this.pct(a.contractRate, 2)));
+      activeRows.push(mrow(s.rGds, this.pct(a.gds, 1)));
+      activeRows.push(mrow(s.rTds, this.pct(a.tds, 1)));
+    }
+
+    const readNotes = [
+      { title: s.nTwentyTitle, body: s.nTwentyBody, fg: 'var(--pass)', bg: 'var(--passbg)', br: 'var(--passbr)' },
+      { title: s.nAboveTitle, body: s.nAboveBody, fg: 'var(--caut)', bg: 'var(--cautbg)', br: 'var(--cautbr)' },
+      { title: s.nHurdleTitle, body: s.nHurdleBody, fg: 'var(--def)', bg: 'var(--defbg)', br: 'var(--defbr)' },
+      { title: s.nOrderTitle, body: s.nOrderBody, fg: 'var(--ac)', bg: 'var(--acbg)', br: 'var(--acbr)' }
+    ];
+
+    const depthOpts = [s.d1, s.d2, s.d3].map((lb, i) => ({
+      label: lb, n: String(i + 1), on: st.depth === i ? 'true' : 'false',
+      bg: st.depth === i ? 'var(--s1)' : 'var(--s2)', fg: st.depth === i ? 'var(--ac)' : 'var(--tx3)', fw: st.depth === i ? '600' : '400',
+      pick: () => this.setState({ depth: i })
+    }));
+    const jumpLinks = [{ href: '#recommend', label: s.d1 }, { href: '#options', label: s.gridTitle }];
+    if (st.depth >= 1) { jumpLinks.push({ href: '#g-cash', label: s.gCash }); jumpLinks.push({ href: '#g-life', label: s.gLifetime }); }
+    if (st.depth >= 2) jumpLinks.push({ href: '#reading', label: s.howToRead });
+    jumpLinks.push({ href: '#inputs', label: s.adjust });
+
+    const langs = ['English', 'Français', 'Українська', 'Español'].map((n, i) => ({
+      name: n, abbr: ['EN', 'FR', 'UK', 'ES'][i], on: i === lang ? 'true' : 'false',
+      pick: () => this.setState({ lang: i }),
+      bg: i === lang ? 'var(--s1)' : 'var(--s2)', fg: i === lang ? 'var(--tx)' : 'var(--tx3)', fw: i === lang ? '600' : '400'
+    }));
+    const cityOpts = D.jur.filter(x => x.city).map(x => ({
+      name: D.C[x.city][lang], code: x.prov, on: x.id === st.jurId ? 'true' : 'false',
+      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--s1)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--tx)',
+      brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--br)',
+      pick: () => this.setState({ jurId: x.id, pickerOpen: false, pulse: st.pulse + 1, price: st.priceTouched ? st.price : x.bench[st.ptype] })
+    }));
+    const amortOpts = [25, 30].map(v => ({
+      label: v + '\u2009' + ['yr', 'ans', '\u0440.', 'a\u00f1os'][lang], on: st.amortYears === v ? 'true' : 'false',
+      bg: st.amortYears === v ? 'var(--s1)' : 'var(--s2)', fg: st.amortYears === v ? 'var(--ac)' : 'var(--tx2)', fw: st.amortYears === v ? '600' : '400',
+      pick: () => this.setState({ amortYears: v })
+    }));
+    const fields = [
+      { label: s.fIncome, key: 'inc1', step: '1000', value: st.inc1 + st.inc2,
+        onChange: e => { const v = parseFloat(e.target.value); this.setState({ inc1: isNaN(v) ? 0 : v, inc2: 0 }); } },
+      { label: s.fDebts, key: 'debts', step: '25', value: st.debts,
+        onChange: e => { const v = parseFloat(e.target.value); this.setState({ debts: isNaN(v) ? 0 : v }); } },
+      { label: s.fCeiling, key: 'comfortCeiling', step: '50', value: st.comfortCeiling,
+        onChange: e => { const v = parseFloat(e.target.value); this.setState({ comfortCeiling: isNaN(v) ? 0 : v }); } },
+      { label: s.fFunds, key: 'funds', step: '1000', value: st.funds,
+        onChange: e => { const v = parseFloat(e.target.value); this.setState({ funds: isNaN(v) ? 0 : v }); } }
+    ];
+
+    return {
+      s, langs, cityOpts, depthOpts, jumpLinks, cards, cols, groups, readNotes, amortOpts, fields, rec,
+      themeA: st.themeA, themeB: st.themeB,
+      themeIconA: st.themeA === 'dark' ? '\u25d1' : '\u25cb', themeIconB: st.themeB === 'dark' ? '\u25d1' : '\u25cb',
+      toggleThemeA: () => this.setState(x => ({ themeA: x.themeA === 'dark' ? 'light' : 'dark' })),
+      toggleThemeB: () => this.setState(x => ({ themeB: x.themeB === 'dark' ? 'light' : 'dark' })),
+      pickerOpen: st.pickerOpen, togglePicker: () => this.setState(x => ({ pickerOpen: !x.pickerOpen })),
+      chip: { city: D.C[j.city] ? D.C[j.city][lang] : D.P[j.prov][lang], code: j.prov,
+        country: ['Canada', 'Canada', '\u041a\u0430\u043d\u0430\u0434\u0430', 'Canad\u00e1'][lang],
+        short: (D.C[j.city] ? D.C[j.city][lang] : D.P[j.prov][lang]) + ', ' + j.prov },
+      locTag: s.locTagTpl.replace('{city}', D.C[j.city] ? D.C[j.city][lang] : D.P[j.prov][lang]) + ' \u00b7 ' + this.date(D.verified),
+      showTable: st.depth >= 1, showMath: st.depth >= 2,
+      hasRef: st.refIdx != null, clearRef: () => this.setState({ refIdx: null }),
+      refHint: st.refIdx == null ? s.refHint : s.refIsTpl.replace('{pct}', this.pct(pcts[st.refIdx])),
+      active: { pct: this.pct(a.dpPct), rows: activeRows, flags: flagsFor(a),
+        refTag: isRec(a) ? s.recommended : '',
+        bg: isRec(a) ? 'var(--passbg)' : 'var(--s1)', br: isRec(a) ? 'var(--passbr)' : 'var(--br)',
+        fg: isRec(a) ? 'var(--pass)' : 'var(--tx)',
+        savingLine: a.extraCash > 0 && a.lifeSaving > 0
+          ? s.rLifeSaving + ': ' + this.money(a.lifeSaving) + ' \u00b7 ' + new Intl.NumberFormat(this.L(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(a.ret) + '\u00d7'
+          : false },
+      price: Math.round(price), priceFmt: this.money(price),
+      onPrice: e => { const v = parseFloat(e.target.value); this.setState({ price: isNaN(v) ? 0 : v, priceTouched: true }); },
+      priceTag: (D.C[j.city] ? D.C[j.city][lang] : D.P[j.prov][lang]) + ' \u00b7 ' + this.money(j.bench[st.ptype]),
+      ftb: st.ftb ? 'true' : 'false', toggleFtb: () => this.setState(x => ({ ftb: !x.ftb })),
+      ftbBg: st.ftb ? 'var(--acbg)' : 'var(--s1)', ftbBr: st.ftb ? 'var(--acbr)' : 'var(--br)',
+      ftbFg: st.ftb ? 'var(--ac)' : 'var(--tx2)', ftbTrack: st.ftb ? 'var(--ac)' : 'var(--brs)', ftbX: st.ftb ? '13px' : '2px',
+      minDownNote: s.minDownNote.replace('{a}', this.money(500000)).replace('{b}', this.money(E.minDown(price))),
+      pulseKey: 'p' + st.pulse + st.jurId,
+      sourcesLine: s.sourcesForTpl.replace('{prov}', D.P[j.prov][lang]) + ' \u00b7 ' + s.lastVerified + ' ' + this.date(D.verified) + ' \u00b7 CMHC / SCHL \u00b7 OSFI B-20 \u00b7 ' + j.orgs.market
+    };
+  }
+}
+
+</script>
+</body>
+</html>
+

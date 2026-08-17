@@ -1,0 +1,26 @@
+import type { Jurisdiction } from "../types";
+
+export const calgary: Jurisdiction = {
+  id: "calgary",
+  prov: "AB",
+  city: "calgary",
+  cityData: true,
+  pro: "lawyer",
+  rent: 1850,
+  yoy: 0.028,
+  bench: { house: 622000, condo: 342000, newbuild: 660000 },
+  propTax: 0.00654,
+  transfer: [
+    { key: "li_titleReg", ex: "ex_titleReg", tier: "provincial", kind: "perValue", base: 50, per: 5, unit: 5000, on: "price" },
+    { key: "li_mortReg", ex: "ex_titleReg", tier: "provincial", kind: "perValue", base: 50, per: 5, unit: 5000, on: "loan" },
+  ],
+  premiumTax: null,
+  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: 0, timing: "closing", noTax: true }],
+  taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
+  fees: { lawyer: 1600, titleIns: 325, inspect: 550, appraisal: 400, statusCert: 350, moving: 1300, setup: 600 },
+  orgs: {
+    transfer: "Alberta Land Titles, tariff of fees",
+    rebate: "Alberta Treasury Board and Finance",
+    market: "CREA MLS® HPI",
+  },
+};
