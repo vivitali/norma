@@ -6,7 +6,6 @@ import { useSharedState } from "@/hooks/use-shared-state";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { affordability } from "@/domain/engine";
 import { federal } from "@/domain/federal";
-import { getJurisdiction } from "@/domain/jurisdictions";
 import { useMoney } from "@/lib/format";
 import {
   AFFORDABILITY_KEYS,
@@ -31,8 +30,7 @@ export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
   const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
   const fmt = useMoney();
-  const [jurisdictionState] = useJurisdiction();
-  const jurisdiction = getJurisdiction(jurisdictionState.jurId) ?? getJurisdiction("winnipeg")!;
+  const [jurisdiction] = useJurisdiction();
   const result = affordability(jurisdiction, federal, form);
 
   const numberField = (key: NumericKey) => ({

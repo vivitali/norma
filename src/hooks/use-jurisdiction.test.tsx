@@ -9,7 +9,7 @@ describe("useJurisdiction", () => {
 
   it("defaults to winnipeg", () => {
     const { result } = renderHook(() => useJurisdiction(), { wrapper: JurisdictionProvider });
-    expect(result.current[0].jurId).toBe("winnipeg");
+    expect(result.current[0].id).toBe("winnipeg");
   });
 
   it("throws when used outside a JurisdictionProvider", () => {
@@ -25,7 +25,19 @@ describe("useJurisdiction", () => {
       return { a, b };
     }
     const { result } = renderHook(() => useTwoConsumers(), { wrapper: JurisdictionProvider });
-    act(() => result.current.a[1]({ jurId: "toronto" }));
-    await waitFor(() => expect(result.current.b[0].jurId).toBe("toronto"));
+    act(() => result.current.a[1]("toronto"));
+    await waitFor(() => expect(result.current.b[0].id).toBe("toronto"));
+  });
+
+  it("exposes the resolved Jurisdiction record, not just its id", async () => {
+    const { result } = renderHook(() => useJurisdiction(), { wrapper: JurisdictionProvider });
+    act(() => result.current[1]("toronto"));
+    await waitFor(() => expect(result.current[0].prov).toBe("ON"));
+  });
+
+  it("resolves an unknown stored id to the default jurisdiction", async () => {
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ jurId: "atlantis" }));
+    const { result } = renderHook(() => useJurisdiction(), { wrapper: JurisdictionProvider });
+    await waitFor(() => expect(result.current[0].id).toBe("winnipeg"));
   });
 });

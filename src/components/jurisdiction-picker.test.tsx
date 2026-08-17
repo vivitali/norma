@@ -42,4 +42,10 @@ describe("JurisdictionPicker", () => {
     const stored = JSON.parse(window.localStorage.getItem("norma.inputs.v1") ?? "{}");
     expect(stored.jurId).toBe("toronto");
   });
+
+  it("shows the default jurisdiction when the stored id is unknown, not a missing-message error", async () => {
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ jurId: "atlantis" }));
+    renderPicker();
+    expect(await screen.findByText("Winnipeg")).toBeInTheDocument();
+  });
 });

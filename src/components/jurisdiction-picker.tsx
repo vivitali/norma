@@ -14,12 +14,12 @@ import { useJurisdiction } from "@/hooks/use-jurisdiction";
 export function JurisdictionPicker() {
   const t = useTranslations("AppHeader");
   const tJur = useTranslations("Jurisdictions");
-  const [state, update] = useJurisdiction();
+  const [jurisdiction, setJurId] = useJurisdiction();
 
   return (
-    <Select value={state.jurId} onValueChange={(jurId) => update({ jurId })}>
+    <Select value={jurisdiction.id} onValueChange={setJurId}>
       <SelectTrigger aria-label={t("changeLocation")} className="w-auto">
-        <SelectValue>{tJur(state.jurId)}</SelectValue>
+        <SelectValue>{tJur(jurisdiction.id)}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {jurisdictions.map((j) => (
