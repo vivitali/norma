@@ -190,3 +190,80 @@ describe("closingTotal", () => {
     expect(result.net).toBeLessThanOrEqual(result.cash);
   });
 });
+
+import { affordability } from "./engine";
+
+describe("affordability", () => {
+  const winnipeg = getJurisdiction("winnipeg")!;
+
+  const baseInput = {
+    income1: 70000,
+    income2: 50000,
+    otherIncome: 0,
+    haircut: 0,
+    debts: 300,
+    amortYears: 25,
+    comfortCeiling: 2800,
+    insuranceAnnual: 1400,
+    utilities: 200,
+    condoFee: 0,
+    contractRate: 4.29,
+    price: 450000,
+    dpPct: 10,
+    ftb: true,
+    ptype: "house" as const,
+    elsewhere: false,
+  };
+
+  it("returns a positive ceiling and comfort figure for a plausible household", () => {
+    const result = affordability(winnipeg, federal, baseInput);
+    expect(result.ceiling).toBeGreaterThan(0);
+    expect(result.comfort).toBeGreaterThan(0);
+  });
+
+  it("increases the qualification ceiling as qualifying income rises", () => {
+    const low = affordability(winnipeg, federal, { ...baseInput, income1: 50000, income2: 0 });
+    const high = affordability(winnipeg, federal, { ...baseInput, income1: 90000, income2: 60000 });
+    expect(high.ceiling).toBeGreaterThan(low.ceiling);
+  });
+
+  it("increases the comfort ceiling as the household's comfort budget rises", () => {
+    const tight = affordability(winnipeg, federal, { ...baseInput, comfortCeiling: 2000 });
+    const roomy = affordability(winnipeg, federal, { ...baseInput, comfortCeiling: 4000 });
+    expect(roomy.comfort).toBeGreaterThan(tight.comfort);
+  });
+
+  it("fails approval when the target price exceeds the qualification ceiling", () => {
+    const result = affordability(winnipeg, federal, { ...baseInput, income1: 30000, income2: 0, price: 900000 });
+    expect(result.approvalPass).toBe(false);
+  });
+
+  it("passes the comfort check when total monthly cost is at or below the comfort ceiling", () => {
+    const result = affordability(winnipeg, federal, { ...baseInput, price: 200000, dpPct: 20 });
+    expect(result.comfortPass).toBe(result.monthly.total <= baseInput.comfortCeiling);
+  });
+
+  it("returns zero income-based figures when qualifying income is zero", () => {
+    const result = affordability(winnipeg, federal, { ...baseInput, income1: 0, income2: 0, otherIncome: 0 });
+    expect(result.ceiling).toBe(0);
+    expect(result.gdsAtTarget).toBe(0);
+    expect(result.tdsAtTarget).toBe(0);
+  });
+
+  it("builds the monthly total from its own components", () => {
+    const result = affordability(winnipeg, federal, baseInput);
+    const { pi, propTax, insurance, utilities, condoFee, maintenance, total } = result.monthly;
+    expect(total).toBeCloseTo(pi + propTax + insurance + utilities + condoFee + maintenance, 5);
+  });
+
+  it("produces a different ceiling in a jurisdiction with materially different transfer-tax rules", () => {
+    // Toronto stacks provincial + municipal LTT (with a rebate cap) on top of an 8% premium
+    // tax; Winnipeg has neither a municipal LTT nor a premium tax. Same household, same price
+    // — the two-ceiling numbers should not coincidentally match.
+    const toronto = getJurisdiction("toronto")!;
+    const winnipegResult = affordability(winnipeg, federal, baseInput);
+    const torontoResult = affordability(toronto, federal, baseInput);
+    expect(torontoResult.ceiling).not.toBeCloseTo(winnipegResult.ceiling, 0);
+    expect(torontoResult.cc.total).toBeGreaterThan(winnipegResult.cc.total);
+  });
+});

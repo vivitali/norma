@@ -252,3 +252,112 @@ export function closingTotal(j: Jurisdiction, F: FederalRules, o: ClosingInput) 
 }
 
 export type ClosingTotalResult = ReturnType<typeof closingTotal>;
+
+export interface AffordabilityInput {
+  income1: number;
+  income2: number;
+  otherIncome: number;
+  haircut: number;
+  debts: number;
+  amortYears: number;
+  comfortCeiling: number;
+  insuranceAnnual: number;
+  utilities: number;
+  condoFee: number;
+  contractRate: number;
+  price: number;
+  dpPct: number;
+  ftb: boolean;
+  ptype: PropertyType;
+  elsewhere: boolean;
+}
+
+/**
+ * Two ceilings, computed side by side: `ceiling` is what a lender's GDS/TDS stress test would
+ * approve; `comfort` is what actually fits inside the household's real monthly budget. Mirrors
+ * the Affordability tab of the Winnipeg reference model.
+ */
+export function affordability(j: Jurisdiction, F: FederalRules, o: AffordabilityInput) {
+  const gross = o.income1 + o.income2 + o.otherIncome;
+  const qualIncome = gross * (1 - o.haircut / 100);
+  const qualRate = Math.max(F.stressTest.floor, o.contractRate + F.stressTest.buffer) / 100;
+  const fq = payFactor(qualRate, o.amortYears);
+  const fc = payFactor(o.contractRate / 100, o.amortYears);
+
+  const gdsAllow = (qualIncome * (F.gds / 100)) / 12;
+  const tdsAllow = (qualIncome * (F.tds / 100)) / 12 - o.debts;
+  const binding = Math.min(gdsAllow, tdsAllow);
+  const tdsBinds = tdsAllow < gdsAllow;
+
+  // Solved so property tax scales with price. Assumes 20% down, as the source model does.
+  const denomLender = 0.8 * fq + j.propTax / 12;
+  const ceiling = qualIncome <= 0 ? 0 : Math.max(0, (binding - F.heatAllowance - o.condoFee * 0.5) / denomLender);
+
+  const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee;
+  const denomComfort = 0.8 * fc + j.propTax / 12 + F.maintenanceReserve / 12;
+  const comfort = Math.max(0, budget) / denomComfort;
+
+  // The target price, actually financed at the actual down payment.
+  const cc = closingTotal(j, F, {
+    price: o.price,
+    dpPct: o.dpPct,
+    ftb: o.ftb,
+    ptype: o.ptype,
+    amortYears: o.amortYears,
+    elsewhere: o.elsewhere,
+  });
+  const pi = cc.fin.loan * payFactor(cc.fin.insured ? F.rates.insured : F.rates.uninsured, o.amortYears);
+  const monthly = {
+    pi,
+    propTax: (o.price * j.propTax) / 12,
+    insurance: o.insuranceAnnual / 12,
+    utilities: o.utilities,
+    condoFee: o.condoFee,
+    maintenance: (o.price * F.maintenanceReserve) / 12,
+    total: 0,
+  };
+  monthly.total =
+    monthly.pi + monthly.propTax + monthly.insurance + monthly.utilities + monthly.condoFee + monthly.maintenance;
+
+  // What a lender counts at the target price: a fixed heating allowance, not real utilities.
+  const gdsAtTarget =
+    qualIncome <= 0
+      ? 0
+      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * 0.5) / (qualIncome / 12)) * 100;
+  const tdsAtTarget =
+    qualIncome <= 0
+      ? 0
+      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * 0.5 + o.debts) / (qualIncome / 12)) * 100;
+
+  // Marginal cost of debt: what one dollar of monthly obligation removes from the ceiling.
+  const capacityPerDollar = 1 / denomLender;
+
+  return {
+    gross,
+    qualIncome,
+    qualRate: qualRate * 100,
+    fq,
+    fc,
+    gdsAllow,
+    tdsAllow,
+    binding,
+    tdsBinds,
+    ceiling,
+    comfort,
+    budget,
+    monthly,
+    cc,
+    gdsAtTarget,
+    tdsAtTarget,
+    capacityPerDollar,
+    impliedMortgage: ceiling * 0.8,
+    comfortDown: comfort * 0.2,
+    comfortPI: comfort * 0.8 * fc,
+    approvalPass: o.price <= ceiling,
+    comfortPass: monthly.total <= o.comfortCeiling,
+    comfortGap: monthly.total - o.comfortCeiling,
+    gap: ceiling - comfort,
+  };
+}
+
+export type AffordabilityResult = ReturnType<typeof affordability>;
