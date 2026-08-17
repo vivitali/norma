@@ -4,6 +4,9 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { ThemeProvider } from "@/components/theme-provider";
+import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
+import { AppHeader } from "@/components/app-header";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -45,10 +48,18 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <JurisdictionProvider>
+              <AppHeader />
+              {children}
+            </JurisdictionProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

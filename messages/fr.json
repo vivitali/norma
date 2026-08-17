@@ -9,6 +9,24 @@
   },
   "AppHeader": {
     "theme": "Thème",
-    "changeLanguage": "Changer de langue"
+    "changeLanguage": "Changer de langue",
+    "brand": "norma",
+    "changeLocation": "Changer de lieu"
+  },
+  "Jurisdictions": {
+    "toronto": "Toronto",
+    "ottawa": "Ottawa",
+    "vancouver": "Vancouver",
+    "halifax": "Halifax",
+    "winnipeg": "Winnipeg",
+    "montreal": "Montréal",
+    "calgary": "Calgary",
+    "saskatoon": "Saskatoon",
+    "nb": "Nouveau-Brunswick",
+    "nl": "Terre-Neuve-et-Labrador",
+    "pe": "Île-du-Prince-Édouard",
+    "yt": "Yukon",
+    "nt": "Territoires du Nord-Ouest",
+    "nu": "Nunavut"
   }
 }

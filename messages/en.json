@@ -9,6 +9,24 @@
   },
   "AppHeader": {
     "theme": "Theme",
-    "changeLanguage": "Change language"
+    "changeLanguage": "Change language",
+    "brand": "norma",
+    "changeLocation": "Change location"
+  },
+  "Jurisdictions": {
+    "toronto": "Toronto",
+    "ottawa": "Ottawa",
+    "vancouver": "Vancouver",
+    "halifax": "Halifax",
+    "winnipeg": "Winnipeg",
+    "montreal": "Montréal",
+    "calgary": "Calgary",
+    "saskatoon": "Saskatoon",
+    "nb": "New Brunswick",
+    "nl": "Newfoundland and Labrador",
+    "pe": "Prince Edward Island",
+    "yt": "Yukon",
+    "nt": "Northwest Territories",
+    "nu": "Nunavut"
   }
 }
