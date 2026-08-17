@@ -257,9 +257,13 @@ describe("affordability", () => {
   });
 
   it("produces a different ceiling in a jurisdiction with materially different transfer-tax rules", () => {
-    // Toronto stacks provincial + municipal LTT (with a rebate cap) on top of an 8% premium
-    // tax; Winnipeg has neither a municipal LTT nor a premium tax. Same household, same price
-    // — the two-ceiling numbers should not coincidentally match.
+    // The ceiling differs between Toronto and Winnipeg because their property tax rates differ
+    // sharply: Toronto's j.propTax is 0.00752 vs Winnipeg's 0.0132 — nearly double. Since
+    // ceiling's denominator includes propTax (0.8*fq + propTax/12), the lower Toronto rate
+    // produces a higher ceiling for the same income. The cc.total (closing costs) also differs
+    // because Toronto stacks provincial + municipal LTT (with a rebate cap) on top of an 8%
+    // premium tax on CMHC premiums; Winnipeg has neither. Same household, same price — both
+    // differences compound to make the jurisdictions diverge significantly.
     const toronto = getJurisdiction("toronto")!;
     const winnipegResult = affordability(winnipeg, federal, baseInput);
     const torontoResult = affordability(toronto, federal, baseInput);
