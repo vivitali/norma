@@ -62,7 +62,7 @@ function slice<K extends keyof SharedInputs>(keys: readonly K[]): Pick<SharedInp
  * to write by accident.
  */
 export const JURISDICTION_KEYS = ["jurId"] as const satisfies readonly (keyof SharedInputs)[];
-export type JurisdictionState = Pick<SharedInputs, (typeof JURISDICTION_KEYS)[number]>;
+type JurisdictionState = Pick<SharedInputs, (typeof JURISDICTION_KEYS)[number]>;
 export const JURISDICTION_DEFAULTS: JurisdictionState = slice(JURISDICTION_KEYS);
 
 export const AFFORDABILITY_KEYS = [

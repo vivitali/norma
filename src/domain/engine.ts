@@ -164,7 +164,7 @@ export interface CreditLine {
   kind: "cap" | "exemptBand" | "fullExempt" | "none";
   amount: number;
   st: "applied" | "capped" | "phasedOut" | "none" | "ftbOnly";
-  target: string | null;
+  target: string;
   cap?: number;
   noTax?: boolean;
 }

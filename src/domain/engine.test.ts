@@ -159,6 +159,10 @@ describe("credits", () => {
     const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: false, ptype: "house" as const, elsewhere: false };
     const lines = buildLines(toronto, federal, input);
     const result = credits(toronto, federal, input, lines.gov);
+    // Toronto has 2 rebates (provincial + municipal) and elsewhere is false, so both transfer
+    // lines exist and both rebates resolve to a row — this assertion would pass vacuously on an
+    // empty array without the length check.
+    expect(result.atClosing).toHaveLength(2);
     expect(result.atClosing.every((c) => c.st === "ftbOnly")).toBe(true);
   });
 
@@ -235,6 +239,19 @@ describe("credits", () => {
     const result = credits(toronto, federal, input, lines.gov);
     expect(result.atClosing.find((c) => c.key === "cr_lttRebateProv")!.target).toBe("li_lttProv");
     expect(result.atClosing.find((c) => c.key === "cr_lttRebateMuni")!.target).toBe("li_lttMuni");
+  });
+
+  // buildLines only skips a municipal-tier line under `elsewhere` when j.prov === "ON" (Toronto).
+  // Halifax's only rebate targets its municipal line (li_deedMuni, tier: "municipal") with
+  // kind: "none" — the row the UI uses to say "no such programme here". If the ON-only guard
+  // were ever loosened to cover every province, Halifax's municipal line would vanish under
+  // elsewhere: true and this rebate would silently disappear instead of rendering as unavailable.
+  it("still emits Halifax's municipal-tier rebate row under elsewhere: true (not an Ontario-only line)", () => {
+    const halifax = getJurisdiction("halifax")!;
+    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true };
+    const lines = buildLines(halifax, federal, input);
+    const result = credits(halifax, federal, input, lines.gov);
+    expect(result.atClosing.some((c) => c.key === "cr_lttRebateProv")).toBe(true);
   });
 });
 

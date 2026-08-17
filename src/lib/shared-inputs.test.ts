@@ -10,7 +10,12 @@ import {
 
 describe("shared input registry", () => {
   it("gives every registry key a default value", () => {
-    for (const key of Object.keys(SHARED_INPUT_DEFAULTS)) {
+    // Assert against the union of every page's key tuple, not Object.keys(SHARED_INPUT_DEFAULTS)
+    // — iterating the registry's own keys back against itself passes vacuously even against {}.
+    const pageKeys = new Set<string>([...AFFORDABILITY_KEYS, ...JURISDICTION_KEYS]);
+    expect(pageKeys.size).toBeGreaterThan(0);
+    for (const key of pageKeys) {
+      expect(SHARED_INPUT_DEFAULTS, key).toHaveProperty(key);
       expect(SHARED_INPUT_DEFAULTS[key as keyof typeof SHARED_INPUT_DEFAULTS], key).toBeDefined();
     }
   });
