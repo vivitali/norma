@@ -35,6 +35,40 @@ Implement → invoke `reviewer` subagent on the diff → fix → repeat until ap
 
 Not yet configured. No CI reviewer workflow installed yet either — add `.github/workflows/claude-review.yml` when ready (needs `ANTHROPIC_API_KEY` secret or the GitHub Claude app).
 
+## Where the project is (read this first)
+
+**Phase 1 is complete** — PR [#4](https://github.com/vivitali/norma/pull/4), branch
+`claude/phase1-affordability-design`. It shipped `src/domain/` (types, federal rules, all 14
+jurisdictions, calculation engine), the reusable `AppHeader` chrome, and two pages: Home and
+`/affordability`.
+
+**Before starting the next milestone, read in this order:**
+1. `docs/superpowers/specs/2026-08-17-phase1-affordability-design.md` — the spec, incl. its
+   Scalability section (the constraint that later pages must be additive, not rewrites)
+2. `docs/superpowers/plans/2026-08-17-phase1-affordability-plan.md` — how Phase 1 was built
+3. Open issues below
+
+**Remaining pages**, each its own spec → plan → implementation cycle, all built on the existing
+`src/domain/` engine (the source prototype in `design-reference/` already has working
+implementations of every one of these — port, don't invent):
+Closing Costs · Down Payment (funding waterfall) · RRSP-HBP · Amortization (with renewal) ·
+Rent vs Buy · Scenarios
+
+**Open issues:**
+- [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists in `design-reference/hbt-data.js`)
+- [#2](https://github.com/vivitali/norma/issues/2) — **three architecture seams to fix before Phase 2.** One is a latent
+  rebate-indexing bug in `credits()` that produces a phantom rebate once the `elsewhere` toggle is
+  exposed — **this blocks Closing Costs specifically.** The other two (shared-input registry out of
+  the route module; `useJurisdiction()` resolving a `Jurisdiction` rather than a raw id) get more
+  expensive with every page added.
+- [#3](https://github.com/vivitali/norma/issues/3) — deferred polish, test-coverage gaps, and a product question about the
+  now-unused insured/uninsured rate spread
+
+**Known limitation, load-bearing:** every jurisdiction figure in `src/domain/` is an *unverified
+placeholder* carried over from the prototype — not sourced from 2026 government data. The UI
+discloses this. Verifying them per-jurisdiction is real, un-started work that must happen before
+this product is useful to anyone.
+
 ## Open product decisions
 
 1. **Affordability formula** — resolved for Phase 1. Two ceilings, computed side by side: a
