@@ -1,5 +1,6 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { StrictMode } from "react";
 import { useSharedState } from "./use-shared-state";
 
 const KEYS = ["price", "jurId"] as const;
@@ -48,40 +49,21 @@ describe("useSharedState", () => {
     expect(result.current[0]).toEqual({ price: 600000, jurId: "winnipeg" });
   });
 
-  it("does not transiently overwrite hydrated values with defaults on first mount", async () => {
-    // Pre-seed localStorage with non-default values
-    const stored = { price: 750000, jurId: "montreal" };
-    window.localStorage.setItem("norma.inputs.v1", JSON.stringify(stored));
+  it("never transiently writes default values to localStorage when hydrating pre-existing data, even under React StrictMode", async () => {
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ price: 700000, jurId: "toronto" }));
+    const setItemSpy = vi.spyOn(window.localStorage, "setItem");
 
-    // Spy on all setItem calls to record what gets written
-    const writes: string[] = [];
-    const originalSetItem = window.localStorage.setItem;
-    window.localStorage.setItem = (key: string, value: string) => {
-      if (key === "norma.inputs.v1") writes.push(value);
-      originalSetItem.call(window.localStorage, key, value);
-    };
+    const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS), { wrapper: StrictMode });
 
-    try {
-      const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS));
+    await waitFor(() => expect(result.current[0].price).toBe(700000));
 
-      // Wait for hydration to complete
-      await waitFor(() => expect(result.current[0].price).toBe(750000));
+    const wroteDefaults = setItemSpy.mock.calls.some(([key, value]) => {
+      if (key !== "norma.inputs.v1") return false;
+      const parsed = JSON.parse(value as string);
+      return parsed.price === DEFAULTS.price && parsed.jurId === DEFAULTS.jurId;
+    });
+    expect(wroteDefaults).toBe(false);
 
-      // Verify final state is hydrated values
-      expect(result.current[0]).toEqual(stored);
-
-      // Verify no write ever contained only the defaults
-      // (would indicate stale write during mount)
-      const defaultsJson = JSON.stringify(DEFAULTS);
-      for (const write of writes) {
-        const written = JSON.parse(write);
-        // Check if this write contained the exact defaults (which would be the bug)
-        const hasDefaultPrice = written.price === DEFAULTS.price;
-        const hasDefaultJurId = written.jurId === DEFAULTS.jurId;
-        expect(!(hasDefaultPrice && hasDefaultJurId)).toBe(true);
-      }
-    } finally {
-      window.localStorage.setItem = originalSetItem;
-    }
+    setItemSpy.mockRestore();
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const STORE_KEY = "norma.inputs.v1";
 
@@ -40,35 +40,35 @@ function writeStore<T extends Record<string, unknown>>(
 /**
  * Persists a slice of component state to a shared localStorage blob, keyed by an allowlist so
  * multiple independent call sites (e.g. the header's jurisdiction picker and a full input form)
- * can share one storage key without overwriting each other's fields. See the Phase 1 spec's
- * Scalability section — this is the mechanism later pages' inputs plug into.
+ * can share one storage key without overwriting each other's fields.
+ *
+ * `ready` gates the persist effect instead of a plain ref: it is set `true` in the SAME batched
+ * update as the hydrated state itself, so it only ever becomes true in a render where `state`
+ * has already been updated to reflect hydration. This makes the persist effect immune to React
+ * StrictMode's double-invoke-effects behavior — both invocations within one render see the same
+ * stale (ready=false) closure, so neither can write stale defaults before the real hydrated
+ * state has landed.
  */
 export function useSharedState<T extends Record<string, unknown>>(
   allowlist: readonly (keyof T & string)[],
   defaults: T,
 ): [T, (patch: Partial<T>) => void] {
   const [state, setState] = useState<T>(defaults);
-  const hydrated = useRef(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (hydrated.current) return;
-    hydrated.current = true;
     const stored = readStore<T>(allowlist);
     if (Object.keys(stored).length > 0) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setState((prev) => ({ ...prev, ...stored }));
     }
+    setReady(true);
   }, [allowlist]);
 
-  const skipFirstPersist = useRef(true);
   useEffect(() => {
-    if (!hydrated.current) return;
-    if (skipFirstPersist.current) {
-      skipFirstPersist.current = false;
-      return;
-    }
+    if (!ready) return;
     writeStore(allowlist, state);
-  }, [allowlist, state]);
+  }, [allowlist, state, ready]);
 
   const update = useCallback((patch: Partial<T>) => {
     setState((prev) => ({ ...prev, ...patch }));
