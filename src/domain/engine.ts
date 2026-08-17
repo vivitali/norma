@@ -306,7 +306,10 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
     amortYears: o.amortYears,
     elsewhere: o.elsewhere,
   });
-  const pi = cc.fin.loan * payFactor(cc.fin.insured ? F.rates.insured : F.rates.uninsured, o.amortYears);
+  // Priced off the entered contract rate — the same rate that drives the comfort ceiling above
+  // — so the "what fits your budget" card and the monthly P&I row can never disagree, and the
+  // rate input actually moves every figure on the screen.
+  const pi = cc.fin.loan * payFactor(o.contractRate / 100, o.amortYears);
   const monthly = {
     pi,
     propTax: (o.price * j.propTax) / 12,

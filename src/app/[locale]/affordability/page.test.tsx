@@ -9,11 +9,12 @@ import { affordability, money } from "@/domain/engine";
 import { JurisdictionPicker } from "@/components/jurisdiction-picker";
 import AffordabilityPage, { DEFAULT_AFFORDABILITY_STATE } from "./page";
 
-function renderPage() {
+function renderPage(locale?: "en" | "fr") {
   return renderWithIntl(
     <JurisdictionProvider>
       <AffordabilityPage />
     </JurisdictionProvider>,
+    { locale },
   );
 }
 
@@ -135,5 +136,78 @@ describe("Affordability page — output panels", () => {
     await user.click(await screen.findByRole("option", { name: "Toronto" }));
 
     expect(await screen.findByText(money(torontoResult.ceiling, "en-CA", false))).toBeInTheDocument();
+  });
+});
+
+describe("Affordability page — French locale", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("renders currency figures with a trailing symbol in fr, not the English leading-symbol form", async () => {
+    renderPage("fr");
+    const winnipeg = getJurisdiction("winnipeg")!;
+    const expected = affordability(winnipeg, federal, DEFAULT_AFFORDABILITY_STATE);
+
+    const expectedFr = money(expected.ceiling, "fr-CA", true);
+    // testing-library's default text normalizer collapses the French group separator (a
+    // non-breaking space) into a plain space, which would break an exact-string match against
+    // `expectedFr` (which still has the real NBSP) even though the render is correct — so match
+    // without whitespace normalization instead.
+    expect(
+      await screen.findByText(expectedFr, { normalizer: (text) => text }),
+    ).toBeInTheDocument();
+    // Guard the intent of the assertion above: a trailing-symbol figure never matches the
+    // leading-symbol form the pre-fix code always rendered, regardless of locale.
+    expect(expectedFr.endsWith(" $")).toBe(true);
+    expect(
+      screen.queryByText(money(expected.ceiling, "en-CA", false), { normalizer: (text) => text }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("Affordability page — unverified-data disclosure", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("shows the placeholder-data disclosure and the verification date", async () => {
+    renderPage();
+    expect(
+      await screen.findByText("Placeholder figures — verify before relying on them"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(`Rules last verified: ${federal.verified}`)).toBeInTheDocument();
+  });
+
+  it("shows the no-city-data note for a province-only jurisdiction (nb) but not a city-level one (winnipeg)", async () => {
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ jurId: "nb" }));
+    renderPage();
+    expect(getJurisdiction("nb")!.cityData).toBe(false);
+    expect(
+      await screen.findByText(
+        "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates.",
+      ),
+    ).toBeInTheDocument();
+
+    cleanup();
+    window.localStorage.clear();
+
+    const winnipeg = getJurisdiction("winnipeg")!;
+    expect(winnipeg.cityData).toBe(true);
+    renderPage();
+    await screen.findByText("Placeholder figures — verify before relying on them");
+    expect(
+      screen.queryByText(
+        "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates.",
+      ),
+    ).not.toBeInTheDocument();
   });
 });

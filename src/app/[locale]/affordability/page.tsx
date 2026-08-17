@@ -1,12 +1,13 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
-import { affordability, money } from "@/domain/engine";
+import { affordability } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { getJurisdiction } from "@/domain/jurisdictions";
+import { useMoney } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -65,13 +66,10 @@ export const DEFAULT_AFFORDABILITY_STATE: AffordabilityFormState = {
 
 type NumericKey = Exclude<keyof AffordabilityFormState, "ftb" | "ptype" | "elsewhere">;
 
-const INTL_LOCALES: Record<string, string> = { en: "en-CA", fr: "fr-CA" };
-
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
   const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, DEFAULT_AFFORDABILITY_STATE);
-  const locale = useLocale();
-  const intlLocale = INTL_LOCALES[locale] ?? "en-CA";
+  const fmt = useMoney();
   const [jurisdictionState] = useJurisdiction();
   const jurisdiction = getJurisdiction(jurisdictionState.jurId) ?? getJurisdiction("winnipeg")!;
   const result = affordability(jurisdiction, federal, form);
@@ -170,7 +168,7 @@ export default function AffordabilityPage() {
             <CardTitle>{t("ceiling")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <p className="text-3xl font-semibold tabular-nums">{money(result.ceiling, intlLocale, false)}</p>
+            <p className="text-3xl font-semibold tabular-nums">{fmt(result.ceiling)}</p>
             <p className={result.approvalPass ? "text-primary" : "text-destructive"}>
               {result.approvalPass ? t("approvalPass") : t("approvalFail")}
             </p>
@@ -181,7 +179,7 @@ export default function AffordabilityPage() {
             <CardTitle>{t("comfort")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <p className="text-3xl font-semibold tabular-nums">{money(result.comfort, intlLocale, false)}</p>
+            <p className="text-3xl font-semibold tabular-nums">{fmt(result.comfort)}</p>
             <p className={result.comfortPass ? "text-primary" : "text-destructive"}>
               {result.comfortPass ? t("comfortPass") : t("comfortFail")}
             </p>
@@ -196,34 +194,42 @@ export default function AffordabilityPage() {
         <CardContent className="flex flex-col gap-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("pi")}</span>
-            <span className="tabular-nums">{money(result.monthly.pi, intlLocale, false)}</span>
+            <span className="tabular-nums">{fmt(result.monthly.pi)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("propTax")}</span>
-            <span className="tabular-nums">{money(result.monthly.propTax, intlLocale, false)}</span>
+            <span className="tabular-nums">{fmt(result.monthly.propTax)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("insuranceAnnual")}</span>
-            <span className="tabular-nums">{money(result.monthly.insurance, intlLocale, false)}</span>
+            <span className="text-muted-foreground">{t("insuranceMonthly")}</span>
+            <span className="tabular-nums">{fmt(result.monthly.insurance)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("utilities")}</span>
-            <span className="tabular-nums">{money(result.monthly.utilities, intlLocale, false)}</span>
+            <span className="tabular-nums">{fmt(result.monthly.utilities)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("condoFee")}</span>
-            <span className="tabular-nums">{money(result.monthly.condoFee, intlLocale, false)}</span>
+            <span className="tabular-nums">{fmt(result.monthly.condoFee)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("maintenance")}</span>
-            <span className="tabular-nums">{money(result.monthly.maintenance, intlLocale, false)}</span>
+            <span className="tabular-nums">{fmt(result.monthly.maintenance)}</span>
           </div>
           <div className="mt-2 flex justify-between border-t border-border pt-2 font-semibold">
             <span>{t("total")}</span>
-            <span className="tabular-nums">{money(result.monthly.total, intlLocale, false)}</span>
+            <span className="tabular-nums">{fmt(result.monthly.total)}</span>
           </div>
         </CardContent>
       </Card>
+
+      <div className="text-xs text-muted-foreground">
+        <p>{t("unverifiedFlag")}</p>
+        <p>
+          {t("lastVerified")}: {federal.verified}
+        </p>
+        {!jurisdiction.cityData ? <p>{t("noCityData")}</p> : null}
+      </div>
     </main>
   );
 }

@@ -171,6 +171,44 @@ describe("credits", () => {
     expect(pttRebate.st).toBe("phasedOut");
     expect(pttRebate.amount).toBe(0);
   });
+
+  // Vancouver's exemptBand rebate: full = 835000, partial = 860000, capBase = 500000. The full
+  // rebate amount is the PTT on a $500,000 home under Vancouver's brackets ([200000, 0.01],
+  // [2000000, 0.02], ...) = 200000*0.01 + 300000*0.02 = 8000.
+  const FULL_REBATE = 8000;
+
+  it("fully applies Vancouver's exempt-band PTT rebate at or below the full threshold", () => {
+    const vancouver = getJurisdiction("vancouver")!;
+    const input = { price: 800000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const lines = buildLines(vancouver, federal, input);
+    const result = credits(vancouver, federal, input, lines.gov);
+    const pttRebate = result.atClosing.find((c) => c.key === "cr_pttExempt")!;
+    expect(pttRebate.st).toBe("applied");
+    expect(pttRebate.amount).toBeCloseTo(FULL_REBATE, 5);
+  });
+
+  it("linearly interpolates Vancouver's exempt-band PTT rebate strictly between the full and partial thresholds", () => {
+    const vancouver = getJurisdiction("vancouver")!;
+    // 840000 is strictly between full (835000) and partial (860000).
+    const input = { price: 840000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const lines = buildLines(vancouver, federal, input);
+    const result = credits(vancouver, federal, input, lines.gov);
+    const pttRebate = result.atClosing.find((c) => c.key === "cr_pttExempt")!;
+    expect(pttRebate.st).toBe("capped");
+    expect(pttRebate.amount).toBeGreaterThan(0);
+    expect(pttRebate.amount).toBeLessThan(FULL_REBATE);
+  });
+
+  it("halves Vancouver's exempt-band rebate at the exact midpoint of the phase-out band (linearity check)", () => {
+    const vancouver = getJurisdiction("vancouver")!;
+    // Midpoint of [835000, 860000] is 847500.
+    const input = { price: 847500, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const lines = buildLines(vancouver, federal, input);
+    const result = credits(vancouver, federal, input, lines.gov);
+    const pttRebate = result.atClosing.find((c) => c.key === "cr_pttExempt")!;
+    expect(pttRebate.st).toBe("capped");
+    expect(pttRebate.amount).toBeCloseTo(FULL_REBATE / 2, 1);
+  });
 });
 
 describe("closingTotal", () => {

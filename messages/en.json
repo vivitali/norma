@@ -59,7 +59,11 @@
     "monthlyBreakdown": "Monthly cost at this price",
     "pi": "Principal and interest",
     "propTax": "Property tax",
+    "insuranceMonthly": "Home insurance",
     "maintenance": "Maintenance reserve",
-    "total": "Total"
+    "total": "Total",
+    "unverifiedFlag": "Placeholder figures — verify before relying on them",
+    "lastVerified": "Rules last verified",
+    "noCityData": "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates."
   }
 }

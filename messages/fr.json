@@ -59,7 +59,11 @@
     "monthlyBreakdown": "Coût mensuel à ce prix",
     "pi": "Capital et intérêts",
     "propTax": "Taxe foncière",
+    "insuranceMonthly": "Assurance habitation",
     "maintenance": "Réserve d'entretien",
-    "total": "Total"
+    "total": "Total",
+    "unverifiedFlag": "Valeurs provisoires — à vérifier avant de vous y fier",
+    "lastVerified": "Règles vérifiées le",
+    "noCityData": "Aucun chiffre municipal vérifié ici pour l'instant. Les règles provinciales sont exactes; les coûts locaux utilisent des moyennes provinciales et sont des estimations."
   }
 }
