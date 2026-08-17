@@ -49,6 +49,17 @@
     "ptypeHouse": "Maison existante",
     "ptypeCondo": "Condo existant",
     "ptypeNewbuild": "Construction neuve",
-    "ftb": "Acheteur d'une première habitation"
+    "ftb": "Acheteur d'une première habitation",
+    "ceiling": "Ce qu'un prêteur approuverait",
+    "comfort": "Ce qui correspond à votre budget réel",
+    "approvalPass": "À votre portée à ce prix",
+    "approvalFail": "Au-dessus de ce qu'un prêteur approuverait",
+    "comfortPass": "Respecte votre budget mensuel",
+    "comfortFail": "Dépasse votre budget mensuel",
+    "monthlyBreakdown": "Coût mensuel à ce prix",
+    "pi": "Capital et intérêts",
+    "propTax": "Taxe foncière",
+    "maintenance": "Réserve d'entretien",
+    "total": "Total"
   }
 }

@@ -1,11 +1,16 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSharedState } from "@/hooks/use-shared-state";
+import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { affordability, money } from "@/domain/engine";
+import { federal } from "@/domain/federal";
+import { getJurisdiction } from "@/domain/jurisdictions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -60,9 +65,16 @@ export const DEFAULT_AFFORDABILITY_STATE: AffordabilityFormState = {
 
 type NumericKey = Exclude<keyof AffordabilityFormState, "ftb" | "ptype" | "elsewhere">;
 
+const INTL_LOCALES: Record<string, string> = { en: "en-CA", fr: "fr-CA" };
+
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
   const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, DEFAULT_AFFORDABILITY_STATE);
+  const locale = useLocale();
+  const intlLocale = INTL_LOCALES[locale] ?? "en-CA";
+  const [jurisdictionState] = useJurisdiction();
+  const jurisdiction = getJurisdiction(jurisdictionState.jurId) ?? getJurisdiction("winnipeg")!;
+  const result = affordability(jurisdiction, federal, form);
 
   const numberField = (key: NumericKey) => ({
     id: key,
@@ -151,6 +163,67 @@ export default function AffordabilityPage() {
           <Label htmlFor="ftb">{t("ftb")}</Label>
         </div>
       </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("ceiling")}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <p className="text-3xl font-semibold tabular-nums">{money(result.ceiling, intlLocale, false)}</p>
+            <p className={result.approvalPass ? "text-primary" : "text-destructive"}>
+              {result.approvalPass ? t("approvalPass") : t("approvalFail")}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("comfort")}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <p className="text-3xl font-semibold tabular-nums">{money(result.comfort, intlLocale, false)}</p>
+            <p className={result.comfortPass ? "text-primary" : "text-destructive"}>
+              {result.comfortPass ? t("comfortPass") : t("comfortFail")}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("monthlyBreakdown")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("pi")}</span>
+            <span className="tabular-nums">{money(result.monthly.pi, intlLocale, false)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("propTax")}</span>
+            <span className="tabular-nums">{money(result.monthly.propTax, intlLocale, false)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("insuranceAnnual")}</span>
+            <span className="tabular-nums">{money(result.monthly.insurance, intlLocale, false)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("utilities")}</span>
+            <span className="tabular-nums">{money(result.monthly.utilities, intlLocale, false)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("condoFee")}</span>
+            <span className="tabular-nums">{money(result.monthly.condoFee, intlLocale, false)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("maintenance")}</span>
+            <span className="tabular-nums">{money(result.monthly.maintenance, intlLocale, false)}</span>
+          </div>
+          <div className="mt-2 flex justify-between border-t border-border pt-2 font-semibold">
+            <span>{t("total")}</span>
+            <span className="tabular-nums">{money(result.monthly.total, intlLocale, false)}</span>
+          </div>
+        </CardContent>
+      </Card>
     </main>
   );
 }

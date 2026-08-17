@@ -49,6 +49,17 @@
     "ptypeHouse": "Resale house",
     "ptypeCondo": "Resale condo",
     "ptypeNewbuild": "New build",
-    "ftb": "First-time buyer"
+    "ftb": "First-time buyer",
+    "ceiling": "What a lender would approve",
+    "comfort": "What fits your real budget",
+    "approvalPass": "Within reach at this price",
+    "approvalFail": "Above what a lender would approve",
+    "comfortPass": "Fits your monthly budget",
+    "comfortFail": "Over your monthly budget",
+    "monthlyBreakdown": "Monthly cost at this price",
+    "pi": "Principal and interest",
+    "propTax": "Property tax",
+    "maintenance": "Maintenance reserve",
+    "total": "Total"
   }
 }
