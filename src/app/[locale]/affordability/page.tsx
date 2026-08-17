@@ -20,7 +20,7 @@ export const AFFORDABILITY_KEYS = [
   "income1", "income2", "otherIncome", "haircut", "debts", "contractRate",
 ] as const;
 
-export interface AffordabilityFormState extends Record<string, unknown> {
+export type AffordabilityFormState = {
   price: number;
   dpPct: number;
   amortYears: number;
@@ -37,7 +37,7 @@ export interface AffordabilityFormState extends Record<string, unknown> {
   haircut: number;
   debts: number;
   contractRate: number;
-}
+};
 
 export const DEFAULT_AFFORDABILITY_STATE: AffordabilityFormState = {
   price: 450000,
@@ -62,12 +62,12 @@ type NumericKey = Exclude<keyof AffordabilityFormState, "ftb" | "ptype" | "elsew
 
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
-  const [form, updateForm] = useSharedState<AffordabilityFormState>(AFFORDABILITY_KEYS, DEFAULT_AFFORDABILITY_STATE);
+  const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, DEFAULT_AFFORDABILITY_STATE);
 
   const numberField = (key: NumericKey) => ({
-    id: key as string,
+    id: key,
     type: "number" as const,
-    value: form[key] as number,
+    value: form[key],
     onChange: (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.valueAsNumber;
       updateForm({ [key]: Number.isNaN(value) ? 0 : value });
@@ -133,7 +133,7 @@ export default function AffordabilityPage() {
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="ptype">{t("ptype")}</Label>
           <Select
-            value={form.ptype as string}
+            value={form.ptype}
             onValueChange={(ptype) => updateForm({ ptype: ptype as AffordabilityFormState["ptype"] })}
           >
             <SelectTrigger id="ptype">
@@ -147,7 +147,7 @@ export default function AffordabilityPage() {
           </Select>
         </div>
         <div className="flex items-center gap-2 sm:col-span-2">
-          <Switch id="ftb" checked={form.ftb as boolean} onCheckedChange={(ftb) => updateForm({ ftb })} />
+          <Switch id="ftb" checked={form.ftb} onCheckedChange={(ftb) => updateForm({ ftb })} />
           <Label htmlFor="ftb">{t("ftb")}</Label>
         </div>
       </div>
