@@ -32,8 +32,8 @@ export const toronto: Jurisdiction = {
   ],
   premiumTax: { rate: 0.08, label: "Ontario retail sales tax, 8%" },
   rebates: [
-    { key: "cr_lttRebateProv", kind: "cap", cap: 4000, on: 0, timing: "closing" },
-    { key: "cr_lttRebateMuni", kind: "cap", cap: 4475, on: 1, timing: "closing" },
+    { key: "cr_lttRebateProv", kind: "cap", cap: 4000, on: "li_lttProv", timing: "closing" },
+    { key: "cr_lttRebateMuni", kind: "cap", cap: 4475, on: "li_lttMuni", timing: "closing" },
   ],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 2200, titleIns: 400, inspect: 650, appraisal: 400, statusCert: 110, moving: 1500, setup: 650 },

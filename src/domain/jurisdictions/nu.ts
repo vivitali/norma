@@ -13,7 +13,7 @@ export const nu: Jurisdiction = {
     { key: "li_mortReg", ex: "ex_titleReg", tier: "provincial", kind: "perValue", base: 0, per: 1.0, unit: 1000, on: "loan", min: 80 },
   ],
   premiumTax: null,
-  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: 0, timing: "closing", noTax: true }],
+  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: "li_titleReg", timing: "closing", noTax: true }],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 2100, titleIns: 350, inspect: 900, appraisal: 650, statusCert: 150, moving: 6500, setup: 900 },
   orgs: {

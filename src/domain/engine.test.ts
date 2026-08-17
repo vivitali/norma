@@ -209,6 +209,33 @@ describe("credits", () => {
     expect(pttRebate.st).toBe("capped");
     expect(pttRebate.amount).toBeCloseTo(FULL_REBATE / 2, 1);
   });
+
+  // The phantom-rebate regression. With elsewhere=true the municipal LTT line is skipped, so
+  // gov becomes [li_lttProv, li_premTax] and a positional lookup of `on: 1` lands on the
+  // premium-tax line — granting a municipal rebate that does not exist. Unreachable from the
+  // Phase 1 UI (no `elsewhere` control), reachable the moment Closing Costs ships one.
+  it("grants no municipal rebate when the municipal line is absent (buying elsewhere in Ontario)", () => {
+    const input = { price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true };
+    const lines = buildLines(toronto, federal, input);
+    const result = credits(toronto, federal, input, lines.gov);
+    expect(lines.gov.map((l) => l.key)).toEqual(["li_lttProv", "li_premTax"]);
+    expect(result.atClosing.some((c) => c.key === "cr_lttRebateMuni")).toBe(false);
+  });
+
+  it("counts only the provincial rebate at closing when buying elsewhere in Ontario", () => {
+    const input = { price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true };
+    // Ontario LTT on $500,000 is $6,475, above the $4,000 cap, so the provincial rebate is
+    // exactly the cap and nothing else may be added to it.
+    expect(closingTotal(toronto, federal, input).creditsAtClosing).toBeCloseTo(4000, 5);
+  });
+
+  it("resolves each rebate to its own transfer line, not to whatever sits at that index", () => {
+    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const lines = buildLines(toronto, federal, input);
+    const result = credits(toronto, federal, input, lines.gov);
+    expect(result.atClosing.find((c) => c.key === "cr_lttRebateProv")!.target).toBe("li_lttProv");
+    expect(result.atClosing.find((c) => c.key === "cr_lttRebateMuni")!.target).toBe("li_lttMuni");
+  });
 });
 
 describe("closingTotal", () => {

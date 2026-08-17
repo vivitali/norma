@@ -48,4 +48,16 @@ describe("jurisdictions", () => {
   it("returns undefined for an unknown id", () => {
     expect(getJurisdiction("nope")).toBeUndefined();
   });
+
+  // Trading a positional index for a string trades an off-by-one for a typo. This is the guard
+  // that makes the string field safe: a misspelled `on` fails here instead of silently
+  // dropping a rebate at runtime.
+  it("targets every rebate at a transfer line that exists in its own jurisdiction", () => {
+    for (const j of jurisdictions) {
+      const lineKeys = new Set(j.transfer.map((l) => l.key));
+      for (const rb of j.rebates) {
+        expect(lineKeys, `${j.id} rebate ${rb.key}`).toContain(rb.on);
+      }
+    }
+  });
 });

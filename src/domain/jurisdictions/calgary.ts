@@ -15,7 +15,7 @@ export const calgary: Jurisdiction = {
     { key: "li_mortReg", ex: "ex_titleReg", tier: "provincial", kind: "perValue", base: 50, per: 5, unit: 5000, on: "loan" },
   ],
   premiumTax: null,
-  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: 0, timing: "closing", noTax: true }],
+  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: "li_titleReg", timing: "closing", noTax: true }],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 1600, titleIns: 325, inspect: 550, appraisal: 400, statusCert: 350, moving: 1300, setup: 600 },
   orgs: {

@@ -55,7 +55,12 @@ export type TransferLine =
 
 interface RebateBase {
   key: string;
-  on: number;
+  /**
+   * `key` of the transfer line this rebate applies against. NOT a positional index: `buildLines`
+   * both removes lines (Ontario's `elsewhere` municipal skip) and appends them (`li_premTax`),
+   * so position is not stable. Enforced by the rebate-target invariant in index.test.ts.
+   */
+  on: string;
   timing: "closing" | "taxTime";
   noTax?: boolean;
 }

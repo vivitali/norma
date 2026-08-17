@@ -23,7 +23,7 @@ export const montreal: Jurisdiction = {
     },
   ],
   premiumTax: { rate: 0.09, label: "Quebec tax on insurance premiums, 9%" },
-  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: 0, timing: "closing" }],
+  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: "li_dutiesMuni", timing: "closing" }],
   taxTime: [
     { key: "cr_hba", ex: "ex_hba", amount: 1500 },
     { key: "cr_provCredit", ex: "ex_hba", amount: 1400 },

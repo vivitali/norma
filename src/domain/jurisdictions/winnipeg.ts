@@ -25,7 +25,7 @@ export const winnipeg: Jurisdiction = {
   marginal: [[47000, 0.258], [57375, 0.2355], [100000, 0.3325], [114750, 0.379], [158519, 0.434], [220000, 0.464], [null, 0.504]],
   // Manitoba removed PST on CMHC premiums in 2020 — no premium-tax line renders here.
   premiumTax: null,
-  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: 0, timing: "closing" }],
+  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: "li_lttProv", timing: "closing" }],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 1800, titleIns: 350, inspect: 600, appraisal: 400, statusCert: 100, moving: 1500, setup: 3000 },
   orgs: {

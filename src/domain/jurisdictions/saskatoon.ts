@@ -15,7 +15,7 @@ export const saskatoon: Jurisdiction = {
     { key: "li_mortReg", ex: "ex_titleReg", tier: "provincial", kind: "fixed", amount: 160 },
   ],
   premiumTax: { rate: 0.06, label: "Saskatchewan PST on insurance premiums, 6%" },
-  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: 0, timing: "closing", noTax: true }],
+  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: "li_titleReg", timing: "closing", noTax: true }],
   taxTime: [
     { key: "cr_hba", ex: "ex_hba", amount: 1500 },
     { key: "cr_provCredit", ex: "ex_hba", amount: 1155 },

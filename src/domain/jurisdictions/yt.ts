@@ -13,7 +13,7 @@ export const yt: Jurisdiction = {
     { key: "li_mortReg", ex: "ex_titleReg", tier: "provincial", kind: "fixed", amount: 100 },
   ],
   premiumTax: null,
-  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: 0, timing: "closing", noTax: true }],
+  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: "li_titleReg", timing: "closing", noTax: true }],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 1800, titleIns: 350, inspect: 700, appraisal: 500, statusCert: 150, moving: 3200, setup: 750 },
   orgs: {
