@@ -114,24 +114,21 @@ describe("buildLines", () => {
     const lines = buildLines(winnipeg, federal, {
       price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(lines.gov.some((l: any) => l.key === "li_premTax")).toBe(false);
+    expect(lines.gov.some((l) => l.key === "li_premTax")).toBe(false);
   });
 
   it("includes a premium-tax line only when the jurisdiction has one and CMHC premium is charged", () => {
     const lines = buildLines(toronto, federal, {
       price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(lines.gov.some((l: any) => l.key === "li_premTax")).toBe(true);
+    expect(lines.gov.some((l) => l.key === "li_premTax")).toBe(true);
   });
 
   it("skips Toronto's municipal LTT line when elsewhere-in-Ontario is selected", () => {
     const lines = buildLines(toronto, federal, {
       price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house", elsewhere: true,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(lines.gov.some((l: any) => l.key === "li_lttMuni")).toBe(false);
+    expect(lines.gov.some((l) => l.key === "li_lttMuni")).toBe(false);
   });
 
   it("only adds a condo status-certificate fee line for condo purchases", () => {
@@ -141,10 +138,8 @@ describe("buildLines", () => {
     const condo = buildLines(toronto, federal, {
       price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "condo", elsewhere: false,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(house.pro.some((l: any) => l.key === "li_statusCert")).toBe(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(condo.pro.some((l: any) => l.key === "li_statusCert")).toBe(true);
+    expect(house.pro.some((l) => l.key === "li_statusCert")).toBe(false);
+    expect(condo.pro.some((l) => l.key === "li_statusCert")).toBe(true);
   });
 });
 
@@ -155,8 +150,7 @@ describe("credits", () => {
     const input = { price: 2000000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
     const lines = buildLines(toronto, federal, input);
     const result = credits(toronto, federal, input, lines.gov);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const provRebate = result.atClosing.find((c: any) => c.key === "cr_lttRebateProv")!;
+    const provRebate = result.atClosing.find((c) => c.key === "cr_lttRebateProv")!;
     expect(provRebate.st).toBe("capped");
     expect(provRebate.amount).toBeCloseTo(4000, 5);
   });
@@ -165,8 +159,7 @@ describe("credits", () => {
     const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: false, ptype: "house" as const, elsewhere: false };
     const lines = buildLines(toronto, federal, input);
     const result = credits(toronto, federal, input, lines.gov);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(result.atClosing.every((c: any) => c.st === "ftbOnly")).toBe(true);
+    expect(result.atClosing.every((c) => c.st === "ftbOnly")).toBe(true);
   });
 
   it("phases out Vancouver's exempt-band PTT rebate above the partial threshold", () => {
@@ -174,8 +167,7 @@ describe("credits", () => {
     const input = { price: 900000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
     const lines = buildLines(vancouver, federal, input);
     const result = credits(vancouver, federal, input, lines.gov);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pttRebate = result.atClosing.find((c: any) => c.key === "cr_pttExempt")!;
+    const pttRebate = result.atClosing.find((c) => c.key === "cr_pttExempt")!;
     expect(pttRebate.st).toBe("phasedOut");
     expect(pttRebate.amount).toBe(0);
   });
