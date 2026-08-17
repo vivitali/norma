@@ -1,52 +1,32 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useRouter, usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 
-const LOCALES = [
-  { code: "en", label: "EN" },
-  { code: "fr", label: "FR" },
-] as const;
+const LOCALE_LABELS: Record<string, string> = { en: "EN", fr: "FR" };
 
 export function LocaleSwitcher() {
-  const router = useRouter();
+  const t = useTranslations("AppHeader");
   const pathname = usePathname();
-  const params = useParams() as { locale?: string };
-  const currentLocale = params.locale || "en";
-
-  const handleChangeLocale = (newLocale: string) => {
-    // Replace current locale in pathname with new locale
-    let newPath: string;
-
-    if (pathname === "/") {
-      // At root, just add locale prefix
-      newPath = `/${newLocale}`;
-    } else if (pathname.startsWith(`/${currentLocale}`)) {
-      // Replace existing locale prefix
-      newPath = `/${newLocale}${pathname.slice(currentLocale.length + 1)}`;
-    } else if (pathname.startsWith("/en") || pathname.startsWith("/fr")) {
-      // Handle case where pathname includes locale prefix
-      const locale = pathname.startsWith("/en") ? "en" : "fr";
-      newPath = `/${newLocale}${pathname.slice(locale.length + 1)}`;
-    } else {
-      // Default: just add new locale prefix
-      newPath = `/${newLocale}${pathname}`;
-    }
-
-    router.replace(newPath, { locale: newLocale });
-  };
+  const router = useRouter();
+  const params = useParams<{ locale: string }>();
+  const activeLocale = params.locale;
 
   return (
-    <div className="flex gap-2">
-      {LOCALES.map((locale) => (
+    <div role="group" aria-label={t("changeLanguage")} className="flex gap-1">
+      {routing.locales.map((locale) => (
         <Button
-          key={locale.code}
-          variant={currentLocale === locale.code ? "default" : "outline"}
+          key={locale}
+          type="button"
+          variant={locale === activeLocale ? "secondary" : "ghost"}
           size="sm"
-          onClick={() => handleChangeLocale(locale.code)}
+          aria-current={locale === activeLocale}
+          onClick={() => router.replace(pathname, { locale })}
         >
-          {locale.label}
+          {LOCALE_LABELS[locale]}
         </Button>
       ))}
     </div>
