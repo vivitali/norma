@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { money, bracketTax, payFactor, minDown } from "./engine";
+import { money, bracketTax, payFactor, minDown, financing, buildLines, credits, closingTotal } from "./engine";
+import { federal } from "./federal";
+import { getJurisdiction } from "./jurisdictions";
 
 describe("money", () => {
   it("formats a positive amount with the symbol first in en", () => {
@@ -73,5 +75,126 @@ describe("minDown", () => {
   it("requires a flat 20% at or above $1,500,000", () => {
     expect(minDown(1500000)).toBeCloseTo(300000, 5);
     expect(minDown(2000000)).toBeCloseTo(400000, 5);
+  });
+});
+
+describe("financing", () => {
+  it("does not require CMHC insurance at 20% down", () => {
+    const result = financing(federal, { price: 500000, dpPct: 20, amortYears: 25 });
+    expect(result.insured).toBe(false);
+    expect(result.premium).toBe(0);
+    expect(result.loan).toBeCloseTo(result.baseLoan, 5);
+  });
+
+  it("requires CMHC insurance and adds a premium below 20% down", () => {
+    const result = financing(federal, { price: 500000, dpPct: 10, amortYears: 25 });
+    expect(result.insured).toBe(true);
+    expect(result.premium).toBeGreaterThan(0);
+    expect(result.loan).toBeCloseTo(result.baseLoan + result.premium, 5);
+  });
+
+  it("does not allow insurance at or above the insured price cap", () => {
+    const result = financing(federal, { price: 2000000, dpPct: 10, amortYears: 25 });
+    expect(result.insured).toBe(false);
+  });
+
+  it("surcharges the premium rate for amortizations over 25 years", () => {
+    const short = financing(federal, { price: 500000, dpPct: 10, amortYears: 25 });
+    const long = financing(federal, { price: 500000, dpPct: 10, amortYears: 30 });
+    expect(long.premRate).toBeGreaterThan(short.premRate);
+  });
+});
+
+describe("buildLines", () => {
+  const winnipeg = getJurisdiction("winnipeg")!;
+  const toronto = getJurisdiction("toronto")!;
+
+  it("omits a non-applicable line item entirely rather than rendering it as zero", () => {
+    // Winnipeg has no premiumTax, so no li_premTax line should ever appear.
+    const lines = buildLines(winnipeg, federal, {
+      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(lines.gov.some((l: any) => l.key === "li_premTax")).toBe(false);
+  });
+
+  it("includes a premium-tax line only when the jurisdiction has one and CMHC premium is charged", () => {
+    const lines = buildLines(toronto, federal, {
+      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(lines.gov.some((l: any) => l.key === "li_premTax")).toBe(true);
+  });
+
+  it("skips Toronto's municipal LTT line when elsewhere-in-Ontario is selected", () => {
+    const lines = buildLines(toronto, federal, {
+      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house", elsewhere: true,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(lines.gov.some((l: any) => l.key === "li_lttMuni")).toBe(false);
+  });
+
+  it("only adds a condo status-certificate fee line for condo purchases", () => {
+    const house = buildLines(toronto, federal, {
+      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+    });
+    const condo = buildLines(toronto, federal, {
+      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "condo", elsewhere: false,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(house.pro.some((l: any) => l.key === "li_statusCert")).toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(condo.pro.some((l: any) => l.key === "li_statusCert")).toBe(true);
+  });
+});
+
+describe("credits", () => {
+  const toronto = getJurisdiction("toronto")!;
+
+  it("caps a rebate at the line item's rule cap when the raw tax exceeds it", () => {
+    const input = { price: 2000000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const lines = buildLines(toronto, federal, input);
+    const result = credits(toronto, federal, input, lines.gov);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const provRebate = result.atClosing.find((c: any) => c.key === "cr_lttRebateProv")!;
+    expect(provRebate.st).toBe("capped");
+    expect(provRebate.amount).toBeCloseTo(4000, 5);
+  });
+
+  it("marks a rebate ftbOnly when the buyer is not a first-time buyer", () => {
+    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: false, ptype: "house" as const, elsewhere: false };
+    const lines = buildLines(toronto, federal, input);
+    const result = credits(toronto, federal, input, lines.gov);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(result.atClosing.every((c: any) => c.st === "ftbOnly")).toBe(true);
+  });
+
+  it("phases out Vancouver's exempt-band PTT rebate above the partial threshold", () => {
+    const vancouver = getJurisdiction("vancouver")!;
+    const input = { price: 900000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const lines = buildLines(vancouver, federal, input);
+    const result = credits(vancouver, federal, input, lines.gov);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pttRebate = result.atClosing.find((c: any) => c.key === "cr_pttExempt")!;
+    expect(pttRebate.st).toBe("phasedOut");
+    expect(pttRebate.amount).toBe(0);
+  });
+});
+
+describe("closingTotal", () => {
+  it("returns cash equal to down payment plus total closing costs", () => {
+    const winnipeg = getJurisdiction("winnipeg")!;
+    const result = closingTotal(winnipeg, federal, {
+      price: 400000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+    });
+    expect(result.cash).toBeCloseTo(result.fin.down + result.total, 5);
+  });
+
+  it("returns net cash at or below cash (credits never make it more expensive)", () => {
+    const toronto = getJurisdiction("toronto")!;
+    const result = closingTotal(toronto, federal, {
+      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+    });
+    expect(result.net).toBeLessThanOrEqual(result.cash);
   });
 });
