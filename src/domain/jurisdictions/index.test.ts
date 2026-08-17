@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jurisdictions, getJurisdiction } from "./index";
+import { jurisdictions, getJurisdiction, defaultJurisdiction } from "./index";
 
 const VALID_PROVINCES = new Set([
   "ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "PE", "NL", "YT", "NT", "NU",
@@ -59,5 +59,10 @@ describe("jurisdictions", () => {
         expect(lineKeys, `${j.id} rebate ${rb.key}`).toContain(rb.on);
       }
     }
+  });
+
+  it("exposes a default jurisdiction that is itself one of the listed jurisdictions", () => {
+    expect(jurisdictions).toContain(defaultJurisdiction);
+    expect(getJurisdiction(defaultJurisdiction.id)).toBe(defaultJurisdiction);
   });
 });
