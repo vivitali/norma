@@ -8,6 +8,7 @@
     "subheading": "Not what a bank will approve — your province's real tax and cost-of-ownership rules, applied to your real numbers."
   },
   "AppHeader": {
-    "theme": "Theme"
+    "theme": "Theme",
+    "changeLanguage": "Change Language"
   }
 }
