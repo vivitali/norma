@@ -1,0 +1,37 @@
+name: Claude Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@main
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this pull request against the conventions in CLAUDE.md and
+            AGENTS.md at the repo root.
+
+            Pay particular attention to:
+            - Province and jurisdiction rules must live in src/domain/jurisdictions/,
+              never inlined in components.
+            - User-facing strings must come from messages/en.json and messages/fr.json
+              via next-intl, never hardcoded in JSX.
+            - Every page route must stay prerendered; flag anything that would make a
+              route server-rendered on demand.
+            - Locale routing lives in src/middleware.ts, not src/proxy.ts. Renaming it
+              back to proxy.ts breaks deployment — see the note in CLAUDE.md.
+            - Tests must accompany behavior changes.
+
+            Report only issues you are confident about. Skip style nits already
+            covered by eslint.
