@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import LocaleLayout from "./layout";
+import LocaleLayout, { dynamicParams } from "./layout";
 
 vi.mock("next-intl/server", () => ({
   setRequestLocale: vi.fn(),
@@ -31,6 +31,12 @@ vi.mock("@/components/app-header", () => ({ AppHeader: () => null }));
  */
 describe("LocaleLayout", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  // Without this, an unknown locale reaches the Worker and renders a 404 through
+  // React — billed, under a 10ms CPU cap — instead of being refused at routing.
+  it("refuses unknown locales at the routing layer", () => {
+    expect(dynamicParams).toBe(false);
+  });
 
   it("marks the request locale so the whole segment is prerendered", async () => {
     await LocaleLayout({

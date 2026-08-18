@@ -143,8 +143,10 @@ export function checkPrerendered(appRoutes, prerender, declaredParams = {}) {
     }
 
     for (const [index, name] of positions) {
+      // hasOwn, not a bare lookup: a param named [constructor] would otherwise
+      // resolve to a function and blow up the spread below.
+      if (!Object.hasOwn(declaredParams, name)) continue;
       const declared = declaredParams[name];
-      if (!declared) continue;
 
       const covered = new Set(
         concrete

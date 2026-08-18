@@ -19,6 +19,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/**
+ * Refuse unknown locales at the routing layer instead of rendering them. Without
+ * this, `dynamicParams` defaults to true and /de/affordability reaches the Worker
+ * to render a 404 through React — billed, under a 10ms CPU cap. Behaviourally a
+ * no-op given the `hasLocale` guard below already calls notFound().
+ */
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
