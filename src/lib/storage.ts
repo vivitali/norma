@@ -13,11 +13,15 @@ export const CURRENT_STORE_KEY = "norma.inputs.v1";
 export const LEGACY_STORE_KEYS: readonly string[] = [];
 
 /**
- * Bring a parsed blob to the current shape. Today that is validation only — there is exactly one
- * version — and an unusable value resets to defaults rather than throwing, because a corrupted
- * blob must not be able to break every page at once.
+ * Bring a parsed blob to the current shape. `fromKey` is which of CURRENT_STORE_KEY /
+ * LEGACY_STORE_KEYS the blob was read from, so a future branch can tell a v2 shape from a v1 one
+ * before converting it — a plain boolean or version number can't do that once there's more than
+ * one legacy key. Today there is exactly one key and this is validation only: an unusable value
+ * resets to defaults rather than throwing, because a corrupted blob must not be able to break
+ * every page at once.
  */
-export function migrate(raw: unknown): Record<string, unknown> {
+export function migrate(raw: unknown, fromKey: string): Record<string, unknown> {
+  void fromKey;
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return {};
   return raw as Record<string, unknown>;
 }
@@ -29,7 +33,7 @@ export function readBlob(): Record<string, unknown> {
     try {
       const raw = window.localStorage.getItem(key);
       if (!raw) continue;
-      const migrated = migrate(JSON.parse(raw));
+      const migrated = migrate(JSON.parse(raw), key);
       if (Object.keys(migrated).length > 0) return migrated;
     } catch {
       // unparseable or unreadable — fall through to the next key, then to defaults

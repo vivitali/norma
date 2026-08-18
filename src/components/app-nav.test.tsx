@@ -1,39 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ReactNode } from "react";
 import { cleanup, screen } from "@testing-library/react";
-import { useLocale } from "next-intl";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { routing } from "@/i18n/routing";
 import { AppNav } from "./app-nav";
 
-let mockPathname = "/";
+// Real `@/i18n/navigation` now runs unmocked: only `next/navigation` (its dependency) is
+// replaced, with the RAW browser pathname next-intl expects — `/en/...` or `/fr/...`, always
+// prefixed (routing.ts's default `localePrefix` mode is "always"). next-intl's own `usePathname`
+// then reverse-maps that raw, possibly-localized pathname back to the canonical route key, and its
+// `Link` resolves `href` forward into the localized slug from `routing.pathnames` — so both
+// directions of the real localization logic are exercised, not a hand-written stand-in.
+let mockPathname = "/en";
 
-// The real `@/i18n/navigation` cannot be imported under Vitest in this repo — even unmocked —
-// because next-intl's createNavigation.js does a bare `import ... from "next/navigation"` that
-// Vite's resolver fails on without an extension against this Next 16.3.1 install (reproduced with
-// a bare `import { Link } from "@/i18n/navigation"` and no vi.mock at all: same
-// ERR_MODULE_NOT_FOUND). Every other test in this codebase (app-header, locale-switcher, the Home
-// page) works around it the same way: replace the module with a hand-written stand-in rather than
-// `vi.importActual`. The Link stand-in below still exercises the real localization data — it reads
-// `routing.pathnames`, the same config the real Link would consult — so the localized-slug
-// assertion is checking AppNav's behavior against real routing data, not a hardcoded fixture.
-vi.mock("@/i18n/navigation", () => ({
+vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname,
-  Link: ({ href, children, ...props }: { href: string; children: ReactNode }) => {
-    const locale = useLocale();
-    const template = routing.pathnames[href as keyof typeof routing.pathnames];
-    const slug = typeof template === "string" ? template : (template?.[locale as "fr"] ?? href);
-    return (
-      <a href={`/${locale}${slug}`} {...props}>
-        {children}
-      </a>
-    );
-  },
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  redirect: vi.fn(),
+  permanentRedirect: vi.fn(),
 }));
 
 describe("AppNav", () => {
   beforeEach(() => {
-    mockPathname = "/";
+    mockPathname = "/en";
   });
 
   afterEach(() => {
@@ -47,6 +34,7 @@ describe("AppNav", () => {
   });
 
   it("points the link at the localized slug", () => {
+    mockPathname = "/fr";
     renderWithIntl(<AppNav />, { locale: "fr" });
     expect(screen.getByRole("link", { name: "Capacité d'achat" })).toHaveAttribute(
       "href",
@@ -60,11 +48,18 @@ describe("AppNav", () => {
   });
 
   it("marks the current route as the active page", () => {
-    // usePathname returns the CANONICAL key, never the localized slug — that is what makes this
-    // comparison work identically under /en and /fr.
-    mockPathname = "/affordability";
+    mockPathname = "/en/affordability";
     renderWithIntl(<AppNav />);
     expect(screen.getByRole("link", { name: "Affordability" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  it("marks the current route as active from a localized pathname, proving next-intl reverse-maps the French slug to the canonical route key", () => {
+    mockPathname = "/fr/abordabilite";
+    renderWithIntl(<AppNav />, { locale: "fr" });
+    expect(screen.getByRole("link", { name: "Capacité d'achat" })).toHaveAttribute(
       "aria-current",
       "page",
     );

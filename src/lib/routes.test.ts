@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { routing } from "@/i18n/routing";
+import enMessages from "../../messages/en.json";
+import frMessages from "../../messages/fr.json";
 import { NAV, builtEntries } from "./routes";
 
 describe("nav registry", () => {
@@ -33,6 +35,27 @@ describe("nav registry", () => {
   it("never lists the home route as a nav entry", () => {
     for (const group of NAV) {
       for (const entry of group.entries) expect(entry.route).not.toBe("/");
+    }
+  });
+
+  it("covers every route in routing.pathnames — nothing added there is left off the registry", () => {
+    // The previous test only catches a NAV entry pointing at a nonexistent route. This is the
+    // reverse: a route added to routing.ts and forgotten here would otherwise be silently
+    // unreachable from the UI.
+    const navRoutes = new Set(NAV.flatMap((g) => g.entries.map((e) => e.route)));
+    navRoutes.add("/");
+    expect([...navRoutes].sort()).toEqual(Object.keys(routing.pathnames).sort());
+  });
+
+  it("has a Nav message key for every label and heading, in both locales", () => {
+    const keys = new Set<string>();
+    for (const group of NAV) {
+      keys.add(group.heading);
+      for (const entry of group.entries) keys.add(entry.label);
+    }
+    for (const key of keys) {
+      expect(enMessages.Nav, `Nav.${key} missing in en.json`).toHaveProperty(key);
+      expect(frMessages.Nav, `Nav.${key} missing in fr.json`).toHaveProperty(key);
     }
   });
 });

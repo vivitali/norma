@@ -271,8 +271,19 @@ describe("Affordability page — hydration", () => {
     // including a single un-gated monthly row.
     expect(screen.queryByText(money(settled.ceiling, "en-CA", false))).not.toBeInTheDocument();
     expect(screen.queryByText(money(settled.comfort, "en-CA", false))).not.toBeInTheDocument();
-    expect(screen.queryByText(money(settled.monthly.pi, "en-CA", false))).not.toBeInTheDocument();
-    expect(screen.queryByText(money(settled.monthly.total, "en-CA", false))).not.toBeInTheDocument();
+    // Loops over every monthly row, not just pi/total: if figure() were dropped from a single row
+    // (e.g. propTax), the other rows would still render skeletons and a two-row check would miss it.
+    for (const row of [
+      "pi",
+      "propTax",
+      "insurance",
+      "utilities",
+      "condoFee",
+      "maintenance",
+      "total",
+    ] as const) {
+      expect(screen.queryByText(money(settled.monthly[row], "en-CA", false))).not.toBeInTheDocument();
+    }
     // Catches an inverted pass/fail ternary: neither the ceiling nor the comfort verdict line may
     // render its text while busy — it must be a Skeleton in that slot too.
     expect(screen.queryByText("Within reach at this price")).not.toBeInTheDocument();

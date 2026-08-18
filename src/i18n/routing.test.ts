@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getPathname } from "@/i18n/navigation";
 import { routing } from "./routing";
 
 describe("routing", () => {
@@ -48,4 +49,26 @@ describe("routing.pathnames", () => {
       }
     }
   });
+
+  it("falls a locale with no pathnames entry for a route back to the canonical slug", () => {
+    // en is deliberately absent from every entry above; getLocalizedTemplate is
+    // `pathnameConfig[locale] || internalTemplate`, so this must resolve to the canonical key.
+    expect(getPathname({ href: "/affordability", locale: "en" })).toBe("/en/affordability");
+  });
+
+  it.each([
+    ["/affordability", "/abordabilite"],
+    ["/closing-costs", "/frais-de-cloture"],
+    ["/down-payment", "/mise-de-fonds"],
+    ["/rrsp-hbp", "/reer-rap"],
+    ["/amortization", "/amortissement"],
+    ["/rent-vs-buy", "/louer-ou-acheter"],
+    ["/scenarios", "/scenarios"],
+    ["/sources", "/sources"],
+  ] satisfies Array<[keyof typeof routing.pathnames, string]>)(
+    "resolves %s to the French path /fr%s",
+    (href, frSlug) => {
+      expect(getPathname({ href, locale: "fr" })).toBe(`/fr${frSlug}`);
+    },
+  );
 });
