@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,23 @@ import {
 } from "@/components/ui/select";
 
 type NumericKey = Exclude<keyof AffordabilityFormState, "ftb" | "ptype" | "elsewhere">;
+
+/**
+ * A skeleton that is legal inside phrasing content. shadcn's `<Skeleton>` renders a `<div>`, and
+ * a `<div>` inside a `<p>` or `<span>` is invalid HTML — the browser's parser hoists it out, so
+ * the server tree and the client tree disagree and React reports a hydration error on every load.
+ * Every figure below sits inside a `<p>` or a `<span>`, so they all need this rather than the
+ * block skeleton. Keeps `data-slot="skeleton"` so it is still findable the same way.
+ */
+function InlineSkeleton({ className }: { className?: string }) {
+  return (
+    <span
+      data-slot="skeleton"
+      aria-hidden="true"
+      className={cn("inline-block animate-pulse rounded-md bg-muted align-middle", className)}
+    />
+  );
+}
 
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
@@ -38,7 +56,7 @@ export default function AffordabilityPage() {
   // through immediately; a derived dollar figure does not, because a returning user seeing
   // "$412,000" replaced by "$689,000" has been shown a wrong answer, however briefly.
   const figure = (value: string) =>
-    hydrated ? <>{value}</> : <Skeleton className="h-8 w-32" />;
+    hydrated ? <>{value}</> : <InlineSkeleton className="h-6 w-28" />;
 
   const numberField = (key: NumericKey) => ({
     id: key,

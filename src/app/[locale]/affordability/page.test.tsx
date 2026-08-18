@@ -233,6 +233,35 @@ describe("Affordability page — French locale", () => {
   });
 });
 
+describe("Affordability page — HTML validity during hydration", () => {
+  afterEach(() => {
+    hydrationGate.release?.();
+    hydrationGate.armed = false;
+    hydrationGate.release = null;
+    cleanup();
+  });
+
+  // jsdom does not enforce content-model rules, so 129 passing tests still shipped a <div>
+  // (shadcn's Skeleton) inside <p> and <span>. A real browser's parser hoists that div out of the
+  // paragraph, so the server tree and the client tree disagree and React logs a hydration error on
+  // every single page load. This asserts the rule jsdom will not.
+  it("never nests a block element inside phrasing content while busy", () => {
+    // MUST arm the gate: without it hydration settles inside act() before any query runs, no
+    // skeleton is ever in the DOM, and this test passes against the very markup it exists to
+    // reject. Verified by running it against the pre-fix page — armed it fails, unarmed it does not.
+    hydrationGate.armed = true;
+    renderPage();
+    for (const parent of Array.from(document.querySelectorAll("p, span"))) {
+      const block = parent.querySelector("div, p");
+      expect(
+        block,
+        `<${block?.tagName.toLowerCase()}> inside <${parent.tagName.toLowerCase()}> is invalid HTML `
+          + `and causes a hydration error in a real browser`,
+      ).toBeNull();
+    }
+  });
+});
+
 describe("Affordability page — hydration", () => {
   beforeEach(() => {
     window.localStorage.clear();
