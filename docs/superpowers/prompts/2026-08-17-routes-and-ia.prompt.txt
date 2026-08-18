@@ -1,0 +1,18 @@
+norma is going from 2 pages to roughly 9, and the route/information architecture needs to be
+designed before those pages get built — some of these decisions get materially more expensive
+once the URLs are public.
+
+Read first, in this order:
+1. `docs/superpowers/prompts/2026-08-17-routes-and-ia-handoff.md` (this file — findings and
+   recommendations, already reasoned through)
+2. `docs/superpowers/specs/2026-08-17-hosting-cicd-design.md` — in particular the prerendering
+   requirement, which is a hard constraint on anything you design here
+3. `docs/superpowers/specs/2026-08-17-phase2-prereqs-design.md` — the shared-input registry seam
+   this builds on
+
+That handoff file has four findings with recommendations attached. Finding 1 is the one that is
+expensive to defer; treat it as the primary decision. Brainstorm these with me, then write a spec.
+
+Hard constraint from the hosting spec: every page route must stay prerendered (`●` SSG in the
+`next build` route table). A CI guard enforces this. If any design you propose would make a route
+dynamic, raise it explicitly rather than working around the guard.
