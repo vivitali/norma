@@ -23,7 +23,14 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 
 ## Conventions
 
-- App Router pages/layouts live under `src/app/[locale]/`; every route is locale-prefixed via `src/proxy.ts` (Next 16 renamed `middleware.ts` → `proxy.ts` — don't recreate a `middleware.ts` file).
+- App Router pages/layouts live under `src/app/[locale]/`; every route is locale-prefixed via
+  **`src/middleware.ts`** — deliberately *not* `src/proxy.ts`, despite Next 16 renaming
+  `middleware.ts` → `proxy.ts`. Per Next's own version-16 upgrade guide: "The `edge` runtime is
+  **NOT** supported in `proxy`. The `proxy` runtime is `nodejs`, and it cannot be configured. If you
+  want to continue using the `edge` runtime, keep using `middleware`." `@opennextjs/cloudflare`
+  hard-refuses a Node-runtime proxy (`process.exit(1)`, no flag), so `proxy.ts` cannot be deployed
+  to our host at all. Don't "fix" this back to `proxy.ts` — it breaks `scripts/ship`. Revisit when
+  the adapter supports Node middleware.
 - User-facing strings go in `messages/en.json` / `messages/fr.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy.
 - shadcn/ui components: `npx shadcn@latest add <component>` (this project's shadcn CLI needs explicit `-b radix -p nova` if it re-prompts).
 - Branches: `claude/<ticket-or-slug>`; commits: conventional commits; never push to `main`.

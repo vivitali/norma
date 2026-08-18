@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# The one place Cloudflare is named. scripts/build stays plain `next build` so a
+# future host change touches this file only.
+#
+#   scripts/ship             deploy to production
+#   scripts/ship --preview   upload a preview version and print its URL
+
+if [[ "${1:-}" == "--preview" ]]; then
+  npx opennextjs-cloudflare build
+  npx opennextjs-cloudflare upload
+else
+  npx opennextjs-cloudflare build
+  npx opennextjs-cloudflare deploy
+fi
