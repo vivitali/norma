@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { render, renderHook, act, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { useSharedState } from "./use-shared-state";
 
@@ -84,5 +84,19 @@ describe("useSharedState", () => {
     } finally {
       Object.defineProperty(window, "localStorage", { value: originalLocalStorage, configurable: true });
     }
+  });
+
+  it("reports hydrated false on first render and true once storage has been read", async () => {
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ price: 999000 }));
+    const seen: boolean[] = [];
+    const PROBE_KEYS = ["price"] as const;
+    function Probe() {
+      const [, , hydrated] = useSharedState(PROBE_KEYS, { price: 450000 });
+      seen.push(hydrated);
+      return null;
+    }
+    render(<Probe />);
+    await waitFor(() => expect(seen.at(-1)).toBe(true));
+    expect(seen[0]).toBe(false);
   });
 });
