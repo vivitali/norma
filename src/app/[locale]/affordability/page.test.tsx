@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, beforeEach } from "vitest";
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, beforeEach, vi } from "vitest";
+import { cleanup, screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
@@ -8,8 +8,69 @@ import { getJurisdiction } from "@/domain/jurisdictions";
 import { affordability, money } from "@/domain/engine";
 import { JurisdictionPicker } from "@/components/jurisdiction-picker";
 import AffordabilityPage from "./page";
-import { AFFORDABILITY_DEFAULTS, AFFORDABILITY_KEYS } from "@/lib/shared-inputs";
-import { useSharedState } from "@/hooks/use-shared-state";
+import { AFFORDABILITY_DEFAULTS } from "@/lib/shared-inputs";
+
+/**
+ * The hydration effect in `useSharedState` reads localStorage synchronously and calls its state
+ * setters in the same tick, with no `await` boundary — so in this test stack (React 19 + RTL 16 +
+ * jsdom), the busy-to-settled transition completes before `render()` (or even a raw
+ * `createRoot().render()` outside `act()`, confirmed by spiking it) ever returns control to the
+ * test. There is no tick at which the DOM can be observed mid-hydration by any means that leaves
+ * `useSharedState` itself untouched — including mocking `readBlob` to return a controlled Promise,
+ * also confirmed by spiking it: `readStore` never awaits its return value, so a Promise there is
+ * just inert data, not a deferral point.
+ *
+ * So this mocks the HOOK, not the storage module: it always calls the real `useSharedState` (so
+ * every call site — including JurisdictionProvider's own `useSharedState(JURISDICTION_KEYS, ...)`
+ * — keeps its real state and persistence behavior unchanged), then unconditionally runs a second
+ * hook that OVERRIDES only the exposed `hydrated` boolean, and only for the specific
+ * `AFFORDABILITY_KEYS` call (by reference), holding it false until the test explicitly releases a
+ * controlled Promise. Both hooks are called on every render regardless of branch, so which code
+ * path runs is a plain value inside the hook body — not a conditional hook call — satisfying
+ * react-hooks/rules-of-hooks. This reintroduces a genuine, controllable async boundary for the
+ * exposed flag, so the test can assert on `AffordabilityPage`'s own rendered DOM — not a decoupled
+ * probe — both while genuinely suspended and after release.
+ */
+const hydrationGate: { armed: boolean; release: (() => void) | null } = {
+  armed: false,
+  release: null,
+};
+
+vi.mock("@/hooks/use-shared-state", async (importOriginal) => {
+  const React = await import("react");
+  const actual = await importOriginal<typeof import("@/hooks/use-shared-state")>();
+  const { AFFORDABILITY_KEYS } = await import("@/lib/shared-inputs");
+
+  function useHydrationGateOverride(allowlist: readonly string[], realHydrated: boolean): boolean {
+    const [gatedHydrated, setGatedHydrated] = React.useState(false);
+    const isGated = hydrationGate.armed && allowlist === AFFORDABILITY_KEYS;
+
+    React.useEffect(() => {
+      if (!isGated) return;
+      let cancelled = false;
+      const gate = new Promise<void>((resolve) => {
+        hydrationGate.release = resolve;
+      });
+      gate.then(() => {
+        if (!cancelled) setGatedHydrated(true);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [allowlist, isGated]);
+
+    return isGated ? gatedHydrated : realHydrated;
+  }
+
+  return {
+    ...actual,
+    useSharedState: (allowlist: readonly string[], defaults: Record<string, unknown>) => {
+      const [state, update, realHydrated] = actual.useSharedState(allowlist, defaults);
+      const hydrated = useHydrationGateOverride(allowlist, realHydrated);
+      return [state, update, hydrated];
+    },
+  };
+});
 
 function renderPage(locale?: "en" | "fr") {
   return renderWithIntl(
@@ -179,34 +240,61 @@ describe("Affordability page — hydration", () => {
 
   afterEach(() => {
     cleanup();
+    hydrationGate.armed = false;
+    hydrationGate.release = null;
   });
 
-  it("holds the computed panels until stored inputs have loaded", async () => {
-    // testing-library's render() wraps the initial mount in a synchronous act(), which — for
-    // this stack — flushes the hydration effect (and its resulting re-render) before render()
-    // returns control to the test. That makes the pre-hydration frame unobservable via a DOM
-    // query taken after render() returns, even though it is genuinely painted first in a real
-    // browser (see use-shared-state.test.tsx's "reports hydrated false on first render" test,
-    // which hits the same constraint and works around it the same way: capture state as it is
-    // produced during a render pass, not by inspecting the DOM afterward).
+  it("holds the computed panels behind a visible skeleton until stored inputs have loaded, then shows the real figures", async () => {
     window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ price: 999000 }));
-    const seenHydrated: boolean[] = [];
-    function HydrationProbe() {
-      const [, , hydrated] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
-      seenHydrated.push(hydrated);
-      return null;
+    hydrationGate.armed = true;
+
+    renderPage();
+
+    const winnipeg = getJurisdiction("winnipeg")!;
+    // The mock only delays the exposed `hydrated` flag — the real hook underneath still merges
+    // the stored price into `form` on its own normal (synchronous) schedule. So the engine result
+    // the page computes is already `settled` throughout; what must differ before/after release is
+    // purely whether that result is showing (via `figure()`/aria-busy) or held behind a Skeleton.
+    const settled = affordability(winnipeg, federal, { ...AFFORDABILITY_DEFAULTS, price: 999000 });
+
+    const ceilingPanel = screen.getByTestId("ceiling-panel");
+    const comfortPanel = screen.getByTestId("comfort-panel");
+    const monthlyPanel = screen.getByTestId("monthly-panel");
+
+    // Genuinely busy — the gate is unreleased, so this reads AffordabilityPage's own aria-busy
+    // and Skeleton wiring, not a decoupled probe's.
+    for (const panel of [ceilingPanel, comfortPanel, monthlyPanel]) {
+      expect(panel).toHaveAttribute("aria-busy", "true");
+      expect(panel.querySelector('[data-slot="skeleton"]')).toBeInTheDocument();
     }
+    // Catches a dropped figure() wrap: no settled figure may appear anywhere while busy,
+    // including a single un-gated monthly row.
+    expect(screen.queryByText(money(settled.ceiling, "en-CA", false))).not.toBeInTheDocument();
+    expect(screen.queryByText(money(settled.comfort, "en-CA", false))).not.toBeInTheDocument();
+    expect(screen.queryByText(money(settled.monthly.pi, "en-CA", false))).not.toBeInTheDocument();
+    expect(screen.queryByText(money(settled.monthly.total, "en-CA", false))).not.toBeInTheDocument();
+    // Catches an inverted pass/fail ternary: neither the ceiling nor the comfort verdict line may
+    // render its text while busy — it must be a Skeleton in that slot too.
+    expect(screen.queryByText("Within reach at this price")).not.toBeInTheDocument();
+    expect(screen.queryByText("Above what a lender would approve")).not.toBeInTheDocument();
+    expect(screen.queryByText("Fits your monthly budget")).not.toBeInTheDocument();
+    expect(screen.queryByText("Over your monthly budget")).not.toBeInTheDocument();
 
-    renderWithIntl(
-      <JurisdictionProvider>
-        <HydrationProbe />
-        <AffordabilityPage />
-      </JurisdictionProvider>,
-    );
+    await act(async () => {
+      hydrationGate.release?.();
+      await Promise.resolve();
+    });
 
-    expect(seenHydrated[0]).toBe(false);
-    await waitFor(() => expect(seenHydrated.at(-1)).toBe(true));
-    expect(screen.getByTestId("ceiling-panel")).toHaveAttribute("aria-busy", "false");
+    for (const panel of [ceilingPanel, comfortPanel, monthlyPanel]) {
+      expect(panel).toHaveAttribute("aria-busy", "false");
+      expect(panel.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument();
+    }
+    expect(screen.getByText(money(settled.ceiling, "en-CA", false))).toBeInTheDocument();
+    expect(screen.getByText(money(settled.comfort, "en-CA", false))).toBeInTheDocument();
+    expect(screen.getByText(money(settled.monthly.total, "en-CA", false))).toBeInTheDocument();
+    expect(
+      screen.getByText(settled.approvalPass ? "Within reach at this price" : "Above what a lender would approve"),
+    ).toBeInTheDocument();
   });
 
   it("renders input controls immediately, without waiting for hydration", () => {
