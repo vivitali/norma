@@ -2,6 +2,12 @@
 set -euo pipefail
 
 npm run lint
+
+# LayoutProps/PageProps are generated into .next/types by the Next build. A clean
+# checkout has no .next, so tsc fails on them — invisible locally, where a stale
+# .next always exists, but fatal in CI. typegen writes just the types, without
+# running a build (and so without taking the build lock this script must avoid).
+npm run typegen
 npm run typecheck
 # Full suite, not --changed: on a clean tree (which is exactly the state right after a commit,
 # when the post-edit hook fires) vitest --changed finds no test files and exits 0, so the gate
