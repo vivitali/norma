@@ -7,3 +7,8 @@ npm run typecheck
 # when the post-edit hook fires) vitest --changed finds no test files and exits 0, so the gate
 # silently degraded to lint + typecheck. The suite runs in ~2s; there is nothing to save here.
 npm run test
+
+# The prerender guard deliberately lives in scripts/verify-prerender, not here: it
+# needs a build, `next build` takes a per-project lock, and this script runs from a
+# post-edit hook — so overlapping runs would fail with "Another next build process
+# is already running." CI runs both scripts.

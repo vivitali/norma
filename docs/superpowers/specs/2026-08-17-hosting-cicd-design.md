@@ -119,8 +119,14 @@ is heading for roughly nine (the six remaining tools in `CLAUDE.md`, plus a like
 sources/methodology page), added across many sessions — nobody will notice.
 
 So the invariant needs a machine guard rather than discipline: **a build-time assertion that reads
-the `next build` route table and fails if any page route is marked `ƒ` (Dynamic).** It belongs in
-`scripts/check` after the build, and therefore runs in CI on every PR.
+the `next build` route table and fails if any page route is marked `ƒ` (Dynamic).**
+
+It lives in its own script, `scripts/verify-prerender` (build + assert), **not** inside
+`scripts/check`. That placement was tried and is wrong: `scripts/check` runs from a post-edit hook,
+`next build` takes a per-project lock, and two overlapping runs fail with "Another next build
+process is already running." Putting a build in the hook-driven gate makes it flaky by
+construction. CI runs `scripts/check` and `scripts/verify-prerender` as separate steps, so the
+guard is still enforced on every PR.
 
 Two properties this guard must have, because the page set is going to grow and change shape:
 
@@ -248,7 +254,8 @@ to conflict with it:
 
 - `scripts/check` must pass, including the updated `page.test.tsx`.
 - The prerender guard must fail when it should: verify by temporarily removing `setRequestLocale`
-  and confirming `scripts/check` goes red. A guard never observed failing is not known to work.
+  and confirming `scripts/verify-prerender` goes red. A guard never observed failing is not known
+  to work.
 - `scripts/build` route table must show `●` (SSG) for every locale route and no `ƒ` on any page
   route.
 - A deployed preview must serve `/`, `/en`, `/fr`, and the affordability route in both locales,

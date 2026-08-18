@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Every page route must be prerendered: Cloudflare serves static assets free and
+# unlimited, but bills dynamic routes as Worker invocations under a 10ms CPU cap.
+# A page that loses its prerendering still renders correctly, so only a build-time
+# assertion catches it.
+#
+# Separate from scripts/check because `next build` takes a per-project lock and
+# scripts/check runs from a post-edit hook — see the note there.
+
+./scripts/build
+node scripts/assert-prerendered.mjs

@@ -4,7 +4,7 @@
 
 **Goal:** Deploy norma to Cloudflare Workers with GitHub Actions CI/CD, and make the prerendering the free tier depends on machine-enforced rather than remembered.
 
-**Architecture:** norma builds as a normal Next app; `@opennextjs/cloudflare` adapts that build into a Worker. All page routes are prerendered to static HTML (free and unlimited on Cloudflare), leaving `src/proxy.ts`'s locale redirect as the only Worker invocation. A build-time guard fails the check gate if any page route regresses to dynamic. CI drives everything through the existing scripts contract, so a future host change touches one script.
+**Architecture:** norma builds as a normal Next app; `@opennextjs/cloudflare` adapts that build into a Worker. All page routes are prerendered to static HTML (free and unlimited on Cloudflare), leaving `src/proxy.ts`'s locale redirect as the only Worker invocation. A build-time guard (`scripts/verify-prerender`) fails CI if any page route regresses to dynamic. CI drives everything through the existing scripts contract, so a future host change touches one script.
 
 **Tech Stack:** Next.js 16.3.1 · `@opennextjs/cloudflare` · Wrangler ≥3.99.0 · GitHub Actions · Node 24
 
@@ -15,7 +15,7 @@
 - **Every page route must be prerendered.** `next build` must report `●` (SSG) for all page routes and `ƒ` for none. This is the free tier's economics, not a preference.
 - **The guard must never hard-code route paths.** It derives routes from build output and asserts on prerender status, because localized route slugs are expected to land in separate work (`docs/superpowers/prompts/2026-08-17-routes-and-ia-handoff.md`).
 - **Wrangler must be ≥ 3.99.0** — required by `@opennextjs/cloudflare`.
-- **Workflows call scripts, never raw stack commands.** `scripts/check`, `scripts/build`, `scripts/ship` are the automation interface (`~/Developer/CLAUDE.md`).
+- **Workflows call scripts, never raw stack commands.** `scripts/check`, `scripts/build`, `scripts/verify-prerender`, `scripts/ship` are the automation interface (`~/Developer/CLAUDE.md`).
 - **`scripts/build` stays host-agnostic** (`next build` only). `scripts/ship` is the only host-aware script.
 - **Never push to `main`; never self-merge a PR.** Deploy triggers on push-to-main *after* merge.
 - **Conventional commits**, branch `claude/hosting-cicd` (already created, spec already committed).
@@ -30,7 +30,8 @@
 | `src/app/[locale]/page.tsx` | *modify* — thin async shell: await `params`, `setRequestLocale`, render `HomeContent` |
 | `src/app/[locale]/page.test.tsx` | *modify* — render `HomeContent` instead of the async page |
 | `scripts/assert-prerendered.mjs` | *create* — the guard; reads build manifests, exits non-zero on any dynamic page route |
-| `scripts/check` | *modify* — build, then run the guard |
+| `scripts/verify-prerender` | *create* — build + guard; separate from `scripts/check`, which runs from a post-edit hook |
+| `scripts/check` | *modify* — note pointing at `scripts/verify-prerender` |
 | `eslint.config.mjs` | *modify* — node globals for `scripts/**/*.mjs`; ignore `.open-next/**` generated output |
 | `scripts/ship` | *create* — the only Cloudflare-aware script; adapter build + deploy/upload |
 | `wrangler.jsonc` | *create* — Worker + static assets config |
@@ -294,19 +295,29 @@ prerender guard: these page routes are server-rendered on demand:
 
 Uncomment `setRequestLocale(locale);`. Re-run `npm run build && node scripts/assert-prerendered.mjs` and expect exit 0 again. Confirm with `git diff src/app/'[locale]'/layout.tsx` that nothing remains changed.
 
-- [ ] **Step 6: Wire the guard into the check gate**
+- [ ] **Step 6: Give the guard its own script**
 
-Modify `scripts/check` — append after the existing `npm run test` line:
+Do **not** put the build inside `scripts/check`. That was the original design and it is wrong: `scripts/check` runs from a post-edit hook, `next build` takes a per-project lock, and overlapping runs fail with "Another next build process is already running."
+
+Create `scripts/verify-prerender`:
 
 ```bash
-# The Cloudflare free tier serves prerendered pages as free static assets but bills
-# dynamic routes as Worker invocations under a 10ms CPU cap. A page that loses its
-# prerendering still renders correctly, so only a build-time assertion catches it.
-npm run build
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Every page route must be prerendered: Cloudflare serves static assets free and
+# unlimited, but bills dynamic routes as Worker invocations under a 10ms CPU cap.
+# A page that loses its prerendering still renders correctly, so only a build-time
+# assertion catches it.
+#
+# Separate from scripts/check because `next build` takes a per-project lock and
+# scripts/check runs from a post-edit hook — see the note there.
+
+./scripts/build
 node scripts/assert-prerendered.mjs
 ```
 
-Note this makes `scripts/check` slower by roughly the build time (~2-4s). That is deliberate: the check gate runs in CI on every PR, and the regression it catches is invisible by construction.
+Then `chmod +x scripts/verify-prerender`, and add a comment in `scripts/check` after `npm run test` explaining why the guard is not there.
 
 - [ ] **Step 7: Run the full gate**
 
@@ -518,8 +529,12 @@ jobs:
 
       - run: npm ci
 
-      # Lint, typecheck, tests, and the prerender guard — the whole gate.
+      # Lint, typecheck, tests.
       - run: ./scripts/check
+
+      # Build + assert every page route is still prerendered. Separate step because
+      # next build takes a lock and scripts/check runs from a post-edit hook locally.
+      - run: ./scripts/verify-prerender
 
   preview:
     runs-on: ubuntu-latest
@@ -571,6 +586,7 @@ jobs:
       # Re-run the gate rather than trusting the PR run: main can move between
       # a PR passing and its merge landing.
       - run: ./scripts/check
+      - run: ./scripts/verify-prerender
 
       - run: ./scripts/ship
         env:
