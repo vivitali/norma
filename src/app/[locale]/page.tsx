@@ -1,19 +1,9 @@
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
+import { setRequestLocale } from "next-intl/server";
+import { HomeContent } from "@/components/home-content";
 
-export default function Home() {
-  const t = useTranslations("Home");
+export default async function HomePage({ params }: PageProps<"/[locale]">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
 
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
-      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-        {t("heading")}
-      </h1>
-      <p className="max-w-xl text-muted-foreground">{t("subheading")}</p>
-      <Button asChild size="lg">
-        <Link href="/affordability">{t("cta")}</Link>
-      </Button>
-    </main>
-  );
+  return <HomeContent />;
 }
