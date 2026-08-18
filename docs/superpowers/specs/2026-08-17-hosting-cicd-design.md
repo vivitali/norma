@@ -110,6 +110,31 @@ keep a synchronous inner component that holds the markup and is what the test re
 async outer component doing only `params` + `setRequestLocale`. The affordability page is already
 `"use client"` and needs no change of its own — the layout's call covers its segment.
 
+### The prerender guard — required, because this degrades silently
+
+Prerendering is a per-page opt-in, and forgetting it produces no visible failure. A page that
+misses `setRequestLocale` still renders correctly; it just becomes `ƒ`, quietly spending Worker
+invocations and running React SSR against the 10 ms CPU cap. With two pages a human notices. norma
+is heading for roughly nine (the six remaining tools in `CLAUDE.md`, plus a likely
+sources/methodology page), added across many sessions — nobody will notice.
+
+So the invariant needs a machine guard rather than discipline: **a build-time assertion that reads
+the `next build` route table and fails if any page route is marked `ƒ` (Dynamic).** It belongs in
+`scripts/check` after the build, and therefore runs in CI on every PR.
+
+Two properties this guard must have, because the page set is going to grow and change shape:
+
+- It **derives the route list from the build output**. It must never hard-code the four routes that
+  exist today, or it silently stops covering new pages — which is the exact failure it exists to
+  prevent.
+- It **asserts on the marker, not on route names**. Localized route slugs are likely to land (see
+  Assumptions below), so any guard keyed to the literal string `/affordability` would break.
+
+Mitigating factor worth recording: every remaining tool page is an interactive calculator and will
+be `"use client"`, and the probe confirmed a client page inherits static rendering from the
+layout's single `setRequestLocale` call. So in practice only server components — Home, and any
+future content page — need their own call. The guard is what makes that reasoning safe to rely on.
+
 ### Repo changes
 
 - Add `@opennextjs/cloudflare` and `wrangler` as devDependencies.
@@ -198,15 +223,36 @@ not re-litigate a decision that has already been reasoned through.
   *after* it succeeds, at the moment the user has just received value. This spec deliberately
   forecloses nothing either way.
 
+## Assumptions about concurrent work
+
+norma's route and information architecture is being designed in a separate session, since this
+spec is scoped to hosting and CI. This spec assumes that work lands and is deliberately written not
+to conflict with it:
+
+- **Route paths will change.** Localized route slugs (`/fr/abordabilite` rather than
+  `/fr/affordability`) are recommended there and likely to be adopted. Nothing here may hard-code a
+  route path — see the two guard properties above. The middleware, the adapter, and the deploy are
+  all route-agnostic already; the guard is the only piece that could get this wrong.
+- **The page count grows from 2 to roughly 9.** This is a non-event for hosting: 9 pages × 4 locales
+  is 36 prerendered HTML files against a 20,000-static-assets-per-version limit. No plan, config, or
+  cost implication.
+- **Every future page stays prerendered.** This is the one hard constraint this spec places on that
+  work, and the guard enforces it rather than trusting it. If a page ever genuinely requires
+  per-request rendering, that is a deliberate decision to make against the free-tier CPU cap — not
+  something to discover from a bill or a latency report.
+- **A save/scenarios feature will introduce a second storage concept** beyond the single
+  `norma.inputs.v1` blob. That is where the monetization seam described below becomes concrete. No
+  hosting change is implied; Workers KV is already the recorded answer if it ever needs a server.
+
 ## Testing
 
 - `scripts/check` must pass, including the updated `page.test.tsx`.
-- `scripts/build` route table must show `●` (SSG) for all four locale routes and no `ƒ` on any page
-  route. This is the acceptance check for the prerendering requirement and should be asserted
-  explicitly during implementation, since a regression here silently degrades the hosting economics
-  rather than breaking anything visibly.
-- A deployed preview must serve `/`, `/en`, `/fr`, and `/en/affordability`, with `/` redirecting by
-  `Accept-Language` — confirming the middleware survived the adapter.
+- The prerender guard must fail when it should: verify by temporarily removing `setRequestLocale`
+  and confirming `scripts/check` goes red. A guard never observed failing is not known to work.
+- `scripts/build` route table must show `●` (SSG) for every locale route and no `ƒ` on any page
+  route.
+- A deployed preview must serve `/`, `/en`, `/fr`, and the affordability route in both locales,
+  with `/` redirecting by `Accept-Language` — confirming the middleware survived the adapter.
 - Theme toggle and locale switcher must work on the deployed preview, confirming client hydration.
 
 ## Out of scope
@@ -218,6 +264,10 @@ not re-litigate a decision that has already been reasoned through.
 - Jurisdiction data verification — the load-bearing known limitation in `CLAUDE.md`, tracked
   separately.
 - uk/es locales ([#1](https://github.com/vivitali/norma/issues/1)).
+- **Route and information architecture** — localized route slugs, navigation for ~9 tools, and the
+  Scenarios storage model. Handed off to its own session; see
+  `docs/superpowers/prompts/2026-08-17-routes-and-ia-handoff.md`. This spec only constrains it to
+  keep every page prerendered, and enforces that with the guard rather than with a convention.
 
 ## Sources
 
