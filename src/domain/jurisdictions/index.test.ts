@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jurisdictions, getJurisdiction } from "./index";
+import { jurisdictions, getJurisdiction, defaultJurisdiction } from "./index";
 
 const VALID_PROVINCES = new Set([
   "ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "PE", "NL", "YT", "NT", "NU",
@@ -47,5 +47,22 @@ describe("jurisdictions", () => {
 
   it("returns undefined for an unknown id", () => {
     expect(getJurisdiction("nope")).toBeUndefined();
+  });
+
+  // Trading a positional index for a string trades an off-by-one for a typo. This is the guard
+  // that makes the string field safe: a misspelled `on` fails here instead of silently
+  // dropping a rebate at runtime.
+  it("targets every rebate at a transfer line that exists in its own jurisdiction", () => {
+    for (const j of jurisdictions) {
+      const lineKeys = new Set(j.transfer.map((l) => l.key));
+      for (const rb of j.rebates) {
+        expect(lineKeys, `${j.id} rebate ${rb.key}`).toContain(rb.on);
+      }
+    }
+  });
+
+  it("exposes a default jurisdiction that is itself one of the listed jurisdictions", () => {
+    expect(jurisdictions).toContain(defaultJurisdiction);
+    expect(getJurisdiction(defaultJurisdiction.id)).toBe(defaultJurisdiction);
   });
 });

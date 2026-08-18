@@ -10,7 +10,7 @@ export const pe: Jurisdiction = {
   propTax: 0.0105,
   transfer: [{ key: "li_lttProv", ex: "ex_lttProv", tier: "provincial", kind: "flat", rate: 0.01 }],
   premiumTax: null,
-  rebates: [{ key: "cr_pttExempt", kind: "fullExempt", on: 0, timing: "closing" }],
+  rebates: [{ key: "cr_pttExempt", kind: "fullExempt", on: "li_lttProv", timing: "closing" }],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 1400, titleIns: 300, inspect: 500, appraisal: 350, statusCert: 100, moving: 1200, setup: 550 },
   orgs: {

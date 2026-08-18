@@ -14,7 +14,7 @@ export const halifax: Jurisdiction = {
     { key: "li_deedMuni", ex: "ex_lttMuni", tier: "municipal", kind: "flat", rate: 0.015 },
   ],
   premiumTax: null,
-  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: 0, timing: "closing" }],
+  rebates: [{ key: "cr_lttRebateProv", kind: "none", on: "li_deedMuni", timing: "closing" }],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 1700, titleIns: 350, inspect: 600, appraisal: 400, statusCert: 100, moving: 1400, setup: 600 },
   orgs: {

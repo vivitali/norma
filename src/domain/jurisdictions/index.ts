@@ -22,3 +22,9 @@ export const jurisdictions: readonly Jurisdiction[] = [
 export function getJurisdiction(id: string): Jurisdiction | undefined {
   return jurisdictions.find((j) => j.id === id);
 }
+
+/**
+ * Used when nothing has been selected yet, or when a stored id no longer resolves. Declared
+ * once here so the picker, the provider, and every page's calculation cannot drift apart.
+ */
+export const defaultJurisdiction: Jurisdiction = winnipeg;

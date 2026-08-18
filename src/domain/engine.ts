@@ -164,7 +164,7 @@ export interface CreditLine {
   kind: "cap" | "exemptBand" | "fullExempt" | "none";
   amount: number;
   st: "applied" | "capped" | "phasedOut" | "none" | "ftbOnly";
-  target: string | null;
+  target: string;
   cap?: number;
   noTax?: boolean;
 }
@@ -179,8 +179,11 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
   const atClosing: CreditLine[] = [];
   const later: LaterCredit[] = [];
   for (const rb of j.rebates) {
-    const target = gov[rb.on];
-    const raw = target ? target.amount : 0;
+    const target = gov.find((l) => l.key === rb.on);
+    // A rebate against a line that was not built is not a zero row — it is absent, matching
+    // buildLines' own convention. Where there is no municipal tax there is nothing to rebate.
+    if (!target) continue;
+    const raw = target.amount;
     let amount = 0;
     let st: CreditLine["st"] = "none";
     if (rb.kind === "none") {
@@ -194,7 +197,7 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
       amount = raw;
       st = "applied";
     } else if (rb.kind === "exemptBand") {
-      const transferLine = j.transfer[rb.on];
+      const transferLine = j.transfer.find((l) => l.key === rb.on);
       const full =
         transferLine && transferLine.kind === "brackets"
           ? bracketTax(Math.min(o.price, rb.capBase), transferLine.brackets).total
@@ -214,7 +217,7 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
       kind: rb.kind,
       amount,
       st,
-      target: target ? target.key : null,
+      target: target.key,
       cap: rb.kind === "cap" ? rb.cap : undefined,
       noTax: rb.noTax,
     });

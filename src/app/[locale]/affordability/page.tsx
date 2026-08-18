@@ -6,8 +6,12 @@ import { useSharedState } from "@/hooks/use-shared-state";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { affordability } from "@/domain/engine";
 import { federal } from "@/domain/federal";
-import { getJurisdiction } from "@/domain/jurisdictions";
 import { useMoney } from "@/lib/format";
+import {
+  AFFORDABILITY_KEYS,
+  AFFORDABILITY_DEFAULTS,
+  type AffordabilityFormState,
+} from "@/lib/shared-inputs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -20,58 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const AFFORDABILITY_KEYS = [
-  "price", "dpPct", "amortYears", "ftb", "ptype", "elsewhere",
-  "insuranceAnnual", "utilities", "condoFee", "comfortCeiling",
-  "income1", "income2", "otherIncome", "haircut", "debts", "contractRate",
-] as const;
-
-export type AffordabilityFormState = {
-  price: number;
-  dpPct: number;
-  amortYears: number;
-  ftb: boolean;
-  ptype: "house" | "condo" | "newbuild";
-  elsewhere: boolean;
-  insuranceAnnual: number;
-  utilities: number;
-  condoFee: number;
-  comfortCeiling: number;
-  income1: number;
-  income2: number;
-  otherIncome: number;
-  haircut: number;
-  debts: number;
-  contractRate: number;
-};
-
-export const DEFAULT_AFFORDABILITY_STATE: AffordabilityFormState = {
-  price: 450000,
-  dpPct: 10,
-  amortYears: 25,
-  ftb: true,
-  ptype: "house",
-  elsewhere: false,
-  insuranceAnnual: 1400,
-  utilities: 200,
-  condoFee: 0,
-  comfortCeiling: 2800,
-  income1: 70000,
-  income2: 50000,
-  otherIncome: 0,
-  haircut: 0,
-  debts: 300,
-  contractRate: 4.29,
-};
-
 type NumericKey = Exclude<keyof AffordabilityFormState, "ftb" | "ptype" | "elsewhere">;
 
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
-  const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, DEFAULT_AFFORDABILITY_STATE);
+  const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
   const fmt = useMoney();
-  const [jurisdictionState] = useJurisdiction();
-  const jurisdiction = getJurisdiction(jurisdictionState.jurId) ?? getJurisdiction("winnipeg")!;
+  const [jurisdiction] = useJurisdiction();
   const result = affordability(jurisdiction, federal, form);
 
   const numberField = (key: NumericKey) => ({
