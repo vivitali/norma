@@ -178,7 +178,7 @@ breakpoint, since there is no screen-label attribute.
 
 ---
 
-## 6. Open question — type density
+## 6. Type density — resolved
 
 **The reference's body text is 11.5–12.5px, and its most common size is 11.5px.** That reads well
 on a canvas at a fixed 1700px preview width. In a shipped responsive app it is small: below
@@ -195,10 +195,19 @@ that is the default. But the trade is worth naming explicitly:
 - **Port as-is except inputs** — inputs at 16px, everything else unchanged. Smallest possible
   deviation that removes the iOS zoom problem.
 
-I would take the third. The density is genuinely part of the design's character, and the inputs are
-the one place where keeping it has a concrete, user-visible cost that has nothing to do with taste.
+**Decided: the third — port as measured, except form inputs, which are 16px.**
 
-This needs a decision before the restyle lands; it does not block writing the implementation plan.
+Rationale: the density is genuinely part of this design's character and is preserved everywhere it
+is read. The inputs are the one place where keeping it has a concrete, user-visible cost unrelated
+to taste — iOS Safari zooms the viewport on focus, and this page has twelve fields.
+
+Implementation notes:
+
+- 16px applies to the **text input control itself** (`NumberField`, text inputs, the Select trigger)
+  — not to its label, helper text or unit suffix, which keep their measured sizes.
+- 16px is the floor, not a redesign: no other size in §2.1 moves.
+- A test asserts the computed `font-size` of every form control is ≥16px, so the rule cannot be
+  quietly undone by a later "fidelity" pass. The same guard covers the two `--tx3` corrections.
 
 ---
 
