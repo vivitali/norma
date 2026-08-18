@@ -5,13 +5,13 @@
  * Cloudflare serves prerendered HTML as a free, unlimited static asset, but bills
  * anything server-rendered on demand as a Worker invocation under a 10ms CPU cap.
  *
- * Three distinct ways that invariant can break, all checked below:
+ * Ways that invariant can break, all checked below:
  *   1. A page route has no prerendered output at all (the classic: a server
  *      component missing `setRequestLocale`).
  *   2. A page route is prerendered for only *some* of its params. Next's
  *      `dynamicParams` defaults to true and the prerender manifest records
- *      `fallback: null`, meaning any param not generated at build time is
- *      rendered on demand — silently, at full Worker cost.
+ *      `fallback: null`, so any param not generated at build time is rendered on
+ *      demand — silently, at full Worker cost.
  *   3. A route is "prerendered" but revalidating (`compute` other than "static"),
  *      which is also on-demand work.
  */
@@ -42,44 +42,45 @@ export function concreteRoutesBySource(prerender) {
 }
 
 /**
- * Positional map of dynamic params in a route pattern: { index -> paramName }.
- * Catch-all segments (`[...slug]`) are skipped: they span a variable number of
- * path segments, so their values cannot be read positionally.
+ * Positional map of dynamic params in a route pattern: { index -> paramName },
+ * plus whether the pattern is positionally checkable at all.
+ *
+ * A catch-all (`[...slug]`) consumes a variable number of path segments, so any
+ * param appearing *after* one cannot be located by index. Rather than compute a
+ * wrong answer quietly, such patterns are reported as unsupported.
  */
 function paramPositions(pattern) {
   const positions = new Map();
+  let catchAllAt = -1;
+  let unsupported = false;
+
   segments(pattern).forEach((segment, index) => {
     const match = DYNAMIC_SEGMENT.exec(segment);
-    if (match && !match.groups.modifier) positions.set(index, match.groups.name);
-  });
-  return positions;
-}
-
-/**
- * Which values each param was actually prerendered with, across every page route.
- * Params are matched by name, so `/[locale]` and `/[locale]/affordability` share
- * one expected set — which is what lets us catch a page built for only some locales.
- */
-export function observedParamValues(pages, bySource) {
-  const observed = new Map();
-  for (const page of pages) {
-    const positions = paramPositions(page);
-    if (positions.size === 0) continue;
-    for (const { route } of bySource.get(page) ?? []) {
-      const parts = segments(route);
-      for (const [index, name] of positions) {
-        if (index >= parts.length) continue;
-        if (!observed.has(name)) observed.set(name, new Set());
-        observed.get(name).add(parts[index]);
-      }
+    if (!match) return;
+    if (match.groups.modifier) {
+      catchAllAt = index;
+      return;
     }
-  }
-  return observed;
+    if (catchAllAt !== -1) {
+      unsupported = true;
+      return;
+    }
+    positions.set(index, match.groups.name);
+  });
+
+  return { positions, unsupported };
 }
 
 /**
  * Returns a list of problems; empty means the invariant holds.
  * Each problem is { kind, route, message }.
+ *
+ * `declaredParams` (e.g. `{ locale: ["en", "fr"] }`) is the app's own statement of
+ * which values must exist. It is the ONLY cross-page authority: observed values are
+ * scoped to the page they came from, because two unrelated pages that happen to
+ * share a param name — `/[locale]/tools/[slug]` and `/[locale]/guides/[slug]` —
+ * have entirely unrelated valid values for it, and unioning them would demand
+ * `/tools/<a guide slug>` exist.
  */
 export function checkPrerendered(appRoutes, prerender, declaredParams = {}) {
   const problems = [];
@@ -99,16 +100,6 @@ export function checkPrerendered(appRoutes, prerender, declaredParams = {}) {
   }
 
   const bySource = concreteRoutesBySource(prerender);
-  const expected = observedParamValues(pages, bySource);
-
-  // Observation alone cannot catch a param value disappearing from *every* route —
-  // if the build stops emitting French entirely, there is nothing left to compare
-  // against. `declaredParams` carries the app's own declaration (routing.locales),
-  // so the expected set is authoritative rather than merely inferred.
-  for (const [name, values] of Object.entries(declaredParams)) {
-    if (!expected.has(name)) expected.set(name, new Set());
-    for (const value of values) expected.get(name).add(value);
-  }
 
   for (const page of pages) {
     const concrete = bySource.get(page) ?? [];
@@ -123,7 +114,15 @@ export function checkPrerendered(appRoutes, prerender, declaredParams = {}) {
     }
 
     for (const { route, compute } of concrete) {
-      if (compute !== undefined && compute !== "static") {
+      // Absence is not success: if Next drops or renames this field, the ISR check
+      // must go red rather than quietly stop checking.
+      if (compute === undefined) {
+        problems.push({
+          kind: "compute-missing",
+          route,
+          message: `${route} has no "compute" field — the manifest shape has changed and the on-demand check can no longer run`,
+        });
+      } else if (compute !== "static") {
         problems.push({
           kind: "compute",
           route,
@@ -132,17 +131,28 @@ export function checkPrerendered(appRoutes, prerender, declaredParams = {}) {
       }
     }
 
-    // Every param this route uses must be prerendered for every value seen anywhere.
-    const positions = paramPositions(page);
+    const { positions, unsupported } = paramPositions(page);
+
+    if (unsupported) {
+      problems.push({
+        kind: "unsupported",
+        route: page,
+        message: `${page} has a dynamic param after a catch-all segment, which this guard cannot verify positionally`,
+      });
+      continue;
+    }
+
     for (const [index, name] of positions) {
-      const wanted = expected.get(name);
-      if (!wanted) continue;
+      const declared = declaredParams[name];
+      if (!declared) continue;
+
       const covered = new Set(
         concrete
           .map(({ route }) => segments(route)[index])
           .filter((value) => value !== undefined),
       );
-      const gaps = [...wanted].filter((value) => !covered.has(value)).sort();
+      const gaps = [...declared].filter((value) => !covered.has(value)).sort();
+
       if (gaps.length > 0) {
         problems.push({
           kind: "partial",

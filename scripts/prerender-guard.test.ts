@@ -29,8 +29,10 @@ const ALL_STATIC = {
   },
 };
 
-function messages(appRoutes: object, prerender: object) {
-  return checkPrerendered(appRoutes, prerender).problems.map(
+const LOCALES = { locale: ["en", "fr"] };
+
+function messages(appRoutes: object, prerender: object, declared: object = LOCALES) {
+  return checkPrerendered(appRoutes, prerender, declared).problems.map(
     (p: { message: string }) => p.message,
   );
 }
@@ -102,11 +104,11 @@ describe("prerender guard", () => {
 
   it("fails when a prerendered route revalidates instead of being static", () => {
     const prerender = {
-      routes: { ...ALL_STATIC.routes, "/en": route("/[locale]", "incremental") },
+      routes: { ...ALL_STATIC.routes, "/en": route("/[locale]", "blocking") },
     };
 
     expect(messages(APP_ROUTES, prerender)).toContain(
-      '/en is computed "incremental" rather than "static"',
+      '/en is computed "blocking" rather than "static"',
     );
   });
 
@@ -117,7 +119,7 @@ describe("prerender guard", () => {
     delete (prerender.routes as Record<string, unknown>)["/fr"];
     delete (prerender.routes as Record<string, unknown>)["/fr/affordability"];
 
-    expect(checkPrerendered(APP_ROUTES, prerender).problems).toEqual([]);
+    expect(checkPrerendered(APP_ROUTES, prerender, {}).problems).toEqual([]);
 
     const withDeclared = checkPrerendered(APP_ROUTES, prerender, {
       locale: ["en", "fr"],
@@ -147,6 +149,56 @@ describe("prerender guard", () => {
       routes: { "/en": route("/[locale]"), "/fr": route("/[locale]") },
     };
     expect(checkPrerendered(appRoutes, prerender).problems).toEqual([]);
+  });
+
+  // Two unrelated pages sharing a param name have unrelated valid values. Unioning
+  // observed values across pages would demand /tools/<a guide slug> exist.
+  it("does not cross-contaminate param values between unrelated pages", () => {
+    const appRoutes = {
+      "/[locale]/tools/[slug]/page": "/[locale]/tools/[slug]",
+      "/[locale]/guides/[slug]/page": "/[locale]/guides/[slug]",
+    };
+    const prerender = {
+      routes: {
+        "/en/tools/mortgage": route("/[locale]/tools/[slug]"),
+        "/fr/tools/mortgage": route("/[locale]/tools/[slug]"),
+        "/en/guides/first-home": route("/[locale]/guides/[slug]"),
+        "/fr/guides/first-home": route("/[locale]/guides/[slug]"),
+      },
+    };
+
+    expect(checkPrerendered(appRoutes, prerender, LOCALES).problems).toEqual([]);
+  });
+
+  // Absence of the field is not success: a renamed field must go red, not quiet.
+  it("fails when the compute field disappears from the manifest", () => {
+    const prerender = {
+      routes: { ...ALL_STATIC.routes, "/en": { routeType: "page", srcRoute: "/[locale]" } },
+    };
+
+    expect(messages(APP_ROUTES, prerender)).toContain(
+      '/en has no "compute" field — the manifest shape has changed and the on-demand check can no longer run',
+    );
+  });
+
+  // A catch-all consumes a variable number of segments, so anything after it
+  // cannot be located by index. Refuse rather than compute a wrong answer.
+  it("refuses to guess when a param follows a catch-all", () => {
+    const appRoutes = { "/[...path]/[locale]/page": "/[...path]/[locale]" };
+    const prerender = { routes: { "/a/b/en": route("/[...path]/[locale]") } };
+
+    expect(messages(appRoutes, prerender)).toContain(
+      "/[...path]/[locale] has a dynamic param after a catch-all segment, which this guard cannot verify positionally",
+    );
+  });
+
+  it("still checks params that precede a catch-all", () => {
+    const appRoutes = { "/[locale]/docs/[...path]/page": "/[locale]/docs/[...path]" };
+    const prerender = { routes: { "/en/docs/a/b": route("/[locale]/docs/[...path]") } };
+
+    expect(messages(appRoutes, prerender)).toContain(
+      "/[locale]/docs/[...path] is not prerendered for locale=fr — those render on demand",
+    );
   });
 
   it("tolerates a manifest with no prerendered routes at all", () => {

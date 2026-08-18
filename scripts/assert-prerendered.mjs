@@ -36,10 +36,22 @@ const prerender = read(PRERENDER, "routes");
 // The app's own declaration of which locales must exist. Read rather than inferred:
 // if a build stopped emitting French altogether, comparing routes against each other
 // would find nothing wrong, because nothing French would remain to compare.
+// `locale` is currently the only declared dimension. Any future dynamic param —
+// a fixed province list, say — must be added here too, or it falls back to being
+// unchecked across pages.
 let declaredParams = {};
 try {
   const { routing } = await import("../src/i18n/routing.ts");
-  declaredParams = { locale: routing.locales };
+  const locales = routing?.locales;
+  // An empty or malformed list is not "nothing to check" — it silently restores
+  // exactly the blind spot this exists to close, and stays green while doing it.
+  if (!Array.isArray(locales) || locales.length === 0) {
+    console.error("prerender guard: src/i18n/routing.ts declares no locales");
+    console.error(`  got: ${JSON.stringify(locales)}`);
+    console.error("  Without them the guard cannot tell that a whole locale went missing.");
+    process.exit(1);
+  }
+  declaredParams = { locale: locales };
 } catch (error) {
   console.error("prerender guard: cannot read locales from src/i18n/routing.ts");
   console.error(`  ${error.message}`);

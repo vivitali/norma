@@ -53,6 +53,12 @@ Cloudflare Workers via `@opennextjs/cloudflare`. Deploys run from CI on push to 
 Repository secrets required: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`,
 `ANTHROPIC_API_KEY`.
 
+The preview deploy and the Claude review job are both gated to branches on this repo. GitHub
+withholds secrets from fork pull requests by design, so on a fork those jobs are skipped rather
+than failing on a blank key — meaning **outside contributions get no preview URL and no automated
+review**, and need a human to look. `wrangler versions upload` also requires the Worker to exist,
+so the first production deploy must land on `main` before any preview can work.
+
 **Every page route must stay prerendered.** `scripts/verify-prerender` fails if any page route is
 server-rendered on demand, and CI runs it on every PR. This is not a style rule: Cloudflare serves
 prerendered pages as free static assets, but bills dynamic routes as Worker invocations under a
