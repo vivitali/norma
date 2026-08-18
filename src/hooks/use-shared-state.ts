@@ -1,40 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-
-const STORE_KEY = "norma.inputs.v1";
+import { readBlob, writeBlob } from "@/lib/storage";
 
 function readStore<T extends Record<string, unknown>>(
   allowlist: readonly (keyof T & string)[],
 ): Partial<T> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(STORE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const out: Partial<T> = {};
-    for (const key of allowlist) {
-      if (key in parsed) out[key] = parsed[key] as T[typeof key];
-    }
-    return out;
-  } catch {
-    return {};
+  const parsed = readBlob();
+  const out: Partial<T> = {};
+  for (const key of allowlist) {
+    if (key in parsed) out[key] = parsed[key] as T[typeof key];
   }
+  return out;
 }
 
 function writeStore<T extends Record<string, unknown>>(
   allowlist: readonly (keyof T & string)[],
   state: T,
 ) {
-  if (typeof window === "undefined") return;
-  try {
-    const raw = window.localStorage.getItem(STORE_KEY);
-    const existing = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
-    for (const key of allowlist) existing[key] = state[key];
-    window.localStorage.setItem(STORE_KEY, JSON.stringify(existing));
-  } catch {
-    // storage full or unavailable (private browsing) — state still lives in memory
-  }
+  const patch: Record<string, unknown> = {};
+  for (const key of allowlist) patch[key] = state[key];
+  writeBlob(patch);
 }
 
 /**
