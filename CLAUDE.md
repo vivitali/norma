@@ -14,8 +14,10 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 
 ## Commands (scripts contract — always use these, never raw stack commands)
 
-- `scripts/check` — `eslint . && tsc --noEmit && vitest run --changed`
-- `scripts/test`  — `vitest run` (full suite)
+- `scripts/check` — `eslint . && tsc --noEmit && vitest run` (full suite; it runs in ~2s, and
+  `--changed` silently found zero tests on a clean tree — i.e. right after every commit, exactly
+  when the post-edit hook fires — degrading the gate to lint + typecheck)
+- `scripts/test`  — `vitest run` (full suite, no lint or typecheck)
 - `scripts/build` — `next build`
 - `scripts/ship`  — not configured yet; deploy target undecided (Vercel is the default fit for Next.js — confirm before wiring)
 

@@ -3,4 +3,7 @@ set -euo pipefail
 
 npm run lint
 npm run typecheck
-npm run test -- --changed
+# Full suite, not --changed: on a clean tree (which is exactly the state right after a commit,
+# when the post-edit hook fires) vitest --changed finds no test files and exits 0, so the gate
+# silently degraded to lint + typecheck. The suite runs in ~2s; there is nothing to save here.
+npm run test
