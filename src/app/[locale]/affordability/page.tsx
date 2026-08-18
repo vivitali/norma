@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -28,10 +29,16 @@ type NumericKey = Exclude<keyof AffordabilityFormState, "ftb" | "ptype" | "elsew
 
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
-  const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
+  const [form, updateForm, hydrated] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
   const fmt = useMoney();
   const [jurisdiction] = useJurisdiction();
   const result = affordability(jurisdiction, federal, form);
+
+  // Prerendered HTML necessarily paints defaults before localStorage is readable. Inputs show
+  // through immediately; a derived dollar figure does not, because a returning user seeing
+  // "$412,000" replaced by "$689,000" has been shown a wrong answer, however briefly.
+  const figure = (value: string) =>
+    hydrated ? <>{value}</> : <Skeleton className="h-8 w-32" />;
 
   const numberField = (key: NumericKey) => ({
     id: key,
@@ -122,62 +129,70 @@ export default function AffordabilityPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Card>
+        <Card data-testid="ceiling-panel" aria-busy={!hydrated}>
           <CardHeader>
             <CardTitle>{t("ceiling")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <p className="text-3xl font-semibold tabular-nums">{fmt(result.ceiling)}</p>
-            <p className={result.approvalPass ? "text-primary" : "text-destructive"}>
-              {result.approvalPass ? t("approvalPass") : t("approvalFail")}
-            </p>
+            <p className="text-3xl font-semibold tabular-nums">{figure(fmt(result.ceiling))}</p>
+            {hydrated ? (
+              <p className={result.approvalPass ? "text-primary" : "text-destructive"}>
+                {result.approvalPass ? t("approvalPass") : t("approvalFail")}
+              </p>
+            ) : (
+              <Skeleton className="h-5 w-40" />
+            )}
           </CardContent>
         </Card>
-        <Card>
+        <Card data-testid="comfort-panel" aria-busy={!hydrated}>
           <CardHeader>
             <CardTitle>{t("comfort")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <p className="text-3xl font-semibold tabular-nums">{fmt(result.comfort)}</p>
-            <p className={result.comfortPass ? "text-primary" : "text-destructive"}>
-              {result.comfortPass ? t("comfortPass") : t("comfortFail")}
-            </p>
+            <p className="text-3xl font-semibold tabular-nums">{figure(fmt(result.comfort))}</p>
+            {hydrated ? (
+              <p className={result.comfortPass ? "text-primary" : "text-destructive"}>
+                {result.comfortPass ? t("comfortPass") : t("comfortFail")}
+              </p>
+            ) : (
+              <Skeleton className="h-5 w-40" />
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card data-testid="monthly-panel" aria-busy={!hydrated}>
         <CardHeader>
           <CardTitle>{t("monthlyBreakdown")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("pi")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.pi)}</span>
+            <span className="tabular-nums">{figure(fmt(result.monthly.pi))}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("propTax")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.propTax)}</span>
+            <span className="tabular-nums">{figure(fmt(result.monthly.propTax))}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("insuranceMonthly")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.insurance)}</span>
+            <span className="tabular-nums">{figure(fmt(result.monthly.insurance))}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("utilities")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.utilities)}</span>
+            <span className="tabular-nums">{figure(fmt(result.monthly.utilities))}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("condoFee")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.condoFee)}</span>
+            <span className="tabular-nums">{figure(fmt(result.monthly.condoFee))}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t("maintenance")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.maintenance)}</span>
+            <span className="tabular-nums">{figure(fmt(result.monthly.maintenance))}</span>
           </div>
           <div className="mt-2 flex justify-between border-t border-border pt-2 font-semibold">
             <span>{t("total")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.total)}</span>
+            <span className="tabular-nums">{figure(fmt(result.monthly.total))}</span>
           </div>
         </CardContent>
       </Card>

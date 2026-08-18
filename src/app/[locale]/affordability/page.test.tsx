@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, beforeEach } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
@@ -8,7 +8,8 @@ import { getJurisdiction } from "@/domain/jurisdictions";
 import { affordability, money } from "@/domain/engine";
 import { JurisdictionPicker } from "@/components/jurisdiction-picker";
 import AffordabilityPage from "./page";
-import { AFFORDABILITY_DEFAULTS } from "@/lib/shared-inputs";
+import { AFFORDABILITY_DEFAULTS, AFFORDABILITY_KEYS } from "@/lib/shared-inputs";
+import { useSharedState } from "@/hooks/use-shared-state";
 
 function renderPage(locale?: "en" | "fr") {
   return renderWithIntl(
@@ -168,6 +169,50 @@ describe("Affordability page — French locale", () => {
     expect(
       screen.queryByText(money(expected.ceiling, "en-CA", false), { normalizer: (text) => text }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("Affordability page — hydration", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("holds the computed panels until stored inputs have loaded", async () => {
+    // testing-library's render() wraps the initial mount in a synchronous act(), which — for
+    // this stack — flushes the hydration effect (and its resulting re-render) before render()
+    // returns control to the test. That makes the pre-hydration frame unobservable via a DOM
+    // query taken after render() returns, even though it is genuinely painted first in a real
+    // browser (see use-shared-state.test.tsx's "reports hydrated false on first render" test,
+    // which hits the same constraint and works around it the same way: capture state as it is
+    // produced during a render pass, not by inspecting the DOM afterward).
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ price: 999000 }));
+    const seenHydrated: boolean[] = [];
+    function HydrationProbe() {
+      const [, , hydrated] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
+      seenHydrated.push(hydrated);
+      return null;
+    }
+
+    renderWithIntl(
+      <JurisdictionProvider>
+        <HydrationProbe />
+        <AffordabilityPage />
+      </JurisdictionProvider>,
+    );
+
+    expect(seenHydrated[0]).toBe(false);
+    await waitFor(() => expect(seenHydrated.at(-1)).toBe(true));
+    expect(screen.getByTestId("ceiling-panel")).toHaveAttribute("aria-busy", "false");
+  });
+
+  it("renders input controls immediately, without waiting for hydration", () => {
+    renderPage();
+    // The price field is usable on first paint; only derived figures wait.
+    expect(screen.getByLabelText("Purchase price you're considering")).toBeInTheDocument();
   });
 });
 
