@@ -35,10 +35,13 @@ reference is a canvas prototype and some of it is prototype scaffolding. What mu
    read time. No `touched` flags, no re-seed effect.
 4. **The city default is the honest first paint**, tagged `typical`, flipping to `yours` when the
    user personalises. The hydration flash becomes a designed state change.
-5. **Semantic tokens and numeral treatment only.** Add pass/caution/blocked triples and a figure
-   treatment; leave radius, palette and shadcn Nova styling alone. This narrowly supersedes the
-   Phase 1 spec's "the prototype's visual system is not the visual target" — for the three-state
-   colour layer only, because caution is currently inexpressible.
+5. **Full visual port, across every page.** *(Revised 2026-08-18 — this replaces an earlier
+   decision to add semantic tokens only.)* The reference's complete visual system — palette,
+   semantic state triples, type scale, numeral treatment, radii, spacing rhythm and fonts — is
+   ported and applied app-wide, not per page. This **supersedes** the Phase 1 spec's "the
+   prototype's own visual system is a content/structure/interaction reference, not the visual
+   target"; the prototype's visual system is now the visual target. shadcn Nova remains the
+   component substrate — we restyle its tokens, we do not replace its components. See §10.
 6. **Depth persists; open sections live in the URL hash.**
 7. **Debts split into four named fields**, one derived total.
 8. **`pathnames` and the nav shell land in phase 1.5**, before any new URL exists.
@@ -417,25 +420,52 @@ verified. It is what makes per-line marks meaningful rather than decorative.
 
 ---
 
-## 10. Design tokens
+## 10. Design tokens — full visual port
 
-Added to `src/app/globals.css`, in the token layer, not in components:
+The reference's visual system is ported whole into `src/app/globals.css`, in the token layer, never
+into components. It applies **app-wide**: header, Home, Affordability, `/sources`, and every page
+built afterwards inherit it. `src/app/globals.css` is currently unmodified stock shadcn — chroma 0
+on every token except `--destructive` — so this is a replacement of the palette, not an addition to
+it.
 
-- `--pass`, `--pass-bg`, `--pass-border`
-- `--caution`, `--caution-bg`, `--caution-border`
-- `--blocked`, `--blocked-bg`, `--blocked-border`
-- `--band`, `--band-bg`, `--band-border` — the inverted gap band, a fourth neutral state
+Scope of the port:
 
-Each mapped through `@theme inline` as `--color-*` so Tailwind utilities exist, and each redefined
-under `.dark`. Contrast checked in both themes.
+- **Palette** — surfaces, text ramp, borders and accent, replacing the stock greyscale values on the
+  existing shadcn tokens (`--background`, `--card`, `--border`, `--muted-foreground`, `--primary`,
+  `--accent`, `--ring`, `--input`) in both themes.
+- **Semantic state triples** — background / border / foreground for each of `pass`, `caution`,
+  `blocked`, and `band` (the inverted gap band's fourth, neutral state). New tokens; `blocked` may
+  alias `--destructive`. **Caution is currently inexpressible, and it is the state of the two most
+  common verdicts.**
+- **Type scale** — sizes, weights, line heights and letter-spacing, including the recurring
+  uppercase micro-label pattern.
+- **Numeral treatment** — a `.figure` treatment applied once (mono family, `font-variant-numeric:
+  tabular-nums lining-nums`) rather than ad-hoc `tabular-nums` on individual spans.
+- **Geometry** — radii and border widths.
+- **Spacing rhythm** — only where the reference actually has a coherent scale; an invented scale is
+  worse than none.
+- **Fonts** — the reference's families, self-hosted under `src/app/fonts/` and wired through
+  `--font-sans` / `--font-mono`. Latin subsets only, `font-display: swap`, preloaded. No external
+  font CDN: the app is served from Cloudflare as static assets and must not add a third-party
+  request on first paint.
 
-`--blocked` may alias `--destructive`; `--pass` and `--caution` are new. **Caution is currently
-inexpressible in this theme, and it is the state of the two most common verdicts.**
+Everything goes through `@theme inline` as `--color-*` / `--font-*` / `--radius-*` so Tailwind
+utilities exist, and everything is redefined under `.dark`. **The app uses a `.dark` class via
+next-themes, not the reference's `data-theme` attribute** — the values port, the selector does not.
 
-Figures get a `.figure` treatment — the existing mono family with `font-variant-numeric:
-tabular-nums lining-nums` — applied once rather than as ad-hoc `tabular-nums` on individual spans.
+**Contrast is checked in both themes before anything ships.** The reference was authored on a
+canvas, not against WCAG; any pair that fails gets adjusted, and the adjustment is recorded rather
+than silently applied.
 
-Radius, palette and shadcn Nova component styling are unchanged.
+shadcn Nova stays the component substrate. We restyle its tokens; we do not replace its components,
+and we do not fight Radix internals to chase a pixel.
+
+### 10.1 Applying it to the existing surface
+
+The restyle lands **before** the Affordability rebuild, as its own step, so its effect is visible in
+isolation and a regression is attributable. It touches `AppHeader`, `HomeContent`, the jurisdiction
+picker, locale switcher and theme toggle — these get restyled in place, not redesigned; Home's
+redesign is phase 3.
 
 ---
 
@@ -533,8 +563,9 @@ locales, and a jurisdiction-id ↔ message-key parity test.
 
 ## 14. Phasing
 
-**Phase 1 — Affordability.**
-Semantic tokens and figure treatment · `number-format` + `NumberField` · section registry +
+**Phase 1 — visual system, then Affordability.**
+The full visual port applied app-wide (§10), landing first and on its own · `number-format` +
+`NumberField` · section registry +
 `DisclosureSection` + depth control + jump rail + hash targeting · storage v2, `coerce`, migration ·
 `resolveInputs` and the registry key additions (`funds`, `save`, `car`, `student`, `cc`,
 `otherDebt`, `depth`; `debts` removed) · the rebuilt Affordability page · `/sources`.

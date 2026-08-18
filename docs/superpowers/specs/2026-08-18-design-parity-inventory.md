@@ -199,10 +199,13 @@ verdicts (`over`, `shortCash`).
 Figures in the prototype are set in a mono face with tabular lining numerals. The app applies
 `tabular-nums` ad hoc on individual spans.
 
-**Bucket: degraded**, for the semantic triples and the numeral treatment. The prototype's radii,
-palette and type scale are **kept** as a divergence — the Phase 1 spec settled that the prototype is
-a content/structure/interaction reference and shadcn Nova is the visual target, and nothing in this
-audit overturns that.
+**Bucket: degraded**, in full — palette, semantic triples, type scale, numeral treatment, radii,
+spacing and fonts.
+
+*(Revised 2026-08-18.)* This row initially bucketed the prototype's palette, radii and type scale as
+a **kept** divergence, on the Phase 1 spec's ruling that shadcn Nova is the visual target. That
+ruling has since been overturned: the prototype's visual system is now the visual target and is
+ported whole, app-wide. See §10 of the interaction-model spec.
 
 ### 4.3 Number inputs
 
@@ -350,7 +353,7 @@ travel together.
 |---|---|
 | **missing** | 7 whole screens, 1 sources page, 13 Affordability sections, 8 Home sections, navigation |
 | **degraded** | Affordability (6 sections), Home (hero), tokens, number inputs, defaults, storage, i18n coverage, phone layout |
-| **kept** | monthly-breakdown placement, prototype canvas chrome, Nova as visual target, hydration flash as a hosting consequence, en/fr locale count |
+| **kept** | monthly-breakdown placement, prototype canvas chrome, hydration flash as a hosting consequence, en/fr locale count |
 
 The single largest finding is not any one row: it is that `affordability()` computes 22 top-level
 results and the screen renders 6, while asking for 14 numbers before it shows any of them.

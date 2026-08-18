@@ -20,11 +20,15 @@ It would also have been immediately stale: phase 1 of
 Sync once **phase 1 of the interaction-model spec has landed**. That phase produces the first
 genuinely norma-specific design surface:
 
-- semantic `pass` / `caution` / `blocked` / `band` token triples, light and dark (spec §10)
-- the figure treatment — mono, `tabular-nums lining-nums` (spec §10)
+- the full visual port, app-wide (spec §10) — palette, semantic `pass` / `caution` / `blocked` /
+  `band` triples, type scale, numeral treatment, radii, spacing and self-hosted fonts, replacing
+  stock shadcn in both themes
 - `NumberField` — locale-aware, `null`-capable (spec §5)
 - `DisclosureSection` + the depth control radiogroup (spec §1–2)
 - the check, verdict, gap-band and stat-strip components (spec §4)
+
+*(Revised 2026-08-18: the visual scope was widened from "semantic tokens only" to a full port. That
+makes the eventual sync considerably more worthwhile — the tokens will be norma's, not shadcn's.)*
 
 ### Repo facts a future run needs
 
