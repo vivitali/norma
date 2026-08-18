@@ -24,10 +24,30 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 ## Conventions
 
 - App Router pages/layouts live under `src/app/[locale]/`; every route is locale-prefixed via `src/proxy.ts` (Next 16 renamed `middleware.ts` → `proxy.ts` — don't recreate a `middleware.ts` file).
+- **Adding a page is two entries and a boolean.** Route keys and their localized slugs live in
+  `src/i18n/routing.ts` (`pathnames`); the navigation IA lives in `src/lib/routes.ts` (`NAV`). Add
+  the route to both, then flip `built: true` when the page exists. Tests enforce the pair in both
+  directions, so forgetting either fails the suite. **Never write a route string anywhere else** —
+  the folder name stays the canonical English key and the localized slug is a proxy rewrite.
+- `en` is deliberately absent from every `pathnames` entry: next-intl resolves a missing locale as
+  `pathnameConfig[locale] || internalTemplate`, so the canonical key *is* the English slug. This is
+  also why uk/es ([#1](https://github.com/vivitali/norma/issues/1)) is purely additive — new locales
+  get English slugs until someone translates one, a line at a time.
+- Slugs are ASCII, no accents (`/abordabilite`, not `/abordabilité`) — an accented path
+  percent-encodes the moment it is copied, pasted or logged.
+- **Allowlists passed to `useSharedState` MUST be module-level constants** from
+  `src/lib/shared-inputs.ts`. The hook keys an effect on the array's identity; an inline literal is
+  an infinite render loop, not a type error. This has bitten twice.
+- Any component displaying a *derived* figure gates on `useSharedState`'s third element,
+  `hydrated`. Inputs render immediately. Static hosting cannot personalize the first paint, so the
+  alternative is showing a returning user a number that is about to change.
 - User-facing strings go in `messages/en.json` / `messages/fr.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy.
 - shadcn/ui components: `npx shadcn@latest add <component>` (this project's shadcn CLI needs explicit `-b radix -p nova` if it re-prompts).
 - Branches: `claude/<ticket-or-slug>`; commits: conventional commits; never push to `main`.
 - Tests accompany every behavior change; `scripts/check` must pass before review.
+- Vitest inlines `next-intl` (`vitest.config.ts` → `test.server.deps.inline`) so the real
+  `Link`/`getPathname` run in tests instead of a mock. Without it Vitest externalizes the package,
+  Node's loader chokes on its extensionless `next/navigation` import, and `vi.mock` never applies.
 
 ## Workflow
 
