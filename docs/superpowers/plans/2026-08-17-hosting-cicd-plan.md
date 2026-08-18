@@ -4,7 +4,7 @@
 
 **Goal:** Deploy norma to Cloudflare Workers with GitHub Actions CI/CD, and make the prerendering the free tier depends on machine-enforced rather than remembered.
 
-**Architecture:** norma builds as a normal Next app; `@opennextjs/cloudflare` adapts that build into a Worker. All page routes are prerendered to static HTML (free and unlimited on Cloudflare), leaving `src/proxy.ts`'s locale redirect as the only Worker invocation. A build-time guard (`scripts/verify-prerender`) fails CI if any page route regresses to dynamic. CI drives everything through the existing scripts contract, so a future host change touches one script.
+**Architecture:** norma builds as a normal Next app; `@opennextjs/cloudflare` adapts that build into a Worker. All page routes are prerendered to static HTML (free and unlimited on Cloudflare), leaving `src/middleware.ts`'s locale redirect as the only Worker invocation. A build-time guard (`scripts/verify-prerender`) fails CI if any page route regresses to dynamic. CI drives everything through the existing scripts contract, so a future host change touches one script.
 
 **Tech Stack:** Next.js 16.3.1 · `@opennextjs/cloudflare` · Wrangler ≥3.99.0 · GitHub Actions · Node 24
 

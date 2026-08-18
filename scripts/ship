@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd "$(dirname "$0")/.."
+
 # The one place Cloudflare is named. scripts/build stays plain `next build` so a
 # future host change touches this file only.
 #
 #   scripts/ship             deploy to production
 #   scripts/ship --preview   upload a preview version and print its URL
 
-if [[ "${1:-}" == "--preview" ]]; then
-  npx opennextjs-cloudflare build
-  npx opennextjs-cloudflare upload
-else
-  npx opennextjs-cloudflare build
-  npx opennextjs-cloudflare deploy
-fi
+usage() {
+  echo "usage: scripts/ship [--preview]" >&2
+  exit 2
+}
+
+# An unrecognised argument must never fall through to a production deploy: the
+# failure mode of a typo should not be "shipped to prod".
+case "$#" in
+  0) command="deploy" ;;
+  1) [[ "$1" == "--preview" ]] || usage; command="upload" ;;
+  *) usage ;;
+esac
+
+npx opennextjs-cloudflare build
+npx opennextjs-cloudflare "$command"

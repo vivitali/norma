@@ -3,6 +3,9 @@ name: CI
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 # A new push to the same PR makes the in-flight run obsolete.
 concurrency:
   group: ci-${{ github.ref }}
@@ -24,13 +27,18 @@ jobs:
       # Lint, typecheck, tests.
       - run: ./scripts/check
 
-      # Build + assert every page route is still prerendered. Separate step because
-      # next build takes a lock and scripts/check runs from a post-edit hook locally.
+      # Build + assert every page route is still fully prerendered. Separate step
+      # because next build takes a lock and scripts/check runs from a post-edit
+      # hook locally.
       - run: ./scripts/verify-prerender
 
   preview:
     runs-on: ubuntu-latest
     needs: check
+    # Forks get empty secrets on pull_request (by design — they must not receive
+    # them), so this job can only work for branches on this repo. Without the
+    # guard, every outside contribution fails on an opaque auth error.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +49,23 @@ jobs:
 
       - run: npm ci
 
-      - run: ./scripts/ship --preview
+      # NOTE: `wrangler versions upload` requires the Worker to already exist, so
+      # the very first production deploy must land on main before previews work.
+      - name: Upload preview version
+        run: |
+          set -o pipefail
+          ./scripts/ship --preview 2>&1 | tee preview.log
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Surface the URL in the run summary — otherwise it is buried in the log.
+      - name: Publish preview URL
+        if: always()
+        run: |
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' preview.log | head -1 || true)
+          if [ -n "$url" ]; then
+            echo "### Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Preview URL not found in build log" >> "$GITHUB_STEP_SUMMARY"
+          fi

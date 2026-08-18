@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd "$(dirname "$0")/.."
+
 # Every page route must be prerendered: Cloudflare serves static assets free and
-# unlimited, but bills dynamic routes as Worker invocations under a 10ms CPU cap.
-# A page that loses its prerendering still renders correctly, so only a build-time
-# assertion catches it.
+# unlimited, but bills on-demand rendering as Worker invocations under a 10ms CPU
+# cap. A page that loses its prerendering still renders correctly, so only a
+# build-time assertion catches it.
 #
 # Separate from scripts/check because `next build` takes a per-project lock and
 # scripts/check runs from a post-edit hook — see the note there.
 
 ./scripts/build
-node scripts/assert-prerendered.mjs
+
+# --disable-warning silences only MODULE_TYPELESS_PACKAGE_JSON, emitted because the
+# guard imports src/i18n/routing.ts directly (Node strips the types). Scoped to that
+# one code so genuine warnings still surface.
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/assert-prerendered.mjs

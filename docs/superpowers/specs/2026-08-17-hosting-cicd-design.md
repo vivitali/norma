@@ -17,8 +17,8 @@ experience must be "integrated and seamless."
 
 norma's shape today makes the technical bar low. There are no API routes, no database, no auth, no
 secrets. `src/domain/` is pure functions and every jurisdiction figure is bundled static data. The
-only dynamic surface in the repo is `src/proxy.ts`, the next-intl middleware that handles locale
-prefixing. So the choice is driven almost entirely by product direction and licensing, not by what
+only dynamic surface in the repo is the next-intl middleware that handles locale prefixing (then
+`src/proxy.ts`; renamed to `src/middleware.ts` by this work — see below). So the choice is driven almost entirely by product direction and licensing, not by what
 the code needs to run.
 
 ## Decisions carried in from brainstorming
@@ -136,6 +136,23 @@ Two properties this guard must have, because the page set is going to grow and c
 - It **asserts on the marker, not on route names**. Localized route slugs are likely to land (see
   Assumptions below), so any guard keyed to the literal string `/affordability` would break.
 
+Three distinct ways the invariant can break, all of which the guard must catch — the first two were
+found by review after an initial version missed them:
+
+1. **A page is not prerendered at all** — the classic missing `setRequestLocale`.
+2. **A page is prerendered for only some params.** `dynamicParams` defaults to true and the manifest
+   records `fallback: null`, so any locale absent from `generateStaticParams` renders on demand at
+   full Worker cost. Checking "does *any* concrete route exist for this pattern" is not enough.
+   Because a locale can also vanish from *every* route — leaving nothing to compare against — the
+   guard reads the expected locale set from `src/i18n/routing.ts` rather than inferring it.
+3. **A route is prerendered but revalidating** (`compute` other than `"static"`), which is also
+   on-demand work.
+
+And the guard itself must fail when it matches nothing. An earlier version exited 0 on an empty
+manifest, which would have made it a permanent no-op the moment Next changed a manifest key — the
+same silent-zero-match failure as the `vitest --changed` bug fixed in 06f642b. It is unit-tested
+(`scripts/prerender-guard.test.ts`) precisely because its own failure mode is invisible.
+
 Mitigating factor worth recording: every remaining tool page is an interactive calculator and will
 be `"use client"`, and the probe confirmed a client page inherits static rendering from the
 layout's single `setRequestLocale` call. So in practice only server components — Home, and any
@@ -143,10 +160,17 @@ future content page — need their own call. The guard is what makes that reason
 
 ### Repo changes
 
-- Add `@opennextjs/cloudflare` and `wrangler` as devDependencies.
+- Add `@opennextjs/cloudflare` and `wrangler` as devDependencies. The adapter is build-time
+  only — nothing in `src/` or `next.config.ts` imports it at runtime.
 - Add `wrangler.jsonc` and `open-next.config.ts`.
-- `src/proxy.ts` is unchanged. Its matcher already excludes `/api`, so future API routes are
-  unaffected by locale rewriting.
+- **`src/proxy.ts` must be renamed to `src/middleware.ts`.** Next 16's `proxy` convention is
+  nodejs-runtime-only and not configurable, and the adapter hard-refuses Node middleware
+  (`process.exit(1)`, no override flag). Next's own version-16 upgrade guide directs you back to
+  `middleware.ts` to keep the edge runtime. Verified both ways: the adapter build fails on
+  `proxy.ts` and succeeds on `middleware.ts`, with the route table and locale behaviour unchanged.
+  The file's contents are untouched, and its matcher already excludes `/api`, so future API routes
+  are unaffected by locale rewriting. Cost: `next build` now prints a deprecation notice for the
+  `middleware` convention on every run. Revisit if the adapter gains Node middleware support.
 - `next.config.ts` needs no `output` change — the adapter consumes a normal Next build.
 
 Exact adapter commands, config keys, and `compatibility_flags` must be read from the current
@@ -260,6 +284,8 @@ to conflict with it:
   route.
 - A deployed preview must serve `/`, `/en`, `/fr`, and the affordability route in both locales,
   with `/` redirecting by `Accept-Language` — confirming the middleware survived the adapter.
+  Note `wrangler versions upload` requires the Worker to already exist, so the first production
+  deploy must land on `main` before PR previews can work at all.
 - Theme toggle and locale switcher must work on the deployed preview, confirming client hydration.
 
 ## Out of scope
