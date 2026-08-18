@@ -2774,22 +2774,29 @@ page that renders the transfer lines and fees.
 
 - [ ] **Step 1: Write the failing tests**
 
-```ts
+`AffordabilityPage` takes no props and is not async, and it must be wrapped in
+`JurisdictionProvider` — use the `renderPage()` helper already defined at the top of
+`page.test.tsx`. The disclosure tests at `page.test.tsx:174` show the established pattern.
+
+```tsx
 describe("Affordability page — property tax provenance", () => {
-  it("names the source behind the property tax figure", async () => {
-    render(await AffordabilityPage({ params: Promise.resolve({ locale: "en" }) }));
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("names the source behind the property tax figure", () => {
+    // The default jurisdiction is Winnipeg, whose propTax.publishedRate is sourced.
+    renderPage();
     expect(screen.getByText(/City of Winnipeg 2026 combined mill rate/)).toBeInTheDocument();
   });
 
-  it("says the figure is an estimate where the assessment ratio is assumed", async () => {
-    render(await AffordabilityPage({ params: Promise.resolve({ locale: "en" }) }));
-    expect(screen.getByText(/estimated/i)).toBeInTheDocument();
+  it("says the figure is an estimate where the assessment base is not market value", () => {
+    // Winnipeg is `portioned`, so the estimate caveat renders.
+    renderPage();
+    expect(screen.getByText(/estimates the rate against market value/i)).toBeInTheDocument();
   });
 });
 ```
-
-Follow the existing test file's rendering helper rather than the sketch above if it differs — the
-disclosure tests at `page.test.tsx:174` show the established pattern for this page.
 
 - [ ] **Step 2: Run to verify failure**
 
