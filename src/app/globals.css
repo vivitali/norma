@@ -202,3 +202,49 @@
 .ab-pulse {
   animation: ab-pulse 0.7s ease-out;
 }
+
+/*
+ * The haircut slider. Radix's Slider is not used here — the reference designs a
+ * native range input, and a native input is the smaller, more accessible control
+ * for one value on one axis. Cross-browser track and thumb rules are explicit
+ * because there is no shared pseudo-element for them.
+ */
+.norma-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+}
+.norma-range::-webkit-slider-runnable-track {
+  height: 3px;
+  background: var(--input);
+  border-radius: 1px;
+}
+.norma-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 8px;
+  margin-top: -3px;
+  border: 0;
+  border-radius: 1px;
+  background: var(--primary);
+}
+.norma-range::-moz-range-track {
+  height: 3px;
+  background: var(--input);
+  border-radius: 1px;
+}
+.norma-range::-moz-range-thumb {
+  width: 18px;
+  height: 8px;
+  border: 0;
+  border-radius: 1px;
+  background: var(--primary);
+}
+@media (min-width: 640px) {
+  .norma-range {
+    height: 22px;
+  }
+}

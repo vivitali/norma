@@ -22,6 +22,10 @@ import { JumpRail } from "@/components/jump-rail";
 import { VerdictCard } from "@/components/affordability/verdict-card";
 import { StatStrip } from "@/components/affordability/stat-strip";
 import { Checks } from "@/components/affordability/checks";
+import { GapBand } from "@/components/affordability/gap-band";
+import { InputGroups } from "@/components/affordability/input-groups";
+import { MathColumns } from "@/components/affordability/math-columns";
+import { StickyVerdict } from "@/components/affordability/sticky-verdict";
 
 /**
  * Answer first, inputs second, advanced detail reachable in place.
@@ -55,6 +59,7 @@ export default function AffordabilityPage() {
   const previous = usePreviousResult(result);
 
   const sections = visibleSections(AFFORDABILITY_SECTIONS, depth);
+  const showMath = sections.some((s) => s.id === "math");
   const openOf = (disclosureId: string) => {
     const def = AFFORDABILITY_SECTIONS.flatMap((s) => s.disclosures ?? []).find(
       (d) => d.id === disclosureId,
@@ -72,17 +77,30 @@ export default function AffordabilityPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-y border-border-hairline py-2">
-        <DepthControl
-          value={depth}
-          onChange={(d: Depth) => setDepth(d)}
-          label={tDepth("label")}
-          optionLabels={[tDepth("answer"), tDepth("why"), tDepth("math")]}
-        />
+        {/*
+          Phone puts the depth control in a fixed bottom bar (main carries the
+          matching bottom padding); from `sm` it sits inline beside the rail.
+        */}
+        <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center border-t border-border bg-card p-2 sm:static sm:z-auto sm:border-0 sm:p-0">
+          <DepthControl
+            value={depth}
+            onChange={(d: Depth) => setDepth(d)}
+            label={tDepth("label")}
+            optionLabels={[tDepth("answer"), tDepth("why"), tDepth("math")]}
+          />
+        </div>
+        {/*
+          Rendered once. The reference omits the rail on phone entirely, which
+          would leave "advanced detail reachable in place" unmet on the device
+          where scrolling costs most; here it becomes a scrollable chip row.
+        */}
         <JumpRail
           label={tDepth("jumpTo")}
           links={sections.map((s) => ({ id: s.id, label: t(s.labelKey) }))}
         />
       </div>
+
+      <StickyVerdict result={result} />
 
       <VerdictCard result={result} personalised={isPersonalised(stored)} />
       <StatStrip result={result} previous={previous} />
@@ -94,6 +112,20 @@ export default function AffordabilityPage() {
         isOpen={openOf}
         onToggle={toggle}
       />
+
+      <GapBand result={result} price={resolved.price} />
+
+      <InputGroups
+        stored={stored}
+        resolved={resolved}
+        result={result}
+        jurisdiction={jurisdiction}
+        update={update}
+        isOpen={openOf}
+        onToggle={toggle}
+      />
+
+      {showMath ? <MathColumns result={result} resolved={resolved} /> : null}
 
       <div className="text-[10.5px] text-text-faint">
         <p>{t("unverifiedFlag")}</p>

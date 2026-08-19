@@ -176,7 +176,8 @@
     "tagYours": "Your numbers",
     "cashUnanswered": "We can tell you what this costs. Tell us what you have and we can tell you whether it is enough.",
     "condoFeePrompt": "You picked a condo. Add its monthly fee and the comfort figure sharpens.",
-    "addSecondApplicantHint": "Nothing is assumed about a second income until you add one."
+    "addSecondApplicantHint": "Nothing is assumed about a second income until you add one.",
+    "elsewhereIn": "Somewhere else in"
   },
   "Depth": {
     "label": "Detail",
@@ -205,5 +206,20 @@
     "osfi": "OSFI Guideline B-20 — residential mortgage underwriting",
     "cmhc": "CMHC / SCHL — mortgage loan insurance premiums",
     "none": "No source recorded for this jurisdiction yet."
+  },
+  "Provinces": {
+    "AB": "Alberta",
+    "BC": "British Columbia",
+    "MB": "Manitoba",
+    "NB": "New Brunswick",
+    "NL": "Newfoundland and Labrador",
+    "NS": "Nova Scotia",
+    "NT": "Northwest Territories",
+    "NU": "Nunavut",
+    "ON": "Ontario",
+    "PE": "Prince Edward Island",
+    "QC": "Quebec",
+    "SK": "Saskatchewan",
+    "YT": "Yukon"
   }
 }

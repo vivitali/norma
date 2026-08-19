@@ -167,10 +167,7 @@ export function Checks({ result, stored, resolved, update, isOpen, onToggle }: C
           <Row label={t("closingCosts")} value={fmt(result.cc.total)} />
           <Row label={t("grpAtClosing")} value={`− ${fmt(result.cc.creditsAtClosing)}`} />
           <Row label={t("netCash")} value={fmt(result.cc.net)} strong />
-          <Row
-            label={t("available")}
-            value={resolved.funds === null ? "—" : fmt(resolved.funds)}
-          />
+          <Row label={t("cFunds")} value={resolved.funds === null ? "—" : fmt(resolved.funds)} />
           <Row
             label={t("monthsToClose")}
             value={result.monthsToClose === null ? "—" : String(result.monthsToClose)}
@@ -180,7 +177,7 @@ export function Checks({ result, stored, resolved, update, isOpen, onToggle }: C
             <InlineAsk prompt={t("cashUnanswered")}>
               <NumberField
                 id="funds-inline"
-                label={t("cFunds")}
+                label={t("available")}
                 value={stored.funds}
                 min={0}
                 onCommit={(funds) => update({ funds })}

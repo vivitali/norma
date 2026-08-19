@@ -176,7 +176,8 @@
     "tagYours": "Vos chiffres",
     "cashUnanswered": "Nous pouvons vous dire ce que cela coûte. Dites-nous ce dont vous disposez et nous vous dirons si cela suffit.",
     "condoFeePrompt": "Vous avez choisi un condo. Ajoutez ses frais mensuels et le chiffre de confort s’affine.",
-    "addSecondApplicantHint": "Aucun second revenu n’est présumé tant que vous n’en ajoutez pas un."
+    "addSecondApplicantHint": "Aucun second revenu n’est présumé tant que vous n’en ajoutez pas un.",
+    "elsewhereIn": "Ailleurs en"
   },
   "Depth": {
     "label": "Détail",
@@ -205,5 +206,20 @@
     "osfi": "Ligne directrice B-20 du BSIF — souscription de prêts hypothécaires résidentiels",
     "cmhc": "SCHL / CMHC — primes d’assurance prêt hypothécaire",
     "none": "Aucune source enregistrée pour ce territoire pour l’instant."
+  },
+  "Provinces": {
+    "AB": "Alberta",
+    "BC": "Colombie-Britannique",
+    "MB": "Manitoba",
+    "NB": "Nouveau-Brunswick",
+    "NL": "Terre-Neuve-et-Labrador",
+    "NS": "Nouvelle-Écosse",
+    "NT": "Territoires du Nord-Ouest",
+    "NU": "Nunavut",
+    "ON": "Ontario",
+    "PE": "Île-du-Prince-Édouard",
+    "QC": "Québec",
+    "SK": "Saskatchewan",
+    "YT": "Yukon"
   }
 }
