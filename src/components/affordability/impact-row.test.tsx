@@ -30,6 +30,18 @@ describe("ImpactRow", () => {
     expect(screen.getByText(/reduces what a lender will approve/)).toBeInTheDocument();
   });
 
+  it("claims nothing at all when nothing is approvable", () => {
+    // debtCapacity is also 0 when the ceiling is 0 -- no qualifying income at
+    // all. "Your debts cost you nothing" in pass tokens, beside a declined
+    // verdict and a $0 ceiling, is the opposite of the truth.
+    const result = render({ income1: 0, car: 400 });
+    expect(result.ceiling).toBe(0);
+    expect(result.debtCapacity).toBe(0);
+    expect(screen.queryByText(/Housing cost is your binding constraint/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No monthly debts entered/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Total debt service is usually the binding constraint/)).toBeInTheDocument();
+  });
+
   it("does not claim no debts were entered when debts simply cost nothing", () => {
     // debtCapacity is legitimately 0 whenever housing cost binds first. Reading
     // that as "no monthly debts entered" tells a user with $50 in the car field

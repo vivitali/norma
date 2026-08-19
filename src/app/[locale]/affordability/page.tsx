@@ -39,22 +39,9 @@ export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
   const tDepth = useTranslations("Depth");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
+  const [stored, update, hydrated] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
   const [depth, setDepth] = useDepth();
   const hashTarget = useHashTarget();
-
-  /**
-   * Whether an edit has come from the user this session.
-   *
-   * The delta announcement is gated on it: `usePreviousResult` sees hydration as
-   * a change like any other, so a returning user would get one unprompted polite
-   * announcement at load for a figure they had not touched.
-   */
-  const [edited, setEdited] = useState(false);
-  const handleUpdate = (patch: Parameters<typeof update>[0]) => {
-    setEdited(true);
-    update(patch);
-  };
 
   /** Explicit opens and closes, for this session only. Depth is a floor, not a state. */
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
@@ -79,7 +66,13 @@ export default function AffordabilityPage() {
     () => affordability(jurisdiction, federal, resolved),
     [jurisdiction, resolved],
   );
-  const previous = usePreviousResult(result);
+  /*
+   * Gated on hydration rather than on a form edit: an edit flag would miss the
+   * header's jurisdiction picker, which writes through its own useSharedState
+   * instance and moves every figure on the page — the largest single change in
+   * the product — without touching this form at all.
+   */
+  const previous = usePreviousResult(result, { enabled: hydrated });
 
   const sections = visibleSections(AFFORDABILITY_SECTIONS, depth);
   const showMath = sections.some((s) => s.id === "math");
@@ -126,12 +119,12 @@ export default function AffordabilityPage() {
       <StickyVerdict result={result} />
 
       <VerdictCard result={result} personalised={isPersonalised(stored)} />
-      <StatStrip result={result} previous={edited ? previous : null} />
+      <StatStrip result={result} previous={previous} />
       <Checks
         result={result}
         stored={stored}
         resolved={resolved}
-        update={handleUpdate}
+        update={update}
         isOpen={openOf}
         onToggle={toggle}
       />
@@ -143,7 +136,7 @@ export default function AffordabilityPage() {
         resolved={resolved}
         result={result}
         jurisdiction={jurisdiction}
-        update={handleUpdate}
+        update={update}
         isOpen={openOf}
         onToggle={toggle}
       />

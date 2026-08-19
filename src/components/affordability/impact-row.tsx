@@ -19,14 +19,29 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
   const t = useTranslations("Affordability");
   const fmt = useMoney();
 
-  const state = debts <= 0 ? "none" : result.debtCapacity > 0 ? "costly" : "notBinding";
+  // debtCapacity === 0 has THREE meanings, not two. Beyond "no debts" and
+  // "housing cost binds first", it is also zero when the ceiling itself is zero —
+  // no qualifying income, or a binding allowance already swallowed by the heat
+  // allowance. Claiming "your debts cost you nothing" there, in pass tokens,
+  // beside a declined verdict and a $0 ceiling, is the opposite of the truth:
+  // nothing binds because nothing is approvable. That case asserts nothing.
+  const state =
+    debts <= 0
+      ? "none"
+      : result.debtCapacity > 0
+        ? "costly"
+        : !result.tdsBinds && result.ceiling > 0
+          ? "notBinding"
+          : "noClaim";
 
   const body =
     state === "costly"
       ? { label: t("impactPre"), figure: `− ${fmt(result.debtCapacity)}`, foot: t("impactFoot") }
       : state === "notBinding"
         ? { label: t("impactNoneBinding"), figure: null, foot: t("impactNoneBindingFoot") }
-        : { label: t("impactNone"), figure: fmt(result.capacityPer100), foot: t("perHundred") };
+        : state === "noClaim"
+          ? { label: t("impactFoot"), figure: null, foot: null }
+          : { label: t("impactNone"), figure: fmt(result.capacityPer100), foot: t("perHundred") };
 
   return (
     <div
@@ -64,7 +79,7 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
           />
         </span>
       ) : null}
-      <span className="text-[10.5px] text-text-faint">{body.foot}</span>
+      {body.foot ? <span className="text-[10.5px] text-text-faint">{body.foot}</span> : null}
     </div>
   );
 }

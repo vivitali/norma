@@ -21,7 +21,7 @@ import { readStored, writeStored } from "@/lib/storage";
 export function useSharedState<T extends Record<string, unknown>>(
   allowlist: readonly (keyof T & string)[],
   defaults: T,
-): [T, (patch: Partial<T>) => void] {
+): [T, (patch: Partial<T>) => void, boolean] {
   const [state, setState] = useState<T>(defaults);
   const [ready, setReady] = useState(false);
 
@@ -43,5 +43,8 @@ export function useSharedState<T extends Record<string, unknown>>(
     setState((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  return [state, update];
+  // `ready` is returned as well as gating the persist effect: consumers that
+  // react to CHANGES in state need to know which transition was hydration and
+  // which was a real edit, and this is the only place that distinction exists.
+  return [state, update, ready];
 }
