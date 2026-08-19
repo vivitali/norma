@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Serena MCP tool metadata (local, not project config)
 .serena/
+
+# Terminal colour artifact, not project state
+.termcolor

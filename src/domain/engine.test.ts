@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { money, bracketTax, payFactor, minDown, financing, buildLines, credits, closingTotal } from "./engine";
+import {
+  affordability,
+  bracketTax,
+  buildLines,
+  closingTotal,
+  credits,
+  defaultContractRate,
+  financing,
+  minDown,
+  money,
+  payFactor,
+} from "./engine";
 import { federal } from "./federal";
 import { getJurisdiction } from "./jurisdictions";
 
@@ -273,8 +284,6 @@ describe("closingTotal", () => {
   });
 });
 
-import { affordability } from "./engine";
-
 describe("affordability", () => {
   const winnipeg = getJurisdiction("winnipeg")!;
 
@@ -321,8 +330,18 @@ describe("affordability", () => {
   });
 
   it("passes the comfort check when total monthly cost is at or below the comfort ceiling", () => {
-    const result = affordability(winnipeg, federal, { ...baseInput, price: 200000, dpPct: 20 });
-    expect(result.comfortPass).toBe(result.monthly.total <= baseInput.comfortCeiling);
+    // Asserted against a literal, not against the implementation's own
+    // expression: `comfortPass === (monthly.total <= comfortCeiling)` restated
+    // the formula and could not fail whatever the engine did.
+    const cheap = affordability(winnipeg, federal, { ...baseInput, price: 200000, dpPct: 20 });
+    expect(cheap.monthly.total).toBeLessThan(baseInput.comfortCeiling);
+    expect(cheap.comfortPass).toBe(true);
+  });
+
+  it("fails the comfort check when the total blows past the ceiling", () => {
+    const dear = affordability(winnipeg, federal, { ...baseInput, price: 1200000, dpPct: 20 });
+    expect(dear.monthly.total).toBeGreaterThan(baseInput.comfortCeiling);
+    expect(dear.comfortPass).toBe(false);
   });
 
   it("returns zero income-based figures when qualifying income is zero", () => {
@@ -351,5 +370,113 @@ describe("affordability", () => {
     const torontoResult = affordability(toronto, federal, baseInput);
     expect(torontoResult.ceiling).not.toBeCloseTo(winnipegResult.ceiling, 0);
     expect(torontoResult.cc.total).toBeGreaterThan(winnipegResult.cc.total);
+  });
+});
+
+describe("defaultContractRate", () => {
+  // contractRate is NOT an input in the reference — it is derived from the down
+  // payment against the federal insured/uninsured spread. The port dropped this
+  // and hardcoded 4.29, which left federal.rates.insured/.uninsured unread by
+  // any screen.
+  it("uses the insured rate below 20% down", () => {
+    expect(defaultContractRate(federal, 10)).toBeCloseTo(federal.rates.insured * 100, 10);
+    expect(defaultContractRate(federal, 19.99)).toBeCloseTo(federal.rates.insured * 100, 10);
+  });
+  it("uses the uninsured rate at 20% down and above", () => {
+    expect(defaultContractRate(federal, 20)).toBeCloseTo(federal.rates.uninsured * 100, 10);
+    expect(defaultContractRate(federal, 25)).toBeCloseTo(federal.rates.uninsured * 100, 10);
+  });
+});
+
+describe("affordability cash and debt-cost outputs", () => {
+  const winnipeg = getJurisdiction("winnipeg")!;
+  const base = {
+    income1: 70000,
+    income2: 50000,
+    otherIncome: 0,
+    haircut: 0,
+    debts: 300,
+    amortYears: 25,
+    comfortCeiling: 2800,
+    insuranceAnnual: 1400,
+    utilities: 200,
+    condoFee: 0,
+    contractRate: 4.29,
+    price: 450000,
+    dpPct: 10,
+    ftb: true,
+    ptype: "house" as const,
+    elsewhere: false,
+  };
+
+  it("reports cashGap as null when funds are unknown", () => {
+    // "Not told" is not "told zero": a 0 here would fabricate a shortfall equal
+    // to the entire cash requirement and drive the verdict from it.
+    const r = affordability(winnipeg, federal, { ...base, funds: null, save: null });
+    expect(r.cashGap).toBeNull();
+    expect(r.monthsToClose).toBeNull();
+  });
+
+  it("treats an omitted funds figure the same as an explicit null", () => {
+    expect(affordability(winnipeg, federal, base).cashGap).toBeNull();
+  });
+
+  it("reports cashGap as funds minus net cash at closing", () => {
+    const r = affordability(winnipeg, federal, { ...base, funds: 50000, save: 1200 });
+    expect(r.cashGap).toBeCloseTo(50000 - r.cc.net, 6);
+  });
+
+  it("reports months to close, rounded up", () => {
+    const needed = affordability(winnipeg, federal, base).cc.net;
+    const r = affordability(winnipeg, federal, { ...base, funds: needed - 2500, save: 1000 });
+    expect(r.monthsToClose).toBe(3);
+  });
+
+  it("reports zero months when the funds already cover it", () => {
+    const needed = affordability(winnipeg, federal, base).cc.net;
+    const r = affordability(winnipeg, federal, { ...base, funds: needed + 1, save: 1000 });
+    expect(r.monthsToClose).toBe(0);
+  });
+
+  it("reports months as null when nothing is being saved", () => {
+    const r = affordability(winnipeg, federal, { ...base, funds: 1000, save: 0 });
+    expect(r.monthsToClose).toBeNull();
+  });
+
+  it("prices debt as the ceiling it actually costs", () => {
+    // The most behaviour-changing number on the page: what monthly obligations
+    // remove from the lender's ceiling. Asserted against the ceiling the same
+    // household reaches with NO debt -- an independent derivation, rather than
+    // restating `debts * capacityPerDollar` back at the implementation.
+    const free = affordability(winnipeg, federal, { ...base, debts: 0 });
+    const owing = affordability(winnipeg, federal, { ...base, debts: 550 });
+    expect(owing.debtCapacity).toBeCloseTo(free.ceiling - owing.ceiling, 4);
+  });
+
+  it("prices $100 of monthly obligation the same way", () => {
+    const free = affordability(winnipeg, federal, { ...base, debts: 0 });
+    const owing = affordability(winnipeg, federal, { ...base, debts: 100 });
+    expect(free.capacityPer100).toBeCloseTo(free.ceiling - owing.ceiling, 4);
+  });
+
+  it("prices debt at zero when there is none", () => {
+    expect(affordability(winnipeg, federal, { ...base, debts: 0 }).debtCapacity).toBe(0);
+  });
+
+  it("prices debt at zero while housing cost, not debt, is the constraint", () => {
+    // A household whose GDS limit binds well before its TDS limit loses nothing
+    // to a small obligation, and the screen must not claim otherwise. The
+    // reference's `debts * capacityPerDollar` claims a five-figure loss here.
+    const gdsBound = { ...base, income1: 300000, income2: 0, debts: 50 };
+    const r = affordability(winnipeg, federal, gdsBound);
+    expect(r.tdsBinds).toBe(false);
+    expect(r.debtCapacity).toBe(0);
+  });
+
+  it("matches the marginal rate once total debt service is the constraint", () => {
+    const heavy = { ...base, debts: 2000 };
+    const r = affordability(winnipeg, federal, heavy);
+    expect(r.tdsBinds).toBe(true);
+    expect(r.capacityPer100).toBeCloseTo(100 * r.capacityPerDollar, 4);
   });
 });
