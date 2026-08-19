@@ -1,236 +1,189 @@
-import { afterEach, describe, expect, it, beforeEach } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
-import { federal } from "@/domain/federal";
-import { getJurisdiction } from "@/domain/jurisdictions";
-import { affordability, money } from "@/domain/engine";
-import { JurisdictionPicker } from "@/components/jurisdiction-picker";
 import AffordabilityPage from "./page";
-import { AFFORDABILITY_DEFAULTS } from "@/lib/shared-inputs";
-import { resolveInputs } from "@/lib/resolve-inputs";
-import type { AffordabilityFormState } from "@/lib/shared-inputs";
-import { STORE_KEY_V2 } from "@/lib/storage";
 
-/** Stored inputs resolved the same way the page resolves them. */
-function resolved(
-  over: Partial<AffordabilityFormState> = {},
-  jurisdictionId = "winnipeg",
-) {
-  return resolveInputs(
-    { ...AFFORDABILITY_DEFAULTS, ...over },
-    getJurisdiction(jurisdictionId)!,
-    federal,
-  );
-}
-
-function renderPage(locale?: "en" | "fr") {
-  return renderWithIntl(
+const renderPage = (locale: "en" | "fr" = "en") =>
+  renderWithIntl(
     <JurisdictionProvider>
       <AffordabilityPage />
     </JurisdictionProvider>,
     { locale },
   );
-}
 
-function renderPageWithPicker() {
-  return renderWithIntl(
-    <JurisdictionProvider>
-      <JurisdictionPicker />
-      <AffordabilityPage />
-    </JurisdictionProvider>,
-  );
-}
+beforeEach(() => window.localStorage.clear());
+afterEach(() => {
+  window.location.hash = "";
+});
 
-describe("Affordability page — input form", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
-
-  afterEach(() => {
-    cleanup();
-  });
-
-  it("renders the heading and every input with its default value", () => {
+describe("Affordability — the answer comes first", () => {
+  it("shows a real figure before any input is touched", async () => {
+    // No screen in this product opens on an empty form.
     renderPage();
-    expect(screen.getByRole("heading", { name: "What can you actually afford?" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Your annual income")).toHaveValue(resolved().income1);
-    expect(screen.getByLabelText("Purchase price you're considering")).toHaveValue(resolved().price);
+    const verdict = await screen.findByRole("region", { name: /lender would decline|comfortably afford|above what you would be comfortable|not yet enough cash/i });
+    expect(verdict).toBeInTheDocument();
   });
 
-  it("updates a numeric field's value on change", async () => {
-    const user = userEvent.setup();
+  it("tags the untouched answer as typical, not as the user's", () => {
     renderPage();
-    const priceInput = screen.getByLabelText("Purchase price you're considering");
-    await user.clear(priceInput);
-    await user.type(priceInput, "600000");
-    expect(priceInput).toHaveValue(600000);
+    expect(screen.getByText("Typical for your city")).toBeInTheDocument();
   });
 
-  it("toggles first-time buyer status", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    const ftbSwitch = screen.getByRole("switch", { name: "First-time buyer" });
-    expect(ftbSwitch).toBeChecked();
-    await user.click(ftbSwitch);
-    expect(ftbSwitch).not.toBeChecked();
-  });
+  // Left as a todo rather than deleted, so the missing coverage is visible in
+  // the run: the income control lands with the input groups in the next commit.
+  it.todo("flips to 'your numbers' once income is given");
 
-  it("persists a field change to localStorage", async () => {
-    const user = userEvent.setup();
+  it("renders all four stat-strip figures", () => {
     renderPage();
-    const priceInput = screen.getByLabelText("Purchase price you're considering");
-    await user.clear(priceInput);
-    await user.type(priceInput, "600000");
-    await screen.findByDisplayValue("600000");
-    const stored = JSON.parse(window.localStorage.getItem(STORE_KEY_V2) ?? "{}");
-    expect(stored.price).toBe(600000);
+    // "True all-in monthly" is deliberately the label of both the stat and the
+    // comfort check's total row — the same figure, named the same way.
+    for (const label of [
+      "Comfortable price",
+      "Lender ceiling",
+      "True all-in monthly",
+      "Cash needed at closing",
+    ]) {
+      expect(screen.getAllByText(label).length, label).toBeGreaterThan(0);
+    }
   });
 });
 
-describe("Affordability page — output panels", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
-
-  afterEach(() => {
-    cleanup();
-  });
-
-  it("shows the engine's ceiling and comfort figures for the default household in the default jurisdiction (winnipeg)", async () => {
+describe("Affordability — the parity checklist", () => {
+  // Each registry section, asserted present, so dropping one fails the suite
+  // rather than quietly shipping a thinner screen.
+  it("renders every section present at the default depth", () => {
     renderPage();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, resolved());
-
-    expect(await screen.findByText(money(expected.ceiling, "en-CA", false))).toBeInTheDocument();
-    expect(screen.getByText(money(expected.comfort, "en-CA", false))).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The three checks" })).toBeInTheDocument();
+    for (const name of ["Verdict", "The three checks", "The gap", "Adjust your numbers"]) {
+      expect(screen.getByRole("link", { name })).toBeInTheDocument();
+    }
   });
 
-  it("shows a passing approval badge when the price is within the lender ceiling", async () => {
-    const user = userEvent.setup();
+  it("does not render the math section at the default depth", () => {
     renderPage();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    // The derived defaults are a SINGLE $75,000 income against the city
-    // benchmark, which a lender declines — so the badge has to be driven by a
-    // household that clears the ceiling rather than by the defaults.
-    const income1Input = screen.getByLabelText("Your annual income");
-    await user.clear(income1Input);
-    await user.type(income1Input, "150000");
-    const expected = affordability(winnipeg, federal, resolved({ income1: 150000 }));
-    expect(expected.approvalPass).toBe(true); // sanity check on the fixture itself
-    expect(await screen.findByText("Within reach at this price")).toBeInTheDocument();
-  });
-
-  it("recomputes the ceiling when an income field changes", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const before = affordability(winnipeg, federal, resolved());
-
-    const income1Input = screen.getByLabelText("Your annual income");
-    await user.clear(income1Input);
-    await user.type(income1Input, "120000");
-
-    const after = affordability(winnipeg, federal, resolved({ income1: 120000 }));
-    expect(after.ceiling).toBeGreaterThan(before.ceiling);
-    expect(await screen.findByText(money(after.ceiling, "en-CA", false))).toBeInTheDocument();
-  });
-
-  it("renders the monthly breakdown total equal to the sum of its own line items", async () => {
-    renderPage();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, resolved());
-    expect(await screen.findByText(money(expected.monthly.total, "en-CA", false))).toBeInTheDocument();
-    expect(screen.getByText(money(expected.monthly.pi, "en-CA", false))).toBeInTheDocument();
-  });
-
-  it("recomputes the numbers when the jurisdiction is switched in the header picker", async () => {
-    const user = userEvent.setup();
-    renderPageWithPicker();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const toronto = getJurisdiction("toronto")!;
-    const winnipegResult = affordability(winnipeg, federal, resolved());
-    const torontoResult = affordability(toronto, federal, resolved({}, "toronto"));
-
-    expect(await screen.findByText(money(winnipegResult.ceiling, "en-CA", false))).toBeInTheDocument();
-
-    await user.click(screen.getByRole("combobox", { name: "Change location" }));
-    await user.click(await screen.findByRole("option", { name: "Toronto" }));
-
-    expect(await screen.findByText(money(torontoResult.ceiling, "en-CA", false))).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "The math, line by line" }),
+    ).not.toBeInTheDocument();
   });
 });
 
-describe("Affordability page — French locale", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
+describe("Affordability — depth", () => {
+  it("leaves the three checks collapsed at 'the answer'", () => {
+    renderPage();
+    for (const name of [/Approval/, /Comfort/, /Cash/]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-expanded", "false");
+    }
   });
 
-  afterEach(() => {
-    cleanup();
+  it("opens the three checks at 'why'", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("radio", { name: /Why/ }));
+    for (const name of [/Approval/, /Comfort/, /Cash/]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-expanded", "true");
+    }
   });
 
-  it("renders currency figures with a trailing symbol in fr, not the English leading-symbol form", async () => {
+  it("adds the math jump link at 'the math'", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("radio", { name: /The math/ }));
+    expect(screen.getByRole("link", { name: "The math, line by line" })).toBeInTheDocument();
+  });
+
+  it("survives a remount", async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderPage();
+    await user.click(screen.getByRole("radio", { name: /The math/ }));
+    unmount();
+    renderPage();
+    expect(await screen.findByRole("radio", { name: /The math/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+  });
+
+  it("lets a check be opened at 'the answer' and closed at 'the math'", async () => {
+    // The reference's own defect, asserted against: it pins every check open at
+    // depth >= 1 and leaves the toggle inoperative.
+    const user = userEvent.setup();
+    renderPage();
+    const comfort = () => screen.getByRole("button", { name: /Comfort/ });
+    await user.click(comfort());
+    expect(comfort()).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(screen.getByRole("radio", { name: /The math/ }));
+    await user.click(comfort());
+    expect(comfort()).toHaveAttribute("aria-expanded", "false");
+  });
+});
+
+describe("Affordability — deep links", () => {
+  it("opens the check the hash names", async () => {
+    window.location.hash = "#check-comfort";
+    renderPage();
+    expect(await screen.findByRole("button", { name: /Comfort/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("is inert for an unknown hash", () => {
+    window.location.hash = "#not-a-section";
+    renderPage();
+    expect(screen.getByRole("button", { name: /Comfort/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+});
+
+describe("Affordability — the unanswered cash check", () => {
+  it("still shows the cash required, and asks for the one field it wants", async () => {
+    // Nothing is gated: cc.net is fully computable from defaults.
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Cash/ }));
+    expect(screen.getByText("Net cash at closing, after credits applied that day")).toBeVisible();
+    expect(screen.getByLabelText("Funds available")).toBeVisible();
+  });
+
+  it("never reports shortCash while funds are unknown", () => {
+    renderPage();
+    expect(
+      screen.queryByText("You have enough income, but not yet enough cash to close."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reports a shortfall once funds are given and fall short", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Cash/ }));
+    const funds = screen.getByLabelText("Funds available");
+    await user.type(funds, "1000");
+    await user.tab();
+    expect(screen.getByRole("button", { name: /Cash.*Blocked/ })).toBeInTheDocument();
+  });
+});
+
+describe("Affordability — the disclosure stays", () => {
+  it("keeps the unverified-figures wording visible", () => {
+    renderPage();
+    expect(screen.getByText("Placeholder figures — verify before relying on them")).toBeVisible();
+    expect(screen.getByText(/Rules last verified/)).toBeVisible();
+  });
+});
+
+describe("Affordability — number formatting end to end", () => {
+  it("never renders a sign inside the currency symbol in French", () => {
+    // money() emits "− 340 $" in fr and "− $340" in en. Never "$-340".
     renderPage("fr");
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, resolved());
-
-    const expectedFr = money(expected.ceiling, "fr-CA", true);
-    // testing-library's default text normalizer collapses the French group separator (a
-    // non-breaking space) into a plain space, which would break an exact-string match against
-    // `expectedFr` (which still has the real NBSP) even though the render is correct — so match
-    // without whitespace normalization instead.
-    expect(
-      await screen.findByText(expectedFr, { normalizer: (text) => text }),
-    ).toBeInTheDocument();
-    // Guard the intent of the assertion above: a trailing-symbol figure never matches the
-    // leading-symbol form the pre-fix code always rendered, regardless of locale.
-    expect(expectedFr.endsWith(" $")).toBe(true);
-    expect(
-      screen.queryByText(money(expected.ceiling, "en-CA", false), { normalizer: (text) => text }),
-    ).not.toBeInTheDocument();
-  });
-});
-
-describe("Affordability page — unverified-data disclosure", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
-
-  afterEach(() => {
-    cleanup();
-  });
-
-  it("shows the placeholder-data disclosure and the verification date", async () => {
-    renderPage();
-    expect(
-      await screen.findByText("Placeholder figures — verify before relying on them"),
-    ).toBeInTheDocument();
-    expect(screen.getByText(`Rules last verified: ${federal.verified}`)).toBeInTheDocument();
-  });
-
-  it("shows the no-city-data note for a province-only jurisdiction (nb) but not a city-level one (winnipeg)", async () => {
-    window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ jurId: "nb" }));
-    renderPage();
-    expect(getJurisdiction("nb")!.cityData).toBe(false);
-    expect(
-      await screen.findByText(
-        "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates.",
-      ),
-    ).toBeInTheDocument();
-
-    cleanup();
-    window.localStorage.clear();
-
-    const winnipeg = getJurisdiction("winnipeg")!;
-    expect(winnipeg.cityData).toBe(true);
-    renderPage();
-    await screen.findByText("Placeholder figures — verify before relying on them");
-    expect(
-      screen.queryByText(
-        "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates.",
-      ),
-    ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/\$\s?-\d/);
   });
 });

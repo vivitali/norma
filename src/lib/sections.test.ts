@@ -76,6 +76,21 @@ describe("isDisclosureOpen", () => {
 });
 
 describe("AFFORDABILITY_SECTIONS", () => {
+  it("labels every section and disclosure with a key from the page's own namespace", async () => {
+    // labelKey is resolved with useTranslations("Affordability"); a key that
+    // only exists in another namespace renders as the raw key path.
+    const messages = (await import("../../messages/en.json")).default.Affordability as Record<
+      string,
+      string
+    >;
+    for (const section of AFFORDABILITY_SECTIONS) {
+      expect(messages[section.labelKey], section.id).toBeDefined();
+      for (const d of section.disclosures ?? []) {
+        expect(messages[d.labelKey], d.id).toBeDefined();
+      }
+    }
+  });
+
   it("has globally unique ids across sections and disclosures", () => {
     // The ids are URL hash targets and test handles; a collision silently makes
     // one of them unreachable.

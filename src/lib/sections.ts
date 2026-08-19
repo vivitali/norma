@@ -25,7 +25,10 @@ export interface SectionDef {
 }
 
 export const AFFORDABILITY_SECTIONS: readonly SectionDef[] = [
-  { id: "verdict", labelKey: "d1", minDepth: 0 },
+  // labelKey resolves inside the PAGE's namespace, so it cannot borrow the
+  // depth control's "The answer" — and "Verdict" reads better in a rail that
+  // already sits beside a control labelled "The answer".
+  { id: "verdict", labelKey: "tagComfort", minDepth: 0 },
   {
     id: "checks",
     labelKey: "ckTitle",
