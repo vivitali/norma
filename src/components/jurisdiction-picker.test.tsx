@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { JurisdictionPicker } from "./jurisdiction-picker";
+import { STORE_KEY_V2 } from "@/lib/storage";
 
 afterEach(() => cleanup());
 
@@ -39,12 +40,12 @@ describe("JurisdictionPicker", () => {
     await user.click(await screen.findByRole("combobox"));
     await user.click(await screen.findByRole("option", { name: "Toronto" }));
     await screen.findByText("Toronto");
-    const stored = JSON.parse(window.localStorage.getItem("norma.inputs.v1") ?? "{}");
+    const stored = JSON.parse(window.localStorage.getItem(STORE_KEY_V2) ?? "{}");
     expect(stored.jurId).toBe("toronto");
   });
 
   it("shows the default jurisdiction when the stored id is unknown, not a missing-message error", async () => {
-    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ jurId: "atlantis" }));
+    window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ jurId: "atlantis" }));
     renderPicker();
     expect(await screen.findByText("Winnipeg")).toBeInTheDocument();
   });

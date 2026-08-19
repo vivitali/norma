@@ -11,6 +11,7 @@ import AffordabilityPage from "./page";
 import { AFFORDABILITY_DEFAULTS } from "@/lib/shared-inputs";
 import { resolveInputs } from "@/lib/resolve-inputs";
 import type { AffordabilityFormState } from "@/lib/shared-inputs";
+import { STORE_KEY_V2 } from "@/lib/storage";
 
 /** Stored inputs resolved the same way the page resolves them. */
 function resolved(
@@ -83,7 +84,7 @@ describe("Affordability page — input form", () => {
     await user.clear(priceInput);
     await user.type(priceInput, "600000");
     await screen.findByDisplayValue("600000");
-    const stored = JSON.parse(window.localStorage.getItem("norma.inputs.v1") ?? "{}");
+    const stored = JSON.parse(window.localStorage.getItem(STORE_KEY_V2) ?? "{}");
     expect(stored.price).toBe(600000);
   });
 });
@@ -210,7 +211,7 @@ describe("Affordability page — unverified-data disclosure", () => {
   });
 
   it("shows the no-city-data note for a province-only jurisdiction (nb) but not a city-level one (winnipeg)", async () => {
-    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ jurId: "nb" }));
+    window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ jurId: "nb" }));
     renderPage();
     expect(getJurisdiction("nb")!.cityData).toBe(false);
     expect(

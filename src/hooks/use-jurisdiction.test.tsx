@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { JurisdictionProvider, useJurisdiction } from "./use-jurisdiction";
+import { STORE_KEY_V2 } from "@/lib/storage";
 
 describe("useJurisdiction", () => {
   beforeEach(() => {
@@ -36,7 +37,7 @@ describe("useJurisdiction", () => {
   });
 
   it("resolves an unknown stored id to the default jurisdiction", async () => {
-    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ jurId: "atlantis" }));
+    window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ jurId: "atlantis" }));
     const { result } = renderHook(() => useJurisdiction(), { wrapper: JurisdictionProvider });
     await waitFor(() => expect(result.current[0].id).toBe("winnipeg"));
   });
