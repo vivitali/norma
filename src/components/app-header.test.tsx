@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
-import { screen, cleanup } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { ThemeProvider } from "./theme-provider";
@@ -7,8 +7,6 @@ import { AppHeader } from "./app-header";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
-
-afterEach(() => cleanup());
 
 describe("AppHeader", () => {
   it("renders the brand link, jurisdiction picker, locale switcher, and theme toggle together", async () => {

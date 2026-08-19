@@ -60,7 +60,7 @@ export function MathColumns({
         <div className="rounded-lg border border-border bg-card p-3">
           <h3 className="micro mb-1 text-text-faint">{t("mLender")}</h3>
           <MathRow label={t("mQualInc")} value={fmt(result.qualIncome)} />
-          <MathRow label={t("mStressRate")} value={pct(result.qualRate, 2)} why={t("mStressWhy")} />
+          <MathRow label={t("mStressRate")} value={pct(result.qualRate, 2)} why={t("mStressWhy", { floor: pct(federal.stressTest.floor, 2) })} />
           <MathRow label={t("mFactor")} value={result.fq.toFixed(6)} why={t("mFactorWhy")} />
           <MathRow label={`${t("mGdsAllow")} · GDS ${pct(federal.gds)}`} value={fmt(result.gdsAllow)} />
           <MathRow label={`${t("mTdsAllow")} · TDS ${pct(federal.tds)}`} value={fmt(result.tdsAllow)} />
@@ -77,12 +77,20 @@ export function MathColumns({
         <div className="rounded-lg border border-border bg-card p-3">
           <h3 className="micro mb-1 text-primary">{t("mComfort")}</h3>
           <MathRow label={t("mStated")} value={fmt(resolved.comfortCeiling)} />
+          {/* The engine's own monthly figures, not the inputs re-divided here:
+              two code paths for one number is how two screens start disagreeing. */}
           <MathRow
             label={`${t("mLess")} · ${t("cInsurance")}`}
-            value={`− ${fmt(resolved.insuranceAnnual / 12)}`}
+            value={`− ${fmt(result.monthly.insurance)}`}
           />
-          <MathRow label={`${t("mLess")} · ${t("cUtilities")}`} value={`− ${fmt(resolved.utilities)}`} />
-          <MathRow label={`${t("mLess")} · ${t("cCondoFee")}`} value={`− ${fmt(resolved.condoFee)}`} />
+          <MathRow
+            label={`${t("mLess")} · ${t("cUtilities")}`}
+            value={`− ${fmt(result.monthly.utilities)}`}
+          />
+          <MathRow
+            label={`${t("mLess")} · ${t("cCondoFee")}`}
+            value={`− ${fmt(result.monthly.condoFee)}`}
+          />
           <MathRow label={t("mBudget")} value={fmt(result.budget)} strong />
           <MathRow
             label={`${t("mFactorContract")} · ${pct(resolved.contractRate, 2)}`}

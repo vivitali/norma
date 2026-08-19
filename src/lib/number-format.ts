@@ -20,15 +20,22 @@ export function separatorsFor(locale: string): { group: string; decimal: string 
   return { group, decimal };
 }
 
+/**
+ * The symbols a figure may legitimately carry, and nothing else. Stripping
+ * everything non-numeric instead would make the validation below unreachable:
+ * "350k" would become 350 and "12e3" would become 123 — silently wrong, rather
+ * than rejected the way "1-2" already is.
+ */
+const CURRENCY = /[$€£¥%]/g;
+
 export function parseLocaleNumber(raw: string, locale: string): number | null {
   const { group, decimal } = separatorsFor(locale);
-  let s = raw.replace(MINUS, "-").replace(SPACES, "");
+  let s = raw.replace(MINUS, "-").replace(SPACES, "").replace(CURRENCY, "");
   if (s === "") return null;
   // Drop the group separator, then normalise the decimal mark. Order matters: in
   // fr-CA the group separator is whitespace and is already gone.
   s = s.split(group).join("");
   if (decimal !== ".") s = s.split(decimal).join(".");
-  s = s.replace(/[^\d.-]/g, "");
   if (!/^-?(\d+(\.\d*)?|\.\d+)$/.test(s)) return null;
   const n = Number(s);
   return Number.isFinite(n) ? n : null;

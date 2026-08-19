@@ -66,7 +66,7 @@ describe("Affordability — the parity checklist", () => {
   it("renders every section present at the default depth", () => {
     renderPage();
     expect(screen.getByRole("heading", { name: "The three checks" })).toBeInTheDocument();
-    for (const name of ["Verdict", "The three checks", "The gap", "Adjust your numbers"]) {
+    for (const name of ["The answer", "The three checks", "The gap", "Adjust your numbers"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
   });
@@ -131,13 +131,15 @@ describe("Affordability — depth", () => {
 });
 
 describe("Affordability — deep links", () => {
-  it("opens the check the hash names", async () => {
+  it("opens the check the hash names and moves focus to its heading", async () => {
     window.location.hash = "#check-comfort";
     renderPage();
     expect(await screen.findByRole("button", { name: /Comfort/ })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
+    // Scrolling without moving focus leaves a keyboard user where they started.
+    expect(document.getElementById("check-comfort")).toHaveFocus();
     expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute(
       "aria-expanded",
       "false",

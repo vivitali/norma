@@ -14,13 +14,13 @@ describe("Provenance", () => {
         <Provenance kind="estimate" />
       </>,
     );
-    expect(screen.getByRole("link", { name: "rule" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "estimate" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /From a rule in the tables/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /local or household estimate/ })).toBeInTheDocument();
   });
 
   it("links to the sources page, at the anchor that explains the mark", () => {
     renderWithIntl(<Provenance kind="rule" />);
-    expect(screen.getByRole("link", { name: "rule" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /From a rule in the tables/ })).toHaveAttribute(
       "href",
       expect.stringContaining("/sources#rule"),
     );

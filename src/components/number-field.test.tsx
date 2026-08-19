@@ -66,13 +66,43 @@ describe("NumberField", () => {
     expect(onCommit).not.toHaveBeenCalledWith(0);
   });
 
-  it("renders the derived placeholder when the value is null", () => {
+  it("shows the derived default as a placeholder, not as a value", () => {
     // "Absent means derived": an untouched field still shows a real, correct
-    // number -- the city benchmark -- rather than an empty box.
+    // number -- the city benchmark -- but as a hint, so it cannot be mistaken
+    // for something the user typed.
     renderWithIntl(
       <NumberField id="price" label="Price" value={null} placeholder={400000} onCommit={vi.fn()} />,
     );
-    expect(screen.getByLabelText("Price")).toHaveValue("400,000");
+    const input = screen.getByLabelText("Price");
+    expect(input).toHaveValue("");
+    expect(input).toHaveAttribute("placeholder", "400,000");
+  });
+
+  it("commits NOTHING when a derived field is focused and left untouched", () => {
+    // The bug this guards: focus materialised the placeholder into the draft and
+    // blur committed it, so tabbing through a form silently converted every
+    // derived default into an explicit user edit -- pinning price to one city's
+    // benchmark and the rate across the 20% boundary.
+    const onCommit = vi.fn();
+    renderWithIntl(
+      <NumberField id="price" label="Price" value={null} placeholder={400000} onCommit={onCommit} />,
+    );
+    const input = screen.getByLabelText("Price");
+    input.focus();
+    input.blur();
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it("still commits null when an EDITED field is blanked", () => {
+    const onCommit = vi.fn();
+    renderWithIntl(
+      <NumberField id="price" label="Price" value={512000} placeholder={400000} onCommit={onCommit} />,
+    );
+    const input = screen.getByLabelText("Price") as HTMLInputElement;
+    input.focus();
+    input.value = "";
+    input.blur();
+    expect(onCommit).toHaveBeenLastCalledWith(null);
   });
 
   it("clamps to min on commit, so negative income is impossible", async () => {

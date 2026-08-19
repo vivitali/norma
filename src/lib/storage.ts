@@ -61,16 +61,33 @@ export function migrateV1(v1: Record<string, unknown>): Record<string, unknown> 
   return out;
 }
 
-function parse(key: string): Record<string, unknown> | null {
+/**
+ * "absent" and "corrupt" are different facts and must not collapse into one.
+ * Treating a corrupt v2 blob as absent re-ran the v1 migration over it, which
+ * would silently revert a user who had been editing under v2 for months back to
+ * their pre-migration v1 snapshot — permanently, since v1 is never deleted.
+ */
+type Slot =
+  | { state: "absent" }
+  | { state: "corrupt" }
+  | { state: "present"; value: Record<string, unknown> };
+
+function parse(key: string): Slot {
+  let raw: string | null;
   try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
-    return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : null;
+    raw = window.localStorage.getItem(key);
   } catch {
-    return null;
+    return { state: "absent" };
+  }
+  if (!raw) return { state: "absent" };
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return { state: "corrupt" };
+    }
+    return { state: "present", value: parsed as Record<string, unknown> };
+  } catch {
+    return { state: "corrupt" };
   }
 }
 
@@ -78,11 +95,20 @@ export function readStored<T extends Record<string, unknown>>(
   allowlist: readonly (keyof T & string)[],
 ): Partial<T> {
   if (typeof window === "undefined") return {};
-  let blob = parse(STORE_KEY_V2);
-  if (!blob) {
+  const v2 = parse(STORE_KEY_V2);
+  // A corrupt v2 yields defaults for this session. It is NOT re-migrated from
+  // v1: that would overwrite months of v2 edits with a stale snapshot.
+  if (v2.state === "corrupt") return {};
+
+  let blob: Record<string, unknown>;
+  if (v2.state === "present") {
+    blob = v2.value;
+  } else {
     const v1 = parse(STORE_KEY_V1);
-    if (!v1) return {};
-    blob = migrateV1(v1);
+    if (v1.state !== "present") return {};
+    // Coerced before it is written, so junk keys and out-of-range values from v1
+    // do not land in v2 and complicate the next migration.
+    blob = coerceStored(migrateV1(v1.value)) as Record<string, unknown>;
     // v1 is left in place: harmless, and it keeps the migration re-runnable
     // while it is new.
     try {
@@ -105,7 +131,10 @@ export function writeStored<T extends Record<string, unknown>>(
 ): void {
   if (typeof window === "undefined") return;
   try {
-    const existing = parse(STORE_KEY_V2) ?? {};
+    const slot = parse(STORE_KEY_V2);
+    // A corrupt blob is replaced, not merged into: merging would preserve
+    // whatever made it unreadable.
+    const existing = slot.state === "present" ? slot.value : {};
     for (const key of allowlist) existing[key] = state[key];
     window.localStorage.setItem(STORE_KEY_V2, JSON.stringify(existing));
   } catch {

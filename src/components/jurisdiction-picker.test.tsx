@@ -1,12 +1,10 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { screen, cleanup } from "@testing-library/react";
+import { describe, expect, it, beforeEach } from "vitest";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { JurisdictionPicker } from "./jurisdiction-picker";
 import { STORE_KEY_V2 } from "@/lib/storage";
-
-afterEach(() => cleanup());
 
 function renderPicker() {
   return renderWithIntl(

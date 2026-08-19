@@ -107,10 +107,14 @@ Rent vs Buy · Scenarios
 
 **Open issues:**
 - [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists in `design-reference/hbt-data.js`)
-- ~~[#2](https://github.com/vivitali/norma/issues/2)~~ — **closed.** All three seams landed,
-  including the rebate-indexing fix: `credits()` looks its target up by key in both `gov` and
-  `j.transfer` (`engine.ts:182`, `engine.ts:200`). So `elsewhere` is safe to expose — it now has a
-  control on `/affordability` — and **Closing Costs is not blocked.**
+- ~~[#2](https://github.com/vivitali/norma/issues/2)~~ — **closed, before this branch, not by it.**
+  `credits()` already looked its rebate target up by key in both `gov` and `j.transfer`
+  (`engine.ts:182`, `engine.ts:200`), so the phantom-rebate defect was gone: `elsewhere` is safe to
+  expose, and it now has a control on `/affordability`. **Closing Costs is not blocked.** The
+  registry seam is `src/lib/shared-inputs.ts`. The third seam — `useJurisdiction()` returning a
+  resolved `Jurisdiction` rather than a raw id — was judged satisfied rather than fixed, on the
+  grounds that `jurisdiction.id` *is* the raw id (parity inventory §6.1); `src/hooks/use-jurisdiction.tsx`
+  is unchanged. If a later page needs the id without resolving, that is the seam to revisit.
 - [#3](https://github.com/vivitali/norma/issues/3) — deferred polish and test-coverage gaps. The
   "now-unused insured/uninsured rate spread" question is **resolved**: it was never unused in the
   design, it *is* the rate model, and `defaultContractRate()` restores it. `federal.contractRate`

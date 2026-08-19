@@ -57,6 +57,13 @@ describe("parseLocaleNumber", () => {
     expect(parseLocaleNumber(".", "en-CA")).toBeNull();
     expect(parseLocaleNumber("abc", "en-CA")).toBeNull();
   });
+  it("rejects a shorthand rather than silently truncating it", () => {
+    // "350k" must not become 350, and "12e3" must not become 123. Rejecting is
+    // the only honest answer -- the field then keeps what it had.
+    for (const raw of ["350k", "1.5M", "12e3", "350 000 CAD"]) {
+      expect(parseLocaleNumber(raw, "en-CA"), raw).toBeNull();
+    }
+  });
 });
 
 describe("formatLocaleNumber", () => {

@@ -443,17 +443,40 @@ describe("affordability cash and debt-cost outputs", () => {
     expect(r.monthsToClose).toBeNull();
   });
 
-  it("prices debt in purchase-price terms", () => {
-    // The most behaviour-changing number on the page: what one dollar of monthly
-    // obligation removes from the lender's ceiling.
-    const r = affordability(winnipeg, federal, { ...base, debts: 550 });
-    expect(r.debtCapacity).toBeCloseTo(550 * r.capacityPerDollar, 6);
-    expect(r.capacityPer100).toBeCloseTo(100 * r.capacityPerDollar, 6);
+  it("prices debt as the ceiling it actually costs", () => {
+    // The most behaviour-changing number on the page: what monthly obligations
+    // remove from the lender's ceiling. Asserted against the ceiling the same
+    // household reaches with NO debt -- an independent derivation, rather than
+    // restating `debts * capacityPerDollar` back at the implementation.
+    const free = affordability(winnipeg, federal, { ...base, debts: 0 });
+    const owing = affordability(winnipeg, federal, { ...base, debts: 550 });
+    expect(owing.debtCapacity).toBeCloseTo(free.ceiling - owing.ceiling, 4);
   });
 
-  it("prices debt at zero when there is none, while still pricing $100", () => {
-    const r = affordability(winnipeg, federal, { ...base, debts: 0 });
+  it("prices $100 of monthly obligation the same way", () => {
+    const free = affordability(winnipeg, federal, { ...base, debts: 0 });
+    const owing = affordability(winnipeg, federal, { ...base, debts: 100 });
+    expect(free.capacityPer100).toBeCloseTo(free.ceiling - owing.ceiling, 4);
+  });
+
+  it("prices debt at zero when there is none", () => {
+    expect(affordability(winnipeg, federal, { ...base, debts: 0 }).debtCapacity).toBe(0);
+  });
+
+  it("prices debt at zero while housing cost, not debt, is the constraint", () => {
+    // A household whose GDS limit binds well before its TDS limit loses nothing
+    // to a small obligation, and the screen must not claim otherwise. The
+    // reference's `debts * capacityPerDollar` claims a five-figure loss here.
+    const gdsBound = { ...base, income1: 300000, income2: 0, debts: 50 };
+    const r = affordability(winnipeg, federal, gdsBound);
+    expect(r.tdsBinds).toBe(false);
     expect(r.debtCapacity).toBe(0);
-    expect(r.capacityPer100).toBeGreaterThan(0);
+  });
+
+  it("matches the marginal rate once total debt service is the constraint", () => {
+    const heavy = { ...base, debts: 2000 };
+    const r = affordability(winnipeg, federal, heavy);
+    expect(r.tdsBinds).toBe(true);
+    expect(r.capacityPer100).toBeCloseTo(100 * r.capacityPerDollar, 4);
   });
 });

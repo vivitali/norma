@@ -76,8 +76,21 @@ export function StatStrip({
 
   const downShare = splitWidth(result.cc.fin.down, result.cc.cash);
 
+  /**
+   * One region for the whole strip, not one per chip: four chips each announcing
+   * themselves would produce a volley on a single keystroke. Only the figure that
+   * anchors the answer is announced.
+   */
+  const announcement =
+    previous && Math.round(previous.comfort) !== Math.round(result.comfort)
+      ? `${t("stComfort")} ${fmt(result.comfort)}`
+      : "";
+
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div aria-live="polite" className="sr-only">
+        {announcement}
+      </div>
       <Stat
         emphasis
         provenance="estimate"

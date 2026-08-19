@@ -65,7 +65,7 @@
     "unverifiedFlag": "Placeholder figures — verify before relying on them",
     "lastVerified": "Rules last verified",
     "noCityData": "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates.",
-    "aDeep": "Deep dive 1 of 5",
+    "aDeep": "Deep dive",
     "aTitle": "Affordability",
     "aSub": "What a lender would approve, and what you could comfortably carry. They are rarely the same number.",
     "stComfort": "Comfortable price",
@@ -131,7 +131,7 @@
     "mComfort": "What you could comfortably carry",
     "mQualInc": "Qualifying income, after haircut",
     "mStressRate": "Stress test qualifying rate",
-    "mStressWhy": "The greater of 5.25% or your contract rate plus two points. You must carry the payment at this rate, not the one you are offered.",
+    "mStressWhy": "The greater of {floor} or your contract rate plus two points. You must carry the payment at this rate, not the one you are offered.",
     "mFactor": "Monthly payment per $1 of mortgage",
     "mFactorWhy": "Canadian mortgages compound semi-annually, not monthly.",
     "mGdsAllow": "Maximum monthly housing cost",
@@ -177,7 +177,8 @@
     "cashUnanswered": "We can tell you what this costs. Tell us what you have and we can tell you whether it is enough.",
     "condoFeePrompt": "You picked a condo. Add its monthly fee and the comfort figure sharpens.",
     "addSecondApplicantHint": "Nothing is assumed about a second income until you add one.",
-    "elsewhereIn": "Somewhere else in"
+    "elsewhereIn": "Somewhere else in",
+    "secVerdict": "The answer"
   },
   "Depth": {
     "label": "Detail",
@@ -203,9 +204,10 @@
     "federalHeading": "Federal",
     "provincialHeading": "Provincial and municipal",
     "marketHeading": "Market data",
-    "osfi": "OSFI Guideline B-20 — residential mortgage underwriting",
-    "cmhc": "CMHC / SCHL — mortgage loan insurance premiums",
-    "none": "No source recorded for this jurisdiction yet."
+    "osfi": "OSFI Guideline B-20 — the rule shapes here follow it. The figures are not sourced from it.",
+    "cmhc": "CMHC / SCHL mortgage loan insurance — the premium bands follow its structure. The rates here are not sourced from it.",
+    "none": "No source recorded for this jurisdiction yet.",
+    "provenanceNote": "Naming a body means this site follows the shape of its rules. It does not mean any figure was taken from, or checked against, that body's published tables."
   },
   "Provinces": {
     "AB": "Alberta",

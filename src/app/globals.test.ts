@@ -53,7 +53,10 @@ describe("palette", () => {
 });
 
 describe("contrast", () => {
-  const SURFACES = ["--background", "--card", "--muted"] as const;
+  // --accent-surface is included because the stat strip's emphasis card and the
+  // checks' inline asks both render faint text on it, at ~4.58:1 -- inside the
+  // threshold this guard exists to defend, and previously unguarded.
+  const SURFACES = ["--background", "--card", "--muted", "--accent-surface"] as const;
 
   // The reference's --tx3 fails AA at the 9.5-11.5px sizes it is used at:
   // 2.86:1 on --s2 in light. Corrected to #676A6F / #898D93. If anyone "restores

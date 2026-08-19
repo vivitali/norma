@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 export interface SegmentedOption<T> {
@@ -25,6 +25,10 @@ export function SegmentedGroup<T extends string | number>({
   options: readonly SegmentedOption<T>[];
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  // Not `${label}-label`: label is a translated sentence, so the id contained
+  // whitespace (invalid) and aria-labelledby -- an ID *list* -- tokenised it into
+  // several ids that do not exist, leaving the group with no accessible name.
+  const labelId = useId();
 
   const move = (to: number) => {
     if (to < 0 || to >= options.length) return;
@@ -34,12 +38,12 @@ export function SegmentedGroup<T extends string | number>({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[11.5px] font-semibold text-muted-foreground" id={`${label}-label`}>
+      <span className="text-[11.5px] font-semibold text-muted-foreground" id={labelId}>
         {label}
       </span>
       <div
         role="radiogroup"
-        aria-labelledby={`${label}-label`}
+        aria-labelledby={labelId}
         className="inline-flex rounded-md border border-border bg-muted p-0.5"
       >
         {options.map((option, i) => (

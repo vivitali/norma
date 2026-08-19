@@ -1,9 +1,15 @@
 import type { AffordabilityResult } from "@/domain/engine";
 
 /**
- * Every field affordability() returns, classified. The screen used to render 6
- * of 22; this manifest is what stops that recurring silently. Adding a field to
- * the engine and leaving it unclassified fails the typecheck, naming the key.
+ * Every field affordability() returns, classified as shown or deliberately not.
+ *
+ * This is a CLASSIFICATION manifest, not a coverage guard: it does not inspect
+ * the DOM, so it cannot tell you a component stopped rendering something. What
+ * it does is force a decision — adding a field to the engine and leaving it
+ * unclassified fails the typecheck naming the key, and deleting a field fails
+ * the runtime test. The screen shipped rendering 6 of 22 results precisely
+ * because nothing ever forced that decision. Section presence is asserted
+ * separately, in page.test.tsx's parity checklist.
  */
 export const RENDERED = [
   "qualIncome", "qualRate", "fq", "fc", "gdsAllow", "tdsAllow", "binding", "tdsBinds",

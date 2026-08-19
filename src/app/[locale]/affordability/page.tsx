@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { affordability } from "@/domain/engine";
 import { federal } from "@/domain/federal";
@@ -47,6 +47,16 @@ export default function AffordabilityPage() {
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
   const toggle = (id: string, currentlyOpen: boolean) =>
     setOverrides((prev) => ({ ...prev, [id]: !currentlyOpen }));
+
+  /**
+   * Scrolling without moving focus leaves a keyboard user exactly where they
+   * started, so arriving at /affordability#check-comfort moves focus to that
+   * heading — not only the browser's scroll position.
+   */
+  useEffect(() => {
+    if (!hashTarget) return;
+    document.getElementById(hashTarget)?.focus({ preventScroll: true });
+  }, [hashTarget]);
 
   const resolved = useMemo(
     () => resolveInputs(stored, jurisdiction, federal),

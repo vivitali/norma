@@ -76,6 +76,7 @@ export function SourcesContent() {
 
       <Section id="federal" heading={t("federalHeading")}>
         {list([t("osfi"), t("cmhc")])}
+        <p className="max-w-prose text-[10.5px] text-text-faint">{t("provenanceNote")}</p>
         <p className="figure text-[10.5px] text-text-faint">
           {tAff("lastVerified")} {federal.verified}
         </p>

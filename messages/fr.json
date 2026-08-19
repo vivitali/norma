@@ -65,7 +65,7 @@
     "unverifiedFlag": "Valeurs provisoires — à vérifier avant de vous y fier",
     "lastVerified": "Règles vérifiées le",
     "noCityData": "Aucun chiffre municipal vérifié ici pour l'instant. Les règles provinciales sont exactes; les coûts locaux utilisent des moyennes provinciales et sont des estimations.",
-    "aDeep": "Analyse détaillée 1 de 5",
+    "aDeep": "Analyse détaillée",
     "aTitle": "Capacité d’achat",
     "aSub": "Ce qu’un prêteur approuverait, et ce que vous pourriez porter confortablement. Rarement le même chiffre.",
     "stComfort": "Prix confortable",
@@ -131,7 +131,7 @@
     "mComfort": "Ce que vous pourriez porter confortablement",
     "mQualInc": "Revenu admissible, après décote",
     "mStressRate": "Taux admissible du test de résistance",
-    "mStressWhy": "Le plus élevé de 5,25 % ou de votre taux contractuel plus deux points. Vous devez porter le paiement à ce taux, pas à celui qu’on vous offre.",
+    "mStressWhy": "Le plus élevé de {floor} ou de votre taux contractuel plus deux points. Vous devez porter le paiement à ce taux, pas à celui qu’on vous offre.",
     "mFactor": "Paiement mensuel par 1 $ de prêt",
     "mFactorWhy": "Les prêts canadiens sont composés semestriellement, non mensuellement.",
     "mGdsAllow": "Coût mensuel de logement maximal",
@@ -177,7 +177,8 @@
     "cashUnanswered": "Nous pouvons vous dire ce que cela coûte. Dites-nous ce dont vous disposez et nous vous dirons si cela suffit.",
     "condoFeePrompt": "Vous avez choisi un condo. Ajoutez ses frais mensuels et le chiffre de confort s’affine.",
     "addSecondApplicantHint": "Aucun second revenu n’est présumé tant que vous n’en ajoutez pas un.",
-    "elsewhereIn": "Ailleurs en"
+    "elsewhereIn": "Ailleurs en",
+    "secVerdict": "La réponse"
   },
   "Depth": {
     "label": "Détail",
@@ -203,9 +204,10 @@
     "federalHeading": "Fédéral",
     "provincialHeading": "Provincial et municipal",
     "marketHeading": "Données de marché",
-    "osfi": "Ligne directrice B-20 du BSIF — souscription de prêts hypothécaires résidentiels",
-    "cmhc": "SCHL / CMHC — primes d’assurance prêt hypothécaire",
-    "none": "Aucune source enregistrée pour ce territoire pour l’instant."
+    "osfi": "Ligne directrice B-20 du BSIF — la forme des règles la suit. Les chiffres n’en proviennent pas.",
+    "cmhc": "Assurance prêt hypothécaire SCHL / CMHC — les bandes de prime en suivent la structure. Les taux n’en proviennent pas.",
+    "none": "Aucune source enregistrée pour ce territoire pour l’instant.",
+    "provenanceNote": "Nommer un organisme signifie que ce site suit la forme de ses règles. Cela ne signifie pas qu’un chiffre en a été tiré ni vérifié auprès de lui."
   },
   "Provinces": {
     "AB": "Alberta",

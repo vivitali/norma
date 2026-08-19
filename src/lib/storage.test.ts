@@ -120,6 +120,27 @@ describe("readStored", () => {
     expect(readStored(AFFORDABILITY_KEYS)).toEqual({});
   });
 
+  it("does NOT resurrect v1 when v2 is corrupt", () => {
+    // v1 is never deleted, so treating a corrupt v2 as absent would silently
+    // revert a user who has been editing under v2 for months to their
+    // pre-migration snapshot -- and then write it back over v2, permanently.
+    window.localStorage.setItem(STORE_KEY_V1, JSON.stringify({ income1: 11111 }));
+    window.localStorage.setItem(STORE_KEY_V2, "{not json");
+    expect(readStored(AFFORDABILITY_KEYS)).toEqual({});
+    expect(window.localStorage.getItem(STORE_KEY_V2)).toBe("{not json");
+  });
+
+  it("coerces the migrated blob before writing it, so junk does not land in v2", () => {
+    window.localStorage.setItem(
+      STORE_KEY_V1,
+      JSON.stringify({ debts: 300, notAKey: "junk", dpPct: 900 }),
+    );
+    readStored(AFFORDABILITY_KEYS);
+    const blob = JSON.parse(window.localStorage.getItem(STORE_KEY_V2)!);
+    expect(blob.notAKey).toBeUndefined();
+    expect(blob.dpPct).toBe(100);
+  });
+
   it("only returns allowlisted keys", () => {
     window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ income1: 5, jurId: "toronto" }));
     expect(readStored(["income1"] as const)).toEqual({ income1: 5 });

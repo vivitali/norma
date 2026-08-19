@@ -49,22 +49,36 @@ export function NumberField({
 }: NumberFieldProps) {
   const locale = useLocale();
   const intlLocale = INTL_LOCALES[locale] ?? "en-CA";
-  const shown = value ?? placeholder ?? null;
   /** Non-null only while the field is being edited. */
   const [draft, setDraft] = useState<string | null>(null);
   const suffixId = useId();
 
+  /**
+   * A derived value is shown as a PLACEHOLDER, never as the field's value.
+   *
+   * Rendering it as the value meant that focusing a field and tabbing straight
+   * out committed the derived figure as an explicit user edit — which pinned
+   * `price` to one city's benchmark, pinned `contractRate` across the 20%
+   * boundary, and flipped the verdict badge to "your numbers" with no input at
+   * all. "Absent means derived" only holds if an untouched field is genuinely
+   * empty.
+   */
   const display =
-    draft !== null ? draft : shown === null ? "" : formatLocaleNumber(shown, intlLocale, dp);
+    draft !== null ? draft : value === null ? "" : formatLocaleNumber(value, intlLocale, dp);
+  const hint =
+    placeholder === undefined ? undefined : formatLocaleNumber(placeholder, intlLocale, dp);
 
   const commit = (raw: string) => {
     setDraft(null);
     const parsed = parseLocaleNumber(raw, intlLocale);
     if (parsed === null) {
       // An empty box means "not told" and returns the field to its derived
-      // default. A partial entry ("-", ".") means the user is not finished —
-      // neither of those is a 0, and neither may become one.
-      onCommit(raw.trim() === "" ? null : value);
+      // default — but only if it was not already null, so tabbing through an
+      // untouched form writes nothing. A partial entry ("-", ".") means the user
+      // is not finished; neither of those is a 0, and neither may become one.
+      if (raw.trim() === "") {
+        if (value !== null) onCommit(null);
+      }
       return;
     }
     let next = parsed;
@@ -83,12 +97,13 @@ export function NumberField({
           id={id}
           type="text"
           inputMode="decimal"
-          className={cn("figure text-right font-medium", value === null && "text-muted-foreground")}
+          className="figure text-right font-medium"
           value={display}
+          placeholder={hint}
           aria-describedby={
             [describedBy, suffix ? suffixId : null].filter(Boolean).join(" ") || undefined
           }
-          onFocus={() => setDraft(shown === null ? "" : String(shown))}
+          onFocus={() => setDraft(value === null ? "" : String(value))}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={(e) => commit(e.target.value)}
           onKeyDown={(e) => {
