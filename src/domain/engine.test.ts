@@ -330,8 +330,18 @@ describe("affordability", () => {
   });
 
   it("passes the comfort check when total monthly cost is at or below the comfort ceiling", () => {
-    const result = affordability(winnipeg, federal, { ...baseInput, price: 200000, dpPct: 20 });
-    expect(result.comfortPass).toBe(result.monthly.total <= baseInput.comfortCeiling);
+    // Asserted against a literal, not against the implementation's own
+    // expression: `comfortPass === (monthly.total <= comfortCeiling)` restated
+    // the formula and could not fail whatever the engine did.
+    const cheap = affordability(winnipeg, federal, { ...baseInput, price: 200000, dpPct: 20 });
+    expect(cheap.monthly.total).toBeLessThan(baseInput.comfortCeiling);
+    expect(cheap.comfortPass).toBe(true);
+  });
+
+  it("fails the comfort check when the total blows past the ceiling", () => {
+    const dear = affordability(winnipeg, federal, { ...baseInput, price: 1200000, dpPct: 20 });
+    expect(dear.monthly.total).toBeGreaterThan(baseInput.comfortCeiling);
+    expect(dear.comfortPass).toBe(false);
   });
 
   it("returns zero income-based figures when qualifying income is zero", () => {

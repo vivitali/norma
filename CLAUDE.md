@@ -38,6 +38,13 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 - User-facing strings go in `messages/en.json` / `messages/fr.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy.
 - shadcn/ui components: `npx shadcn@latest add <component>` (this project's shadcn CLI needs explicit `-b radix -p nova` if it re-prompts).
 - Branches: `claude/<ticket-or-slug>`; commits: conventional commits; never push to `main`.
+- Persisted user input lives in one localStorage blob under `norma.inputs.v2`, behind
+  `src/lib/storage.ts` (schema-checked on read, with a v1 migration) and the `useSharedState`
+  allowlist. Add keys to `src/lib/shared-inputs.ts`; never add a second mechanism.
+- Derivable inputs store `null` when untouched and resolve at read time through
+  `resolveInputs()` — no `touched` flags, no re-seed effect on jurisdiction change. `funds`, `save`
+  and `income2` are *unknowns*: `null` means there is nothing honest to assume, and the UI asks for
+  them in place rather than inventing a value.
 - Tests accompany every behavior change; `scripts/check` must pass before review.
 
 ## Workflow
@@ -72,11 +79,25 @@ prerendered pages as free static assets, but bills dynamic routes as Worker invo
 jurisdictions, calculation engine), the reusable `AppHeader` chrome, and two pages: Home and
 `/affordability`.
 
+**The interaction-model rebuild is complete** — branch `claude/interaction-model`. It ported the
+reference visual system app-wide (palette, four semantic state triples, IBM Plex, 1/2/3px radii),
+added the section registry / depth control / disclosure / jump rail / hash targeting, moved storage
+to `norma.inputs.v2` with a coerce step and a v1 migration, replaced hardcoded defaults with
+`resolveInputs()`, rebuilt `/affordability` answer-first, and added `/sources` with per-figure
+provenance marks. **Next up is phase 1.5: `pathnames` with French slugs, and the nav shell** — until
+it lands, `/sources` has no French slug and no link in the header, and the provenance marks are its
+only entry point.
+
 **Before starting the next milestone, read in this order:**
-1. `docs/superpowers/specs/2026-08-17-phase1-affordability-design.md` — the spec, incl. its
-   Scalability section (the constraint that later pages must be additive, not rewrites)
-2. `docs/superpowers/plans/2026-08-17-phase1-affordability-plan.md` — how Phase 1 was built
-3. Open issues below
+1. `docs/superpowers/specs/2026-08-18-interaction-model-design.md` — the current interaction model,
+   incl. §14, which defines phases 1.5 through 4+
+2. `docs/superpowers/plans/2026-08-18-interaction-model-plan.md` — how it was built, incl. the seven
+   places the plan challenges its own specs
+3. `docs/superpowers/specs/2026-08-18-visual-system-port.md` — the design system, with the two
+   corrections (`--tx3` contrast, the 16px control floor) that `src/app/globals.test.ts` guards
+4. `docs/superpowers/specs/2026-08-17-phase1-affordability-design.md` — the older spec, still the
+   authority on the Scalability constraint that later pages must be additive, not rewrites
+5. Open issues below
 
 **Remaining pages**, each its own spec → plan → implementation cycle, all built on the existing
 `src/domain/` engine (the source prototype in `design-reference/` already has working
@@ -86,13 +107,14 @@ Rent vs Buy · Scenarios
 
 **Open issues:**
 - [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists in `design-reference/hbt-data.js`)
-- [#2](https://github.com/vivitali/norma/issues/2) — **three architecture seams to fix before Phase 2.** One is a latent
-  rebate-indexing bug in `credits()` that produces a phantom rebate once the `elsewhere` toggle is
-  exposed — **this blocks Closing Costs specifically.** The other two (shared-input registry out of
-  the route module; `useJurisdiction()` resolving a `Jurisdiction` rather than a raw id) get more
-  expensive with every page added.
-- [#3](https://github.com/vivitali/norma/issues/3) — deferred polish, test-coverage gaps, and a product question about the
-  now-unused insured/uninsured rate spread
+- ~~[#2](https://github.com/vivitali/norma/issues/2)~~ — **closed.** All three seams landed,
+  including the rebate-indexing fix: `credits()` looks its target up by key in both `gov` and
+  `j.transfer` (`engine.ts:182`, `engine.ts:200`). So `elsewhere` is safe to expose — it now has a
+  control on `/affordability` — and **Closing Costs is not blocked.**
+- [#3](https://github.com/vivitali/norma/issues/3) — deferred polish and test-coverage gaps. The
+  "now-unused insured/uninsured rate spread" question is **resolved**: it was never unused in the
+  design, it *is* the rate model, and `defaultContractRate()` restores it. `federal.contractRate`
+  is the field that is now unread, left in place rather than churned.
 
 **Known limitation, load-bearing:** every jurisdiction figure in `src/domain/` is an *unverified
 placeholder* carried over from the prototype — not sourced from 2026 government data. The UI
