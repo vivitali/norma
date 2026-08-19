@@ -1,29 +1,30 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
-import { screen, cleanup } from "@testing-library/react";
-import { renderWithIntl } from "@/test/render-with-intl";
-import Home from "./page";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { setRequestLocale } from "next-intl/server";
+import HomePage from "./page";
 
+vi.mock("next-intl/server", () => ({ setRequestLocale: vi.fn() }));
+
+// The page renders HomeContent, which pulls in next-intl's navigation Link; that
+// module does not resolve under the test environment.
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+  Link: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+/**
+ * The page renders nothing itself — its whole job is marking the request locale so
+ * the route can be prerendered. That call is invisible when it goes missing: the
+ * page still renders correctly, it just becomes a billed Worker invocation. See
+ * docs/superpowers/specs/2026-08-17-hosting-cicd-design.md.
+ */
 describe("Home page", () => {
-  afterEach(() => cleanup());
+  beforeEach(() => vi.clearAllMocks());
 
-  it("renders the heading", () => {
-    renderWithIntl(<Home />);
-    expect(screen.getByRole("heading", { name: "What can you actually afford?" })).toBeInTheDocument();
-  });
+  it("marks the request locale so the route is prerendered", async () => {
+    await HomePage({
+      params: Promise.resolve({ locale: "fr" }),
+      searchParams: Promise.resolve({}),
+    });
 
-  it("links its primary CTA to the affordability page", () => {
-    renderWithIntl(<Home />);
-    expect(screen.getByRole("link", { name: "See what you can afford" })).toHaveAttribute(
-      "href",
-      "/affordability",
-    );
+    expect(setRequestLocale).toHaveBeenCalledWith("fr");
   });
 });

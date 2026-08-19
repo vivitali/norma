@@ -19,11 +19,22 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
   when the post-edit hook fires — degrading the gate to lint + typecheck)
 - `scripts/test`  — `vitest run` (full suite, no lint or typecheck)
 - `scripts/build` — `next build`
-- `scripts/ship`  — not configured yet; deploy target undecided (Vercel is the default fit for Next.js — confirm before wiring)
+- `scripts/ship`  — `opennextjs-cloudflare build && deploy` to Cloudflare Workers.
+  `scripts/ship --preview` uploads a preview version instead. The only host-aware script.
+- `scripts/verify-prerender` — `scripts/build` + `scripts/assert-prerendered.mjs`. Deliberately
+  separate from `scripts/check`: `next build` takes a per-project lock and `scripts/check` runs
+  from a post-edit hook, so a build inside it fails on overlapping runs.
 
 ## Conventions
 
-- App Router pages/layouts live under `src/app/[locale]/`; every route is locale-prefixed via `src/proxy.ts` (Next 16 renamed `middleware.ts` → `proxy.ts` — don't recreate a `middleware.ts` file).
+- App Router pages/layouts live under `src/app/[locale]/`; every route is locale-prefixed via
+  **`src/middleware.ts`** — deliberately *not* `src/proxy.ts`, despite Next 16 renaming
+  `middleware.ts` → `proxy.ts`. Per Next's own version-16 upgrade guide: "The `edge` runtime is
+  **NOT** supported in `proxy`. The `proxy` runtime is `nodejs`, and it cannot be configured. If you
+  want to continue using the `edge` runtime, keep using `middleware`." `@opennextjs/cloudflare`
+  hard-refuses a Node-runtime proxy (`process.exit(1)`, no flag), so `proxy.ts` cannot be deployed
+  to our host at all. Don't "fix" this back to `proxy.ts` — it breaks `scripts/ship`. Revisit when
+  the adapter supports Node middleware.
 - User-facing strings go in `messages/en.json` / `messages/fr.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy.
 - shadcn/ui components: `npx shadcn@latest add <component>` (this project's shadcn CLI needs explicit `-b radix -p nova` if it re-prompts).
 - Branches: `claude/<ticket-or-slug>`; commits: conventional commits; never push to `main`.
@@ -35,7 +46,24 @@ Implement → invoke `reviewer` subagent on the diff → fix → repeat until ap
 
 ## Deployment
 
-Not yet configured. No CI reviewer workflow installed yet either — add `.github/workflows/claude-review.yml` when ready (needs `ANTHROPIC_API_KEY` secret or the GitHub Claude app).
+Cloudflare Workers via `@opennextjs/cloudflare`. Deploys run from CI on push to `main`
+(i.e. after a PR merges) — never from this machine, unless you deliberately run
+`scripts/ship`. PRs get a preview URL from `scripts/ship --preview`.
+
+Repository secrets required: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`,
+`ANTHROPIC_API_KEY`.
+
+The preview deploy and the Claude review job are both gated to branches on this repo. GitHub
+withholds secrets from fork pull requests by design, so on a fork those jobs are skipped rather
+than failing on a blank key — meaning **outside contributions get no preview URL and no automated
+review**, and need a human to look. `wrangler versions upload` also requires the Worker to exist,
+so the first production deploy must land on `main` before any preview can work.
+
+**Every page route must stay prerendered.** `scripts/verify-prerender` fails if any page route is
+server-rendered on demand, and CI runs it on every PR. This is not a style rule: Cloudflare serves
+prerendered pages as free static assets, but bills dynamic routes as Worker invocations under a
+10ms CPU cap. The usual cause of a regression is a server component missing
+`setRequestLocale(locale)`. See `docs/superpowers/specs/2026-08-17-hosting-cicd-design.md`.
 
 ## Where the project is (read this first)
 
