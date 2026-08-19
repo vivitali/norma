@@ -5,6 +5,7 @@ import type { AffordabilityResult } from "@/domain/engine";
 import { splitWidth } from "@/lib/scale";
 import { useMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Provenance, type ProvenanceKind } from "@/components/provenance";
 
 function Stat({
   label,
@@ -12,6 +13,7 @@ function Stat({
   note,
   delta,
   emphasis,
+  provenance,
   children,
 }: {
   label: string;
@@ -19,6 +21,7 @@ function Stat({
   note?: string;
   delta?: string | null;
   emphasis?: boolean;
+  provenance?: ProvenanceKind;
   children?: React.ReactNode;
 }) {
   return (
@@ -28,7 +31,10 @@ function Stat({
         emphasis ? "border-accent-border bg-accent-surface" : "border-border bg-card",
       )}
     >
-      <span className="micro text-text-faint">{label}</span>
+      <span className="micro text-text-faint">
+        {label}
+        {provenance ? <Provenance kind={provenance} /> : null}
+      </span>
       <span className="flex items-baseline gap-1.5">
         <span className={cn("figure font-semibold", emphasis ? "text-[24px]" : "text-[19px]")}>
           {figure}
@@ -74,18 +80,21 @@ export function StatStrip({
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <Stat
         emphasis
+        provenance="estimate"
         label={t("stComfort")}
         figure={fmt(result.comfort)}
         note={t("stComfortNote")}
         delta={delta(result.comfort, previous?.comfort)}
       />
       <Stat
+        provenance="rule"
         label={t("stCeiling")}
         figure={fmt(result.ceiling)}
         note={t("stCeilingNote")}
         delta={delta(result.ceiling, previous?.ceiling)}
       />
       <Stat
+        provenance="estimate"
         label={t("stMonthly")}
         figure={fmt(result.monthly.total)}
         note={monthlyVsCeiling}

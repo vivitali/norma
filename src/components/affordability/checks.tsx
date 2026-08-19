@@ -16,12 +16,30 @@ import type { AffordabilityFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
 import { DisclosureSection } from "@/components/disclosure-section";
 import { NumberField } from "@/components/number-field";
+import { Provenance, type ProvenanceKind } from "@/components/provenance";
 
-function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+/**
+ * `provenance` is set only where the classification is unambiguous. A figure that
+ * genuinely mixes both — net cash at closing combines rule-driven taxes with
+ * estimated professional fees — carries no mark rather than a misleading one; its
+ * components are marked instead.
+ */
+function Row({
+  label,
+  value,
+  strong,
+  provenance,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  provenance?: ProvenanceKind;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-0.5 text-[11.5px]">
       <span className={strong ? "font-semibold text-foreground" : "text-muted-foreground"}>
         {label}
+        {provenance ? <Provenance kind={provenance} /> : null}
       </span>
       <span className={`figure ${strong ? "font-semibold" : ""}`}>{value}</span>
     </div>
@@ -112,9 +130,9 @@ export function Checks({ result, stored, resolved, update, isOpen, onToggle }: C
         fmt(result.ceiling),
         <>
           <Row label={t("mQualInc")} value={fmt(result.qualIncome)} />
-          <Row label={t("mStressRate")} value={pct(result.qualRate, 2)} />
-          <Row label={t("mGdsAllow")} value={fmt(result.gdsAllow)} />
-          <Row label={t("mTdsAllow")} value={fmt(result.tdsAllow)} />
+          <Row label={t("mStressRate")} value={pct(result.qualRate, 2)} provenance="rule" />
+          <Row label={t("mGdsAllow")} value={fmt(result.gdsAllow)} provenance="rule" />
+          <Row label={t("mTdsAllow")} value={fmt(result.tdsAllow)} provenance="rule" />
           <Row
             label={t("mBinding")}
             value={`${fmt(result.binding)} · ${result.tdsBinds ? "TDS" : "GDS"}`}
@@ -134,11 +152,11 @@ export function Checks({ result, stored, resolved, update, isOpen, onToggle }: C
           {/* The monthly breakdown that used to be a standalone card: same
               figures, in the place that explains them. */}
           <Row label={t("mPi")} value={fmt(result.monthly.pi)} />
-          <Row label={t("mPropTax")} value={fmt(result.monthly.propTax)} />
-          <Row label={t("cInsurance")} value={fmt(result.monthly.insurance)} />
-          <Row label={t("cUtilities")} value={fmt(result.monthly.utilities)} />
+          <Row label={t("mPropTax")} value={fmt(result.monthly.propTax)} provenance="estimate" />
+          <Row label={t("cInsurance")} value={fmt(result.monthly.insurance)} provenance="estimate" />
+          <Row label={t("cUtilities")} value={fmt(result.monthly.utilities)} provenance="estimate" />
           <Row label={t("cCondoFee")} value={fmt(result.monthly.condoFee)} />
-          <Row label={t("mMaint")} value={fmt(result.monthly.maintenance)} />
+          <Row label={t("mMaint")} value={fmt(result.monthly.maintenance)} provenance="estimate" />
           <Row label={t("mTotal")} value={fmt(result.monthly.total)} strong />
           <Row label={t("mStated")} value={fmt(resolved.comfortCeiling)} strong />
           {resolved.ptype === "condo" && stored.condoFee === null ? (
@@ -164,8 +182,8 @@ export function Checks({ result, stored, resolved, update, isOpen, onToggle }: C
         cashSummary,
         <>
           <Row label={t("downPaymentRow")} value={fmt(result.cc.fin.down)} />
-          <Row label={t("closingCosts")} value={fmt(result.cc.total)} />
-          <Row label={t("grpAtClosing")} value={`− ${fmt(result.cc.creditsAtClosing)}`} />
+          <Row label={t("closingCosts")} value={fmt(result.cc.total)} provenance="estimate" />
+          <Row label={t("grpAtClosing")} value={`− ${fmt(result.cc.creditsAtClosing)}`} provenance="rule" />
           <Row label={t("netCash")} value={fmt(result.cc.net)} strong />
           <Row label={t("cFunds")} value={resolved.funds === null ? "—" : fmt(resolved.funds)} />
           <Row

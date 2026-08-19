@@ -5,19 +5,8 @@ import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { ThemeProvider } from "./theme-provider";
 import { AppHeader } from "./app-header";
 
-vi.mock("next/navigation", () => ({
-  useParams: () => ({ locale: "en" }),
-}));
-
-vi.mock("@/i18n/navigation", () => ({
-  usePathname: () => "/",
-  useRouter: () => ({ replace: vi.fn() }),
-  Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
-}));
+vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
+vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
 afterEach(() => cleanup());
 

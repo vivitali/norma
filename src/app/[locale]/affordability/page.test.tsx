@@ -1,9 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import AffordabilityPage from "./page";
+
+// The page now contains provenance links, which pull in next-intl's navigation.
+vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
+vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
 const renderPage = (locale: "en" | "fr" = "en") =>
   renderWithIntl(
