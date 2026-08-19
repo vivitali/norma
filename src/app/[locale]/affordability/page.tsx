@@ -12,6 +12,7 @@ import {
   AFFORDABILITY_DEFAULTS,
   type AffordabilityFormState,
 } from "@/lib/shared-inputs";
+import { resolveInputs } from "@/lib/resolve-inputs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -31,12 +32,16 @@ export default function AffordabilityPage() {
   const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
   const fmt = useMoney();
   const [jurisdiction] = useJurisdiction();
-  const result = affordability(jurisdiction, federal, form);
+  // Bridge only: this page is rebuilt on the section registry in a later commit.
+  // Rendering the RESOLVED value rather than the raw stored one keeps the screen
+  // honest in the meantime — an untouched field shows its derived default, not 0.
+  const resolved = resolveInputs(form, jurisdiction, federal);
+  const result = affordability(jurisdiction, federal, resolved);
 
   const numberField = (key: NumericKey) => ({
     id: key,
     type: "number" as const,
-    value: form[key],
+    value: resolved[key] ?? 0,
     onChange: (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.valueAsNumber;
       updateForm({ [key]: Number.isNaN(value) ? 0 : value });
@@ -64,10 +69,6 @@ export default function AffordabilityPage() {
           <Input {...numberField("otherIncome")} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="debts">{t("debts")}</Label>
-          <Input {...numberField("debts")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
           <Label htmlFor="price">{t("price")}</Label>
           <Input {...numberField("price")} />
         </div>
@@ -78,10 +79,6 @@ export default function AffordabilityPage() {
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="amortYears">{t("amortYears")}</Label>
           <Input {...numberField("amortYears")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="contractRate">{t("contractRate")}</Label>
-          <Input {...numberField("contractRate")} step="0.01" />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="comfortCeiling">{t("comfortCeiling")}</Label>

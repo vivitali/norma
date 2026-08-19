@@ -9,6 +9,20 @@ import { affordability, money } from "@/domain/engine";
 import { JurisdictionPicker } from "@/components/jurisdiction-picker";
 import AffordabilityPage from "./page";
 import { AFFORDABILITY_DEFAULTS } from "@/lib/shared-inputs";
+import { resolveInputs } from "@/lib/resolve-inputs";
+import type { AffordabilityFormState } from "@/lib/shared-inputs";
+
+/** Stored inputs resolved the same way the page resolves them. */
+function resolved(
+  over: Partial<AffordabilityFormState> = {},
+  jurisdictionId = "winnipeg",
+) {
+  return resolveInputs(
+    { ...AFFORDABILITY_DEFAULTS, ...over },
+    getJurisdiction(jurisdictionId)!,
+    federal,
+  );
+}
 
 function renderPage(locale?: "en" | "fr") {
   return renderWithIntl(
@@ -40,8 +54,8 @@ describe("Affordability page — input form", () => {
   it("renders the heading and every input with its default value", () => {
     renderPage();
     expect(screen.getByRole("heading", { name: "What can you actually afford?" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Your annual income")).toHaveValue(70000);
-    expect(screen.getByLabelText("Purchase price you're considering")).toHaveValue(450000);
+    expect(screen.getByLabelText("Your annual income")).toHaveValue(resolved().income1);
+    expect(screen.getByLabelText("Purchase price you're considering")).toHaveValue(resolved().price);
   });
 
   it("updates a numeric field's value on change", async () => {
@@ -86,16 +100,23 @@ describe("Affordability page — output panels", () => {
   it("shows the engine's ceiling and comfort figures for the default household in the default jurisdiction (winnipeg)", async () => {
     renderPage();
     const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
+    const expected = affordability(winnipeg, federal, resolved());
 
     expect(await screen.findByText(money(expected.ceiling, "en-CA", false))).toBeInTheDocument();
     expect(screen.getByText(money(expected.comfort, "en-CA", false))).toBeInTheDocument();
   });
 
   it("shows a passing approval badge when the price is within the lender ceiling", async () => {
+    const user = userEvent.setup();
     renderPage();
     const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
+    // The derived defaults are a SINGLE $75,000 income against the city
+    // benchmark, which a lender declines — so the badge has to be driven by a
+    // household that clears the ceiling rather than by the defaults.
+    const income1Input = screen.getByLabelText("Your annual income");
+    await user.clear(income1Input);
+    await user.type(income1Input, "150000");
+    const expected = affordability(winnipeg, federal, resolved({ income1: 150000 }));
     expect(expected.approvalPass).toBe(true); // sanity check on the fixture itself
     expect(await screen.findByText("Within reach at this price")).toBeInTheDocument();
   });
@@ -104,13 +125,13 @@ describe("Affordability page — output panels", () => {
     const user = userEvent.setup();
     renderPage();
     const winnipeg = getJurisdiction("winnipeg")!;
-    const before = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
+    const before = affordability(winnipeg, federal, resolved());
 
     const income1Input = screen.getByLabelText("Your annual income");
     await user.clear(income1Input);
     await user.type(income1Input, "120000");
 
-    const after = affordability(winnipeg, federal, { ...AFFORDABILITY_DEFAULTS, income1: 120000 });
+    const after = affordability(winnipeg, federal, resolved({ income1: 120000 }));
     expect(after.ceiling).toBeGreaterThan(before.ceiling);
     expect(await screen.findByText(money(after.ceiling, "en-CA", false))).toBeInTheDocument();
   });
@@ -118,7 +139,7 @@ describe("Affordability page — output panels", () => {
   it("renders the monthly breakdown total equal to the sum of its own line items", async () => {
     renderPage();
     const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
+    const expected = affordability(winnipeg, federal, resolved());
     expect(await screen.findByText(money(expected.monthly.total, "en-CA", false))).toBeInTheDocument();
     expect(screen.getByText(money(expected.monthly.pi, "en-CA", false))).toBeInTheDocument();
   });
@@ -128,8 +149,8 @@ describe("Affordability page — output panels", () => {
     renderPageWithPicker();
     const winnipeg = getJurisdiction("winnipeg")!;
     const toronto = getJurisdiction("toronto")!;
-    const winnipegResult = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
-    const torontoResult = affordability(toronto, federal, AFFORDABILITY_DEFAULTS);
+    const winnipegResult = affordability(winnipeg, federal, resolved());
+    const torontoResult = affordability(toronto, federal, resolved({}, "toronto"));
 
     expect(await screen.findByText(money(winnipegResult.ceiling, "en-CA", false))).toBeInTheDocument();
 
@@ -152,7 +173,7 @@ describe("Affordability page — French locale", () => {
   it("renders currency figures with a trailing symbol in fr, not the English leading-symbol form", async () => {
     renderPage("fr");
     const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
+    const expected = affordability(winnipeg, federal, resolved());
 
     const expectedFr = money(expected.ceiling, "fr-CA", true);
     // testing-library's default text normalizer collapses the French group separator (a
