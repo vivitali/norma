@@ -66,7 +66,7 @@ describe("Affordability — the parity checklist", () => {
   it("renders every section present at the default depth", () => {
     renderPage();
     expect(screen.getByRole("heading", { name: "The three checks" })).toBeInTheDocument();
-    for (const name of ["The answer", "The three checks", "The gap", "Adjust your numbers"]) {
+    for (const name of ["Verdict", "The three checks", "The gap", "Adjust your numbers"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
   });
@@ -306,5 +306,25 @@ describe("Affordability — the math", () => {
     expect(screen.queryByText(/standard heating allowance/)).not.toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: /The math/ }));
     expect(screen.getByText(/standard heating allowance/)).toBeInTheDocument();
+  });
+});
+
+describe("Affordability — the change announcement", () => {
+  it("says nothing on load, when nothing has been asked for", () => {
+    // usePreviousResult sees hydration as a change like any other, so an
+    // ungated live region greets a returning user with an announcement.
+    renderPage();
+    const live = document.querySelector('[aria-live="polite"]');
+    expect(live).toBeInTheDocument();
+    expect(live).toHaveTextContent("");
+  });
+
+  it("announces the comfortable price once the user changes something", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const ceiling = screen.getByLabelText("Monthly all-in you would be relaxed about");
+    await user.type(ceiling, "4200");
+    await user.tab();
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(/Comfortable price/);
   });
 });

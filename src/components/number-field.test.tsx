@@ -78,7 +78,7 @@ describe("NumberField", () => {
     expect(input).toHaveAttribute("placeholder", "400,000");
   });
 
-  it("commits NOTHING when a derived field is focused and left untouched", () => {
+  it("commits NOTHING when a derived field is focused and left untouched", async () => {
     // The bug this guards: focus materialised the placeholder into the draft and
     // blur committed it, so tabbing through a form silently converted every
     // derived default into an explicit user edit -- pinning price to one city's
@@ -87,21 +87,20 @@ describe("NumberField", () => {
     renderWithIntl(
       <NumberField id="price" label="Price" value={null} placeholder={400000} onCommit={onCommit} />,
     );
-    const input = screen.getByLabelText("Price");
-    input.focus();
-    input.blur();
+    const user = userEvent.setup();
+    await user.click(screen.getByLabelText("Price"));
+    await user.tab();
     expect(onCommit).not.toHaveBeenCalled();
   });
 
-  it("still commits null when an EDITED field is blanked", () => {
+  it("still commits null when an EDITED field is blanked", async () => {
     const onCommit = vi.fn();
     renderWithIntl(
       <NumberField id="price" label="Price" value={512000} placeholder={400000} onCommit={onCommit} />,
     );
-    const input = screen.getByLabelText("Price") as HTMLInputElement;
-    input.focus();
-    input.value = "";
-    input.blur();
+    const user = userEvent.setup();
+    await user.clear(screen.getByLabelText("Price"));
+    await user.tab();
     expect(onCommit).toHaveBeenLastCalledWith(null);
   });
 

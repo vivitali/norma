@@ -178,7 +178,9 @@
     "condoFeePrompt": "You picked a condo. Add its monthly fee and the comfort figure sharpens.",
     "addSecondApplicantHint": "Nothing is assumed about a second income until you add one.",
     "elsewhereIn": "Somewhere else in",
-    "secVerdict": "The answer"
+    "secVerdict": "Verdict",
+    "impactNoneBinding": "Your debts cost you nothing at this price. Housing cost is your binding constraint, not your other debts.",
+    "impactNoneBindingFoot": "That changes the moment total debt service becomes the limit."
   },
   "Depth": {
     "label": "Detail",

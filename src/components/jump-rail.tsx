@@ -20,6 +20,8 @@ export function JumpRail({ links, label }: { links: readonly JumpLink[]; label: 
           onClick={() => {
             // Let the browser do the scroll and the history entry; only take
             // over focus, which it does not move for a same-document hash.
+            // Kept here rather than left to a page-level hashchange effect so
+            // the rail works on any page, and so focus lands synchronously.
             const target = document.getElementById(link.id);
             if (target instanceof HTMLElement) target.focus({ preventScroll: true });
           }}

@@ -43,15 +43,28 @@ export default function AffordabilityPage() {
   const [depth, setDepth] = useDepth();
   const hashTarget = useHashTarget();
 
+  /**
+   * Whether an edit has come from the user this session.
+   *
+   * The delta announcement is gated on it: `usePreviousResult` sees hydration as
+   * a change like any other, so a returning user would get one unprompted polite
+   * announcement at load for a figure they had not touched.
+   */
+  const [edited, setEdited] = useState(false);
+  const handleUpdate = (patch: Parameters<typeof update>[0]) => {
+    setEdited(true);
+    update(patch);
+  };
+
   /** Explicit opens and closes, for this session only. Depth is a floor, not a state. */
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
   const toggle = (id: string, currentlyOpen: boolean) =>
     setOverrides((prev) => ({ ...prev, [id]: !currentlyOpen }));
 
   /**
-   * Scrolling without moving focus leaves a keyboard user exactly where they
-   * started, so arriving at /affordability#check-comfort moves focus to that
-   * heading — not only the browser's scroll position.
+   * Focus for an ARRIVAL: someone opening /affordability#check-comfort from a
+   * shared link, where there is no click for JumpRail to hook. JumpRail handles
+   * its own clicks synchronously; this covers the case it cannot see.
    */
   useEffect(() => {
     if (!hashTarget) return;
@@ -113,12 +126,12 @@ export default function AffordabilityPage() {
       <StickyVerdict result={result} />
 
       <VerdictCard result={result} personalised={isPersonalised(stored)} />
-      <StatStrip result={result} previous={previous} />
+      <StatStrip result={result} previous={edited ? previous : null} />
       <Checks
         result={result}
         stored={stored}
         resolved={resolved}
-        update={update}
+        update={handleUpdate}
         isOpen={openOf}
         onToggle={toggle}
       />
@@ -130,7 +143,7 @@ export default function AffordabilityPage() {
         resolved={resolved}
         result={result}
         jurisdiction={jurisdiction}
-        update={update}
+        update={handleUpdate}
         isOpen={openOf}
         onToggle={toggle}
       />

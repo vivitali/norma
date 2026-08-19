@@ -184,7 +184,7 @@ export function InputGroups({
             min={0}
             onCommit={(otherDebt) => update({ otherDebt })}
           />
-          <ImpactRow result={result} />
+          <ImpactRow result={result} debts={resolved.debts} />
         </Group>
 
         <Group legend={t("cPurchase")}>

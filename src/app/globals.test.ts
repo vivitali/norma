@@ -67,9 +67,13 @@ describe("contrast", () => {
         expect(contrastRatio(hex(tokens, "--text-faint"), hex(tokens, surface))).toBeGreaterThanOrEqual(4.5);
       });
     }
-    it(`${theme} --muted-foreground on --card passes AA`, () => {
-      expect(contrastRatio(hex(tokens, "--muted-foreground"), hex(tokens, "--card"))).toBeGreaterThanOrEqual(4.5);
-    });
+    for (const surface of SURFACES) {
+      it(`${theme} --muted-foreground on ${surface} passes AA`, () => {
+        expect(
+          contrastRatio(hex(tokens, "--muted-foreground"), hex(tokens, surface)),
+        ).toBeGreaterThanOrEqual(4.5);
+      });
+    }
     for (const state of ["pass", "caution", "blocked", "band"] as const) {
       it(`${theme} --${state} on --${state}-bg passes AA`, () => {
         expect(contrastRatio(hex(tokens, `--${state}`), hex(tokens, `--${state}-bg`))).toBeGreaterThanOrEqual(4.5);

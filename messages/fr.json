@@ -178,7 +178,9 @@
     "condoFeePrompt": "Vous avez choisi un condo. Ajoutez ses frais mensuels et le chiffre de confort s’affine.",
     "addSecondApplicantHint": "Aucun second revenu n’est présumé tant que vous n’en ajoutez pas un.",
     "elsewhereIn": "Ailleurs en",
-    "secVerdict": "La réponse"
+    "secVerdict": "Verdict",
+    "impactNoneBinding": "Vos dettes ne vous coûtent rien à ce prix. C’est le coût du logement qui limite, pas vos autres dettes.",
+    "impactNoneBindingFoot": "Cela change dès que le service total de la dette devient la limite."
   },
   "Depth": {
     "label": "Détail",

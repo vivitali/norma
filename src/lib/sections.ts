@@ -26,7 +26,10 @@ export interface SectionDef {
 
 export const AFFORDABILITY_SECTIONS: readonly SectionDef[] = [
   // Its own key, not the pass-state chip's `tagComfort`: one string doing two
-  // jobs means the rail renames itself whenever the verdict copy changes.
+  // jobs means the rail renames itself whenever the verdict copy changes. Its
+  // value is deliberately NOT the depth control's "The answer" — the two render
+  // inches apart in the same row, and two adjacent controls with one name is
+  // worse than either problem it would solve.
   { id: "verdict", labelKey: "secVerdict", minDepth: 0 },
   {
     id: "checks",
