@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { money, bracketTax, payFactor, minDown, financing, buildLines, credits, closingTotal } from "./engine";
+import {
+  affordability,
+  bracketTax,
+  buildLines,
+  closingTotal,
+  credits,
+  defaultContractRate,
+  financing,
+  minDown,
+  money,
+  payFactor,
+} from "./engine";
 import { federal } from "./federal";
 import { getJurisdiction } from "./jurisdictions";
 
@@ -273,8 +284,6 @@ describe("closingTotal", () => {
   });
 });
 
-import { affordability } from "./engine";
-
 describe("affordability", () => {
   const winnipeg = getJurisdiction("winnipeg")!;
 
@@ -351,5 +360,90 @@ describe("affordability", () => {
     const torontoResult = affordability(toronto, federal, baseInput);
     expect(torontoResult.ceiling).not.toBeCloseTo(winnipegResult.ceiling, 0);
     expect(torontoResult.cc.total).toBeGreaterThan(winnipegResult.cc.total);
+  });
+});
+
+describe("defaultContractRate", () => {
+  // contractRate is NOT an input in the reference — it is derived from the down
+  // payment against the federal insured/uninsured spread. The port dropped this
+  // and hardcoded 4.29, which left federal.rates.insured/.uninsured unread by
+  // any screen.
+  it("uses the insured rate below 20% down", () => {
+    expect(defaultContractRate(federal, 10)).toBeCloseTo(federal.rates.insured * 100, 10);
+    expect(defaultContractRate(federal, 19.99)).toBeCloseTo(federal.rates.insured * 100, 10);
+  });
+  it("uses the uninsured rate at 20% down and above", () => {
+    expect(defaultContractRate(federal, 20)).toBeCloseTo(federal.rates.uninsured * 100, 10);
+    expect(defaultContractRate(federal, 25)).toBeCloseTo(federal.rates.uninsured * 100, 10);
+  });
+});
+
+describe("affordability cash and debt-cost outputs", () => {
+  const winnipeg = getJurisdiction("winnipeg")!;
+  const base = {
+    income1: 70000,
+    income2: 50000,
+    otherIncome: 0,
+    haircut: 0,
+    debts: 300,
+    amortYears: 25,
+    comfortCeiling: 2800,
+    insuranceAnnual: 1400,
+    utilities: 200,
+    condoFee: 0,
+    contractRate: 4.29,
+    price: 450000,
+    dpPct: 10,
+    ftb: true,
+    ptype: "house" as const,
+    elsewhere: false,
+  };
+
+  it("reports cashGap as null when funds are unknown", () => {
+    // "Not told" is not "told zero": a 0 here would fabricate a shortfall equal
+    // to the entire cash requirement and drive the verdict from it.
+    const r = affordability(winnipeg, federal, { ...base, funds: null, save: null });
+    expect(r.cashGap).toBeNull();
+    expect(r.monthsToClose).toBeNull();
+  });
+
+  it("treats an omitted funds figure the same as an explicit null", () => {
+    expect(affordability(winnipeg, federal, base).cashGap).toBeNull();
+  });
+
+  it("reports cashGap as funds minus net cash at closing", () => {
+    const r = affordability(winnipeg, federal, { ...base, funds: 50000, save: 1200 });
+    expect(r.cashGap).toBeCloseTo(50000 - r.cc.net, 6);
+  });
+
+  it("reports months to close, rounded up", () => {
+    const needed = affordability(winnipeg, federal, base).cc.net;
+    const r = affordability(winnipeg, federal, { ...base, funds: needed - 2500, save: 1000 });
+    expect(r.monthsToClose).toBe(3);
+  });
+
+  it("reports zero months when the funds already cover it", () => {
+    const needed = affordability(winnipeg, federal, base).cc.net;
+    const r = affordability(winnipeg, federal, { ...base, funds: needed + 1, save: 1000 });
+    expect(r.monthsToClose).toBe(0);
+  });
+
+  it("reports months as null when nothing is being saved", () => {
+    const r = affordability(winnipeg, federal, { ...base, funds: 1000, save: 0 });
+    expect(r.monthsToClose).toBeNull();
+  });
+
+  it("prices debt in purchase-price terms", () => {
+    // The most behaviour-changing number on the page: what one dollar of monthly
+    // obligation removes from the lender's ceiling.
+    const r = affordability(winnipeg, federal, { ...base, debts: 550 });
+    expect(r.debtCapacity).toBeCloseTo(550 * r.capacityPerDollar, 6);
+    expect(r.capacityPer100).toBeCloseTo(100 * r.capacityPerDollar, 6);
+  });
+
+  it("prices debt at zero when there is none, while still pricing $100", () => {
+    const r = affordability(winnipeg, federal, { ...base, debts: 0 });
+    expect(r.debtCapacity).toBe(0);
+    expect(r.capacityPer100).toBeGreaterThan(0);
   });
 });

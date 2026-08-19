@@ -273,6 +273,22 @@ export interface AffordabilityInput {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  /** Funds available at closing. null = not told; there is nothing honest to assume. */
+  funds?: number | null;
+  /** Monthly saving toward the purchase. null = not told. */
+  save?: number | null;
+}
+
+/**
+ * The contract rate a borrower would actually be offered, from the down payment.
+ * Insured mortgages price below uninsured ones because the lender's risk is
+ * covered. Derived rather than entered: the reference computes it at
+ * Affordability.dc.html:768 and again at Home.dc.html:444, and hardcoding it
+ * left federal.rates.insured/.uninsured unread by any screen. Returned as a
+ * percentage, which is what AffordabilityInput.contractRate takes.
+ */
+export function defaultContractRate(F: FederalRules, dpPct: number): number {
+  return (dpPct < 20 ? F.rates.insured : F.rates.uninsured) * 100;
 }
 
 /**
@@ -338,6 +354,15 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   // Marginal cost of debt: what one dollar of monthly obligation removes from the ceiling.
   const capacityPerDollar = 1 / denomLender;
 
+  // Cash at closing against what the buyer actually has. Both null-safe: a
+  // missing figure must stay missing all the way to the screen, so the cash
+  // check can render `unanswered` rather than a fabricated shortfall.
+  const funds = o.funds ?? null;
+  const save = o.save ?? null;
+  const cashGap = funds === null ? null : funds - cc.net;
+  const monthsToClose =
+    cashGap === null || save === null || save <= 0 ? null : Math.max(0, Math.ceil(-cashGap / save));
+
   return {
     gross,
     qualIncome,
@@ -356,6 +381,10 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
     gdsAtTarget,
     tdsAtTarget,
     capacityPerDollar,
+    debtCapacity: o.debts * capacityPerDollar,
+    capacityPer100: 100 * capacityPerDollar,
+    cashGap,
+    monthsToClose,
     impliedMortgage: ceiling * 0.8,
     comfortDown: comfort * 0.2,
     comfortPI: comfort * 0.8 * fc,
