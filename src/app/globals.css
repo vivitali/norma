@@ -5,126 +5,200 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* surfaces, text, borders, accent — shadcn's own token names, reference values */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--muted);
+  --color-secondary-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--muted);
+  --color-accent-foreground: var(--foreground);
+  --color-destructive: var(--blocked);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* tokens with no shadcn equivalent */
+  --color-surface-sunken: var(--surface-sunken);
+  --color-border-hairline: var(--border-hairline);
+  --color-text-faint: var(--text-faint);
+  --color-accent-surface: var(--accent-surface);
+  --color-accent-border: var(--accent-border);
+
+  /* Four semantic state triples. "caution" is the state of the two most common
+     verdicts (over, shortCash) and was inexpressible in the stock theme. */
+  --color-pass: var(--pass);
+  --color-pass-bg: var(--pass-bg);
+  --color-pass-border: var(--pass-border);
+  --color-caution: var(--caution);
+  --color-caution-bg: var(--caution-bg);
+  --color-caution-border: var(--caution-border);
+  --color-blocked: var(--blocked);
+  --color-blocked-bg: var(--blocked-bg);
+  --color-blocked-border: var(--blocked-border);
+  --color-band: var(--band);
+  --color-band-bg: var(--band-bg);
+  --color-band-border: var(--band-border);
+
+  --font-sans: var(--font-plex-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-heading: var(--font-plex-sans), system-ui, sans-serif;
+
+  /* Written out, not derived from --radius by multiplication: the reference uses
+     1px on bars and tracks, 2px on inputs and chips, 3px on cards and panels.
+     A cascade from 3px gives 1.8 / 2.4 / 4.2, which is none of those. */
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 3px;
+  --radius-2xl: 4px;
+  --radius-3xl: 4px;
+  --radius-4xl: 4px;
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 3px;
+
+  --background: oklch(0.9706 0.0057 84.57);        /* #F7F5F1 warm cream, not white */
+  --card: oklch(1.0000 0.0000 89.88);              /* #FFFFFF */
+  --muted: oklch(0.9435 0.0099 87.47);             /* #EFECE5 */
+  --surface-sunken: oklch(0.9101 0.0141 88.69);    /* #E5E1D7 */
+  --border: oklch(0.8801 0.0159 86.43);            /* #DCD7CC */
+  --border-hairline: oklch(0.9256 0.0128 86.83);   /* #EAE6DD */
+  --input: oklch(0.8065 0.0208 84.59);             /* #C6BFB1 */
+  --foreground: oklch(0.2126 0.0067 258.37);       /* #17191C */
+  --muted-foreground: oklch(0.4658 0.0095 253.92); /* #565A5F */
+  /* CORRECTED, do not revert: the reference's #888C92 is 2.86:1 on --muted and
+     is used at 9.5-11.5px, where AA-large does not apply. See globals.test.ts. */
+  --text-faint: oklch(0.5234 0.0087 260.73);       /* #676A6F (ref #888C92) */
+  --primary: oklch(0.3389 0.0708 261.03);          /* #22375C */
+  --primary-foreground: oklch(1.0000 0.0000 89.88);
+  --ring: oklch(0.4756 0.0960 259.81);             /* #3B5C92 */
+  --accent-surface: oklch(0.9416 0.0121 259.82);   /* #E7ECF4 */
+  --accent-border: oklch(0.8512 0.0295 259.59);    /* #C3CFE2 */
+
+  --pass: oklch(0.4699 0.0983 158.04);             /* #1A6B45 */
+  --pass-bg: oklch(0.9412 0.0158 160.61);          /* #E3EFE8 */
+  --pass-border: oklch(0.8656 0.0378 161.41);      /* #BEDBCB */
+  --caution: oklch(0.5023 0.1033 73.04);           /* #87590A */
+  --caution-bg: oklch(0.9506 0.0253 86.87);        /* #F6EEDC */
+  --caution-border: oklch(0.8705 0.0521 87.40);    /* #E3D3AE */
+  --blocked: oklch(0.4376 0.1340 24.57);           /* #8D2A2A */
+  --blocked-bg: oklch(0.9393 0.0166 26.65);        /* #F6E7E5 */
+  --blocked-border: oklch(0.8474 0.0381 26.09);    /* #E5C4C0 */
+  --band: oklch(0.4575 0.0391 244.66);             /* #455A6C */
+  --band-bg: oklch(0.9435 0.0076 241.67);          /* #E8EDF1 */
+  --band-border: oklch(0.8611 0.0173 242.46);      /* #C8D3DC */
+
+  /* The one deviation from "port the scale as measured": iOS Safari zooms the
+     viewport when a control under 16px takes focus. Labels, units and helper
+     text keep their measured sizes. */
+  --control-font-size: 1rem;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.1904 0.0069 258.37);       /* #121417 */
+  --card: oklch(0.2250 0.0090 255.61);             /* #191C20 */
+  --muted: oklch(0.2625 0.0110 254.03);            /* #21252A */
+  --surface-sunken: oklch(0.3028 0.0129 253.01);   /* #2A2F35 */
+  --border: oklch(0.3230 0.0142 256.78);           /* #2F343B */
+  --border-hairline: oklch(0.2835 0.0124 258.37);  /* #262A30 */
+  --input: oklch(0.3804 0.0158 255.61);            /* #3D434B */
+  --foreground: oklch(0.9342 0.0070 88.64);        /* #EBE9E4 */
+  --muted-foreground: oklch(0.7294 0.0104 252.84); /* #A3A8AE */
+  /* CORRECTED, do not revert: reference #767B82 is 3.61:1 on --muted. */
+  --text-faint: oklch(0.6420 0.0101 258.35);       /* #898D93 (ref #767B82) */
+  --primary: oklch(0.7592 0.0740 256.94);          /* #93B3E0 */
+  --primary-foreground: oklch(0.1904 0.0069 258.37);
+  --ring: oklch(0.8235 0.0590 258.07);             /* #AEC7EC */
+  --accent-surface: oklch(0.2648 0.0267 253.32);   /* #1C2632 */
+  --accent-border: oklch(0.3471 0.0373 253.36);    /* #2C3B4D */
+
+  --pass: oklch(0.7518 0.1096 160.38);             /* #6AC497 */
+  --pass-bg: oklch(0.2513 0.0256 169.94);          /* #152620 */
+  --pass-border: oklch(0.3672 0.0482 161.69);      /* #264737 */
+  --caution: oklch(0.7717 0.1267 79.90);           /* #DFAB4C */
+  --caution-bg: oklch(0.2555 0.0278 85.50);        /* #292213 */
+  --caution-border: oklch(0.3540 0.0461 86.85);    /* #463A1E */
+  --blocked: oklch(0.7408 0.1135 20.13);           /* #EA8D8D */
+  --blocked-bg: oklch(0.2358 0.0274 19.32);        /* #2A1919 */
+  --blocked-border: oklch(0.3305 0.0447 19.73);    /* #4A2C2C */
+  --band: oklch(0.7601 0.0330 243.83);             /* #A0B4C5 */
+  --band-bg: oklch(0.2440 0.0169 248.52);          /* #1A2128 */
+  --band-border: oklch(0.3314 0.0245 248.57);      /* #2C3742 */
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+    font-size: 12px;
+    line-height: 1.5;
   }
   html {
     @apply font-sans;
   }
+  /* The reference separates surfaces with borders and background steps, never
+     elevation: one shadow token, on one of eight screens. Stock shadcn card
+     shadows and rings come off rather than sitting alongside. */
+  [data-slot="card"] {
+    @apply border border-border ring-0;
+  }
+  /* Ports directly from the reference and is better than shadcn's default ring
+     for this system. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0s !important;
+      transition-duration: 0s !important;
+    }
+  }
+}
+
+@layer components {
+  /* Applied once, rather than ad-hoc `tabular-nums` on individual spans. */
+  .figure {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  /* The system's signature: 89 uses across the eight reference screens. */
+  .micro {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  /* The 16px floor, in one place so the guard in globals.test.ts covers every
+     control that opts into it. */
+  .control {
+    font-size: var(--control-font-size);
+  }
+}
+
+@keyframes ab-pulse {
+  from {
+    background: var(--accent-surface);
+  }
+  to {
+    background: transparent;
+  }
+}
+.ab-pulse {
+  animation: ab-pulse 0.7s ease-out;
 }
