@@ -153,3 +153,11 @@ pending in `design-reference/` for later phases.
 - Don't hardcode province rules inline in components — they live in `src/domain/jurisdictions/*.ts`,
   one typed file per jurisdiction, ported from `design-reference/hbt-data.js`. See the Phase 1 spec.
 - Don't add a deploy target or CI workflow without asking — monetization (above) is still open.
+- **Don't do SEO outreach, link-building or directory submissions until
+  [#5](https://github.com/vivitali/norma/issues/5) lands** — every jurisdiction figure is still an
+  unverified placeholder, and a wrong land transfer tax in a placed article becomes the story about
+  a product whose whole promise is showing what is actually true. The in-app disclosure is honest
+  for someone who finds us organically; it is not honest for someone we pitched. The technical
+  foundation, metadata, hreflang, content structure and `/sources` copy are all safe to build now
+  and depend on none of it. Gate and split recorded in
+  [#12](https://github.com/vivitali/norma/issues/12).
