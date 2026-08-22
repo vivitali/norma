@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/theme-provider";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { AppHeader } from "@/components/app-header";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import "../globals.css";
 
 /**
@@ -45,11 +46,17 @@ export async function generateMetadata({
   params,
 }: LayoutProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "Metadata" });
+  const t = await getTranslations({ locale, namespace: "Metadata.home" });
 
   return {
-    title: t("title"),
-    description: t("description"),
+    // Makes every relative URL in a child page's metadata — the OG image above
+    // all — resolve against the canonical host rather than the request host,
+    // which on a Worker can be a versioned preview hostname.
+    metadataBase: new URL(SITE_URL),
+    applicationName: SITE_NAME,
+    // Pages supply complete titles already inside 60 characters, so appending a
+    // suffix here would push them over.
+    title: { default: t("title"), template: "%s" },
   };
 }
 
