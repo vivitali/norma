@@ -1,8 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { setRequestLocale } from "next-intl/server";
+import { renderWithIntl } from "@/test/render-with-intl";
 import HomePage from "./page";
 
-vi.mock("next-intl/server", () => ({ setRequestLocale: vi.fn() }));
+// getTranslations is needed too: the page reads Metadata.home.description to
+// fill the WebApplication structured data.
+vi.mock("next-intl/server", () => ({
+  setRequestLocale: vi.fn(),
+  getTranslations: vi.fn(async () => (key: string) => key),
+}));
 
 // The page renders HomeContent, which pulls in next-intl's navigation Link; that
 // module does not resolve under the test environment.
@@ -26,5 +32,20 @@ describe("Home page", () => {
     });
 
     expect(setRequestLocale).toHaveBeenCalledWith("fr");
+  });
+
+  it("emits WebApplication structured data", async () => {
+    const tree = await HomePage({
+      params: Promise.resolve({ locale: "en" }),
+      searchParams: Promise.resolve({}),
+    });
+
+    // HomeContent below the JsonLd needs the client intl context.
+    const { container } = renderWithIntl(tree);
+    const script = container.querySelector('script[type="application/ld+json"]');
+    expect(JSON.parse(script?.textContent ?? "")).toMatchObject({
+      "@type": "WebApplication",
+      applicationCategory: "FinanceApplication",
+    });
   });
 });
