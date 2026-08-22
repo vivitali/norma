@@ -493,6 +493,7 @@ git commit -m "feat(seo): give every route its own title, description and canoni
 ```ts
 // src/app/sitemap.test.ts
 import { describe, expect, it } from "vitest";
+import { globSync } from "node:fs";
 import { routing } from "@/i18n/routing";
 import { INDEXABLE_ROUTES, absoluteUrl } from "@/lib/seo";
 import sitemap from "./sitemap";
@@ -523,6 +524,25 @@ describe("sitemap", () => {
     for (const entry of entries) {
       expect(Object.keys(entry.alternates?.languages ?? {})).toContain("x-default");
     }
+  });
+
+  /**
+   * Six more pages are coming (Closing Costs, Down Payment, RRSP-HBP,
+   * Amortization, Rent vs Buy, Scenarios). Without this, each one ships
+   * unlisted and nobody notices, because a short sitemap looks exactly like a
+   * correct one. Compares INDEXABLE_ROUTES against the page files on disk.
+   */
+  it("lists every page route that exists", () => {
+    const pageFiles = globSync("src/app/[locale]/**/page.tsx");
+    const routesOnDisk = pageFiles
+      .map((f) =>
+        f
+          .replace("src/app/[locale]", "")
+          .replace(/\/page\.tsx$/, "")
+          .replace(/^$/, "/"),
+      )
+      .sort();
+    expect([...INDEXABLE_ROUTES].sort()).toEqual(routesOnDisk);
   });
 });
 ```
@@ -708,7 +728,7 @@ export default function NotFound() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-16">
       <h1 className="text-2xl font-semibold tracking-tight">404</h1>
-      <p className="mt-2 text-[var(--tx2)]">{t("body")}</p>
+      <p className="mt-2 text-muted-foreground">{t("body")}</p>
       <p className="mt-6">
         <Link href="/affordability" className="underline underline-offset-4">
           {t("cta")}
@@ -1085,6 +1105,26 @@ Expected: FAIL — `expected 'norma' to be 'AffordMath'`.
 - [ ] **Step 3: Rename the brand string**
 
 In both `messages/en.json` and `messages/fr.json`, change `"brand": "norma"` to `"brand": "AffordMath"`.
+
+**Do not rename these — they are not the brand:**
+
+- `STORE_KEY_V1 = "norma.inputs.v1"` and `STORE_KEY_V2 = "norma.inputs.v2"` in
+  `src/lib/storage.ts`. These are localStorage keys on real browsers. Changing them
+  silently discards every saved input and defeats the v1 migration.
+- The `.norma-range` CSS class in `src/app/globals.css:212` and its use in
+  `src/components/affordability/input-groups.tsx:145`.
+- The Worker name `norma` in `wrangler.jsonc` (Global Constraints).
+
+- [ ] **Step 3b: Update the header test that asserts the old brand**
+
+`src/components/app-header.test.tsx:20` asserts the brand link by its accessible name:
+
+```ts
+expect(screen.getByRole("link", { name: "norma" })).toHaveAttribute("href", "/");
+```
+
+Change `"norma"` to `"AffordMath"`. Run `npx vitest run src/components/app-header.test.tsx`
+and expect PASS.
 
 - [ ] **Step 4: Run test to verify it passes**
 
