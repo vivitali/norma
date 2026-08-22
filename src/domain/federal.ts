@@ -45,5 +45,12 @@ export const federal: FederalRules = {
   gstFthb: { rate: 0.05, fullTo: 1000000, zeroAt: 1500000, cap: 50000 },
   hba: 1500,
   verified: VERIFIED_AT,
+  /**
+   * No longer read by any screen: the contract rate derives from dpPct against
+   * `rates.insured` / `rates.uninsured` (see `defaultContractRate` in engine.ts),
+   * with an override in the Affordability page's Advanced disclosure. Left in
+   * place rather than removed — src/domain/ is not churned by UI work. Tracked
+   * on #3.
+   */
   contractRate: 4.29,
 };

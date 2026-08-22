@@ -273,6 +273,22 @@ export interface AffordabilityInput {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  /** Funds available at closing. null = not told; there is nothing honest to assume. */
+  funds?: number | null;
+  /** Monthly saving toward the purchase. null = not told. */
+  save?: number | null;
+}
+
+/**
+ * The contract rate a borrower would actually be offered, from the down payment.
+ * Insured mortgages price below uninsured ones because the lender's risk is
+ * covered. Derived rather than entered: the reference computes it at
+ * Affordability.dc.html:768 and again at Home.dc.html:444, and hardcoding it
+ * left federal.rates.insured/.uninsured unread by any screen. Returned as a
+ * percentage, which is what AffordabilityInput.contractRate takes.
+ */
+export function defaultContractRate(F: FederalRules, dpPct: number): number {
+  return (dpPct < 20 ? F.rates.insured : F.rates.uninsured) * 100;
 }
 
 /**
@@ -294,7 +310,18 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
 
   // Solved so property tax scales with price. Assumes 20% down, as the source model does.
   const denomLender = 0.8 * fq + j.propTax / 12;
-  const ceiling = qualIncome <= 0 ? 0 : Math.max(0, (binding - F.heatAllowance - o.condoFee * 0.5) / denomLender);
+  /**
+   * The ceiling this household would reach carrying `debts` of monthly obligation.
+   * Parameterised because the debt-impact figures below are the DIFFERENCE between
+   * two ceilings, not a marginal rate multiplied out.
+   */
+  const ceilingCarrying = (monthlyDebts: number) => {
+    if (qualIncome <= 0) return 0;
+    const tds = (qualIncome * (F.tds / 100)) / 12 - monthlyDebts;
+    const binds = Math.min(gdsAllow, tds);
+    return Math.max(0, (binds - F.heatAllowance - o.condoFee * 0.5) / denomLender);
+  };
+  const ceiling = ceilingCarrying(o.debts);
 
   const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee;
   const denomComfort = 0.8 * fc + j.propTax / 12 + F.maintenanceReserve / 12;
@@ -335,8 +362,18 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
       ? 0
       : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * 0.5 + o.debts) / (qualIncome / 12)) * 100;
 
-  // Marginal cost of debt: what one dollar of monthly obligation removes from the ceiling.
+  // Marginal cost of debt WHERE TDS BINDS: what one dollar of monthly obligation
+  // removes from the ceiling once total debt service is the constraint.
   const capacityPerDollar = 1 / denomLender;
+
+  // Cash at closing against what the buyer actually has. Both null-safe: a
+  // missing figure must stay missing all the way to the screen, so the cash
+  // check can render `unanswered` rather than a fabricated shortfall.
+  const funds = o.funds ?? null;
+  const save = o.save ?? null;
+  const cashGap = funds === null ? null : funds - cc.net;
+  const monthsToClose =
+    cashGap === null || save === null || save <= 0 ? null : Math.max(0, Math.ceil(-cashGap / save));
 
   return {
     gross,
@@ -356,6 +393,19 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
     gdsAtTarget,
     tdsAtTarget,
     capacityPerDollar,
+    /**
+     * What the household's debts ACTUALLY cost them in purchase price: the gap
+     * between the ceiling they would reach with none and the one they reach with
+     * these. Deliberately not `debts * capacityPerDollar`, the reference's own
+     * formula — that is the marginal rate where TDS binds, and while GDS binds it
+     * overstates the cost by an order of magnitude. The screen says "reduces what
+     * a lender will approve by about", so it has to be the reduction.
+     */
+    debtCapacity: ceilingCarrying(0) - ceiling,
+    /** The same figure for the next $100, on the same honest basis. */
+    capacityPer100: ceiling - ceilingCarrying(o.debts + 100),
+    cashGap,
+    monthsToClose,
     impliedMortgage: ceiling * 0.8,
     comfortDown: comfort * 0.2,
     comfortPI: comfort * 0.8 * fc,
