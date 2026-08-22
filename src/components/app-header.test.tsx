@@ -17,7 +17,7 @@ describe("AppHeader", () => {
         </JurisdictionProvider>
       </ThemeProvider>,
     );
-    expect(screen.getByRole("link", { name: "norma" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "AffordMath" })).toHaveAttribute("href", "/");
     expect(await screen.findByRole("combobox")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "EN" })).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "Theme" })).toBeInTheDocument();

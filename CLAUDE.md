@@ -2,6 +2,10 @@
 
 # norma
 
+> **Public brand: AffordMath** (`affordmath.com`). `norma` is the repository name and
+> internal codename; the localStorage keys and the `.norma-range` class keep it too. See
+> `docs/superpowers/specs/2026-08-22-seo-growth-design.md` §2.
+
 **norma** — named for the constellation Norma, the Level (Carpenter's Square): the instrument that shows what is actually true and straight, not what merely looks fine. Latin *norma* means "rule, standard."
 
 ## Purpose

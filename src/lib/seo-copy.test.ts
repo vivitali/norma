@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SITE_NAME } from "./seo";
 import en from "../../messages/en.json";
 import fr from "../../messages/fr.json";
 
@@ -38,6 +39,16 @@ describe("metadata copy", () => {
         (messages as unknown as Record<string, unknown>).Metadata,
       );
       expect(json).not.toMatch(banned);
+    }
+  });
+});
+
+describe("brand", () => {
+  it("uses the product name in the header, in every locale", () => {
+    for (const messages of Object.values(LOCALES)) {
+      expect(
+        (messages as unknown as Record<string, Record<string, string>>).AppHeader.brand,
+      ).toBe(SITE_NAME);
     }
   });
 });

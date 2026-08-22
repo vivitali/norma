@@ -24,7 +24,7 @@ Success is a user leaving with a number they can act on, and being able to see w
 
 **Two ceilings, computed side by side, with the binding one named.** A bank-style GDS/TDS-qualified ceiling, and a real carrying-cost ceiling — net income minus property tax, insurance, condo or strata fees, utilities and a maintenance reserve, under a stress-test margin. Almost every competing calculator returns one number, and it is the lender's.
 
-The name carries the thesis: Norma is the constellation of the Level, the carpenter's square — the instrument that shows what is actually true and straight rather than what merely looks fine. Latin *norma*, "rule, standard".
+The name states the method: the product does the actual arithmetic — net income, real carrying costs, provincial land transfer tax, semi-annual compounding — rather than returning a lender's ratio. The internal codename `norma` keeps the older thesis: the constellation of the Level, the carpenter's square, Latin *norma*, "rule, standard".
 
 **Provincial rules, not national averages** — a binding commitment, and the thing a neighbouring product cannot copy without doing the same jurisdiction-by-jurisdiction work.
 
@@ -47,7 +47,12 @@ The name carries the thesis: Norma is the constellation of the Level, the carpen
 
 ## Brand Commitments
 
-- **Name:** norma, lowercase.
+- **Name:** AffordMath, on `affordmath.com`. `norma` remains the repository and folder
+  name — the constellation convention in `~/Developer/CLAUDE.md` governs the repo, not
+  the product — and is the internal codename. It also remains load-bearing in two
+  places that are **not** the brand and must not be renamed: the localStorage keys
+  `norma.inputs.v1`/`.v2` in `src/lib/storage.ts`, and the `.norma-range` CSS class.
+  See `docs/superpowers/specs/2026-08-22-seo-growth-design.md` §2.
 - **Binding: nothing is stored on a server.** Already true, and making it a commitment rules out accounts and server-side persistence without an explicit reversal.
 - **Binding: provincial rules, not national averages.** The core positioning claim, and what the verification work exists to make true.
 - **Not binding:** "no data sale or referral revenue". This appears in the prototype's copy but is explicitly *not* a commitment — recorded so nobody treats prototype text as a promise.
