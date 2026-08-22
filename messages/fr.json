@@ -1,7 +1,23 @@
 {
   "Metadata": {
-    "title": "norma",
-    "description": "Découvrez ce que vous pouvez vraiment vous permettre, selon les règles réelles de votre province."
+    "home": {
+      "title": "Que pouvez-vous vraiment vous permettre ?",
+      "description": "Ce que vous pouvez réellement vous permettre d’acheter au Canada, calculé sur le revenu net et les coûts réels, selon les règles de votre province."
+    },
+    "affordability": {
+      "title": "Calculateur d’abordabilité — le coût réel",
+      "description": "Deux plafonds côte à côte — ce qu’un prêteur approuverait, et ce qui tient dans votre budget mensuel réel. Règles fiscales provinciales incluses."
+    },
+    "sources": {
+      "title": "Sources et provenance — AffordMath",
+      "description": "D’où vient chaque chiffre — règles provinciales exactes, estimations, et chiffres qui ne sont pas encore vérifiés."
+    },
+    "notFound": {
+      "title": "Page introuvable — AffordMath",
+      "description": "Cette page n’existe pas. Le calculateur d’abordabilité et la page des sources sont liés ci-dessous.",
+      "body": "Cette page n’existe pas.",
+      "cta": "Aller au calculateur d’abordabilité"
+    }
   },
   "Home": {
     "heading": "Que pouvez-vous vraiment vous permettre?",
