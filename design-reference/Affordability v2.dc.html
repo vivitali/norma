@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;family=Martian+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<script src="hbt-data.js"></script>
+<script src="hbt-engine.js"></script>
+<style>
+:root{
+--paper:#FAF9F6;--panel:#FFFFFF;--sunk:#F1EFEA;--line:#E4E1DA;--line2:#EFEDE8;
+--ink:#14151A;--ink2:#5B5F66;--ink3:#8B9097;
+--ac:#3D3BD6;--ac2:#6462E6;--acbg:#ECECFD;--acbr:#D3D2FA;
+--pass:#176B4B;--caut:#8A5A12;--blk:#A32B2B;
+--bgS:transparent;--fgS:var(--ink3);--fwS:400;--dot:var(--ink3);--fg:var(--ink);
+}
+[data-theme="dark"]{
+--paper:#0E0F11;--panel:#16181C;--sunk:#1C1F24;--line:#292D33;--line2:#22252A;
+--ink:#ECEAE6;--ink2:#A2A7AE;--ink3:#6F757C;
+--ac:#8886FF;--ac2:#A5A3FF;--acbg:#1B1B33;--acbr:#2E2E52;
+--pass:#55C293;--caut:#D9A94E;--blk:#E88A8A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#E9E7E1;font-family:Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+input,select{font:inherit;color:inherit}
+a{color:var(--ac)}
+a:hover{color:var(--ac2)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:3px;border-radius:3px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;cursor:pointer;display:block}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:100px;background:var(--ink3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:16px;width:16px;border-radius:50%;background:var(--ac);border:0;margin-top:-6px}
+input[type=range]::-moz-range-track{height:4px;border-radius:100px;background:var(--ink3)}
+input[type=range]::-moz-range-thumb{height:16px;width:16px;border-radius:50%;background:var(--ac);border:0}
+@keyframes v2Pulse{0%{opacity:.35}100%{opacity:1}}
+[data-screen-label$="phone"] button{min-height:44px}
+[data-screen-label$="phone"] input{min-height:44px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+.dvT{padding:36px 40px 30px}
+.dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dvId{font:600 10px "Martian Mono",monospace;padding:3px 7px;background:#14151A;color:#fff;border-radius:4px;text-decoration:none}
+.dvOid{font:600 10.5px "Martian Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#14151A;border-radius:4px;text-decoration:none}
+.dvName{font:600 13px/1.2 Archivo,sans-serif;color:#14151A}
+.dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+.dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#3D3BD6;color:#fff}
+.dvNote{max-width:840px;font:400 13px/1.7 Archivo,sans-serif;color:rgba(0,0,0,.62);margin:0 0 24px}
+.dvNote b{color:rgba(0,0,0,.85);font-weight:600}
+.dvNext{margin:24px 0 0;font:12px/1.5 Archivo,sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+
+<section class="dvT" id="t3">
+<div class="dvH"><a class="dvId" href="#t3">3</a><span class="dvName">Affordability, rebuilt — one disclosure mechanism, 2026 surface</span></div>
+<p class="dvNote">The old screen carried <b>four</b> separate ways to go deeper: a three-level depth switcher, a jump rail, per-check expanders, and a hidden advanced-inputs panel. This one carries <b>one</b>. Every section is a single line — status dot, name, plain-language read, live figure — and opening it reveals that section's whole derivation in place. Learn the gesture once and every part of the product is drillable, including the math. One <i>Expand all</i> control in the header opens the lot for advanced readers, so the jump rail is no longer needed to reach the derivation. The surface is stripped to match: no card borders, sections separated by hairlines and air, one accent (electric indigo) doing all the work, and semantic colour reduced to a 7px dot rather than a filled panel. Every figure, hero to table row, is set in Archivo's tabular numerals — a wide mono splits <i>$398,398</i> into two numbers at display size, which is the last thing the headline figure can afford to do. Everything still runs on city defaults before you type, and the engine, rules table and four languages are unchanged from <a href="#2a">2a</a>.</p>
+<div class="dvOpts">
+
+<div class="dvOpt" id="3a">
+<div class="dvLab"><a class="dvOid" href="#3a">3a</a>Desktop — one expander per section, light</div>
+<div data-theme="{{ themeA }}" data-screen-label="Affordability v2 · desktop" style="width:1100px;background:var(--paper);color:var(--ink);border-radius:6px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 18px rgba(0,0,0,.10)">
+
+  <header style="display:flex;align-items:center;gap:14px;padding:0 40px;height:62px;border-bottom:1px solid var(--line)">
+    <span style="font-size:15px;font-weight:700;letter-spacing:-.02em;flex:1;min-width:0">{{ s.brand }}</span>
+    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);border-radius:100px" style-hover="border-color:var(--ink3)">
+      <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:var(--ac);flex:none"></span>
+      <span style="font-size:13px;font-weight:500;white-space:nowrap">{{ chip.short }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--ink3)">▾</span>
+    </button>
+    <div role="group" style="display:flex;gap:2px">
+      <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+        <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:6px 10px;font-size:12px;border-radius:100px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS);white-space:nowrap">{{ lg.abbr }}</button>
+      </sc-for>
+    </div>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--line);font-size:11px;color:var(--ink2)">{{ themeIconA }}</button>
+  </header>
+
+  <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:20px 40px 22px;border-bottom:1px solid var(--line);background:var(--panel)">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px">{{ s.municipality }}</div>
+      <div role="listbox" style="display:flex;flex-wrap:wrap;gap:7px">
+        <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="8">
+          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--bgS:{{ c.bg }};--fgS:{{ c.fg }};--fwS:{{ c.fw }};padding:8px 14px;border-radius:100px;border:1px solid var(--line);background:var(--bgS);color:var(--fgS);font-weight:var(--fwS);font-size:13px">{{ c.name }}</button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="padding:44px 40px 0">
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ac);margin-bottom:20px">{{ s.aTitle }}</div>
+    <div style="display:flex;align-items:flex-end;gap:40px;flex-wrap:wrap">
+      <div style="flex:1;min-width:420px">
+        <div style="font-size:72px;font-weight:700;letter-spacing:-.045em;line-height:1;color:var(--ac);animation:v2Pulse .5s ease-out" key="{{ pulseKey }}">{{ comfortPrice }}</div>
+        <div style="margin-top:16px;font-size:19px;line-height:1.45;font-weight:500;letter-spacing:-.01em;max-width:560px;text-wrap:pretty">{{ verdict.head }}</div>
+        <div style="margin-top:8px;font-size:14.5px;line-height:1.6;color:var(--ink2);max-width:560px;text-wrap:pretty">{{ verdict.sub }}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px;flex:none;min-width:250px">
+        <sc-for list="{{ heroStats }}" as="hs" hint-placeholder-count="3">
+          <div>
+            <div style="font-size:12.5px;color:var(--ink3);margin-bottom:5px">{{ hs.label }}</div>
+            <div style="display:flex;align-items:baseline;gap:9px">
+              <span style="font-size:22px;font-weight:600;letter-spacing:-.02em">{{ hs.value }}</span>
+              <span style="font-size:12px;color:var(--ink3);line-height:1.35">{{ hs.note }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:34px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:14px;padding-bottom:12px">
+      <span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);flex:1">{{ s.breakdown }}</span>
+      <button onClick="{{ toggleAll }}" aria-expanded="{{ anyOpen }}" style="font-size:13px;font-weight:500;color:var(--ac);padding:6px 14px;border:1px solid var(--acbr);border-radius:100px" style-hover="background:var(--acbg)">{{ allLabel }}</button>
+    </div>
+
+    <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="5">
+      <div id="{{ sec.id }}" style="border-top:1px solid var(--line);scroll-margin-top:12px">
+        <button onClick="{{ sec.toggle }}" aria-expanded="{{ sec.open }}" style="display:flex;align-items:center;gap:20px;width:100%;text-align:left;padding:19px 0" style-hover="opacity:.75">
+          <span aria-hidden="true" style="--dot:{{ sec.dot }};width:7px;height:7px;border-radius:50%;background:var(--dot);flex:none"></span>
+          <span style="font-size:16.5px;font-weight:600;letter-spacing:-.015em;flex:none;width:180px">{{ sec.name }}</span>
+          <span style="font-size:13.5px;color:var(--ink2);flex:1;min-width:0;line-height:1.45;text-wrap:pretty">{{ sec.line }}</span>
+          <span style="--fg:{{ sec.figFg }};font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--fg);white-space:nowrap">{{ sec.figure }}</span>
+          <span aria-hidden="true" style="font-size:11px;color:var(--ink3);width:14px;text-align:right;flex:none">{{ sec.caret }}</span>
+        </button>
+
+        <sc-if value="{{ sec.open }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:2px 0 30px 47px">
+            <p style="margin:0 0 18px;font-size:13.5px;line-height:1.65;color:var(--ink2);max-width:620px;text-wrap:pretty">{{ sec.why }}</p>
+
+            <sc-if value="{{ sec.hasBand }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:820px;margin-bottom:22px">
+                <div style="position:relative;height:76px">
+                  <div aria-hidden="true" style="position:absolute;left:0;right:0;top:30px;height:8px;border-radius:100px;background:var(--sunk)"></div>
+                  <div aria-hidden="true" style="position:absolute;left:0;top:30px;width:{{ gapFillW }};height:8px;border-radius:100px;background:var(--ac)"></div>
+                  <div aria-hidden="true" style="position:absolute;left:{{ gapBandL }};top:30px;width:{{ gapBandW }};height:8px;background:{{ band.bg }}"></div>
+                  <div style="position:absolute;left:{{ gapComfortW }};top:0;transform:{{ comfortTf }};display:flex;flex-direction:column;align-items:{{ comfortAlign }};gap:5px">
+                    <span style="font-size:13px;font-weight:600;color:var(--ac);white-space:nowrap">{{ comfortPrice }}</span>
+                    <span aria-hidden="true" style="width:2px;height:9px;background:var(--ac)"></span>
+                  </div>
+                  <div style="position:absolute;left:{{ gapTargetW }};top:44px;transform:{{ targetTf }};display:flex;flex-direction:column;align-items:{{ targetAlign }};gap:5px">
+                    <span aria-hidden="true" style="width:2px;height:9px;background:var(--ink)"></span>
+                    <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ targetLabel }}</span>
+                  </div>
+                  <div style="position:absolute;right:0;top:44px;display:flex;align-items:baseline;gap:8px">
+                    <span aria-hidden="true" style="width:2px;height:9px;background:var(--ink3)"></span>
+                    <span style="font-size:12.5px;color:var(--ink3);white-space:nowrap">{{ ceilingLabel }}</span>
+                  </div>
+                </div>
+                <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:{{ band.fg }};max-width:700px;text-wrap:pretty">{{ band.text }}</p>
+              </div>
+            </sc-if>
+
+            <div style="display:flex;flex-direction:column;max-width:620px">
+              <sc-for list="{{ sec.rows }}" as="r" hint-placeholder-count="5">
+                <div style="--fwS:{{ r.fw }};--fgS:{{ r.fg }};display:flex;align-items:baseline;gap:16px;padding:9px 0;border-bottom:1px solid var(--line2)">
+                  <span style="font-size:13.5px;color:var(--ink2);flex:1;min-width:0;line-height:1.45;font-weight:var(--fwS)">{{ r.label }}</span>
+                  <span style="font-size:13.5px;font-weight:var(--fwS);color:var(--fgS);white-space:nowrap">{{ r.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <sc-if value="{{ sec.hasGauges }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:820px;margin-top:24px">
+                <sc-for list="{{ gauges }}" as="g" hint-placeholder-count="2">
+                  <div style="--fg:{{ g.fg }}">
+                    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
+                      <span style="font-size:12.5px;font-weight:600;letter-spacing:.04em">{{ g.code }}</span>
+                      <span style="font-size:12.5px;color:var(--ink3);flex:1;min-width:0">{{ g.short }}</span>
+                      <span style="font-size:17px;font-weight:600;color:var(--fg)">{{ g.value }}</span>
+                    </div>
+                    <div style="position:relative;height:8px;border-radius:100px;background:var(--sunk);overflow:hidden">
+                      <span aria-hidden="true" style="position:absolute;left:0;top:0;bottom:0;width:{{ g.w }};background:var(--fg);border-radius:100px"></span>
+                      <span aria-hidden="true" style="position:absolute;left:{{ g.limitW }};top:0;bottom:0;width:2px;background:var(--ink)"></span>
+                    </div>
+                    <div style="font-size:11.5px;color:var(--ink3);margin-top:7px">{{ g.limitNote }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <p style="margin:18px 0 0;font-size:12.5px;line-height:1.6;color:var(--ink3);max-width:700px;text-wrap:pretty">{{ heatNote }}</p>
+            </sc-if>
+
+            <sc-if value="{{ sec.hasCols }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;max-width:900px">
+                <sc-for list="{{ mathCols }}" as="mc" hint-placeholder-count="2">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:{{ mc.accent }}">{{ mc.title }}</div>
+                    <sc-for list="{{ mc.rows }}" as="mr" hint-placeholder-count="8">
+                      <div style="--fwS:{{ mr.fw }};--fgS:{{ mr.fg }};border-bottom:1px solid var(--line2);padding:8px 0">
+                        <div style="display:flex;align-items:baseline;gap:14px">
+                          <span style="font-size:13px;color:var(--ink2);flex:1;min-width:0;line-height:1.45;font-weight:var(--fwS)">{{ mr.label }}</span>
+                          <span style="font-size:13px;font-weight:var(--fwS);color:var(--fgS);white-space:nowrap">{{ mr.value }}</span>
+                        </div>
+                        <sc-if value="{{ mr.why }}" hint-placeholder-val="{{ false }}">
+                          <p style="margin:6px 0 0;font-size:12px;line-height:1.55;color:var(--ink3);text-wrap:pretty">{{ mr.why }}</p>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+    <div style="border-top:1px solid var(--line)"></div>
+  </div>
+
+  <div style="padding:38px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:22px">
+      <span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);flex:none">{{ s.adjust }}</span>
+      <span style="font-size:12.5px;color:var(--ink3);line-height:1.5;flex:1;min-width:0;text-wrap:pretty">{{ s.defaults }}</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px 44px">
+      <div>
+        <label style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
+          <span style="font-size:13.5px;font-weight:500">{{ s.cApp1 }}</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--ink3)">{{ s.perYear }}</span>
+        </label>
+        <input type="number" step="1000" value="{{ inc1 }}" onChange="{{ onInc1 }}" aria-label="{{ s.cApp1 }}" style="width:100%;padding:11px 14px;font-size:16px;font-weight:500;background:var(--panel);border:1px solid var(--line);border-radius:8px">
+        <sc-if value="{{ app2 }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:12px">
+            <label style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
+              <span style="font-size:13.5px;font-weight:500">{{ s.cApp2 }}</span>
+              <button onClick="{{ toggleApp2 }}" style="margin-left:auto;font-size:12.5px;color:var(--ac)">{{ s.cRemove }}</button>
+            </label>
+            <input type="number" step="1000" value="{{ inc2 }}" onChange="{{ onInc2 }}" aria-label="{{ s.cApp2 }}" style="width:100%;padding:11px 14px;font-size:16px;font-weight:500;background:var(--panel);border:1px solid var(--line);border-radius:8px">
+          </div>
+        </sc-if>
+        <sc-if value="{{ noApp2 }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ toggleApp2 }}" style="margin-top:12px;width:100%;padding:11px;font-size:13.5px;color:var(--ac);border:1px dashed var(--acbr);border-radius:8px">＋ {{ s.cAddApp }}</button>
+        </sc-if>
+      </div>
+
+      <div>
+        <label style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
+          <span style="font-size:13.5px;font-weight:500">{{ s.cComfortCeiling }}</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--ac);font-weight:500">{{ s.keyLever }}</span>
+        </label>
+        <input type="number" step="50" value="{{ comfortCeiling }}" onChange="{{ onCeiling }}" aria-label="{{ s.cComfortCeiling }}" style="width:100%;padding:11px 14px;font-size:16px;font-weight:600;color:var(--ac);background:var(--acbg);border:1px solid var(--acbr);border-radius:8px">
+        <div style="margin-top:12px;font-size:13.5px;font-weight:500;margin-bottom:9px">{{ s.price }}</div>
+        <input type="range" min="150000" max="2200000" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" aria-valuetext="{{ priceFmt }}">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-top:2px">
+          <span style="font-size:15px;font-weight:600">{{ priceFmt }}</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--ink3)">{{ priceTag }}</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13.5px;font-weight:500;margin-bottom:10px">{{ s.downPayment }}</div>
+        <div role="group" aria-label="{{ s.downPayment }}" style="display:flex;gap:7px">
+          <sc-for list="{{ dpOpts }}" as="d" hint-placeholder-count="4">
+            <button onClick="{{ d.pick }}" aria-pressed="{{ d.on }}" style="--bgS:{{ d.bg }};--fgS:{{ d.fg }};--fwS:{{ d.fw }};flex:1;padding:10px 4px;font-size:13.5px;border:1px solid var(--line);border-radius:100px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ d.label }}</button>
+          </sc-for>
+        </div>
+        <div style="font-size:13.5px;font-weight:500;margin:18px 0 10px">{{ s.amort }}</div>
+        <div role="group" aria-label="{{ s.amort }}" style="display:flex;gap:7px">
+          <sc-for list="{{ amortOpts }}" as="am" hint-placeholder-count="2">
+            <button onClick="{{ am.pick }}" aria-pressed="{{ am.on }}" style="--bgS:{{ am.bg }};--fgS:{{ am.fg }};--fwS:{{ am.fw }};flex:1;padding:10px 4px;font-size:13.5px;border:1px solid var(--line);border-radius:100px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ am.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13.5px;font-weight:500;margin-bottom:12px">{{ s.cDebts }}</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ debtFields }}" as="df" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:14px">
+              <label style="font-size:13px;color:var(--ink2);flex:1;min-width:0;line-height:1.35">{{ df.label }}</label>
+              <input type="number" step="25" value="{{ df.value }}" onChange="{{ df.onChange }}" aria-label="{{ df.label }}" style="width:104px;padding:8px 11px;text-align:right;font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;flex:none">
+            </div>
+          </sc-for>
+        </div>
+        <div style="--fg:{{ impact.fg }};margin-top:16px;padding-left:14px;border-left:2px solid var(--fg)">
+          <div style="display:flex;align-items:baseline;gap:12px">
+            <span style="font-size:13px;line-height:1.5;color:var(--fg);flex:1;text-wrap:pretty">{{ impact.label }}</span>
+            <span style="font-size:17px;font-weight:600;color:var(--fg);white-space:nowrap">{{ impact.amount }}</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:7px;line-height:1.5;text-wrap:pretty">{{ impact.foot }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:26px;border-top:1px solid var(--line);padding-top:20px">
+      <button onClick="{{ toggleAdv }}" aria-expanded="{{ advOpen }}" style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:500;color:var(--ac)">
+        <span aria-hidden="true" style="font-size:11px">{{ advCaret }}</span>{{ advLabel }}
+      </button>
+      <sc-if value="{{ advOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px 44px;margin-top:20px">
+          <div>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+              <span style="font-size:13.5px;font-weight:500">{{ s.cHaircut }}</span>
+              <span style="margin-left:auto;font-size:15px;font-weight:600">{{ haircutFmt }}</span>
+            </div>
+            <input type="range" min="0" max="40" step="1" value="{{ haircut }}" onChange="{{ onHaircut }}" aria-label="{{ s.cHaircut }}" aria-valuetext="{{ haircutFmt }}">
+            <p style="margin:2px 0 0;font-size:12.5px;line-height:1.55;color:var(--ink3);text-wrap:pretty">{{ s.cHaircutWhy }}</p>
+          </div>
+          <div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ carryFields }}" as="cf" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:14px">
+                  <label style="font-size:13px;color:var(--ink2);flex:1;min-width:0;line-height:1.35">{{ cf.label }}</label>
+                  <input type="number" step="{{ cf.step }}" value="{{ cf.value }}" onChange="{{ cf.onChange }}" aria-label="{{ cf.label }}" style="width:104px;padding:8px 11px;text-align:right;font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:8px;flex:none">
+                </div>
+              </sc-for>
+            </div>
+            <button onClick="{{ toggleFtb }}" role="switch" aria-checked="{{ ftb }}" style="--bgS:{{ ftbBg }};--fgS:{{ ftbFg }};display:flex;align-items:center;gap:11px;margin-top:14px;padding:9px 14px 9px 10px;border:1px solid var(--line);border-radius:100px;background:var(--bgS);width:100%">
+              <span aria-hidden="true" style="width:32px;height:18px;border-radius:100px;background:{{ ftbTrack }};position:relative;flex:none">
+                <span style="position:absolute;top:2px;left:{{ ftbX }};width:14px;height:14px;border-radius:50%;background:var(--panel);transition:left .16s ease"></span>
+              </span>
+              <span style="font-size:13.5px;font-weight:500;color:var(--fgS);text-align:left;line-height:1.35">{{ s.ftb }}</span>
+            </button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="margin:40px 40px 0;padding:20px 0 34px;border-top:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:9px">
+      <span style="font-size:11.5px;line-height:1.6;color:var(--ink3);flex:1;min-width:0">{{ sourcesLine }}</span>
+      <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;color:var(--caut);border:1px solid var(--caut)">{{ s.unverifiedFlag }}</span>
+    </div>
+    <p style="margin:0;font-size:12px;line-height:1.65;color:var(--ink3);max-width:900px;text-wrap:pretty">{{ s.disclaimer }}</p>
+  </div>
+</div>
+</div>
+
+<div class="dvOpt" id="3b">
+<div class="dvLab"><a class="dvOid" href="#3b">3b</a>Phone 390 — same one gesture, dark</div>
+<div data-theme="{{ themeB }}" data-screen-label="Affordability v2 · phone" style="width:430px;padding:20px;background:#08090A;border-radius:46px;border:1px solid rgba(255,255,255,.08);box-shadow:0 2px 18px rgba(0,0,0,.3)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:30px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:11px 22px 4px;font-size:12px;font-weight:600;color:var(--ink2)">
+      <span>9:41</span><span style="margin-left:auto;letter-spacing:.14em">•••</span>
+    </div>
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 18px 12px">
+      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:7px;padding:7px 13px;border:1px solid var(--line);border-radius:100px;min-width:0">
+        <span aria-hidden="true" style="width:6px;height:6px;border-radius:50%;background:var(--ac);flex:none"></span>
+        <span style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.short }}</span>
+      </button>
+      <div role="group" style="display:flex;gap:2px;margin-left:auto">
+        <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
+          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 9px;font-size:11.5px;border-radius:100px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line);font-size:11px;color:var(--ink2);flex:none">{{ themeIconB }}</button>
+    </header>
+
+    <div style="flex:1;overflow:auto;padding:6px 18px 18px">
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ac);margin-bottom:14px">{{ s.aTitle }}</div>
+      <div style="font-size:44px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ac);animation:v2Pulse .5s ease-out" key="{{ pulseKey }}">{{ comfortPrice }}</div>
+      <div style="margin-top:14px;font-size:16px;line-height:1.4;font-weight:500;letter-spacing:-.01em;text-wrap:pretty">{{ verdict.head }}</div>
+      <div style="margin-top:7px;font-size:13.5px;line-height:1.6;color:var(--ink2);text-wrap:pretty">{{ verdict.sub }}</div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;margin:22px 0 8px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+        <sc-for list="{{ heroStats }}" as="hs" hint-placeholder-count="3">
+          <div style="display:flex;align-items:baseline;gap:12px">
+            <span style="font-size:13px;color:var(--ink3);flex:1;min-width:0;line-height:1.35">{{ hs.label }}</span>
+            <span style="font-size:17px;font-weight:600;letter-spacing:-.02em;white-space:nowrap">{{ hs.value }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0 4px">
+        <span style="font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);flex:1">{{ s.breakdown }}</span>
+        <button onClick="{{ toggleAll }}" aria-expanded="{{ anyOpen }}" style="font-size:13px;font-weight:500;color:var(--ac)">{{ allLabel }}</button>
+      </div>
+
+      <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="5">
+        <div style="border-top:1px solid var(--line)">
+          <button onClick="{{ sec.toggle }}" aria-expanded="{{ sec.open }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;padding:15px 0">
+            <span aria-hidden="true" style="--dot:{{ sec.dot }};width:7px;height:7px;border-radius:50%;background:var(--dot);flex:none"></span>
+            <span style="font-size:14.5px;font-weight:600;letter-spacing:-.01em;flex:1;min-width:0">{{ sec.name }}</span>
+            <span style="--fg:{{ sec.figFg }};font-size:15px;font-weight:600;color:var(--fg);white-space:nowrap">{{ sec.figure }}</span>
+            <span aria-hidden="true" style="font-size:11px;color:var(--ink3);width:12px;text-align:right;flex:none">{{ sec.caret }}</span>
+          </button>
+          <sc-if value="{{ sec.open }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:0 0 20px 20px">
+              <p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:var(--ink2);text-wrap:pretty">{{ sec.why }}</p>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ sec.rows }}" as="r" hint-placeholder-count="5">
+                  <div style="--fwS:{{ r.fw }};--fgS:{{ r.fg }};display:flex;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--line2)">
+                    <span style="font-size:12.5px;color:var(--ink2);flex:1;min-width:0;line-height:1.4;font-weight:var(--fwS)">{{ r.label }}</span>
+                    <span style="font-size:13px;font-weight:var(--fwS);color:var(--fgS);white-space:nowrap">{{ r.value }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ sec.hasGauges }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:16px;margin-top:18px">
+                  <sc-for list="{{ gauges }}" as="g" hint-placeholder-count="2">
+                    <div style="--fg:{{ g.fg }}">
+                      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
+                        <span style="font-size:12px;font-weight:600;letter-spacing:.04em">{{ g.code }}</span>
+                        <span style="font-size:16px;font-weight:600;color:var(--fg);margin-left:auto">{{ g.value }}</span>
+                        <span style="font-size:11.5px;color:var(--ink3)">{{ g.limitNote }}</span>
+                      </div>
+                      <div style="position:relative;height:8px;border-radius:100px;background:var(--sunk);overflow:hidden">
+                        <span aria-hidden="true" style="position:absolute;left:0;top:0;bottom:0;width:{{ g.w }};background:var(--fg);border-radius:100px"></span>
+                        <span aria-hidden="true" style="position:absolute;left:{{ g.limitW }};top:0;bottom:0;width:2px;background:var(--ink)"></span>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+      <div style="border-top:1px solid var(--line);height:8px"></div>
+    </div>
+
+    <div style="padding:12px 18px 18px;border-top:1px solid var(--line);background:var(--panel)">
+      <button style="width:100%;min-height:50px;background:var(--ac);color:#fff;border-radius:100px;font-size:15px;font-weight:600">{{ s.adjust }}</button>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+<p class="dvNext">Try next: "port this to closing costs and down payment" · "show it with everything expanded" · "make the hero number smaller and the checks bigger" · "apply the indigo/bone system to the hub"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1700,&quot;height&quot;:1500},&quot;startExpanded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Open every section on load&quot;},&quot;startJurisdiction&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;winnipeg&quot;,&quot;toronto&quot;,&quot;ottawa&quot;,&quot;vancouver&quot;,&quot;halifax&quot;,&quot;montreal&quot;,&quot;calgary&quot;,&quot;saskatoon&quot;],&quot;default&quot;:&quot;winnipeg&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;City on load&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Français&quot;,&quot;Українська&quot;,&quot;Español&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Scenario&quot;,&quot;label&quot;:&quot;Language on load&quot;}}">
+class Component extends DCLogic {
+  state = {
+    ready: false, lang: 0, themeA: 'light', themeB: 'dark',
+    jurId: 'winnipeg', pickerOpen: false, open: {}, advOpen: false,
+    inc1: 75000, inc2: 45000, app2: true, haircut: 0,
+    car: 550, student: 0, cc: 0, otherDebt: 0,
+    price: 0, priceTouched: false, dpPct: 10, amortYears: 30, ftb: true, ptype: 'house',
+    comfortCeiling: 2700, insuranceAnnual: 1500, utilities: 300, condoFee: 0,
+    funds: 50000, save: 1200, pulse: 0
+  };
+
+  componentDidMount() {
+    const go = () => {
+      const D = window.CIBTH_DATA; if (!D || !window.CIBTH_ENGINE) return false;
+      const p = this.props || {};
+      const jid = D.jur.some(x => x.id === p.startJurisdiction) ? p.startJurisdiction : 'winnipeg';
+      const li = ['English', 'Français', 'Українська', 'Español'].indexOf(p.startLang);
+      const rec = D.jur.find(x => x.id === jid);
+      const openAll = p.startExpanded === true;
+      const open = {};
+      if (openAll) ['approval', 'comfort', 'cash', 'gap', 'math'].forEach(k => { open[k] = true; });
+      this.setState({ ready: true, jurId: jid, lang: li < 0 ? 0 : li, price: rec.bench.house, open });
+      const shared = window.CIBTH_ENGINE.loadShared();
+      if (Object.keys(shared).length) this.setState(shared);
+      window.CIBTH_ENGINE.onSharedChange(v => this.setState(v));
+      return true;
+    };
+    if (!go()) {
+      this._iv = setInterval(() => { if (go()) clearInterval(this._iv); }, 30);
+      window.addEventListener('cibth-data', go); window.addEventListener('cibth-engine', go);
+    }
+  }
+  componentWillUnmount() { if (this._iv) clearInterval(this._iv); }
+  componentDidUpdate() { if (this.state.ready) window.CIBTH_ENGINE.saveShared(this.state); }
+
+  L() { return ['en-CA', 'fr-CA', 'uk-UA', 'es-ES'][this.state.lang]; }
+  money(n, dp) { return window.CIBTH_ENGINE.money(n, this.L(), this.state.lang !== 0, dp); }
+  pct(n, d) {
+    const v = new Intl.NumberFormat(this.L(), { minimumFractionDigits: d == null ? 0 : d, maximumFractionDigits: d == null ? 1 : d }).format(n);
+    return this.state.lang === 0 ? v + '%' : v + '\u202f%';
+  }
+  date(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat(this.L(), { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d));
+  }
+
+  S = {
+    aTitle: ['Affordability', 'Capacité d’achat', 'Доступність', 'Capacidad de compra'],
+    breakdown: ['The breakdown', 'Le détail', 'Розбір', 'El desglose'],
+    expandAll: ['Expand all', 'Tout ouvrir', 'Розгорнути все', 'Abrir todo'],
+    collapseAll: ['Collapse all', 'Tout fermer', 'Згорнути все', 'Cerrar todo'],
+    stComfort: ['Comfortable price', 'Prix confortable', 'Комфортна ціна', 'Precio cómodo'],
+    stCeiling: ['Lender ceiling', 'Plafond du prêteur', 'Межа кредитора', 'Techo del prestamista'],
+    stCeilingNote: ['a ceiling, not a target', 'un plafond, pas une cible', 'межа, а не мета', 'un techo, no un objetivo'],
+    stMonthly: ['All-in monthly', 'Mensualité tout compris', 'Разом на місяць', 'Mensualidad total'],
+    stCash: ['Cash at closing', 'Comptant à la clôture', 'Готівка при закритті', 'Efectivo en el cierre'],
+    ckApproval: ['Approval', 'Approbation', 'Схвалення', 'Aprobación'],
+    ckComfort: ['Comfort', 'Confort', 'Комфорт', 'Comodidad'],
+    ckCash: ['Cash', 'Liquidités', 'Готівка', 'Efectivo'],
+    ckApOk: ['A lender would approve at this price.', 'Un prêteur approuverait à ce prix.', 'За цією ціною кредитор схвалить.', 'Un prestamista aprobaría a este precio.'],
+    ckApNo: ['A lender would decline at this price.', 'Un prêteur refuserait à ce prix.', 'За цією ціною кредитор відмовить.', 'Un prestamista rechazaría a este precio.'],
+    ckTds: ['Your other debts are the limit, not the house.', 'Vos autres dettes sont la limite, pas la maison.', 'Обмежують інші боргѝ, а не житло.', 'Sus otras deudas son el límite, no la casa.'],
+    ckGds: ['Housing cost is the limit, not your other debts.', 'Le coût du logement est la limite, pas vos autres dettes.', 'Обмежує вартість житла, а не інші боргѝ.', 'El coste de la vivienda es el límite, no sus deudas.'],
+    ckCfOk: ['Inside the monthly ceiling you set.', 'Sous le plafond mensuel que vous avez fixé.', 'У межах вашої місячної стелі.', 'Dentro del techo mensual que fijó.'],
+    ckCfNo: ['Above the monthly ceiling you set.', 'Au-dessus du plafond mensuel que vous avez fixé.', 'Вище за вашу місячну стелю.', 'Por encima del techo mensual que fijó.'],
+    ckCsOk: ['Enough for the down payment and the closing costs.', 'Assez pour la mise de fonds et les frais de clôture.', 'Достатньо на внесок і витрати на закриття.', 'Suficiente para el pago inicial y los gastos de cierre.'],
+    ckCsNo: ['Not yet enough for the down payment and the closing costs.', 'Pas encore assez pour la mise de fonds et les frais de clôture.', 'Ще не достатньо на внесок і витрати на закриття.', 'Aún no alcanza para el pago inicial y los gastos de cierre.'],
+    headroom: ['headroom', 'de marge', 'запасу', 'de margen'],
+    over: ['over', 'de trop', 'перевищення', 'de exceso'],
+    short: ['short', 'manquants', 'бракує', 'faltan'],
+    gapTitle: ['The gap', 'L’écart', 'Розрив', 'La brecha'],
+    gapZone: ['Lenders will approve into this zone. Most people who get into trouble bought here.', 'Les prêteurs approuvent jusque dans cette zone. La plupart de ceux qui se retrouvent en difficulté ont acheté ici.', 'Кредитори схвалюють і в цій зоні. Більшість тих, хто потрапляє в біду, купували саме тут.', 'Los prestamistas aprueban hasta esta zona. La mayoría de quienes acaban en apuros compraron aquí.'],
+    gapZoneInv: ['You would be comfortable carrying more than a lender will approve. Your limit is the lender, not your comfort.', 'Vous porteriez confortablement plus qu’un prêteur n’approuvera. Votre limite est le prêteur, pas votre confort.', 'Ви спокійно витримали б більше, ніж схвалить кредитор. Вас обмежує кредитор, а не комфорт.', 'Sostendría con holgura más de lo que aprobará un prestamista. Su límite es el prestamista, no su comodidad.'],
+    gapLine: ['The distance between what you can carry and what a bank will sign.', 'La distance entre ce que vous pouvez porter et ce qu’une banque signera.', 'Відстань між тим, що ви витримаєте, і тим, що підпише банк.', 'La distancia entre lo que puede sostener y lo que firmará un banco.'],
+    mLine: ['Both ceilings, derived line by line.', 'Les deux plafonds, dérivés ligne par ligne.', 'Обидві межі, виведені рядок за рядком.', 'Ambos techos, derivados línea por línea.'],
+    gapWhy: ['Two ceilings, side by side, on the same scale. Your target price sits somewhere between them — or past them both.', 'Deux plafonds, côte à côte, à la même échelle. Votre prix cible se situe entre les deux — ou au-delà des deux.', 'Дві межі поруч, в одному масштабі. Ваша цільова ціна десь між ними — або за обома.', 'Dos techos, uno junto al otro, en la misma escala. Su precio objetivo queda entre ambos, o más allá.'],
+    gapTarget: ['Your target', 'Votre cible', 'Ваша ціль', 'Su objetivo'],
+    mTitle: ['The math', 'Le calcul', 'Розрахунок', 'El cálculo'],
+    mWhy: ['Nothing here is hidden from you. Every figure traces back to an input or a dated rule.', 'Rien ne vous est caché ici. Chaque chiffre remonte à une donnée saisie ou à une règle datée.', 'Тут від вас нічого не приховано. Кожна цифра походить з ваших даних або датованого правила.', 'Aquí no se le oculta nada. Cada cifra procede de un dato suyo o de una regla fechada.'],
+    mLender: ['What a lender would approve', 'Ce qu’un prêteur approuverait', 'Що схвалить кредитор', 'Lo que aprobaría un prestamista'],
+    mComfort: ['What you could comfortably carry', 'Ce que vous pourriez porter confortablement', 'Що ви справді витримаєте', 'Lo que podría sostener con holgura'],
+    mQualInc: ['Qualifying income, after haircut', 'Revenu admissible, après décote', 'Кваліфікаційний дохід, після дисконту', 'Ingreso computable, tras descuento'],
+    mStressRate: ['Stress test qualifying rate', 'Taux admissible du test de résistance', 'Кваліфікаційна ставка стрес-тесту', 'Tasa de calificación de la prueba'],
+    mStressWhy: ['The greater of 5.25% or your contract rate plus two points. You must carry the payment at this rate, not the one you are offered.', 'Le plus élevé de 5,25 % ou de votre taux contractuel plus deux points. Vous devez porter le paiement à ce taux, pas à celui qu’on vous offre.', 'Більше з двох: 5,25 % або ваша ставка плюс два пункти. Платіж мусить бути посильним за цією ставкою, а не за пропонованою.', 'El mayor entre 5,25 % o su tasa contractual más dos puntos. Debe poder pagar a esta tasa, no a la que le ofrecen.'],
+    mFactor: ['Monthly payment per $1 of mortgage', 'Paiement mensuel par 1 $ de prêt', 'Місячний платіж на 1 $ іпотеки', 'Pago mensual por 1 $ de hipoteca'],
+    mFactorWhy: ['Canadian mortgages compound semi-annually, not monthly.', 'Les prêts canadiens sont composés semestriellement, non mensuellement.', 'Канадські іпотеки складаються півроку, а не щомісяця.', 'Las hipotecas canadienses capitalizan semestralmente, no mensualmente.'],
+    mGdsAllow: ['Maximum monthly housing cost', 'Coût mensuel de logement maximal', 'Максимальна місячна вартість житла', 'Coste mensual máximo de vivienda'],
+    mTdsAllow: ['Maximum after other debts', 'Maximum après les autres dettes', 'Максимум після інших боргів', 'Máximo tras otras deudas'],
+    mBinding: ['Binding constraint', 'Contrainte déterminante', 'Вирішальне обмеження', 'Restricción determinante'],
+    mMaxPrice: ['Maximum price a lender would approve', 'Prix maximal qu’un prêteur approuverait', 'Максимальна ціна, яку схвалить кредитор', 'Precio máximo que aprobaría un prestamista'],
+    mImplied: ['Implied mortgage at 20% down', 'Prêt implicite avec 20 % de mise de fonds', 'Іпотека при 20 % внеску', 'Hipoteca implícita con 20 % de entrada'],
+    mStated: ['Your stated monthly ceiling', 'Votre plafond mensuel déclaré', 'Ваша заявлена місячна стеля', 'Su techo mensual declarado'],
+    mLess: ['Less', 'Moins', 'Мінус', 'Menos'],
+    mBudget: ['Budget for principal, interest, tax and maintenance', 'Budget pour capital, intérêts, taxes et entretien', 'Бюджет на тіло, відсотки, податок і обслуговування', 'Presupuesto para capital, intereses, impuesto y mantenimiento'],
+    mFactorContract: ['Payment factor at your contract rate', 'Facteur de paiement à votre taux contractuel', 'Коефіцієнт платежу за вашою ставкою', 'Factor de pago a su tasa contractual'],
+    mComfortPrice: ['Comfortable purchase price at 20% down', 'Prix d’achat confortable avec 20 % de mise de fonds', 'Комфортна ціна при 20 % внеску', 'Precio de compra cómodo con 20 % de entrada'],
+    mDownReq: ['Down payment required', 'Mise de fonds requise', 'Потрібний внесок', 'Pago inicial necesario'],
+    mPiAt: ['Monthly principal and interest', 'Capital et intérêts mensuels', 'Тіло й відсотки на місяць', 'Capital e intereses mensuales'],
+    mPi: ['Principal and interest', 'Capital et intérêts', 'Тіло й відсотки', 'Capital e intereses'],
+    mPropTax: ['Property tax', 'Taxes foncières', 'Податок на майно', 'Impuesto predial'],
+    mMaint: ['Maintenance reserve', 'Réserve d’entretien', 'Резерв на обслуговування', 'Reserva de mantenimiento'],
+    mTotal: ['True all-in monthly', 'Total mensuel tout compris', 'Разом на місяць', 'Total mensual real'],
+    gdsShort: ['housing over income', 'logement sur revenu', 'житло до доходу', 'vivienda sobre ingreso'],
+    tdsShort: ['all debt over income', 'toute dette sur revenu', 'усі боргѝ до доходу', 'toda deuda sobre ingreso'],
+    limitWord: ['limit', 'limite', 'межа', 'límite'],
+    heatNote: ['Lenders use a standard heating allowance of {h} in these ratios — lower than real utility cost. The monthly total above uses your realistic figure on purpose.', 'Les prêteurs utilisent une allocation de chauffage normalisée de {h} dans ces ratios — inférieure au coût réel. Le total mensuel ci-dessus utilise volontairement votre chiffre réaliste.', 'У цих коефіцієнтах кредитори беруть стандартну норму на опалення {h} — нижчу за реальну. Місячний підсумок вище свідомо використовує ваше реалістичне число.', 'Los prestamistas usan una asignación de calefacción estándar de {h} en estos ratios, inferior al coste real. El total mensual de arriba usa a propósito su cifra realista.'],
+    cIncome: ['Income', 'Revenu', 'Дохід', 'Ingresos'],
+    cApp1: ['Applicant 1', 'Demandeur 1', 'Заявник 1', 'Solicitante 1'],
+    cApp2: ['Applicant 2', 'Demandeur 2', 'Заявник 2', 'Solicitante 2'],
+    perYear: ['gross, per year', 'brut, par an', 'брутто, на рік', 'bruto, al año'],
+    cAddApp: ['Add a second applicant', 'Ajouter un second demandeur', 'Додати другого заявника', 'Añadir un segundo solicitante'],
+    cRemove: ['Remove', 'Retirer', 'Прибрати', 'Quitar'],
+    cAdvanced: ['More inputs — income recognition, carrying costs, first-time buyer', 'Plus de champs — revenu reconnu, frais de possession, premier acheteur', 'Більше полів — визнання доходу, витрати на утримання, перший покупець', 'Más campos — ingreso reconocido, costes de posesión, primer comprador'],
+    cHide: ['Hide those inputs', 'Masquer ces champs', 'Сховати ці поля', 'Ocultar esos campos'],
+    cHaircut: ['Lender income recognition haircut', 'Décote du revenu reconnu', 'Дисконт визнаного доходу', 'Descuento del ingreso reconocido'],
+    cHaircutWhy: ['0% for salaried employees. Raise it to model how a lender discounts self-employed or variable income.', '0 % pour les salariés. Augmentez-la pour modéliser la décote d’un revenu autonome ou variable.', '0 % для найманих працівників. Підвищте, щоб змоделювати дисконт для самозайнятих чи змінного доходу.', '0 % para asalariados. Aumente para modelar cómo se descuenta el ingreso autónomo o variable.'],
+    cDebts: ['Monthly debts', 'Dettes mensuelles', 'Місячні боргѝ', 'Deudas mensuales'],
+    cCar: ['Car loan or lease', 'Prêt ou location auto', 'Автокредит або лізинг', 'Préstamo o leasing de auto'],
+    cStudent: ['Student loan', 'Prêt étudiant', 'Студентський кредит', 'Préstamo estudiantil'],
+    cCc: ['Card or credit line minimum', 'Minimum carte ou marge', 'Мінімум по картці або лінії', 'Mínimo de tarjeta o línea'],
+    cOtherDebt: ['Other obligations', 'Autres obligations', 'Інші зобов’язання', 'Otras obligaciones'],
+    cComfortCeiling: ['Monthly all-in you would be relaxed about', 'Mensualité qui vous laisserait serein', 'Платіж, з яким вам буде спокійно', 'Mensualidad con la que estaría tranquilo'],
+    cInsurance: ['Home insurance, annual', 'Assurance habitation, annuelle', 'Страхування житла, річне', 'Seguro de hogar, anual'],
+    cUtilities: ['Utilities and heat, monthly', 'Services et chauffage, mensuel', 'Комунальні та опалення, місячно', 'Servicios y calefacción, mensual'],
+    cCondoFee: ['Condo or strata fee, monthly', 'Frais de condo, mensuel', 'Внесок за кондо, місячно', 'Cuota de condominio, mensual'],
+    cFunds: ['Funds available', 'Fonds disponibles', 'Доступні кошти', 'Fondos disponibles'],
+    keyLever: ['key lever', 'levier clé', 'ключовий чинник', 'palanca clave'],
+    impactPre: ['Your monthly debts reduce what a lender will approve by about', 'Vos dettes mensuelles réduisent ce qu’un prêteur approuvera d’environ', 'Ваші місячні боргѝ зменшують схвалену суму приблизно на', 'Sus deudas mensuales reducen lo que aprobará un prestamista en unos'],
+    impactNone: ['No monthly debts entered. Every $100 of obligation would cost you roughly', 'Aucune dette mensuelle saisie. Chaque 100 $ d’obligation vous coûterait environ', 'Місячні боргѝ не введено. Кожні 100 $ зобов’язань коштували б приблизно', 'Sin deudas mensuales. Cada 100 $ de obligación le costaría unos'],
+    impactFoot: ['Total debt service is usually the binding constraint, and almost nobody knows it.', 'Le service total de la dette est habituellement la contrainte déterminante, et presque personne ne le sait.', 'Загальне обслуговування боргу зазвичай і є вирішальним обмеженням — і майже ніхто цього не знає.', 'El servicio total de la deuda suele ser la restricción determinante, y casi nadie lo sabe.'],
+    perHundred: ['of borrowing capacity per $100 per month.', 'de capacité d’emprunt par 100 $ par mois.', 'кредитної спроможності на кожні 100 $ на місяць.', 'de capacidad de préstamo por cada 100 $ al mes.'],
+    defaults: ['Pre-filled from your city and the dated rules table. Every field is overwritable.', 'Pré-rempli à partir de votre ville et de la table de règles datée. Chaque champ est modifiable.', 'Заповнено з даних вашого міста й датованої таблиці правил. Кожне поле можна змінити.', 'Precargado desde su ciudad y la tabla de reglas fechada. Todo campo es modificable.'],
+    vComfort: ['You can comfortably afford a home at this price.', 'Vous pouvez confortablement vous permettre une maison à ce prix.', 'Ви можете спокійно дозволити собі житло за цією ціною.', 'Puede permitirse con holgura una vivienda a este precio.'],
+    vOver: ['Your target is above what you would be comfortable carrying.', 'Votre cible dépasse ce que vous porteriez confortablement.', 'Ваша ціль вища за те, що ви спокійно витримаєте.', 'Su objetivo supera lo que sostendría con holgura.'],
+    vDeclined: ['A lender would decline at your target price.', 'Un prêteur refuserait à votre prix cible.', 'За вашою цільовою ціною кредитор відмовить.', 'Un prestamista rechazaría a su precio objetivo.'],
+    vShortCash: ['You have enough income, but not yet enough cash to close.', 'Votre revenu suffit, mais pas encore votre comptant pour clôturer.', 'Доходу достатньо, але готівки на закриття — ще ні.', 'Su ingreso alcanza, pero su efectivo para cerrar todavía no.'],
+    vMonths: ['About {n} months away at your current savings rate.', 'Environ {n} mois à votre rythme d’épargne actuel.', 'Приблизно {n} місяців за поточним темпом заощаджень.', 'Unos {n} meses a su ritmo de ahorro actual.'],
+    subComfort: ['That is the price at which the monthly cost stays inside the ceiling you set — not the price a bank would sign off on.', 'C’est le prix auquel le coût mensuel reste sous le plafond que vous avez fixé — pas celui qu’une banque approuverait.', 'Це ціна, за якої місячний платіж лишається в межах вашої стелі — а не та, яку підпише банк.', 'Es el precio al que el coste mensual se mantiene bajo su techo, no el que firmaría un banco.']
+  };
+
+  renderVals() {
+    const st = this.state;
+    if (!st.ready || !window.CIBTH_DATA || !window.CIBTH_ENGINE) return { themeA: st.themeA, themeB: st.themeB };
+    const D = window.CIBTH_DATA, F = D.federal, E = window.CIBTH_ENGINE, lang = st.lang;
+    const s = {}; for (const k in D.t) s[k] = D.t[k][lang];
+    for (const k in this.S) s[k] = this.S[k][lang];
+
+    const j = D.jur.find(x => x.id === st.jurId) || D.jur[0];
+    const price = st.price || j.bench[st.ptype];
+    const debts = st.car + st.student + st.cc + st.otherDebt;
+    const contractRate = (st.dpPct < 20 ? F.rates.insured : F.rates.uninsured) * 100;
+
+    const A = E.affordability(j, F, {
+      income1: st.inc1, income2: st.app2 ? st.inc2 : 0, otherIncome: 0, haircut: st.haircut,
+      debts, amortYears: st.amortYears, comfortCeiling: st.comfortCeiling,
+      insuranceAnnual: st.insuranceAnnual, utilities: st.utilities, condoFee: st.condoFee,
+      contractRate, price, dpPct: st.dpPct, ftb: st.ftb, ptype: st.ptype, elsewhere: false
+    });
+
+    const cashGap = st.funds - A.cc.net;
+    const monthsAway = st.save > 0 ? Math.ceil(-cashGap / st.save) : null;
+
+    let vKey;
+    if (!A.approvalPass) vKey = 'declined';
+    else if (cashGap < 0) vKey = 'shortCash';
+    else if (!A.comfortPass) vKey = 'over';
+    else vKey = 'comfortable';
+    const verdict = {
+      comfortable: { head: s.vComfort, sub: s.subComfort },
+      over: { head: s.vOver, sub: s.subComfort },
+      declined: { head: s.vDeclined, sub: A.tdsBinds ? s.ckTds : s.ckGds },
+      shortCash: { head: s.vShortCash, sub: monthsAway == null ? s.ckCsNo : s.vMonths.replace('{n}', String(monthsAway)) }
+    }[vKey];
+
+    const langs = ['English', 'Français', 'Українська', 'Español'].map((n, i) => ({
+      name: n, abbr: ['EN', 'FR', 'UK', 'ES'][i], on: i === lang ? 'true' : 'false',
+      pick: () => this.setState({ lang: i }),
+      bg: i === lang ? 'var(--acbg)' : 'transparent', fg: i === lang ? 'var(--ac)' : 'var(--ink3)', fw: i === lang ? '600' : '400'
+    }));
+
+    const cityOpts = D.jur.filter(x => x.city).map(x => ({
+      name: D.C[x.city][lang], on: x.id === st.jurId ? 'true' : 'false',
+      bg: x.id === st.jurId ? 'var(--acbg)' : 'transparent',
+      fg: x.id === st.jurId ? 'var(--ac)' : 'var(--ink)', fw: x.id === st.jurId ? '600' : '400',
+      pick: () => this.setState({ jurId: x.id, pickerOpen: false, pulse: st.pulse + 1, price: st.priceTouched ? st.price : x.bench[st.ptype] })
+    }));
+
+    /* One disclosure model: every section is a row that opens in place. */
+    const SEC_KEYS = ['approval', 'comfort', 'cash', 'gap', 'math'];
+    const anyOpen = SEC_KEYS.some(k => st.open[k]);
+    const toggleAll = () => {
+      const next = {};
+      if (!anyOpen) SEC_KEYS.forEach(k => { next[k] = true; });
+      this.setState({ open: next });
+    };
+    /* A row whose amount rounds to zero is not applicable — it is omitted, never shown as $0. */
+    const nz = n => Math.round(Math.abs(n)) > 0;
+    const row = (label, value, strong) => ({ label, value, fw: strong ? '600' : '400', fg: strong ? 'var(--ink)' : 'var(--ink2)' });
+    const rows = list => list.filter(Boolean);
+    const tone = t => t === 'none' ? 'var(--ink3)' : t === 'pass' ? 'var(--pass)' : t === 'caution' ? 'var(--caut)' : 'var(--blk)';
+    const mkSec = (id, name, t, line, figure, why, rows, extra) => {
+      const open = !!st.open[id];
+      return Object.assign({
+        id, name, line, figure, why, rows, open,
+        dot: tone(t), figFg: (t === 'pass' || t === 'none') ? 'var(--ink)' : tone(t),
+        caret: open ? '\u2715' : '\u203a',
+        hasGauges: false, hasBand: false, hasCols: false,
+        toggle: () => this.setState(x => ({ open: Object.assign({}, x.open, { [id]: !x.open[id] }) }))
+      }, extra || {});
+    };
+
+    const inverted = A.comfort > A.ceiling;
+    const gapTone = inverted ? 'caution' : (Math.abs(A.gap) > A.comfort * 0.15 ? 'caution' : 'pass');
+
+    const sections = [
+      mkSec('approval', s.ckApproval, A.approvalPass ? 'pass' : 'blocked',
+        (A.approvalPass ? s.ckApOk : s.ckApNo) + ' ' + (A.tdsBinds ? s.ckTds : s.ckGds),
+        this.money(A.ceiling), s.mStressWhy,
+        rows([row(s.mQualInc, this.money(A.qualIncome)), row(s.mStressRate, this.pct(A.qualRate, 2)),
+         row(s.mFactor, A.fq.toFixed(6)),
+         row(s.mGdsAllow + ' · GDS ' + this.pct(F.gds), this.money(A.gdsAllow)),
+         row(s.mTdsAllow + ' · TDS ' + this.pct(F.tds), this.money(A.tdsAllow)),
+         row(s.mBinding, this.money(A.binding) + ' · ' + (A.tdsBinds ? 'TDS' : 'GDS'), true),
+         row(s.mMaxPrice, this.money(A.ceiling), true)]),
+        { hasGauges: true }),
+      mkSec('comfort', s.ckComfort, A.comfortPass ? 'pass' : 'caution',
+        A.comfortPass ? s.ckCfOk : s.ckCfNo,
+        (A.comfortGap <= 0 ? this.money(-A.comfortGap) + ' ' + s.headroom : this.money(A.comfortGap) + ' ' + s.over),
+        s.subComfort,
+        rows([row(s.mPi, this.money(A.monthly.pi)), row(s.mPropTax, this.money(A.monthly.propTax)),
+         row(s.cInsurance, this.money(A.monthly.insurance)), row(s.cUtilities, this.money(A.monthly.utilities)),
+         nz(A.monthly.condoFee) && row(s.cCondoFee, this.money(A.monthly.condoFee)),
+         row(s.mMaint, this.money(A.monthly.maintenance)),
+         row(s.mTotal, this.money(A.monthly.total), true), row(s.mStated, this.money(st.comfortCeiling), true)])),
+      mkSec('cash', s.ckCash, cashGap >= 0 ? (cashGap < A.cc.net * 0.1 ? 'caution' : 'pass') : 'blocked',
+        cashGap >= 0 ? s.ckCsOk : s.ckCsNo,
+        (cashGap >= 0 ? this.money(cashGap) + ' ' + s.headroom : this.money(-cashGap) + ' ' + s.short),
+        s.separateNote,
+        rows([row(s.downPaymentRow, this.money(A.cc.fin.down)), row(s.closingCosts, this.money(A.cc.total)),
+         nz(A.cc.creditsAtClosing) && row(s.grpAtClosing, '\u2212\u2009' + this.money(A.cc.creditsAtClosing)),
+         row(s.netCash, this.money(A.cc.net), true), row(s.cFunds, this.money(st.funds)),
+         row(s.monthsToClose, monthsAway == null ? '\u2014' : (cashGap >= 0 ? '0' : String(monthsAway)), true)])),
+      mkSec('gap', s.gapTitle, gapTone,
+        s.gapLine,
+        this.money(Math.abs(A.gap)), s.gapWhy,
+        [row(s.stComfort, this.money(A.comfort), true), row(s.stCeiling, this.money(A.ceiling)),
+         row(s.gapTarget, this.money(price))],
+        { hasBand: true }),
+      mkSec('math', s.mTitle, 'none', s.mLine, '', s.mWhy, [], { hasCols: true })
+    ];
+
+    const lo = Math.min(A.comfort, A.ceiling), hi = Math.max(A.comfort, A.ceiling);
+    const scale = Math.max(hi, price) * 1.04 || 1;
+    const pc = v => Math.max(0, Math.min(100, v / scale * 100));
+    const w = v => pc(v).toFixed(2) + '%';
+    const band = inverted
+      ? { bg: 'var(--caut)', fg: 'var(--caut)', text: s.gapZoneInv }
+      : { bg: 'var(--caut)', fg: 'var(--caut)', text: s.gapZone };
+    const tf = p => p > 86 ? 'translateX(-100%)' : p < 14 ? 'translateX(0)' : 'translateX(-50%)';
+    const al = p => p > 86 ? 'flex-end' : p < 14 ? 'flex-start' : 'center';
+
+    const debtCapacity = debts * A.capacityPerDollar;
+    const per100 = 100 * A.capacityPerDollar;
+    const impact = debts > 0
+      ? { label: s.impactPre, amount: '\u2212\u2009' + this.money(debtCapacity), foot: s.impactFoot, fg: 'var(--caut)' }
+      : { label: s.impactNone, amount: this.money(per100), foot: s.perHundred, fg: 'var(--ink2)' };
+
+    const debtFields = [['cCar', 'car'], ['cStudent', 'student'], ['cCc', 'cc'], ['cOtherDebt', 'otherDebt']].map(([lk, sk]) => ({
+      label: s[lk], value: st[sk],
+      onChange: e => { const v = parseFloat(e.target.value); this.setState({ [sk]: isNaN(v) ? 0 : v }); }
+    }));
+    const carryFields = [['cInsurance', 'insuranceAnnual', '50'], ['cUtilities', 'utilities', '10'], ['cCondoFee', 'condoFee', '25'], ['cFunds', 'funds', '1000']].map(([lk, sk, step]) => ({
+      label: s[lk], value: st[sk], step,
+      onChange: e => { const v = parseFloat(e.target.value); this.setState({ [sk]: isNaN(v) ? 0 : v }); }
+    }));
+
+    const pillOn = on => ({
+      on: on ? 'true' : 'false',
+      bg: on ? 'var(--acbg)' : 'transparent', fg: on ? 'var(--ac)' : 'var(--ink2)', fw: on ? '600' : '400'
+    });
+    const dpOpts = [5, 10, 20, 25].map(v => Object.assign({ label: this.pct(v), pick: () => this.setState({ dpPct: v }) }, pillOn(st.dpPct === v)));
+    const amortOpts = [25, 30].map(v => Object.assign({
+      label: v + '\u2009' + ['yr', 'ans', '\u0440.', 'a\u00f1os'][lang], pick: () => this.setState({ amortYears: v })
+    }, pillOn(st.amortYears === v)));
+
+    const mrow = (label, value, strong, why) => ({ label, value, fw: strong ? '600' : '400', fg: strong ? 'var(--ink)' : 'var(--ink2)', why: why || false });
+    const mathCols = [
+      { title: s.mLender, accent: 'var(--ink)', rows: [
+        mrow(s.mQualInc, this.money(A.qualIncome)),
+        mrow(s.mStressRate, this.pct(A.qualRate, 2), false, s.mStressWhy),
+        mrow(s.mFactor, A.fq.toFixed(6), false, s.mFactorWhy),
+        mrow(s.mGdsAllow, this.money(A.gdsAllow)),
+        mrow(s.mTdsAllow, this.money(A.tdsAllow)),
+        mrow(s.mBinding, this.money(A.binding) + ' · ' + (A.tdsBinds ? 'TDS' : 'GDS'), true, A.tdsBinds ? s.ckTds : s.ckGds),
+        mrow(s.mMaxPrice, this.money(A.ceiling), true),
+        mrow(s.mImplied, this.money(A.impliedMortgage))
+      ] },
+      { title: s.mComfort, accent: 'var(--ac)', rows: rows([
+        mrow(s.mStated, this.money(st.comfortCeiling)),
+        nz(st.insuranceAnnual) && mrow(s.mLess + ' · ' + s.cInsurance, '\u2212\u2009' + this.money(st.insuranceAnnual / 12)),
+        nz(st.utilities) && mrow(s.mLess + ' · ' + s.cUtilities, '\u2212\u2009' + this.money(st.utilities)),
+        nz(st.condoFee) && mrow(s.mLess + ' · ' + s.cCondoFee, '\u2212\u2009' + this.money(st.condoFee)),
+        mrow(s.mBudget, this.money(A.budget), true),
+        mrow(s.mFactorContract + ' · ' + this.pct(contractRate, 2), A.fc.toFixed(6)),
+        mrow(s.mComfortPrice, this.money(A.comfort), true),
+        mrow(s.mDownReq, this.money(A.comfortDown)),
+        mrow(s.mPiAt, this.money(A.comfortPI))
+      ]) }
+    ];
+
+    const gaugeMax = 60;
+    const gauges = [
+      { code: 'GDS', short: s.gdsShort, v: A.gdsAtTarget, limit: F.gds },
+      { code: 'TDS', short: s.tdsShort, v: A.tdsAtTarget, limit: F.tds }
+    ].map(g => ({
+      code: g.code, short: g.short, value: this.pct(g.v, 1),
+      w: Math.max(0, Math.min(100, g.v / gaugeMax * 100)).toFixed(1) + '%',
+      limitW: (g.limit / gaugeMax * 100).toFixed(1) + '%',
+      limitNote: this.pct(g.limit) + ' ' + s.limitWord,
+      fg: g.v <= g.limit * 0.9 ? 'var(--pass)' : g.v <= g.limit ? 'var(--caut)' : 'var(--blk)'
+    }));
+
+    const cityName = D.C[j.city] ? D.C[j.city][lang] : D.P[j.prov][lang];
+
+    return {
+      s, langs, cityOpts, sections, mathCols, gauges, dpOpts, amortOpts, debtFields, carryFields, impact, verdict, band,
+      themeA: st.themeA, themeB: st.themeB,
+      themeIconA: st.themeA === 'dark' ? '\u25d1' : '\u25cb', themeIconB: st.themeB === 'dark' ? '\u25d1' : '\u25cb',
+      toggleThemeA: () => this.setState(x => ({ themeA: x.themeA === 'dark' ? 'light' : 'dark' })),
+      toggleThemeB: () => this.setState(x => ({ themeB: x.themeB === 'dark' ? 'light' : 'dark' })),
+      pickerOpen: st.pickerOpen, togglePicker: () => this.setState(x => ({ pickerOpen: !x.pickerOpen })),
+      chip: { short: cityName + ', ' + j.prov },
+      anyOpen: anyOpen ? 'true' : 'false', toggleAll, allLabel: anyOpen ? s.collapseAll : s.expandAll,
+      comfortPrice: this.money(A.comfort),
+      heroStats: [
+        { label: s.stCeiling, value: this.money(A.ceiling), note: s.stCeilingNote },
+        { label: s.stMonthly, value: this.money(A.monthly.total), note: '' },
+        { label: s.stCash, value: this.money(A.cc.net), note: '' }
+      ],
+      gapComfortW: w(A.comfort), gapTargetW: w(price), gapFillW: w(lo),
+      gapBandL: w(lo), gapBandW: (pc(hi) - pc(lo)).toFixed(2) + '%',
+      comfortTf: tf(pc(A.comfort)), comfortAlign: al(pc(A.comfort)),
+      targetTf: tf(pc(price)), targetAlign: al(pc(price)),
+      targetLabel: s.gapTarget + ' ' + this.money(price),
+      ceilingLabel: s.stCeiling + ' ' + this.money(A.ceiling),
+      heatNote: s.heatNote.replace('{h}', this.money(F.heatAllowance)),
+      inc1: st.inc1, inc2: st.inc2, app2: st.app2, noApp2: !st.app2,
+      onInc1: e => { const v = parseFloat(e.target.value); this.setState({ inc1: isNaN(v) ? 0 : v }); },
+      onInc2: e => { const v = parseFloat(e.target.value); this.setState({ inc2: isNaN(v) ? 0 : v }); },
+      toggleApp2: () => this.setState(x => ({ app2: !x.app2 })),
+      advOpen: st.advOpen, advLabel: st.advOpen ? s.cHide : s.cAdvanced,
+      advCaret: st.advOpen ? '\u2715' : '\u203a',
+      toggleAdv: () => this.setState(x => ({ advOpen: !x.advOpen })),
+      haircut: st.haircut, haircutFmt: this.pct(st.haircut),
+      onHaircut: e => this.setState({ haircut: parseFloat(e.target.value) }),
+      price: Math.round(price), priceFmt: this.money(price),
+      onPrice: e => { const v = parseFloat(e.target.value); this.setState({ price: isNaN(v) ? 0 : v, priceTouched: true }); },
+      priceTag: cityName + ' · ' + this.money(j.bench[st.ptype]),
+      comfortCeiling: st.comfortCeiling,
+      onCeiling: e => { const v = parseFloat(e.target.value); this.setState({ comfortCeiling: isNaN(v) ? 0 : v }); },
+      ftb: st.ftb ? 'true' : 'false', toggleFtb: () => this.setState(x => ({ ftb: !x.ftb })),
+      ftbBg: st.ftb ? 'var(--acbg)' : 'transparent', ftbFg: st.ftb ? 'var(--ac)' : 'var(--ink2)',
+      ftbTrack: st.ftb ? 'var(--ac)' : 'var(--ink3)', ftbX: st.ftb ? '16px' : '2px',
+      pulseKey: 'p' + st.pulse + st.jurId,
+      sourcesLine: s.sourcesForTpl.replace('{prov}', D.P[j.prov][lang]) + ' · ' + s.lastVerified + ' ' + this.date(D.verified) + ' · OSFI B-20 · CMHC / SCHL · ' + j.orgs.market
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -10,39 +10,40 @@
 <helmet data-dc-atomics>
 <meta name="design_doc_mode" content="canvas">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <script src="hbt-data.js"></script>
 <script src="hbt-engine.js"></script>
 <style>
 :root{
---s0:#F7F5F1;--s1:#FFFFFF;--s2:#EFECE5;--s3:#E5E1D7;
---br:#DCD7CC;--brh:#EAE6DD;--brs:#C6BFB1;
---tx:#17191C;--tx2:#565A5F;--tx3:#888C92;
---ac:#22375C;--ac2:#3B5C92;--acbg:#E7ECF4;--acbr:#C3CFE2;
---pass:#1A6B45;--passbg:#E3EFE8;--passbr:#BEDBCB;
---caut:#87590A;--cautbg:#F6EEDC;--cautbr:#E3D3AE;
---blk:#8D2A2A;--blkbg:#F6E7E5;--blkbr:#E5C4C0;
---def:#455A6C;--defbg:#E8EDF1;--defbr:#C8D3DC;
---bgS:var(--s2);--fgS:var(--tx3);--fwS:400;
---kBg:var(--s0);--kBr:var(--br);--kFg:var(--tx2);
+--paper:#FAF9F6;--panel:#FFFFFF;--sunk:#F1EFEA;--line:#E4E1DA;--line2:#EFEDE8;
+--ink:#14151A;--ink2:#5B5F66;--ink3:#8B9097;
+--ac:#3D3BD6;--ac2:#6462E6;--acbg:#ECECFD;--acbr:#D3D2FA;
+--pass:#176B4B;--passbg:#EDF5F1;--passbr:#D3E6DD;
+--caut:#8A5A12;--cautbg:#FBF3E4;--cautbr:#EFE0C2;
+--blk:#A32B2B;--blkbg:#FBEDEC;--blkbr:#F0D3D0;
+--def:#4A4F63;--defbg:#EFEFF6;--defbr:#DCDCE9;
+--bgS:transparent;--fgS:var(--ink3);--fwS:400;
+--bgD:transparent;--fgD:var(--ink2);--fwD:400;
+--kBg:var(--paper);--kBr:var(--line);--kFg:var(--ink2);
+--gW:0%;--gL:0%;--gT:0%;--barW:0%;--barBg:var(--ac2);
+--rowFw:400;--rowFg:var(--ink);--dot:var(--ink3);--fg:var(--ink);
 }
 [data-theme="dark"]{
---s0:#121417;--s1:#191C20;--s2:#21252A;--s3:#2A2F35;
---br:#2F343B;--brh:#262A30;--brs:#3D434B;
---tx:#EBE9E4;--tx2:#A3A8AE;--tx3:#767B82;
---ac:#93B3E0;--ac2:#AEC7EC;--acbg:#1C2632;--acbr:#2C3B4D;
---pass:#6AC497;--passbg:#152620;--passbr:#264737;
---caut:#DFAB4C;--cautbg:#292213;--cautbr:#463A1E;
---blk:#EA8D8D;--blkbg:#2A1919;--blkbr:#4A2C2C;
---def:#A0B4C5;--defbg:#1A2128;--defbr:#2C3742;
+--paper:#0E0F11;--panel:#16181C;--sunk:#1C1F24;--line:#292D33;--line2:#22252A;
+--ink:#ECEAE6;--ink2:#A2A7AE;--ink3:#6F757C;
+--ac:#8886FF;--ac2:#A5A3FF;--acbg:#1B1B33;--acbr:#2E2E52;
+--pass:#55C293;--passbg:#13251E;--passbr:#224535;
+--caut:#D9A94E;--cautbg:#272014;--cautbr:#443921;
+--blk:#E88A8A;--blkbg:#291818;--blkbr:#472B2B;
+--def:#A8AEC4;--defbg:#1A1B24;--defbr:#2C2E3D;
 }
 *{box-sizing:border-box}
-body{margin:0;background:#E8E5DF;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#E9E7E1;font-family:Archivo,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 a{color:var(--ac);text-decoration:none}
 a:hover{color:var(--ac2)}
 input{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:2px}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:7px}
 @keyframes hbPulse{0%{background:var(--acbg)}100%{background:transparent}}
 [data-screen-label$="phone"] button{min-height:44px}
 [data-screen-label$="phone"] a{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
@@ -50,16 +51,16 @@ input{font:inherit;color:inherit}
 @media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
 .dvT{padding:36px 40px 30px}
 .dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
-.dvId{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#17191C;color:#fff;border-radius:3px;text-decoration:none}
-.dvOid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#17191C;border-radius:3px;text-decoration:none}
-.dvName{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#17191C}
+.dvId{font:600 10px Archivo,sans-serif;padding:3px 7px;background:#14151A;color:#fff;border-radius:9px;text-decoration:none}
+.dvOid{font:600 10.5px Archivo,sans-serif;padding:3px 7px;background:rgba(0,0,0,.07);color:#14151A;border-radius:9px;text-decoration:none}
+.dvName{font:600 13px/1.2 Archivo,sans-serif;color:#14151A}
 .dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
 .dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
-.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
-.dvOpt:target .dvOid{background:#22375C;color:#fff}
-.dvNote{max-width:840px;font:400 12.5px/1.65 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#3D3BD6;color:#fff}
+.dvNote{max-width:840px;font:400 12.5px/1.65 Archivo,sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
 .dvNote b{color:rgba(0,0,0,.85);font-weight:600}
-.dvNext{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+.dvNext{margin:22px 0 0;font:12px/1.5 Archivo,sans-serif;color:rgba(0,0,0,.5)}
 </style>
 </helmet>
 
@@ -70,86 +71,86 @@ input{font:inherit;color:inherit}
 
 <div class="dvOpt" id="6a">
 <div class="dvLab"><a class="dvOid" href="#6a">6a</a>Desktop ≥1024 px — light, city defaults</div>
-<div data-theme="{{ themeA }}" data-screen-label="Home · desktop" style="width:1180px;background:var(--s0);color:var(--tx);border:1px solid var(--br);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
+<div data-theme="{{ themeA }}" data-screen-label="Home · desktop" style="width:1180px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
 
-  <header style="display:flex;align-items:center;gap:14px;padding:0 26px;height:60px;background:var(--s1);border-bottom:1px solid var(--br)">
+  <header style="display:flex;align-items:center;gap:14px;padding:0 26px;height:60px;background:var(--panel);border-bottom:1px solid var(--line)">
     <span style="font-size:14px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;flex:1;min-width:0">{{ s.brand }}</span>
-    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:7px 11px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:7px 11px;background:var(--sunk);border:1px solid var(--line);border-radius:9px">
       <span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--ac);flex:none"></span>
       <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ chip.city }}</span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">{{ chip.code }}</span>
-      <span aria-hidden="true" style="color:var(--tx3);font-size:11px">·</span>
-      <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ chip.country }}</span>
-      <span aria-hidden="true" style="font-size:9px;color:var(--tx3)">▾</span>
+      <span style="font-family:Archivo,sans-serif;font-size:11px;color:var(--ink2)">{{ chip.code }}</span>
+      <span aria-hidden="true" style="color:var(--ink3);font-size:11px">·</span>
+      <span style="font-size:11.5px;color:var(--ink2);white-space:nowrap">{{ chip.country }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--ink3)">▾</span>
     </button>
-    <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+    <div role="group" style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden">
       <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
         <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:6px 10px;font-size:11.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.name }}</button>
       </sc-for>
     </div>
-    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--tx2)">{{ themeIconA }}</button>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--line);border-radius:9px;background:var(--sunk);font-family:Archivo,sans-serif;font-size:10.5px;color:var(--ink2)">{{ themeIconA }}</button>
   </header>
 
   <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
-    <div style="background:var(--s1);border-bottom:1px solid var(--br);padding:16px 26px 18px">
-      <div style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);margin-bottom:8px">{{ s.municipality }}</div>
+    <div style="background:var(--panel);border-bottom:1px solid var(--line);padding:16px 26px 18px">
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">{{ s.municipality }}</div>
       <div role="listbox" style="display:flex;flex-wrap:wrap;gap:5px">
         <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="8">
-          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:8px 11px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg);color:var(--kFg)">
+          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:8px 11px;border:1px solid var(--kBr);border-radius:7px;background:var(--kBg);color:var(--kFg)">
             <span style="font-size:12.5px;font-weight:500">{{ c.name }}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ c.code }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:10px;color:var(--ink3)">{{ c.code }}</span>
           </button>
         </sc-for>
       </div>
-      <p style="margin:12px 0 0;font-size:11.5px;line-height:1.55;color:var(--tx3);max-width:620px">{{ s.detectNote }}</p>
+      <p style="margin:12px 0 0;font-size:11.5px;line-height:1.55;color:var(--ink3);max-width:620px">{{ s.detectNote }}</p>
     </div>
   </sc-if>
 
   <div style="padding:34px 26px 0;display:grid;grid-template-columns:1.35fr 1fr;gap:38px;align-items:start">
     <div>
       <h1 style="margin:0 0 12px;font-size:44px;line-height:1.06;font-weight:600;letter-spacing:-.03em;max-width:560px;text-wrap:pretty">{{ s.heroQ }}</h1>
-      <p style="margin:0 0 20px;font-size:15.5px;line-height:1.55;color:var(--tx2);max-width:520px;text-wrap:pretty">{{ s.heroSub }}</p>
+      <p style="margin:0 0 20px;font-size:15.5px;line-height:1.55;color:var(--ink2);max-width:520px;text-wrap:pretty">{{ s.heroSub }}</p>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <a href="Affordability.dc.html" style="display:inline-flex;align-items:baseline;gap:10px;padding:13px 20px;background:var(--ac);border-radius:3px;color:var(--s1)">
+        <a href="Affordability.dc.html" style="display:inline-flex;align-items:baseline;gap:10px;padding:13px 20px;background:var(--ac);border-radius:9px;color:var(--panel)">
           <span style="font-size:15px;font-weight:600">{{ s.startBtn }}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.85">{{ s.startMeta }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:11px;opacity:.85">{{ s.startMeta }}</span>
         </a>
-        <span style="font-size:12px;color:var(--tx3);line-height:1.45;max-width:220px;text-wrap:pretty">{{ s.orPick }}</span>
+        <span style="font-size:12px;color:var(--ink3);line-height:1.45;max-width:220px;text-wrap:pretty">{{ s.orPick }}</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:7px;margin-top:22px;padding-top:18px;border-top:1px solid var(--br);max-width:540px">
+      <div style="display:flex;flex-direction:column;gap:7px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line);max-width:540px">
         <sc-for list="{{ trust }}" as="tr" hint-placeholder-count="3">
           <div style="display:flex;gap:9px;align-items:baseline">
-            <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--pass);flex:none;line-height:1.6">✓</span>
-            <span style="font-size:12.5px;line-height:1.5;color:var(--tx2);text-wrap:pretty">{{ tr }}</span>
+            <span aria-hidden="true" style="font-family:Archivo,sans-serif;font-size:10px;font-weight:700;color:var(--pass);flex:none;line-height:1.6">✓</span>
+            <span style="font-size:12.5px;line-height:1.5;color:var(--ink2);text-wrap:pretty">{{ tr }}</span>
           </div>
         </sc-for>
       </div>
     </div>
 
-    <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:16px 18px">
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:16px 18px">
       <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:13px">
         <span style="font-size:12.5px;font-weight:600">{{ s.snapshot }}</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);margin-left:auto;white-space:nowrap">{{ snapshotTag }}</span>
+        <span style="font-family:Archivo,sans-serif;font-size:9.5px;color:var(--ink3);margin-left:auto;white-space:nowrap">{{ snapshotTag }}</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:0">
         <sc-for list="{{ snapshot }}" as="sn" hint-placeholder-count="4">
-          <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--brh)">
-            <span style="font-size:12.5px;color:var(--tx2);flex:1;min-width:0;line-height:1.35">{{ sn.label }}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;white-space:nowrap">{{ sn.value }}</span>
-            <span style="--kFg:{{ sn.deltaFg }};font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--kFg);min-width:52px;text-align:right;white-space:nowrap">{{ sn.delta }}</span>
+          <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--line2)">
+            <span style="font-size:12.5px;color:var(--ink2);flex:1;min-width:0;line-height:1.35">{{ sn.label }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:13.5px;font-weight:600;white-space:nowrap">{{ sn.value }}</span>
+            <span style="--kFg:{{ sn.deltaFg }};font-family:Archivo,sans-serif;font-size:11px;color:var(--kFg);min-width:52px;text-align:right;white-space:nowrap">{{ sn.delta }}</span>
           </div>
         </sc-for>
       </div>
-      <p style="margin:11px 0 0;font-size:11px;line-height:1.5;color:var(--tx3);text-wrap:pretty">{{ s.snapshotNote }}</p>
+      <p style="margin:11px 0 0;font-size:11px;line-height:1.5;color:var(--ink3);text-wrap:pretty">{{ s.snapshotNote }}</p>
     </div>
   </div>
 
   <div style="display:flex;align-items:flex-end;gap:18px;padding:32px 26px 0;flex-wrap:wrap">
     <div style="flex:1;min-width:300px">
       <h2 style="margin:0 0 5px;font-size:19px;line-height:1.2;font-weight:600;letter-spacing:-.015em">{{ modeHeading }}</h2>
-      <p style="margin:0;font-size:13px;line-height:1.5;color:var(--tx2);max-width:640px;text-wrap:pretty">{{ modeSub }}</p>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:var(--ink2);max-width:640px;text-wrap:pretty">{{ modeSub }}</p>
     </div>
-    <div role="group" aria-label="{{ s.modeLabel }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;flex:none">
+    <div role="group" aria-label="{{ s.modeLabel }}" style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none">
       <sc-for list="{{ modes }}" as="md" hint-placeholder-count="2">
         <button onClick="{{ md.pick }}" aria-pressed="{{ md.on }}" style="--bgS:{{ md.bg }};--fgS:{{ md.fg }};--fwS:{{ md.fw }};padding:8px 14px;font-size:12.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ md.label }}</button>
       </sc-for>
@@ -158,20 +159,20 @@ input{font:inherit;color:inherit}
 
   <div style="padding:16px 26px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
     <sc-for list="{{ cards }}" as="cd" hint-placeholder-count="4">
-      <a href="{{ cd.href }}" style="--kBg:{{ cd.bg }};--kBr:{{ cd.br }};--kFg:{{ cd.fg }};display:block;background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:16px 18px;color:var(--tx)" style-hover="border-color:var(--ac2)">
+      <a href="{{ cd.href }}" style="--kBg:{{ cd.bg }};--kBr:{{ cd.br }};--kFg:{{ cd.fg }};display:block;background:var(--kBg);border:1px solid var(--kBr);border-radius:9px;padding:16px 18px;color:var(--ink)" style-hover="border-color:var(--ac2)">
         <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3)">{{ cd.step }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)">{{ cd.step }}</span>
           <span style="font-size:14px;font-weight:600;letter-spacing:-.01em">{{ cd.title }}</span>
-          <span style="--kFg:{{ cd.stateFg }};font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:{{ cd.stateBg }};color:var(--kFg);margin-left:auto;white-space:nowrap">{{ cd.state }}</span>
+          <span style="--kFg:{{ cd.stateFg }};font-family:Archivo,sans-serif;font-size:9.5px;padding:2px 6px;border-radius:7px;background:{{ cd.stateBg }};color:var(--kFg);margin-left:auto;white-space:nowrap">{{ cd.state }}</span>
         </div>
-        <p style="margin:0 0 12px;font-size:12.5px;line-height:1.5;color:var(--tx2);max-width:440px;text-wrap:pretty">{{ cd.question }}</p>
+        <p style="margin:0 0 12px;font-size:12.5px;line-height:1.5;color:var(--ink2);max-width:440px;text-wrap:pretty">{{ cd.question }}</p>
         <div style="display:flex;align-items:baseline;gap:9px">
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;letter-spacing:-.025em;color:var(--kFg)">{{ cd.value }}</span>
-          <span style="font-size:12px;color:var(--tx2);line-height:1.35;text-wrap:pretty">{{ cd.valueLabel }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.025em;color:var(--kFg)">{{ cd.value }}</span>
+          <span style="font-size:12px;color:var(--ink2);line-height:1.35;text-wrap:pretty">{{ cd.valueLabel }}</span>
         </div>
         <sc-if value="{{ cd.missing }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;align-items:baseline;gap:8px;margin-top:11px;padding-top:10px;border-top:1px solid var(--kBr)">
-            <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:var(--caut);line-height:1.5">+</span>
+            <span aria-hidden="true" style="font-family:Archivo,sans-serif;font-size:10px;font-weight:700;color:var(--caut);line-height:1.5">+</span>
             <span style="font-size:11.5px;line-height:1.45;color:var(--caut);text-wrap:pretty">{{ cd.missing }}</span>
           </div>
         </sc-if>
@@ -179,41 +180,41 @@ input{font:inherit;color:inherit}
     </sc-for>
   </div>
 
-  <div style="margin:14px 26px 0;padding:13px 16px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+  <div style="margin:14px 26px 0;padding:13px 16px;background:var(--sunk);border:1px solid var(--line);border-radius:9px">
     <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);flex:none">{{ s.plannedLabel }}</span>
-      <span style="font-size:12px;line-height:1.5;color:var(--tx2);flex:1;min-width:0;text-wrap:pretty">{{ plannedLine }}</span>
+      <span style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);flex:none">{{ s.plannedLabel }}</span>
+      <span style="font-size:12px;line-height:1.5;color:var(--ink2);flex:1;min-width:0;text-wrap:pretty">{{ plannedLine }}</span>
     </div>
   </div>
 
   <div style="padding:34px 26px 0">
     <h2 style="margin:0 0 4px;font-size:19px;line-height:1.2;font-weight:600;letter-spacing:-.015em">{{ s.insightsHeading }}</h2>
-    <p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:var(--tx2);max-width:660px;text-wrap:pretty">{{ s.insightsSub }}</p>
+    <p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:var(--ink2);max-width:660px;text-wrap:pretty">{{ s.insightsSub }}</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <sc-for list="{{ insights }}" as="ins" hint-placeholder-count="2">
-        <div style="--kBg:{{ ins.bg }};--kBr:{{ ins.br }};--kFg:{{ ins.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:18px 20px">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:8px">{{ ins.tag }}</div>
+        <div style="--kBg:{{ ins.bg }};--kBr:{{ ins.br }};--kFg:{{ ins.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:9px;padding:18px 20px">
+          <div style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:8px">{{ ins.tag }}</div>
           <div style="font-size:17px;line-height:1.28;font-weight:600;letter-spacing:-.012em;color:var(--kFg);margin-bottom:12px;text-wrap:pretty">{{ ins.head }}</div>
           <div style="display:flex;align-items:flex-end;gap:4px;height:56px;margin-bottom:12px">
             <sc-for list="{{ ins.bars }}" as="bar" hint-placeholder-count="3">
               <div style="flex:1;display:flex;flex-direction:column;align-items:stretch;gap:5px">
-                <span aria-hidden="true" style="display:block;height:{{ bar.h }};background:{{ bar.fill }};border:1px solid {{ bar.stroke }};border-radius:1px"></span>
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--tx3);text-align:center;line-height:1.2">{{ bar.label }}</span>
+                <span aria-hidden="true" style="display:block;height:{{ bar.h }};background:{{ bar.fill }};border:1px solid {{ bar.stroke }};border-radius:100px"></span>
+                <span style="font-family:Archivo,sans-serif;font-size:9px;color:var(--ink3);text-align:center;line-height:1.2">{{ bar.label }}</span>
               </div>
             </sc-for>
           </div>
-          <p style="margin:0;font-size:12.5px;line-height:1.6;color:var(--tx2);text-wrap:pretty">{{ ins.body }}</p>
+          <p style="margin:0;font-size:12.5px;line-height:1.6;color:var(--ink2);text-wrap:pretty">{{ ins.body }}</p>
         </div>
       </sc-for>
     </div>
   </div>
 
-  <div style="margin:32px 26px 24px;padding:14px 16px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+  <div style="margin:32px 26px 24px;padding:14px 16px;background:var(--sunk);border:1px solid var(--line);border-radius:9px">
     <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px">
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.5;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);flex:1;min-width:0">{{ sourcesLine }}</span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr)">{{ s.unverifiedFlag }}</span>
+      <span style="font-family:Archivo,sans-serif;font-size:9.5px;line-height:1.5;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);flex:1;min-width:0">{{ sourcesLine }}</span>
+      <span style="font-family:Archivo,sans-serif;font-size:9.5px;padding:2px 6px;border-radius:7px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr)">{{ s.unverifiedFlag }}</span>
     </div>
-    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--tx3);max-width:940px;text-wrap:pretty">{{ s.disclaimer }}</p>
+    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--ink3);max-width:940px;text-wrap:pretty">{{ s.disclaimer }}</p>
   </div>
 </div>
 </div>
@@ -221,44 +222,44 @@ input{font:inherit;color:inherit}
 <div class="dvOpt" id="6b">
 <div class="dvLab"><a class="dvOid" href="#6b">6b</a>Phone 390 px — dark, one card visited</div>
 <div data-theme="{{ themeB }}" data-screen-label="Home · phone" style="width:430px;padding:20px;background:#0B0C0E;border-radius:44px;border:1px solid rgba(255,255,255,.09);box-shadow:0 2px 14px rgba(0,0,0,.28)">
-  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--s0);color:var(--tx);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
-    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:Archivo,sans-serif;font-size:11px;color:var(--ink2)">
       <span>9:41</span><span style="margin-left:auto;letter-spacing:.12em">•••</span>
     </div>
-    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--br)">
-      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--s2);border:1px solid var(--br);border-radius:3px;min-width:0">
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--line)">
+      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--sunk);border:1px solid var(--line);border-radius:9px;min-width:0">
         <span aria-hidden="true" style="width:4px;height:4px;border-radius:50%;background:var(--ac);flex:none"></span>
         <span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.short }}</span>
-        <span aria-hidden="true" style="font-size:8px;color:var(--tx3)">▾</span>
+        <span aria-hidden="true" style="font-size:8px;color:var(--ink3)">▾</span>
       </button>
-      <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-left:auto">
+      <div role="group" style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-left:auto">
         <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
-          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 6px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
+          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 6px;font-family:Archivo,sans-serif;font-size:10px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
         </sc-for>
       </div>
-      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx2);flex:none">{{ themeIconB }}</button>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--line);border-radius:9px;background:var(--sunk);font-family:Archivo,sans-serif;font-size:10px;color:var(--ink2);flex:none">{{ themeIconB }}</button>
     </header>
 
     <div style="flex:1;overflow:auto;padding:16px 14px">
       <h1 style="margin:0 0 10px;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.028em;text-wrap:pretty">{{ s.heroQ }}</h1>
-      <p style="margin:0 0 16px;font-size:13.5px;line-height:1.5;color:var(--tx2);text-wrap:pretty">{{ s.heroSub }}</p>
-      <a href="Affordability.dc.html" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:0 16px;background:var(--ac);border-radius:3px;color:var(--s1);margin-bottom:14px">
+      <p style="margin:0 0 16px;font-size:13.5px;line-height:1.5;color:var(--ink2);text-wrap:pretty">{{ s.heroSub }}</p>
+      <a href="Affordability.dc.html" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:0 16px;background:var(--ac);border-radius:9px;color:var(--panel);margin-bottom:14px">
         <span style="font-size:15px;font-weight:600">{{ s.startBtn }}</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.85">{{ s.startMeta }}</span>
+        <span style="font-family:Archivo,sans-serif;font-size:11px;opacity:.85">{{ s.startMeta }}</span>
       </a>
 
-      <div style="display:flex;flex-direction:column;gap:6px;padding:12px 13px;background:var(--s1);border:1px solid var(--br);border-radius:3px;margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;gap:6px;padding:12px 13px;background:var(--panel);border:1px solid var(--line);border-radius:9px;margin-bottom:16px">
         <sc-for list="{{ trust }}" as="tr" hint-placeholder-count="3">
           <div style="display:flex;gap:8px;align-items:baseline">
-            <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:700;color:var(--pass);flex:none;line-height:1.6">✓</span>
-            <span style="font-size:11.5px;line-height:1.45;color:var(--tx2);text-wrap:pretty">{{ tr }}</span>
+            <span aria-hidden="true" style="font-family:Archivo,sans-serif;font-size:9.5px;font-weight:700;color:var(--pass);flex:none;line-height:1.6">✓</span>
+            <span style="font-size:11.5px;line-height:1.45;color:var(--ink2);text-wrap:pretty">{{ tr }}</span>
           </div>
         </sc-for>
       </div>
 
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);flex:none">{{ s.modeLabel }}</span>
-        <div role="group" aria-label="{{ s.modeLabel }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;flex:1">
+        <span style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);flex:none">{{ s.modeLabel }}</span>
+        <div role="group" aria-label="{{ s.modeLabel }}" style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:1">
           <sc-for list="{{ modes }}" as="md" hint-placeholder-count="2">
             <button onClick="{{ md.pick }}" aria-pressed="{{ md.on }}" style="--bgS:{{ md.bg }};--fgS:{{ md.fg }};--fwS:{{ md.fw }};flex:1;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS);padding:0 6px;white-space:nowrap">{{ md.label }}</button>
           </sc-for>
@@ -267,14 +268,14 @@ input{font:inherit;color:inherit}
 
       <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px">
         <sc-for list="{{ cards }}" as="cd" hint-placeholder-count="4">
-          <a href="{{ cd.href }}" style="--kBg:{{ cd.bg }};--kBr:{{ cd.br }};--kFg:{{ cd.fg }};display:block;background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:13px 14px;color:var(--tx)">
+          <a href="{{ cd.href }}" style="--kBg:{{ cd.bg }};--kBr:{{ cd.br }};--kFg:{{ cd.fg }};display:block;background:var(--kBg);border:1px solid var(--kBr);border-radius:9px;padding:13px 14px;color:var(--ink)">
             <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:7px">
               <span style="font-size:13px;font-weight:600;letter-spacing:-.01em">{{ cd.title }}</span>
-              <span style="--kFg:{{ cd.stateFg }};font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 5px;border-radius:2px;background:{{ cd.stateBg }};color:var(--kFg);margin-left:auto;white-space:nowrap">{{ cd.state }}</span>
+              <span style="--kFg:{{ cd.stateFg }};font-family:Archivo,sans-serif;font-size:9px;padding:2px 5px;border-radius:7px;background:{{ cd.stateBg }};color:var(--kFg);margin-left:auto;white-space:nowrap">{{ cd.state }}</span>
             </div>
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;letter-spacing:-.025em;color:var(--kFg)">{{ cd.value }}</span>
-              <span style="font-size:11px;color:var(--tx2);line-height:1.3;text-wrap:pretty">{{ cd.valueLabel }}</span>
+              <span style="font-family:Archivo,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.025em;color:var(--kFg)">{{ cd.value }}</span>
+              <span style="font-size:11px;color:var(--ink2);line-height:1.3;text-wrap:pretty">{{ cd.valueLabel }}</span>
             </div>
             <sc-if value="{{ cd.missing }}" hint-placeholder-val="{{ false }}">
               <div style="font-size:11px;line-height:1.45;color:var(--caut);text-wrap:pretty">＋ {{ cd.missing }}</div>
@@ -285,18 +286,18 @@ input{font:inherit;color:inherit}
 
       <div style="display:flex;flex-direction:column;gap:10px">
         <sc-for list="{{ insights }}" as="ins" hint-placeholder-count="2">
-          <div style="--kBg:{{ ins.bg }};--kBr:{{ ins.br }};--kFg:{{ ins.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:14px 15px">
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:7px">{{ ins.tag }}</div>
+          <div style="--kBg:{{ ins.bg }};--kBr:{{ ins.br }};--kFg:{{ ins.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:9px;padding:14px 15px">
+            <div style="font-family:Archivo,sans-serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:7px">{{ ins.tag }}</div>
             <div style="font-size:15px;line-height:1.28;font-weight:600;color:var(--kFg);margin-bottom:10px;text-wrap:pretty">{{ ins.head }}</div>
             <div style="display:flex;align-items:flex-end;gap:4px;height:48px;margin-bottom:10px">
               <sc-for list="{{ ins.bars }}" as="bar" hint-placeholder-count="3">
                 <div style="flex:1;display:flex;flex-direction:column;align-items:stretch;gap:4px">
-                  <span aria-hidden="true" style="display:block;height:{{ bar.h }};background:{{ bar.fill }};border:1px solid {{ bar.stroke }};border-radius:1px"></span>
-                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--tx3);text-align:center;line-height:1.2">{{ bar.label }}</span>
+                  <span aria-hidden="true" style="display:block;height:{{ bar.h }};background:{{ bar.fill }};border:1px solid {{ bar.stroke }};border-radius:100px"></span>
+                  <span style="font-family:Archivo,sans-serif;font-size:8.5px;color:var(--ink3);text-align:center;line-height:1.2">{{ bar.label }}</span>
                 </div>
               </sc-for>
             </div>
-            <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ ins.body }}</p>
+            <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--ink2);text-wrap:pretty">{{ ins.body }}</p>
           </div>
         </sc-for>
       </div>
@@ -491,7 +492,7 @@ class Component extends DCLogic {
     const vis = k => !!st.visited[k];
     const tag = k => vis(k)
       ? { state: s.stYours, stateBg: 'var(--acbg)', stateFg: 'var(--ac)' }
-      : { state: s.stTypical, stateBg: 'var(--s2)', stateFg: 'var(--tx3)' };
+      : { state: s.stTypical, stateBg: 'var(--sunk)', stateFg: 'var(--ink3)' };
 
     const order = st.mode === 'full'
       ? ['afford', 'scenarios', 'closing', 'dpsources', 'hbp', 'amort', 'rentbuy']
@@ -524,10 +525,10 @@ class Component extends DCLogic {
     };
     const cards = order.map((k, i) => Object.assign({
       step: (i + 1) + ' / ' + order.length,
-      bg: 'var(--s1)', br: vis(k) ? 'var(--acbr)' : 'var(--br)', fg: 'var(--ac)'
+      bg: 'var(--panel)', br: vis(k) ? 'var(--acbr)' : 'var(--line)', fg: 'var(--ac)'
     }, defs[k], tag(k)));
 
-    const bar = (h, on) => ({ h: h + 'px', fill: on ? 'var(--ac)' : 'var(--s2)', stroke: on ? 'var(--ac)' : 'var(--brs)' });
+    const bar = (h, on) => ({ h: h + 'px', fill: on ? 'var(--ac)' : 'var(--sunk)', stroke: on ? 'var(--ac)' : 'var(--ink3)' });
     const insights = [
       { tag: s.i1Tag, head: s.i1Head, body: s.i1Body, fg: 'var(--ac)', bg: 'var(--acbg)', br: 'var(--acbr)',
         bars: [Object.assign({ label: s.barApproved }, bar(44, false)), Object.assign({ label: s.barComfort }, bar(27, true))] },
@@ -538,26 +539,26 @@ class Component extends DCLogic {
 
     const yoy = j.yoy == null ? null : j.yoy * 100;
     const snapshot = [
-      { label: s.snDetached, value: this.money(j.bench.house), delta: yoy == null ? '\u2014' : (yoy >= 0 ? '+' : '\u2212') + this.pct(Math.abs(yoy), 1), deltaFg: yoy == null ? 'var(--tx3)' : (yoy >= 0 ? 'var(--pass)' : 'var(--blk)') },
-      { label: s.snCondo, value: this.money(j.bench.condo), delta: '\u2014', deltaFg: 'var(--tx3)' },
-      { label: s.snRent, value: this.money(j.rent || 1500), delta: '\u2014', deltaFg: 'var(--tx3)' },
-      { label: s.snTax, value: this.pct(j.propTax * 100, 2), delta: '\u2014', deltaFg: 'var(--tx3)' }
+      { label: s.snDetached, value: this.money(j.bench.house), delta: yoy == null ? '\u2014' : (yoy >= 0 ? '+' : '\u2212') + this.pct(Math.abs(yoy), 1), deltaFg: yoy == null ? 'var(--ink3)' : (yoy >= 0 ? 'var(--pass)' : 'var(--blk)') },
+      { label: s.snCondo, value: this.money(j.bench.condo), delta: '\u2014', deltaFg: 'var(--ink3)' },
+      { label: s.snRent, value: this.money(j.rent || 1500), delta: '\u2014', deltaFg: 'var(--ink3)' },
+      { label: s.snTax, value: this.pct(j.propTax * 100, 2), delta: '\u2014', deltaFg: 'var(--ink3)' }
     ];
 
     const modes = [['one', s.modeOne], ['full', s.modeFull]].map(([k, lb]) => ({
       label: lb, on: st.mode === k ? 'true' : 'false',
-      bg: st.mode === k ? 'var(--s1)' : 'var(--s2)', fg: st.mode === k ? 'var(--ac)' : 'var(--tx3)', fw: st.mode === k ? '600' : '400',
+      bg: st.mode === k ? 'var(--panel)' : 'var(--sunk)', fg: st.mode === k ? 'var(--ac)' : 'var(--ink3)', fw: st.mode === k ? '600' : '400',
       pick: () => this.setState({ mode: k })
     }));
     const langs = ['English', 'Français', 'Українська', 'Español'].map((n, i) => ({
       name: n, abbr: ['EN', 'FR', 'UK', 'ES'][i], on: i === lang ? 'true' : 'false',
       pick: () => this.setState({ lang: i }),
-      bg: i === lang ? 'var(--s1)' : 'var(--s2)', fg: i === lang ? 'var(--tx)' : 'var(--tx3)', fw: i === lang ? '600' : '400'
+      bg: i === lang ? 'var(--panel)' : 'var(--sunk)', fg: i === lang ? 'var(--ink)' : 'var(--ink3)', fw: i === lang ? '600' : '400'
     }));
     const cityOpts = D.jur.filter(x => x.city).map(x => ({
       name: D.C[x.city][lang], code: x.prov, on: x.id === st.jurId ? 'true' : 'false',
-      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--s1)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--tx)',
-      brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--br)',
+      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--panel)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--ink)',
+      brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--line)',
       pick: () => this.setState({ jurId: x.id, pickerOpen: false, pulse: st.pulse + 1,
         price: st.priceTouched ? st.price : x.bench.house, rent: x.rent || st.rent })
     }));
@@ -583,4 +584,3 @@ class Component extends DCLogic {
 </script>
 </body>
 </html>
-
