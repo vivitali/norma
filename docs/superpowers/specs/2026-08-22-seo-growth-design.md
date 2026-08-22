@@ -88,7 +88,16 @@ the root URL and gives English no home at `/`.
 
 ## 4. The metadata layer
 
-A single helper, `src/lib/seo.ts`, exporting `buildMetadata({ locale, path, namespace })`:
+A single helper, `src/lib/seo.ts`, exporting `buildMetadata({ locale, href, title, description })`.
+
+It implements next-intl's locale-prefix rule itself rather than calling
+`getPathname`, which is a react-client module Vitest cannot resolve and which would
+drag client navigation code into the build-time `sitemap.ts`. It reads
+`routing.localePrefix` and `routing.pathnames`, so §3's switch and phase 1.5's
+French slugs both still propagate with no edit. It takes already-translated
+strings, which keeps it a pure function with no request context.
+
+The helper provides:
 
 - `title` and `description` from `messages/*.json`, per page, not per app.
 - `alternates.canonical` — absolute, apex host, current locale.
