@@ -56,7 +56,18 @@
 - Test: `src/lib/seo.test.ts`
 
 **Interfaces:**
-- Consumes: `routing` from `@/i18n/routing`, `getPathname` from `@/i18n/navigation`.
+- Consumes: `routing` from `@/i18n/routing`.
+
+> **Deviation, applied during execution.** The helper does *not* call
+> `getPathname` from `@/i18n/navigation` as originally planned. That module is
+> next-intl's react-client navigation factory: it cannot be resolved under
+> Vitest (`Cannot find module 'next/navigation'`), and every existing test that
+> touches it — `locale-switcher.test.tsx` — mocks it away wholesale, so nothing
+> ever exercised it. Importing it would also pull client navigation code into
+> `sitemap.ts` and `robots.ts`, which run at build time outside React.
+> `seo.ts` therefore implements the prefix rule locally, reading
+> `routing.localePrefix` and `routing.pathnames`, and `seo.test.ts` asserts the
+> rule directly so the duplication cannot drift.
 - Produces:
   - `SITE_URL: string`, `SITE_NAME: string`
   - `INDEXABLE_ROUTES: readonly ["/", "/affordability", "/sources"]`
@@ -893,7 +904,12 @@ git commit -m "feat(seo): add WebApplication structured data to the home page"
 
 **Interfaces:**
 - Consumes: nothing new.
-- Produces: URL shape `/` and `/affordability` for English, `/fr/...` for French. Task 1's `absoluteUrl` follows automatically because it delegates to `getPathname`.
+- Produces: URL shape `/` and `/affordability` for English, `/fr/...` for French. Task 1's `absoluteUrl` follows automatically because `prefixMode()` reads `routing.localePrefix`.
+
+**Also update `src/lib/seo.test.ts`'s `"locale prefixing"` block** — its two
+assertions encode the current `always` shape (`/en/affordability`) on purpose, so
+that the URL shape cannot change without a test saying so. Change them to expect
+`${SITE_URL}/affordability` for English and leave French prefixed.
 
 **Why this is the risky one.** `prerender-guard.mjs` identifies a route's locale *positionally* — `segments(route)[index]` where `index` is where `[locale]` sits in the pattern. Once English drops its prefix, `/affordability` yields `"affordability"` at index 0, the guard concludes English is missing, and `scripts/verify-prerender` fails. The guard must learn the URL shape before the routing change lands.
 
