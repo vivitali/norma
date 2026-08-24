@@ -15,31 +15,24 @@ const hex = (tokens: Record<string, string>, name: string) => {
 };
 
 describe("palette", () => {
-  // Every colour ports from the reference unchanged EXCEPT --text-faint, whose two
-  // values are deliberate WCAG corrections. Round-tripping to hex catches both a
-  // bad oklch conversion and a silently reverted correction.
+  // The v2 world, ported from design-reference/Affordability v2.dc.html. Every
+  // colour ports unchanged EXCEPT --ink3, whose two values are deliberate WCAG
+  // corrections. Round-tripping to hex catches both a bad oklch conversion and a
+  // silently reverted correction.
   const REFERENCE = {
     light: {
-      "--background": "#F7F5F1", "--card": "#FFFFFF", "--muted": "#EFECE5",
-      "--surface-sunken": "#E5E1D7", "--border": "#DCD7CC", "--border-hairline": "#EAE6DD",
-      "--input": "#C6BFB1", "--foreground": "#17191C", "--muted-foreground": "#565A5F",
-      "--text-faint": "#676A6F", "--primary": "#22375C", "--ring": "#3B5C92",
-      "--accent-surface": "#E7ECF4", "--accent-border": "#C3CFE2",
-      "--pass": "#1A6B45", "--pass-bg": "#E3EFE8", "--pass-border": "#BEDBCB",
-      "--caution": "#87590A", "--caution-bg": "#F6EEDC", "--caution-border": "#E3D3AE",
-      "--blocked": "#8D2A2A", "--blocked-bg": "#F6E7E5", "--blocked-border": "#E5C4C0",
-      "--band": "#455A6C", "--band-bg": "#E8EDF1", "--band-border": "#C8D3DC",
+      "--paper": "#FAF9F6", "--panel": "#FFFFFF", "--sunk": "#F1EFEA",
+      "--line": "#E4E1DA", "--line2": "#EFEDE8",
+      "--ink": "#14151A", "--ink2": "#5B5F66", "--ink3": "#6A6D73",
+      "--ac": "#3D3BD6", "--ac2": "#6462E6", "--acbg": "#ECECFD", "--acbr": "#D3D2FA",
+      "--pass": "#176B4B", "--caut": "#8A5A12", "--blk": "#A32B2B",
     },
     dark: {
-      "--background": "#121417", "--card": "#191C20", "--muted": "#21252A",
-      "--surface-sunken": "#2A2F35", "--border": "#2F343B", "--border-hairline": "#262A30",
-      "--input": "#3D434B", "--foreground": "#EBE9E4", "--muted-foreground": "#A3A8AE",
-      "--text-faint": "#898D93", "--primary": "#93B3E0", "--ring": "#AEC7EC",
-      "--accent-surface": "#1C2632", "--accent-border": "#2C3B4D",
-      "--pass": "#6AC497", "--pass-bg": "#152620", "--pass-border": "#264737",
-      "--caution": "#DFAB4C", "--caution-bg": "#292213", "--caution-border": "#463A1E",
-      "--blocked": "#EA8D8D", "--blocked-bg": "#2A1919", "--blocked-border": "#4A2C2C",
-      "--band": "#A0B4C5", "--band-bg": "#1A2128", "--band-border": "#2C3742",
+      "--paper": "#0E0F11", "--panel": "#16181C", "--sunk": "#1C1F24",
+      "--line": "#292D33", "--line2": "#22252A",
+      "--ink": "#ECEAE6", "--ink2": "#A2A7AE", "--ink3": "#82878D",
+      "--ac": "#8886FF", "--ac2": "#A5A3FF", "--acbg": "#1B1B33", "--acbr": "#2E2E52",
+      "--pass": "#55C293", "--caut": "#D9A94E", "--blk": "#E88A8A",
     },
   } as const;
 
@@ -53,31 +46,21 @@ describe("palette", () => {
 });
 
 describe("contrast", () => {
-  // --accent-surface is included because the stat strip's emphasis card and the
-  // checks' inline asks both render faint text on it, at ~4.58:1 -- inside the
-  // threshold this guard exists to defend, and previously unguarded.
-  const SURFACES = ["--background", "--card", "--muted", "--accent-surface"] as const;
+  // v2 has no semantic surfaces — state is a dot and a figure colour on the page
+  // ground — so every meaningful pair is a foreground against one of these three.
+  const SURFACES = ["--paper", "--panel", "--sunk"] as const;
+  const FOREGROUNDS = ["--ink", "--ink2", "--ink3", "--ac", "--pass", "--caut", "--blk"] as const;
 
-  // The reference's --tx3 fails AA at the 9.5-11.5px sizes it is used at:
-  // 2.86:1 on --s2 in light. Corrected to #676A6F / #898D93. If anyone "restores
-  // fidelity" to #888C92 / #767B82 this fails, naming the ratio.
   for (const [theme, tokens] of [["light", light], ["dark", dark]] as const) {
-    for (const surface of SURFACES) {
-      it(`${theme} --text-faint on ${surface} passes AA`, () => {
-        expect(contrastRatio(hex(tokens, "--text-faint"), hex(tokens, surface))).toBeGreaterThanOrEqual(4.5);
-      });
-    }
-    for (const surface of SURFACES) {
-      it(`${theme} --muted-foreground on ${surface} passes AA`, () => {
-        expect(
-          contrastRatio(hex(tokens, "--muted-foreground"), hex(tokens, surface)),
-        ).toBeGreaterThanOrEqual(4.5);
-      });
-    }
-    for (const state of ["pass", "caution", "blocked", "band"] as const) {
-      it(`${theme} --${state} on --${state}-bg passes AA`, () => {
-        expect(contrastRatio(hex(tokens, `--${state}`), hex(tokens, `--${state}-bg`))).toBeGreaterThanOrEqual(4.5);
-      });
+    for (const fg of FOREGROUNDS) {
+      for (const surface of SURFACES) {
+        it(`${theme} ${fg} on ${surface} passes AA`, () => {
+          // --ink3 is the one the reference got wrong, in both themes, and it is
+          // used at 11.5-12.5px where AA-large does not apply. If anyone
+          // "restores fidelity" to #8B9097 / #6F757C this fails, naming the ratio.
+          expect(contrastRatio(hex(tokens, fg), hex(tokens, surface))).toBeGreaterThanOrEqual(4.5);
+        });
+      }
     }
   }
 });
@@ -92,11 +75,17 @@ describe("geometry", () => {
     expect(px).toBeGreaterThanOrEqual(16);
   });
 
-  it("radii are the reference's 1/2/3px, not a multiplied cascade", () => {
+  it("uses v2's soft rectangles and pills, not v1's hairline radii", () => {
     const theme = readTokens(css.replace(/^@theme inline \{/m, ":root {"), ":root");
-    expect(theme["--radius-sm"]).toBe("1px");
-    expect(theme["--radius-md"]).toBe("2px");
-    expect(theme["--radius-lg"]).toBe("3px");
-    expect(theme["--radius-xl"]).toBe("3px");
+    expect(theme["--radius-lg"]).toBe("6px");
+    expect(theme["--radius-xl"]).toBe("6px");
+    // The pill, used on every button, chip and bar in v2.
+    expect(theme["--radius-3xl"]).toBe("100px");
+  });
+
+  it("sets every figure in tabular lining numerals on the body", () => {
+    // Not an opt-in .figure class: v2 puts hero and table row on the same
+    // numerals, so it belongs on the root rather than at 40 call sites.
+    expect(css).toMatch(/font-variant-numeric:\s*tabular-nums lining-nums/);
   });
 });

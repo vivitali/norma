@@ -1,6 +1,5 @@
 import type { PropertyType } from "@/domain/types";
 import { defaultJurisdiction, jurisdictions } from "@/domain/jurisdictions";
-import type { Depth } from "@/lib/sections";
 
 /**
  * Every input this app persists, in one place. Pages select the slice they need instead of
@@ -16,7 +15,6 @@ import type { Depth } from "@/lib/sections";
  */
 export type SharedInputs = {
   jurId: string;
-  depth: Depth;
 
   // The purchase
   /** null = derive from the city benchmark for the chosen property type. */
@@ -58,7 +56,6 @@ export type SharedInputs = {
 
 export const SHARED_INPUT_DEFAULTS: SharedInputs = {
   jurId: defaultJurisdiction.id,
-  depth: 0,
   price: null,
   dpPct: 10,
   amortYears: 30,
@@ -95,7 +92,6 @@ export type FieldSchema =
 
 export const SHARED_INPUT_SCHEMA: Record<keyof SharedInputs, FieldSchema> = {
   jurId: { kind: "enum", values: jurisdictions.map((j) => j.id) },
-  depth: { kind: "numberEnum", values: [0, 1, 2] },
   price: { kind: "number", nullable: true, min: 0 },
   dpPct: { kind: "number", nullable: false, min: 0, max: 100 },
   amortYears: { kind: "number", nullable: false, min: 1, max: 40 },
@@ -134,11 +130,6 @@ function slice<K extends keyof SharedInputs>(keys: readonly K[]): Pick<SharedInp
 export const JURISDICTION_KEYS = ["jurId"] as const satisfies readonly (keyof SharedInputs)[];
 type JurisdictionState = Pick<SharedInputs, (typeof JURISDICTION_KEYS)[number]>;
 export const JURISDICTION_DEFAULTS: JurisdictionState = slice(JURISDICTION_KEYS);
-
-/** Depth is global across every page, not per page — hence its own tuple. */
-export const DEPTH_KEYS = ["depth"] as const satisfies readonly (keyof SharedInputs)[];
-export type DepthState = Pick<SharedInputs, (typeof DEPTH_KEYS)[number]>;
-export const DEPTH_DEFAULTS: DepthState = slice(DEPTH_KEYS);
 
 export const AFFORDABILITY_KEYS = [
   "price", "dpPct", "amortYears", "ftb", "ptype", "elsewhere", "contractRate",

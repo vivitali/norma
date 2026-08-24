@@ -16,8 +16,8 @@ vi.mock("next/navigation", () => ({
 
 // next/font/google runs a build-time loader that is unavailable under vitest.
 vi.mock("next/font/google", () => ({
-  IBM_Plex_Sans: () => ({ variable: "--font-plex-sans" }),
-  IBM_Plex_Mono: () => ({ variable: "--font-plex-mono" }),
+  Archivo: () => ({ variable: "--font-archivo" }),
+  Martian_Mono: () => ({ variable: "--font-martian-mono" }),
 }));
 
 vi.mock("@/components/app-header", () => ({ AppHeader: () => null }));
