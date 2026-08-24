@@ -25,6 +25,10 @@
     "downPayment": {
       "title": "Sources de mise de fonds — l’argent le moins cher d’abord",
       "description": "CELIAPP, comptant, RAP, CELI, don, puis placements. Voyez ce que chaque source vous coûte et ce qu’elle laisse derrière."
+    },
+    "rrspHbp": {
+      "title": "RAP — remboursement d’impôt, règles et remboursement",
+      "description": "Cotiser, déduire, attendre 90 jours, retirer, rembourser sur 15 ans. Ce que vaut le remboursement et ce que coûte une année manquée."
     }
   },
   "Home": {
@@ -401,6 +405,52 @@
     "tagYours": "Vos chiffres",
     "tagTypical": "Chiffres typiques",
     "month": "mois {m}"
+  },
+  "RrspHbp": {
+    "title": "Le jeu REER → Régime d’accession à la propriété",
+    "subtitle": "Cotiser, déduire, attendre, retirer, remboursement — dans cet ordre, et l’ordre compte.",
+    "step1": "1. Cotiser",
+    "step1Body": "Versez de l’argent dans un REER. Tout droit de cotisation REER fonctionne — nul besoin d’un compte spécial.",
+    "step2": "2. Déduire",
+    "step2Body": "Réclamez la cotisation en déduction sur votre déclaration. C’est d’ici que vient le remboursement.",
+    "step3": "3. Attendre 90 jours",
+    "step3Body": "La cotisation doit rester dans le REER au moins 90 jours avant le retrait au titre du RAP. Un retrait plus tôt rend cette partie non déductible.",
+    "step3Warn": "Cette règle est absolue. Aucune exception, aucun appel — la manquer rend le retrait entièrement imposable.",
+    "step4": "4. Retirer",
+    "step4Body": "Retirez jusqu’à {cap} sans impôt dans le cadre du RAP, avec le formulaire T1036.",
+    "step5": "5. Rembourser",
+    "step5Body": "À partir de la deuxième année suivant le retrait, remboursez un quinzième chaque année pendant 15 ans. Un versement manqué s’ajoute à votre revenu de l’année.",
+    "contribution": "Votre cotisation REER",
+    "refund": "Remboursement à votre taux marginal",
+    "withdraw": "Montant retiré sans impôt",
+    "repaySchedule": "Échéancier de remboursement",
+    "repayPerYear": "par an pendant 15 ans",
+    "noWithdraw": "Entrez un montant de retrait pour voir le verdict.",
+    "marginal": "Votre taux marginal",
+    "income": "Revenu imposable",
+    "secRefund": "Le remboursement d’impôt",
+    "secRules": "Les cinq étapes",
+    "secRepayment": "Le remboursement au REER",
+    "secRisk": "Ce que coûte une année manquée",
+    "breakdown": "L’opération, étape par étape",
+    "expandAll": "Tout ouvrir",
+    "collapseAll": "Tout fermer",
+    "refundWhy": "Le remboursement d’impôt est la raison d’être de l’opération. C’est de l’argent réel, cette année, à votre taux marginal — et c’est la seule partie qui arrive rapidement.",
+    "rulesWhy": "L’ordre compte, et l’une de ces étapes ne souffre aucune exception. Les faire dans le désordre ne retarde pas l’avantage : il le supprime.",
+    "repaymentWhy": "Le retrait n’est pas un cadeau. Un quinzième retourne au REER chaque année pendant quinze ans, à compter de la deuxième année suivant le retrait.",
+    "riskWhy": "C’est ici que se joue la décision. Une année de remboursement manquée est ajoutée à votre revenu et imposée, définitivement — impossible de revenir en arrière.",
+    "noVerdict": "Savoir si le remboursement d’impôt vaut quinze ans d’obligation dépend de faits que cette page n’a pas : votre sécurité d’emploi, vos autres épargnes, ce que cet argent aurait fait autrement. Les trois chiffres sont ici ; la décision vous appartient.",
+    "inclusionIfMissed": "Ajouté à votre revenu pour chaque année manquée",
+    "taxOnMissed": "Impôt sur une année manquée",
+    "federalMax": "Maximum du RAP fédéral",
+    "roomLeft": "Marge restante sous le maximum",
+    "graceNote": "Le remboursement commence l’année {y}, pas immédiatement.",
+    "ruleDaysNote": "{d} jours. Pas environ {d} jours.",
+    "year": "Année {y}",
+    "balanceLeft": "Encore dû",
+    "obligationYears": "{n} ans de remboursements",
+    "tagYours": "Vos chiffres",
+    "tagTypical": "Chiffres typiques"
   },
   "Provenance": {
     "rule": "règle",

@@ -46,11 +46,19 @@ export const DOWN_PAYMENT_SECTIONS: readonly SectionDef[] = [
   { id: "glide", labelKey: "secGlide" },
 ] as const;
 
+export const RRSP_HBP_SECTIONS: readonly SectionDef[] = [
+  { id: "refund", labelKey: "secRefund" },
+  { id: "rules", labelKey: "secRules" },
+  { id: "repayment", labelKey: "secRepayment" },
+  { id: "risk", labelKey: "secRisk" },
+] as const;
+
 /** Every registry, with the message namespace its label keys resolve against. */
 export const SECTION_REGISTRIES: readonly { namespace: string; sections: readonly SectionDef[] }[] = [
   { namespace: "Affordability", sections: AFFORDABILITY_SECTIONS },
   { namespace: "ClosingCosts", sections: CLOSING_SECTIONS },
   { namespace: "DownPayment", sections: DOWN_PAYMENT_SECTIONS },
+  { namespace: "RrspHbp", sections: RRSP_HBP_SECTIONS },
 ];
 
 export const SECTION_IDS: readonly string[] = AFFORDABILITY_SECTIONS.map((s) => s.id);

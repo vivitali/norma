@@ -25,6 +25,10 @@
     "downPayment": {
       "title": "Down payment sources — the cheapest money first",
       "description": "FHSA, cash, RRSP Home Buyers' Plan, TFSA, gift, then investments. See what each source costs you and what it leaves behind."
+    },
+    "rrspHbp": {
+      "title": "RRSP Home Buyers' Plan — refund, rules and repayment",
+      "description": "Contribute, deduct, wait 90 days, withdraw, repay over 15 years. What the refund is worth and what a missed repayment year actually costs."
     }
   },
   "Home": {
@@ -401,6 +405,52 @@
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
     "month": "month {m}"
+  },
+  "RrspHbp": {
+    "title": "The RRSP → Home Buyers’ Plan play",
+    "subtitle": "Contribute, deduct, wait, withdraw, repay — in that order, and the order matters.",
+    "step1": "1. Contribute",
+    "step1Body": "Put money into an RRSP. Any RRSP room you have works — this does not need to be a special account.",
+    "step2": "2. Deduct",
+    "step2Body": "Claim the contribution as a deduction on your tax return. This is where the refund comes from.",
+    "step3": "3. Wait 90 days",
+    "step3Body": "The contribution must sit in the RRSP for at least 90 days before you withdraw it under the HBP. Withdraw sooner and that portion is not deductible.",
+    "step3Warn": "This rule is absolute. There is no exception and no appeal — miss it and the withdrawal becomes fully taxable income.",
+    "step4": "4. Withdraw",
+    "step4Body": "Withdraw up to {cap} tax-free under the Home Buyers’ Plan, using Form T1036.",
+    "step5": "5. Repay",
+    "step5Body": "Starting the second year after the withdrawal, repay one fifteenth of it each year for 15 years. Skip a payment and that amount is added to your income for the year.",
+    "contribution": "Your RRSP contribution",
+    "refund": "Refund at your marginal rate",
+    "withdraw": "Amount withdrawn tax-free",
+    "repaySchedule": "Repayment schedule",
+    "repayPerYear": "per year for 15 years",
+    "noWithdraw": "Enter a withdrawal amount to see the verdict.",
+    "marginal": "Your marginal rate",
+    "income": "Taxable income",
+    "secRefund": "The refund",
+    "secRules": "The five steps",
+    "secRepayment": "The repayment",
+    "secRisk": "What a missed year costs",
+    "breakdown": "The play, step by step",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "refundWhy": "The refund is the reason the manoeuvre exists. It is real cash, this year, at your marginal rate — and it is the only part of this that arrives quickly.",
+    "rulesWhy": "Order matters, and one of these steps has no exception. Doing them out of sequence does not delay the benefit; it removes it.",
+    "repaymentWhy": "The withdrawal is not a gift. One fifteenth of it goes back each year for fifteen years, starting the second year after you take it.",
+    "riskWhy": "This is the part worth deciding on. A missed repayment year is added to your income and taxed, permanently — there is no way to put it back.",
+    "noVerdict": "Whether the refund is worth fifteen years of obligation depends on facts this page is not given — your job security, your other savings, what else that money would have done. The three figures are here; the decision is yours.",
+    "inclusionIfMissed": "Added to your income for each year missed",
+    "taxOnMissed": "Tax on a missed year",
+    "federalMax": "Federal HBP maximum",
+    "roomLeft": "Room left under the maximum",
+    "graceNote": "Repayment starts in year {y}, not immediately.",
+    "ruleDaysNote": "{d} days. Not approximately {d} days.",
+    "year": "Year {y}",
+    "balanceLeft": "Still owed",
+    "obligationYears": "{n} years of repayments",
+    "tagYours": "Your figures",
+    "tagTypical": "Typical figures"
   },
   "Provenance": {
     "rule": "rule",

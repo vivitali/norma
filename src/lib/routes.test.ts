@@ -34,6 +34,7 @@ describe("nav registry", () => {
       "/affordability",
       "/closing-costs",
       "/down-payment",
+      "/rrsp-hbp",
       "/sources",
     ]);
   });

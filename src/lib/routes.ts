@@ -38,7 +38,7 @@ export const NAV: readonly NavGroup[] = [
     entries: [
       { route: "/closing-costs", label: "closingCosts", built: true },
       { route: "/down-payment", label: "downPayment", built: true },
-      { route: "/rrsp-hbp", label: "rrspHbp", built: false },
+      { route: "/rrsp-hbp", label: "rrspHbp", built: true },
     ],
   },
   {
