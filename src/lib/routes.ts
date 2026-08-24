@@ -30,7 +30,7 @@ export const NAV: readonly NavGroup[] = [
     heading: "afford",
     entries: [
       { route: "/affordability", label: "affordability", built: true },
-      { route: "/rent-vs-buy", label: "rentVsBuy", built: false },
+      { route: "/rent-vs-buy", label: "rentVsBuy", built: true },
     ],
   },
   {
@@ -45,7 +45,7 @@ export const NAV: readonly NavGroup[] = [
     heading: "own",
     entries: [
       { route: "/amortization", label: "amortization", built: true },
-      { route: "/rent-vs-buy", label: "rentVsBuy", built: false },
+      { route: "/rent-vs-buy", label: "rentVsBuy", built: true },
     ],
   },
   {

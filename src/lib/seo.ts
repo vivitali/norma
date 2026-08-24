@@ -17,6 +17,7 @@ export const INDEXABLE_ROUTES = [
   "/down-payment",
   "/rrsp-hbp",
   "/amortization",
+  "/rent-vs-buy",
   "/sources",
 ] as const;
 

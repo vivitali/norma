@@ -60,6 +60,13 @@ export const AMORTIZATION_SECTIONS: readonly SectionDef[] = [
   { id: "schedule", labelKey: "secSchedule" },
 ] as const;
 
+export const RENT_VS_BUY_SECTIONS: readonly SectionDef[] = [
+  { id: "verdict", labelKey: "secVerdict" },
+  { id: "outlay", labelKey: "secOutlay" },
+  { id: "wealth", labelKey: "secWealth" },
+  { id: "assumptions", labelKey: "secAssumptions" },
+] as const;
+
 /** Every registry, with the message namespace its label keys resolve against. */
 export const SECTION_REGISTRIES: readonly { namespace: string; sections: readonly SectionDef[] }[] = [
   { namespace: "Affordability", sections: AFFORDABILITY_SECTIONS },
@@ -67,6 +74,7 @@ export const SECTION_REGISTRIES: readonly { namespace: string; sections: readonl
   { namespace: "DownPayment", sections: DOWN_PAYMENT_SECTIONS },
   { namespace: "RrspHbp", sections: RRSP_HBP_SECTIONS },
   { namespace: "Amortization", sections: AMORTIZATION_SECTIONS },
+  { namespace: "RentVsBuy", sections: RENT_VS_BUY_SECTIONS },
 ];
 
 export const SECTION_IDS: readonly string[] = AFFORDABILITY_SECTIONS.map((s) => s.id);
