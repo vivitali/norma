@@ -228,3 +228,111 @@ describe("Scenarios — French", () => {
     expect(document.body.textContent).not.toMatch(/Scenarios\./);
   });
 });
+
+describe("Scenarios — the phone layout is a carousel of cards, not a narrowed table", () => {
+  // The comparison shipped as one 560px table inside a horizontal scroller. At
+  // 320px that shows a single column at a time, so reading one figure means
+  // holding a row label in your head while you scroll sideways to find the
+  // number under it. The reference is explicit: "on phone the grid becomes a
+  // card carousel, never a horizontally-scrolling table."
+  //
+  // jsdom applies no layout, so none of this can be measured — it is asserted on
+  // structure and on the class names that carry the breakpoint.
+  const MONTHLY = "The mortgage · Monthly cost";
+
+  const cardsFor = (caption: string) =>
+    within(screen.getByRole("list", { name: caption })).getAllByRole("listitem");
+
+  it("ships one card per scenario, and hands each layout the width the other gives up", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+
+    const cards = cardsFor(MONTHLY);
+    expect(cards).toHaveLength(4);
+    expect(cards.map((card) => card.textContent)).toEqual([
+      expect.stringContaining("5% down"),
+      expect.stringContaining("10% down"),
+      expect.stringContaining("20% down"),
+      expect.stringContaining("25% down"),
+    ]);
+
+    // The two layouts are mutually exclusive. Both rendering at once would read
+    // every figure twice to a screen reader on one width or the other.
+    const list = screen.getByRole("list", { name: MONTHLY });
+    expect(list.className).toContain("sm:hidden");
+    const scroller = screen.getAllByRole("table")[0].parentElement!;
+    expect(scroller.className).toContain("hidden");
+    expect(scroller.className).toContain("sm:block");
+  });
+
+  it("marks the reader's own scenario on the card, as the column already was", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+
+    // Scoped to one carousel: a grid renders per section, and every one of them
+    // marks the reader's scenario.
+    const own = cardsFor(MONTHLY).filter((card) => card.getAttribute("aria-current") === "true");
+    expect(own).toHaveLength(1);
+    // 10% is the default down payment.
+    expect(own[0].textContent).toContain("10% down");
+    expect(own[0].textContent).toContain("Your choice");
+    // The tint is the visual half of the same mark, and it is the reason --acbg
+    // was pulled into the contrast sweep.
+    expect(own[0].className).toContain("bg-acbg");
+  });
+
+  it("moves the mark, and the card it starts on, when the reader changes their down payment", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    await user.click(
+      within(screen.getByRole("radiogroup", { name: /Down payment/ })).getByRole("radio", {
+        name: "20%",
+      }),
+    );
+    const own = cardsFor(MONTHLY).filter((card) => card.getAttribute("aria-current") === "true");
+    expect(own).toHaveLength(1);
+    expect(own[0].textContent).toContain("20% down");
+  });
+
+  it("drops no row from the phone, so the two layouts answer the same questions", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+
+    const table = screen.getAllByRole("table")[0];
+    const bodyRows = within(table).getAllByRole("rowheader");
+    for (const card of cardsFor(MONTHLY)) {
+      expect(within(card).getAllByRole("definition")).toHaveLength(bodyRows.length);
+    }
+
+    // And the same figure, not merely the same count. Cells carry an sr-only
+    // "best of the four" suffix, so this compares the leading figure only.
+    const row = within(table).getByRole("row", { name: /True all-in monthly/ });
+    const yoursColumn = within(row).getAllByRole("cell")[1].textContent ?? "";
+    const own = cardsFor(MONTHLY).find((card) => card.getAttribute("aria-current") === "true")!;
+    const value = within(own).getByText("True all-in monthly").parentElement!.querySelector("dd");
+    expect(yoursColumn).toContain(value?.textContent?.replace(/ · .*/, "") ?? "");
+  });
+
+  it("adds no gesture and no control, so nothing is hidden behind one and nothing traps focus", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+
+    const list = screen.getByRole("list", { name: MONTHLY });
+    // Every scenario is present and in order: this is a scroller, not a set of
+    // tabs. DESIGN.md §8 allows no second way to reveal anything.
+    expect(within(list).queryAllByRole("button")).toEqual([]);
+    expect(within(list).queryAllByRole("tab")).toEqual([]);
+    // The only links inside are the per-figure provenance marks the table
+    // already carried, so there is nothing to trap; the scroller itself is
+    // focusable because Safari does not make scroll containers focusable.
+    expect(list.getAttribute("tabindex")).toBe("0");
+    for (const link of within(list).getAllByRole("link")) {
+      expect(link.getAttribute("href")).toMatch(/\/sources/);
+    }
+  });
+});

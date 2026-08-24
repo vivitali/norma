@@ -119,7 +119,12 @@ describe("no screen renders a non-finite figure", () => {
         cleanup();
       }
     }
-  });
+    // Ninety-eight full page renders, and Scenarios now renders two layouts of
+    // its comparison — the table and the phone cards — on every one of them.
+    // That took the sweep from 4.0s to 5.4s against a 5s default and made it a
+    // timeout rather than an assertion. Raised deliberately: shrinking the
+    // matrix would cost the coverage the test exists for.
+  }, 30_000);
 });
 
 describe("cross-page links stay within their cap", () => {
@@ -216,5 +221,35 @@ describe("horizontal scroll stays inside the element that owns it", () => {
       readFileSync(path, "utf8").includes("overflow-x-auto"),
     );
     expect(found.length).toBeGreaterThanOrEqual(3);
+  });
+
+  /**
+   * `hidden … sm:block` says "not on a phone", and on its own that is a hole in
+   * the phone layout rather than a decision about it. Both places that use it
+   * pair it with a `sm:hidden` sibling carrying the same content in a shape that
+   * fits: SectionRow moves its line under the row, and CompareGrid swaps its
+   * 560px table for a carousel of one card per scenario.
+   *
+   * Source-level, and per file rather than per pair, because the failure this
+   * guards is deleting one half — the phone would then show nothing at all where
+   * the other width shows a comparison, and jsdom applies no layout, so no
+   * rendered test can see it.
+   */
+  const HIDES_BELOW_SM = /className=\{?"[^"]*\bhidden\b[^"]*\bsm:(?:block|flex|table|grid|inline)/;
+  const SHOWS_BELOW_SM = /className=\{?"[^"]*\bsm:hidden\b/;
+
+  it("replaces what a breakpoint hides, rather than only removing it", () => {
+    const offenders = sourceFiles("src").filter((path) => {
+      const source = readFileSync(path, "utf8");
+      return HIDES_BELOW_SM.test(source) && !SHOWS_BELOW_SM.test(source);
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it("finds the swaps at all, so that sweep cannot pass vacuously either", () => {
+    const found = sourceFiles("src").filter((path) =>
+      HIDES_BELOW_SM.test(readFileSync(path, "utf8")),
+    );
+    expect(found.length).toBeGreaterThanOrEqual(2);
   });
 });
