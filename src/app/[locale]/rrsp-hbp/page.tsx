@@ -116,8 +116,12 @@ export default function RrspHbpPage() {
               value={fmt(play.max)}
               provenance={<Provenance kind="rule" />}
             />
-            <PanelRow label={t("roomLeft")} value={fmt(play.roomLeft)} />
-            <PanelRow label={t("income")} value={fmt(resolved.taxIncome)} />
+            <PanelRow label={t("withdrawRoomLeft")} value={fmt(play.withdrawRoomLeft)} />
+            <PanelRow
+              label={t("income")}
+              value={fmt(resolved.taxIncome)}
+              provenance={<Provenance kind="estimate" />}
+            />
             <PanelRow
               label={t("marginal")}
               value={pct(rate * 100, 1)}
@@ -155,11 +159,11 @@ export default function RrspHbpPage() {
           </>,
         )}
 
-        {section("rules", "caution", t("step3"), "", t("rulesWhy"), (
+        {section("rules", "caution", t("step3", { d: play.ruleDays }), "", t("rulesWhy"), (
           <>
             {step(t("step1"), t("step1Body"))}
             {step(t("step2"), t("step2Body"))}
-            {step(t("step3"), t("step3Body"), t("step3Warn"))}
+            {step(t("step3", { d: play.ruleDays }), t("step3Body"), t("step3Warn"))}
             {step(t("step4"), t("step4Body", { cap: fmt(play.max) }))}
             {step(t("step5"), t("step5Body"))}
             <p className="pt-3 text-[12.5px] text-ink3">

@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { buildLines, closingTotal, credits } from "@/domain/engine";
+import { buildLines, closingTotal, credits, monthsToSave } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
@@ -49,8 +49,10 @@ export default function ClosingCostsPage() {
   const later = credit.later.reduce((sum, c) => sum + c.amount, 0);
 
   const gap = resolved.funds === null ? null : resolved.funds - total.net;
-  const months =
-    gap === null || gap >= 0 ? null : resolved.save && resolved.save > 0 ? Math.ceil(-gap / resolved.save) : null;
+  // One implementation, in the engine. This page used to compute it a third way
+  // and return null where the engine returns 0, so a reader who could already
+  // close and a reader who never gave a saving rate both saw the same em-dash.
+  const months = monthsToSave(gap, resolved.save);
 
   const section = (
     id: string,
@@ -205,7 +207,9 @@ export default function ClosingCostsPage() {
               : cash === "caution"
                 ? t("tightNote")
                 : t("shortNote"),
-          cash === "unanswered" ? fmt(total.net) : `${fmt(Math.abs(gap!))} ${gap! >= 0 ? t("stPass") : t("stShort")}`,
+          cash === "unanswered"
+            ? fmt(total.net)
+            : `${fmt(Math.abs(gap!))} ${cash === "blocked" ? t("stShort") : cash === "caution" ? t("stTight") : t("stPass")}`,
           t("cashWhy"),
           <>
             <PanelRow label={t("downPaymentRow")} value={fmt(total.fin.down)} />
@@ -223,6 +227,7 @@ export default function ClosingCostsPage() {
               value={months === null ? "—" : String(months)}
               strong
             />
+            {months === 0 ? <p className="pt-1 text-[12.5px] text-pass">{t("passNote")}</p> : null}
             {gap !== null && gap < 0 && months === null ? (
               <p className="mt-2 text-[12.5px] text-ink3">{t("noSaveRate")}</p>
             ) : null}

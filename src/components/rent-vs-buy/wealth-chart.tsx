@@ -5,7 +5,12 @@ import type { RentVsBuyResult } from "@/domain/engine";
 import { useMoney } from "@/lib/format";
 
 /**
- * Two wealth lines over the horizon, with the crossing marked.
+ * Two wealth lines over the full forty years, with the crossing marked.
+ *
+ * The caption chips are labelled with the YEAR they report. They read the end of
+ * the schedule, while the figures beside the headline read the reader's own
+ * horizon — two different pairs of numbers that otherwise sat under the same two
+ * words on one screen.
  *
  * Buying starts behind — the down payment and closing costs are sunk — and the
  * only question the chart answers is where, if anywhere, the lines cross. Drawn
@@ -73,11 +78,11 @@ export function WealthChart({ result }: { result: RentVsBuyResult }) {
       <figcaption className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-[11px] text-ink3">
         <span className="flex items-center gap-1.5">
           <span aria-hidden="true" className="size-[7px] rounded-full bg-ac" />
-          {`${t("buyWord")} · ${fmt(last.buyW)}`}
+          {`${t("buyWord")} · ${t("atYear", { n: result.years })} · ${fmt(last.buyW)}`}
         </span>
         <span className="flex items-center gap-1.5">
           <span aria-hidden="true" className="size-[7px] rounded-full bg-ink3" />
-          {`${t("rentWord")} · ${fmt(last.rentW)}`}
+          {`${t("rentWord")} · ${t("atYear", { n: result.years })} · ${fmt(last.rentW)}`}
         </span>
         <span>
           {result.breakEven === null

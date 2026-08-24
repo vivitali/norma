@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { defaultContractRate, minDown } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { getJurisdiction } from "@/domain/jurisdictions";
 import { TOOL_DEFAULTS } from "./shared-inputs";
@@ -163,5 +164,61 @@ describe("isPersonalised", () => {
   it("is false for a price change alone", () => {
     // Price is the target being tested, not the household's situation.
     expect(isPersonalised({ ...untouched, price: 600000 })).toBe(false);
+  });
+});
+
+describe("isPersonalised — every page's own inputs count", () => {
+  // The predicate was written for Affordability and drives the typical/yours
+  // badge on all nine pages. A reader who filled in six account balances on Down
+  // Payment, or a contribution and a withdrawal on RRSP-HBP, was still told the
+  // answer above them was "typical".
+  const CASES: [string, Partial<typeof untouched>][] = [
+    ["a down-payment source", { tfsa: 30000 }],
+    ["every down-payment source", { fhsa: 1, cashSav: 1, rrsp: 1, tfsa: 1, gift: 1, nonreg: 1 }],
+    ["an HBP contribution", { hbpContribution: 40000 }],
+    ["an HBP withdrawal", { hbpWithdraw: 40000 }],
+    ["taxable income", { taxIncome: 120000 }],
+    ["the rent being compared against", { rent: 2400 }],
+    ["a monthly saving rate", { save: 800 }],
+  ];
+  for (const [what, patch] of CASES) {
+    it(`is true once the reader gives ${what}`, () => {
+      expect(isPersonalised({ ...untouched, ...patch })).toBe(true);
+    });
+  }
+
+  it("stays false for the question being asked, not the household asking it", () => {
+    // dpPct, amortization, property type and the rent-vs-buy assumptions all have
+    // non-null defaults. Counting them would pin the badge to "yours" forever.
+    expect(
+      isPersonalised({ ...untouched, dpPct: 25, amortYears: 25, ptype: "condo", holding: 25 }),
+    ).toBe(false);
+  });
+});
+
+describe("the legal minimum down payment", () => {
+  it("raises a request below the floor, and says it did", () => {
+    // 5% is legal below $500,000 and not above it. A page that amortized 5% on a
+    // $1.6M house would be quoting a mortgage no lender in Canada may write.
+    const r = resolveInputs({ ...untouched, price: 1600000, dpPct: 5 }, winnipeg, federal);
+    expect(r.belowMinimum).toBe(true);
+    expect(r.dpPctRequested).toBe(5);
+    expect(r.dpPct).toBeGreaterThan(5);
+    expect((r.price * r.dpPct) / 100).toBeCloseTo(minDown(1600000), 4);
+  });
+
+  it("leaves a legal request exactly alone", () => {
+    const r = resolveInputs({ ...untouched, price: 400000, dpPct: 5 }, winnipeg, federal);
+    expect(r.belowMinimum).toBe(false);
+    expect(r.dpPct).toBe(5);
+  });
+
+  it("prices the contract rate off the MODELLED percentage, not the requested one", () => {
+    // Being raised to 20% removes the insurance premium, which is exactly when
+    // the rate offered changes. Deriving it from the request would quote an
+    // insured rate on an uninsured mortgage.
+    const raised = resolveInputs({ ...untouched, price: 3000000, dpPct: 5 }, winnipeg, federal);
+    expect(raised.dpPct).toBeCloseTo(20, 6);
+    expect(raised.contractRate).toBeCloseTo(defaultContractRate(federal, 20), 10);
   });
 });

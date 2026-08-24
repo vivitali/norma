@@ -113,7 +113,9 @@ export default function AmortizationPage() {
           { label: t("rPayNow"), value: fmt(result.firstPayment), mark: "rule" },
           {
             label: t("rChange"),
-            value: `${shock >= 0 ? "" : "− "}${fmt(Math.abs(shock))}`,
+            // money() puts the sign outside the symbol already; doing it again here
+            // is how one screen ends up disagreeing with another about "− $340".
+            value: fmt(shock),
             note: rising ? t("shockUpTag") : falling ? t("shockDownTag") : t("shockNoneTag"),
           },
           { label: t("rInterest"), value: fmt(result.totalInterest), mark: "rule" },
@@ -154,7 +156,7 @@ export default function AmortizationPage() {
               provenance={<Provenance kind="rule" />}
             />
             <PanelRow label={t("rPayNow")} value={fmt(result.firstPayment)} strong />
-            <PanelRow label={t("payoffYear", { n: result.payoffYear })} value={t("yearsWord", { n: result.payoffYear })} />
+            <PanelRow label={t("payoffLabel")} value={t("payoffYear", { n: result.payoffYear })} />
           </>,
         )}
 
@@ -162,7 +164,7 @@ export default function AmortizationPage() {
           "renewal",
           rising ? "blocked" : falling ? "pass" : "caution",
           rising ? t("shockUpTag") : falling ? t("shockDownTag") : t("shockNoneTag"),
-          `${shock >= 0 ? "" : "− "}${fmt(Math.abs(shock))}`,
+          fmt(shock),
           t("renewalWhy"),
           <>
             <p className="mb-3 max-w-[620px] text-[13px] leading-[1.65] font-medium text-pretty">

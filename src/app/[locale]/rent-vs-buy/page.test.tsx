@@ -71,14 +71,21 @@ describe("Rent vs buy — the horizon decides", () => {
 });
 
 describe("Rent vs buy — the flat-market counterweight", () => {
-  it("says whether the verdict survives appreciation being switched off", () => {
+  it("says whether a winning buy verdict survives appreciation being switched off", async () => {
     // The one question the headline cannot carry: is buying winning on shelter
-    // costs, or only on a forecast of the housing market?
+    // costs, or only on a forecast of the housing market? The caveat only exists
+    // on the buyWins path, so the test has to drive the page there first --
+    // accepting "Renting wins" as a pass made this assert nothing at all.
+    const user = userEvent.setup();
     renderPage();
+    const rent = screen.getByLabelText("Rent you are comparing against, monthly");
+    await user.clear(rent);
+    await user.type(rent, "3200");
+    await user.tab();
+
+    expect(screen.getAllByText(/Buying wins/).length).toBeGreaterThan(0);
     const text = document.body.textContent ?? "";
-    expect(
-      /appreciation switched off|depends on appreciation|Renting wins/.test(text),
-    ).toBe(true);
+    expect(/appreciation switched off|depends on appreciation/.test(text)).toBe(true);
   });
 
   it("frames the appreciation switch as a forecast, not a setting", async () => {

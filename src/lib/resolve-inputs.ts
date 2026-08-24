@@ -1,5 +1,5 @@
 import type { FederalRules, Jurisdiction, PropertyType } from "@/domain/types";
-import { defaultContractRate } from "@/domain/engine";
+import { defaultContractRate, minDown } from "@/domain/engine";
 import type { ToolFormState } from "./shared-inputs";
 
 /**
@@ -23,7 +23,20 @@ export const DEFAULT_RENT = 1500;
 
 export interface ResolvedInputs {
   price: number;
+  /**
+   * The down payment percentage the app MODELS, with the legal minimum applied.
+   *
+   * Not the one the reader picked. 5% on a $1.6M house is not a scenario, it is
+   * not allowed, and a page that amortized it would be quoting a mortgage no
+   * lender in Canada may write. Resolving the floor once here is what stopped
+   * Amortization and Rent vs Buy answering the same question differently from
+   * Scenarios, which had applied it all along.
+   */
   dpPct: number;
+  /** What the reader actually chose, for controls and for explaining the raise. */
+  dpPctRequested: number;
+  /** True when the request was below the legal floor and was raised to meet it. */
+  belowMinimum: boolean;
   amortYears: number;
   ftb: boolean;
   ptype: PropertyType;
@@ -101,19 +114,27 @@ export function resolveInputs(
   const income1 = stored.income1 ?? DEFAULT_INCOME_1;
   const income2 = stored.income2 ?? 0;
   const otherIncome = stored.otherIncome ?? 0;
+  const price = stored.price ?? j.bench[stored.ptype];
+  // Half a dollar of slack: a percentage that lands a rounding error under the
+  // floor is not a reader asking for something illegal.
+  const floorPct = price > 0 ? (minDown(price) / price) * 100 : stored.dpPct;
+  const belowMinimum = stored.dpPct < floorPct - 1e-9 && price > 0;
+  const dpPct = Math.max(stored.dpPct, belowMinimum ? floorPct : stored.dpPct);
   const car = stored.car ?? 0;
   const student = stored.student ?? 0;
   const cc = stored.cc ?? 0;
   const otherDebt = stored.otherDebt ?? 0;
 
   return {
-    price: stored.price ?? j.bench[stored.ptype],
-    dpPct: stored.dpPct,
+    price,
+    dpPct,
+    dpPctRequested: stored.dpPct,
+    belowMinimum,
     amortYears: stored.amortYears,
     ftb: stored.ftb,
     ptype: stored.ptype,
     elsewhere: stored.elsewhere,
-    contractRate: stored.contractRate ?? defaultContractRate(F, stored.dpPct),
+    contractRate: stored.contractRate ?? defaultContractRate(F, dpPct),
     income1,
     // null means "no second applicant", not "a second applicant earning nothing".
     income2,
@@ -193,14 +214,31 @@ export function anySourceGiven(stored: ToolFormState): boolean {
  * user's own stated limit and the single input driving the headline figure.
  */
 export function isPersonalised(stored: ToolFormState): boolean {
-  return (
-    stored.income1 !== null ||
-    stored.income2 !== null ||
-    stored.car !== null ||
-    stored.student !== null ||
-    stored.cc !== null ||
-    stored.otherDebt !== null ||
-    stored.funds !== null ||
-    stored.comfortCeiling !== null
-  );
+  return PERSONAL_KEYS.some((key) => stored[key] !== null);
 }
+
+/**
+ * Every input that is the READER'S OWN situation rather than the thing being
+ * tested. Touching any one of them flips the badge from "typical" to "yours".
+ *
+ * Kept as a list rather than a chain of ors because the chain was written for
+ * Affordability and never extended: a reader could fill in all six account
+ * balances on Down Payment, or contribution, withdrawal and taxable income on
+ * RRSP-HBP, and still be told the answer above was "typical figures" over
+ * numbers that were entirely theirs.
+ *
+ * `price` is deliberately absent: it is the target being tested, not the
+ * household. `dpPct`, `amortYears`, `ptype`, `ftb` and the rent-vs-buy
+ * assumptions are absent for the same reason — they are the question, and every
+ * one of them has a non-null default, so including them would make the badge
+ * permanently "yours" and mean nothing.
+ */
+const PERSONAL_KEYS = [
+  "income1", "income2", "otherIncome",
+  "car", "student", "cc", "otherDebt",
+  "comfortCeiling", "insuranceAnnual", "utilities", "condoFee",
+  "funds", "save",
+  "fhsa", "cashSav", "rrsp", "tfsa", "gift", "nonreg", "nonregGain", "taxIncome",
+  "hbpContribution", "hbpWithdraw",
+  "rent",
+] as const satisfies readonly (keyof ToolFormState)[];

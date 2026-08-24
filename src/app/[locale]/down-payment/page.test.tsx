@@ -46,9 +46,7 @@ describe("Down payment — the waterfall", () => {
     // On a first visit every account is unknown. Reporting 'you are short the
     // entire down payment' would be arithmetically true and useless.
     renderPage();
-    expect(
-      screen.getByText(/Add what you have in each account/),
-    ).toBeInTheDocument();
+    expect(screen.getAllByText(/Add what you have in each account/).length).toBeGreaterThan(0);
   });
 
   it("lists the sources in the fixed cost order", async () => {
@@ -86,19 +84,35 @@ describe("Down payment — the waterfall", () => {
 });
 
 describe("Down payment — the glide path", () => {
-  it("refuses to name a month the saving rate cannot reach", async () => {
-    // The honest answer. A number here would be a promise the rate cannot keep.
+  it("asks for a saving rate before judging one", async () => {
+    // On an empty form there is no rate to fail. Saying "not reached at this
+    // savings rate" in red blames the reader for an input never requested.
     const user = userEvent.setup();
     renderPage();
     await open(user, /The savings glide path/);
-    expect(screen.getAllByText(/Not reached within 36 months/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Add a monthly saving rate/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Not reached within 36 months/)).not.toBeInTheDocument();
   });
 
-  it("asks for a saving rate instead of assuming one", async () => {
+  it("refuses to name a month the saving rate genuinely cannot reach", async () => {
+    // Once a rate IS given and it does not get there, the honest answer is no
+    // month at all. A number would be a promise the rate cannot keep.
     const user = userEvent.setup();
     renderPage();
+
+    await open(user, /The funding order/);
+    const fhsa = screen.getByLabelText("FHSA");
+    await user.clear(fhsa);
+    await user.type(fhsa, "1000");
+    await user.tab();
+
     await open(user, /The savings glide path/);
-    expect(screen.getByText(/Add a monthly saving rate/)).toBeInTheDocument();
+    const save = screen.getAllByLabelText("Monthly savings toward the purchase")[0];
+    await user.clear(save);
+    await user.type(save, "50");
+    await user.tab();
+
+    expect(screen.getAllByText(/Not reached within 36 months/).length).toBeGreaterThan(0);
   });
 });
 

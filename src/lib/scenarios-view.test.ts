@@ -41,9 +41,31 @@ describe("recommend", () => {
   });
 
   it("prices the move to 20% as a return per dollar of extra deposit", () => {
-    const result = recommend(columns());
+    // Computed from the columns, not from the result's own two fields -- that
+    // version restated returnOnExtra's definition and would pass for any formula.
+    const cols = columns();
+    const five = cols[0];
+    const twenty = cols.find((c) => c.dpPct === 20)!;
+    const result = recommend(cols);
     if (result.kind !== "twenty") throw new Error("expected twenty");
-    expect(result.returnOnExtra).toBeCloseTo(result.saving / result.extraCash, 6);
+    expect(result.returnOnExtra).toBeCloseTo(
+      (five.costOfBorrowing - twenty.costOfBorrowing) / (twenty.net - five.net),
+      6,
+    );
+    // NOT asserted to be above 1.0. At this scenario it is 0.91, which is why the
+    // ported copy claiming 20% "typically returns more than 1:1" had to go: the
+    // page printed a figure contradicting its own advice two rows below it.
+    expect(result.returnOnExtra).toBeGreaterThan(0);
+  });
+
+  it("keeps fundability independent of approval", () => {
+    // recommend() tests approval FIRST, deliberately. The bug that ordering hid:
+    // a household no lender would approve returned "noneQualify" whether or not
+    // funds were ever given, and the page painted its cash row green over a
+    // table of em-dashes. The columns still have to carry the honest null.
+    const cols = columns({ qualIncome: 20000, funds: null });
+    expect(recommend(cols)).toEqual({ kind: "noneQualify" });
+    expect(cols.every((c) => c.fundable === null)).toBe(true);
   });
 
   it("does not push past 20%, where each extra dollar earns only the mortgage rate", () => {

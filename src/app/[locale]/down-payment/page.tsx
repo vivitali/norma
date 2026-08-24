@@ -93,7 +93,9 @@ export default function DownPaymentPage() {
   const head = !described
     ? t("assembled")
     : funded
-      ? t("fullyFunded", { a: fmt(flow.surplus) })
+      ? flow.taxTotal > 0
+        ? t("fullyFundedBeforeTax", { a: fmt(flow.surplus), tax: fmt(flow.taxTotal) })
+        : t("fullyFunded", { a: fmt(flow.surplus) })
       : t("shortBy", { a: fmt(flow.drawnTotal), b: fmt(flow.shortfall) });
 
   const section = (id: string, tone: Tone, line: string, figure: string, why: string, body: ReactNode) => {
@@ -116,7 +118,9 @@ export default function DownPaymentPage() {
   };
 
   const legal = minDown(resolved.price);
-  const chosen = (resolved.price * resolved.dpPct) / 100;
+  // The REQUESTED percentage, deliberately: resolved.dpPct already has the floor
+  // applied, so comparing it against the floor could never report a raise.
+  const chosen = (resolved.price * resolved.dpPctRequested) / 100;
 
   return (
     <ToolMain>
@@ -148,7 +152,7 @@ export default function DownPaymentPage() {
 
         {section(
           "target",
-          chosen < legal - 0.5 ? "caution" : "none",
+          resolved.belowMinimum ? "caution" : "none",
           t("needLabel"),
           fmt(need),
           t("targetWhy"),
@@ -158,8 +162,8 @@ export default function DownPaymentPage() {
               value={fmt(legal)}
               provenance={<Provenance kind="rule" />}
             />
-            <PanelRow label={`${t("chosenDown")} · ${pct(resolved.dpPct)}`} value={fmt(chosen)} />
-            {chosen < legal - 0.5 ? (
+            <PanelRow label={`${t("chosenDown")} · ${pct(resolved.dpPctRequested)}`} value={fmt(chosen)} />
+            {resolved.belowMinimum ? (
               <p className="pt-1 text-[12.5px] text-caution">{t("belowMin")}</p>
             ) : null}
             <PanelRow
@@ -193,7 +197,7 @@ export default function DownPaymentPage() {
                 </p>
                 {row.drawn > 0 && row.repayAnnual > 0 ? (
                   <p className="pt-1 text-[12px] text-caution">
-                    {t("repayAnnual", { a: fmt(row.repayAnnual) })}
+                    {t("repayAnnual", { a: fmt(row.repayAnnual), y: federal.hbp.repayYears })}
                   </p>
                 ) : null}
                 {row.key === "tfsa" && row.drawn > 0 ? (
@@ -201,7 +205,11 @@ export default function DownPaymentPage() {
                 ) : null}
                 {row.gainRealised > 0 ? (
                   <p className="pt-1 text-[12px] text-caution">
-                    {t("gainRealised", { g: fmt(row.gainRealised), r: pct(flow.rate * 100, 1) })}
+                    {t("gainRealised", {
+                      g: fmt(row.gainRealised),
+                      i: pct(federal.capGainsInclusion * 100),
+                      r: pct(flow.rate * 100, 1),
+                    })}
                   </p>
                 ) : null}
                 <div className="flex gap-4 pt-1 text-[11.5px] text-ink3">
@@ -253,10 +261,14 @@ export default function DownPaymentPage() {
               value={pct(flow.rate * 100, 1)}
               provenance={<Provenance kind="rule" />}
             />
-            <PanelRow label={t("income")} value={fmt(resolved.taxIncome)} />
+            <PanelRow
+              label={t("income")}
+              value={fmt(resolved.taxIncome)}
+              provenance={<Provenance kind="estimate" />}
+            />
             <PanelRow label={t("taxCost")} value={fmt(flow.taxTotal)} strong />
             {obligations > 0 ? (
-              <PanelRow label={t("repayAnnual", { a: fmt(obligations) })} value={fmt(obligations)} strong />
+              <PanelRow label={t("obligationsLabel")} value={t("repayAnnual", { a: fmt(obligations), y: federal.hbp.repayYears })} strong />
             ) : null}
             <div className="mt-4 max-w-[320px]">
               <NumberField
@@ -273,18 +285,29 @@ export default function DownPaymentPage() {
 
         {section(
           "glide",
-          flow.shortfall <= 0.5 ? "pass" : glide.reach === null ? "blocked" : "caution",
-          flow.shortfall <= 0.5
-            ? t("already")
-            : glide.reach === null
-              ? t("never")
-              : t("reached", { m: glide.reach }),
-          flow.shortfall > 0.5 ? fmt(flow.shortfall) : "—",
+          // A saving rate nobody gave cannot fail to reach a target. Reporting
+          // "not reached at this savings rate" over an empty form blames the
+          // reader for an input they were never asked for on this screen.
+          !described || resolved.save === null
+            ? "none"
+            : flow.shortfall <= 0.5
+              ? "pass"
+              : glide.reach === null
+                ? "blocked"
+                : "caution",
+          !described || resolved.save === null
+            ? t("noSaveRate")
+            : flow.shortfall <= 0.5
+              ? t("already")
+              : glide.reach === null
+                ? t("never")
+                : t("reached", { m: glide.reach }),
+          described && flow.shortfall > 0.5 ? fmt(flow.shortfall) : "—",
           t("glideWhy"),
           <>
-            {flow.shortfall > 0.5 ? (
+            {described && flow.shortfall > 0.5 ? (
               <>
-                <GlideChart glide={glide} />
+                {resolved.save !== null && resolved.save > 0 ? <GlideChart glide={glide} /> : null}
                 <PanelRow label={t("shortfallLabel")} value={fmt(flow.shortfall)} strong />
                 <PanelRow
                   label={t("monthlySavings")}
@@ -298,7 +321,9 @@ export default function DownPaymentPage() {
                 </p>
               </>
             ) : (
-              <p className="text-[13.5px] text-ink2">{t("noShortfall")}</p>
+              <p className="text-[13.5px] text-ink2">
+                {described ? t("noShortfall") : t("unanswered")}
+              </p>
             )}
             <div className="mt-4 max-w-[320px]">
               <NumberField

@@ -26,10 +26,13 @@ export function CompareGrid({
   columns,
   rows,
   recommendedPct,
+  caption,
 }: {
   columns: readonly ScenarioResult[];
   rows: readonly MetricRow[];
   recommendedPct: number | null;
+  /** Names the table. Four identically-shaped unnamed tables read as noise. */
+  caption: string;
 }) {
   const t = useTranslations("Scenarios");
   const pct = usePercent();
@@ -37,6 +40,7 @@ export function CompareGrid({
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
+        <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="border-b border-border text-left">
             <th scope="col" className="py-1.5 pr-3 font-medium text-ink3">
@@ -93,6 +97,12 @@ export function CompareGrid({
                     }
                   >
                     {row.value(column)}
+                    {/*
+                      The single fact this grid exists to convey cannot be carried
+                      by colour alone. text-pass is the visual encoding; this is
+                      the one a screen reader and a colour-blind reader get.
+                    */}
+                    {i === best ? <span className="sr-only"> · {t("bestHere")}</span> : null}
                   </td>
                 ))}
               </tr>

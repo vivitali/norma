@@ -19,6 +19,13 @@ import { NumberField } from "@/components/number-field";
 import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
 
+/**
+ * The price at which the minimum down payment steps from 5% to a blended rate.
+ * Named here because the sentence explaining the rule has to agree with
+ * minDown(), and a literal in copy cannot be made to.
+ */
+const MIN_DOWN_TIER = 500000;
+
 export default function ScenariosPage() {
   const t = useTranslations("Scenarios");
   const [jurisdiction] = useJurisdiction();
@@ -59,6 +66,8 @@ export default function ScenariosPage() {
   );
 
   const rec = recommend(columns);
+  const cashUnanswered = columns.every((c) => c.fundable === null);
+  const cashFundable = columns.some((c) => c.fundable === true);
   const recommendedPct = rec.kind === "twenty" ? rec.pct : rec.kind === "only" ? rec.pct : null;
 
   const head =
@@ -124,6 +133,8 @@ export default function ScenariosPage() {
 
   const monthlyRows: MetricRow[] = [
     { label: t("rDownAmt"), value: (c) => fmt(c.down) },
+    { label: t("rBaseLoan"), value: (c) => fmt(c.baseLoan) },
+    { label: t("rLtv"), value: (c) => pct(c.ltv * 100, 1), mark: "rule" },
     { label: t("rTotalMort"), value: (c) => fmt(c.totalMortgage), mark: "rule" },
     { label: t("rPremRate"), value: (c) => (c.premRate > 0 ? pct(c.premRate * 100, 2) : t("fNoPremium")), mark: "rule" },
     { label: t("rPremAmt"), value: (c) => (c.premium > 0 ? fmt(c.premium) : "—"), mark: "rule" },
@@ -132,15 +143,23 @@ export default function ScenariosPage() {
     { label: t("rPropTax"), value: (c) => fmt(c.monthly.propTax), mark: "estimate" },
     { label: t("rMaint"), value: (c) => fmt(c.monthly.maintenance), mark: "estimate" },
     { label: t("rAllIn"), value: (c) => fmt(c.monthly.total), strong: true, best: lowestBy((c) => c.monthly.total) },
-    { label: t("rVsCeiling"), value: (c) => `${c.vsCeiling <= 0 ? "" : "− "}${fmt(Math.abs(c.vsCeiling))}` },
+    // money() already puts the sign outside the symbol. Re-implementing that here
+    // is how two screens end up formatting the same negative figure differently.
+    { label: t("rVsCeiling"), value: (c) => fmt(-c.vsCeiling) },
   ];
 
   const cashRows: MetricRow[] = [
     { label: t("rClosing"), value: (c) => fmt(c.closingTotal), mark: "rule" },
     { label: t("rPremTax"), value: (c) => (c.premiumTaxLine > 0 ? fmt(c.premiumTaxLine) : "—"), mark: "rule" },
     { label: t("rCash"), value: (c) => fmt(c.net), strong: true, best: lowestBy((c) => c.net) },
+    { label: t("rFunds"), value: () => (resolved.funds === null ? "—" : fmt(resolved.funds)) },
     { label: t("rSurplus"), value: (c) => (c.surplus === null ? "—" : fmt(c.surplus)) },
-    { label: t("rMonths"), value: (c) => (c.months === null ? "—" : String(c.months)) },
+    {
+      label: t("rMonths"),
+      // Three distinguishable answers, from one engine helper: 0 means you can
+      // already close, "—" means no saving rate was given, a number is months.
+      value: (c) => (c.months === null ? "—" : t("fMonths", { n: c.months })),
+    },
     {
       label: t("gCash"),
       value: (c) => (c.fundable === null ? "—" : c.fundable ? t("fFundable") : t("fShort")),
@@ -212,9 +231,14 @@ export default function ScenariosPage() {
 
         {section("monthly", "none", t("gMonthly"), fmt(headline.monthly.total), t("monthlyWhy"), (
           <>
-            <CompareGrid columns={columns} rows={monthlyRows} recommendedPct={recommendedPct} />
+            <CompareGrid
+              columns={columns}
+              rows={monthlyRows}
+              recommendedPct={recommendedPct}
+              caption={`${t("gMortgage")} · ${t("gMonthly")}`}
+            />
             <p className="pt-3 text-[12px] leading-[1.6] text-ink3">
-              {t("minDownNote", { a: fmt(500000), b: fmt(minDown(resolved.price)) })}
+              {t("minDownNote", { a: fmt(MIN_DOWN_TIER), b: fmt(minDown(resolved.price)) })}
             </p>
             <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyPremium")}</p>
             <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyContract")}</p>
@@ -223,12 +247,21 @@ export default function ScenariosPage() {
 
         {section(
           "cash",
-          rec.kind === "noneCash" ? "blocked" : rec.kind === "unanswered" ? "none" : "pass",
+          // Derived from the columns, NOT from rec.kind. recommend() tests approval
+          // before fundability on purpose, so a household that no lender would
+          // approve returned "noneQualify" whether or not funds were ever given --
+          // and this row painted itself green over a table of em-dashes.
+          cashUnanswered ? "none" : cashFundable ? "pass" : "blocked",
           t("gCashNote"),
           fmt(headline.net),
           t("cashWhy"),
           <>
-            <CompareGrid columns={columns} rows={cashRows} recommendedPct={recommendedPct} />
+            <CompareGrid
+              columns={columns}
+              rows={cashRows}
+              recommendedPct={recommendedPct}
+              caption={t("gCash")}
+            />
             <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyPremTax")}</p>
             <div className="mt-4 flex max-w-[420px] flex-col gap-3">
               <NumberField
@@ -249,7 +282,12 @@ export default function ScenariosPage() {
           pct(headline.gds, 1),
           t("approvalWhy"),
           <>
-            <CompareGrid columns={columns} rows={qualRows} recommendedPct={recommendedPct} />
+            <CompareGrid
+              columns={columns}
+              rows={qualRows}
+              recommendedPct={recommendedPct}
+              caption={t("gQual")}
+            />
             <div className="mt-4 grid max-w-[520px] gap-3 sm:grid-cols-2">
               <NumberField
                 id="income1"
@@ -280,7 +318,13 @@ export default function ScenariosPage() {
 
         {section("lifetime", "none", t("gLifeNote"), fmt(headline.costOfBorrowing), t("lifetimeWhy"), (
           <>
-            <CompareGrid columns={columns} rows={lifeRows} recommendedPct={recommendedPct} />
+            <CompareGrid
+              columns={columns}
+              rows={lifeRows}
+              recommendedPct={recommendedPct}
+              caption={t("gLifetime")}
+            />
+            <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyVsCeiling")}</p>
             <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyReturn")}</p>
             <div className="mt-4">
               <p className="eyebrow pb-1 text-ink3">{t("howToRead")}</p>

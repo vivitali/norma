@@ -41,6 +41,24 @@ export function payFactor(annualRate: number, years: number): number {
   return i <= 0 ? 1 / n : i / (1 - Math.pow(1 + i, -n));
 }
 
+/**
+ * How many months of saving close a cash gap.
+ *
+ * Three genuinely different answers, and the type keeps them apart:
+ * `0` — already funded. `null` — unknowable, because no saving rate was given.
+ * A number — that many months. Collapsing the first two into one glyph tells a
+ * reader who can already close the same thing it tells one who never answered.
+ *
+ * Lives here rather than in a page because three screens ask it and three
+ * screens must not answer it differently.
+ */
+export function monthsToSave(gap: number | null, save: number | null): number | null {
+  if (gap === null) return null;
+  if (gap >= 0) return 0;
+  if (save === null || save <= 0) return null;
+  return Math.ceil(-gap / save);
+}
+
 export function minDown(price: number): number {
   if (price <= 500000) return price * 0.05;
   if (price < 1500000) return 25000 + (price - 500000) * 0.1;
@@ -372,8 +390,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const funds = o.funds ?? null;
   const save = o.save ?? null;
   const cashGap = funds === null ? null : funds - cc.net;
-  const monthsToClose =
-    cashGap === null || save === null || save <= 0 ? null : Math.max(0, Math.ceil(-cashGap / save));
+  const monthsToClose = monthsToSave(cashGap, save);
 
   return {
     gross,
@@ -731,8 +748,13 @@ export function hbpPlay(F: FederalRules, o: HbpInput) {
     schedule,
     /** Income added, and taxed, for each repayment year missed. */
     inclusionIfMissed: repayAnnual * o.marginalRate,
-    /** Contribution room left under the federal HBP maximum. */
-    roomLeft: F.hbp.max - contribution,
+    /**
+     * WITHDRAWAL room left under the federal maximum — not contribution room.
+     * `F.hbp.max` caps what you may take out, so measuring it against the
+     * contribution reported "$0 left" to someone who had contributed the maximum
+     * and withdrawn a tenth of it, with the rest of the room still there.
+     */
+    withdrawRoomLeft: F.hbp.max - withdraw,
     ruleDays: F.hbp.ruleDays,
     graceYears: F.hbp.graceYears,
     repayYears: F.hbp.repayYears,
@@ -970,8 +992,7 @@ export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
   const cash = down + cc.total;
   const net = cash - cc.creditsAtClosing;
   const surplus = o.funds === null ? null : o.funds - net;
-  const months =
-    surplus === null ? null : surplus >= 0 ? 0 : o.save && o.save > 0 ? Math.ceil(-surplus / o.save) : null;
+  const months = monthsToSave(surplus, o.save);
 
   const qualRate = Math.max(F.stressTest.floor / 100, contractRate + F.stressTest.buffer / 100);
   const stressPay = totalMortgage * payFactor(qualRate, o.amortYears);

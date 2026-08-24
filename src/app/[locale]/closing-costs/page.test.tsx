@@ -102,12 +102,16 @@ describe("Closing costs — credits, and when they arrive", () => {
   });
 
   it("warns that a tax-time credit is not closing-day money", async () => {
+    // Unconditional. The previous version was `if (later) expect(later)...`,
+    // which passes whether the warning renders or not. The default jurisdiction
+    // has a tax-time credit for a first-time buyer, so this is deterministic.
     const user = userEvent.setup();
     renderPage();
     await openSection(user, /Credits back/);
-    const later = screen.queryByText(/do not budget it as closing-day money/);
-    // Only asserted where such a credit exists; Toronto's first-time buyer set has one.
-    if (later) expect(later).toBeInTheDocument();
+    expect(screen.getByText("Arrives later, at tax time")).toBeInTheDocument();
+    expect(
+      screen.getByText(/do not budget it as closing-day money/),
+    ).toBeInTheDocument();
   });
 });
 

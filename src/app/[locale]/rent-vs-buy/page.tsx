@@ -300,6 +300,11 @@ export default function RentVsBuyPage() {
               min={0}
               onCommit={(rent) => update({ rent })}
             />
+            {stored.rent === null ? (
+              <p className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
+                {t("rentTag", { city: jurisdiction.city ?? jurisdiction.prov })}
+              </p>
+            ) : null}
             <NumberField
               id="rentInflation"
               label={t("fRentInf")}
