@@ -79,6 +79,19 @@ describe("Amortization — the schedule", () => {
     expect(screen.getAllByText("Renewal").length).toBeGreaterThan(0);
   });
 
+  it("marks the crossover row in the table, not only in the chart caption", async () => {
+    // Thirty near-identical rows, one of which is the moment the loan turns from
+    // mostly-interest to mostly-principal. The chart named it and the table did
+    // not, so the row worth finding looked like the twenty-nine that were not.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Year by year/);
+    const marked = [...screen.getByRole("table").querySelectorAll("tbody tr")].filter((tr) =>
+      /Principal overtakes interest/.test(tr.textContent ?? ""),
+    );
+    expect(marked).toHaveLength(1);
+  });
+
   it("states the crossover year in text, not only in the chart", async () => {
     // The shape is the argument, and someone who cannot see it still gets the fact.
     const user = userEvent.setup();

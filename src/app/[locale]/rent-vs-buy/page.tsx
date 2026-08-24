@@ -182,11 +182,11 @@ export default function RentVsBuyPage() {
               <table className="w-full min-w-[480px] border-collapse text-[12.5px]">
                 <caption className="sr-only">{t("byHorizon")}</caption>
                 <thead>
-                  <tr className="border-b border-border text-left text-ink3">
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("holdFor")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("buyWealth")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("rentWealth")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("advantage")}</th>
+                  <tr className="border-b border-border text-ink3">
+                    <th scope="col" className="py-1.5 pr-3 text-left font-medium">{t("holdFor")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("buyWealth")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("rentWealth")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("advantage")}</th>
                     <th scope="col" className="py-1.5 font-medium">{t("winner")}</th>
                   </tr>
                 </thead>

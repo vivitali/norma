@@ -262,6 +262,7 @@ export default function ScenariosPage() {
               columns={columns}
               rows={monthlyRows}
               recommendedPct={recommendedPct}
+              yoursPct={stored.dpPct}
               caption={`${t("gMortgage")} · ${t("gMonthly")}`}
             />
             <p className="pt-3 text-[12px] leading-[1.6] text-ink3">
@@ -291,6 +292,7 @@ export default function ScenariosPage() {
               columns={columns}
               rows={cashRows}
               recommendedPct={recommendedPct}
+              yoursPct={stored.dpPct}
               caption={t("gCash")}
             />
             <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyPremTax")}</p>
@@ -317,6 +319,7 @@ export default function ScenariosPage() {
               columns={columns}
               rows={qualRows}
               recommendedPct={recommendedPct}
+              yoursPct={stored.dpPct}
               caption={t("gQual")}
             />
             <div className="mt-4 grid max-w-[520px] gap-3 sm:grid-cols-2">
@@ -353,6 +356,7 @@ export default function ScenariosPage() {
               columns={columns}
               rows={lifeRows}
               recommendedPct={recommendedPct}
+              yoursPct={stored.dpPct}
               caption={t("gLifetime")}
             />
 

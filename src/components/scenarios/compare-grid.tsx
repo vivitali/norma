@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { ScenarioResult } from "@/domain/engine";
 import { usePercent } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { Provenance, type ProvenanceKind } from "@/components/provenance";
 
 export interface MetricRow {
@@ -26,11 +27,22 @@ export function CompareGrid({
   columns,
   rows,
   recommendedPct,
+  yoursPct,
   caption,
 }: {
   columns: readonly ScenarioResult[];
   rows: readonly MetricRow[];
   recommendedPct: number | null;
+  /**
+   * The down payment the reader actually chose.
+   *
+   * Distinct from `recommendedPct`, and the distinction is the point: four
+   * columns sat here with only the recommendation marked, so the one the reader
+   * had actually picked was indistinguishable from two they had not. When the
+   * two marks fall on different columns, that gap is the finding this screen
+   * exists to deliver.
+   */
+  yoursPct: number;
   /** Names the table. Four identically-shaped unnamed tables read as noise. */
   caption: string;
 }) {
@@ -42,21 +54,29 @@ export function CompareGrid({
       <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-b border-border text-left">
-            <th scope="col" className="py-1.5 pr-3 font-medium text-ink3">
+          <tr className="border-b border-border">
+            <th scope="col" className="py-1.5 pr-3 text-left font-medium text-ink3">
               {t("metric")}
             </th>
             {columns.map((column) => (
               <th
                 key={column.dpPct}
                 scope="col"
-                className={
-                  column.dpPct === recommendedPct
-                    ? "py-1.5 pr-3 font-semibold text-ac"
-                    : "py-1.5 pr-3 font-medium text-ink2"
-                }
+                // aria-current marks the reader's own column for a screen reader,
+                // which the tint does visually. "Recommended" stays a label
+                // rather than a second surface — two tinted columns would read as
+                // one selection split in half.
+                aria-current={column.dpPct === yoursPct ? "true" : undefined}
+                className={cn(
+                  "py-1.5 pr-3 text-right",
+                  column.dpPct === yoursPct && "bg-acbg",
+                  column.dpPct === recommendedPct ? "font-semibold text-ac" : "font-medium text-ink2",
+                )}
               >
                 {t("column", { p: pct(column.dpPct) })}
+                {column.dpPct === yoursPct ? (
+                  <span className="block text-[10.5px] font-normal text-ac">{t("yours")}</span>
+                ) : null}
                 {column.dpPct === recommendedPct ? (
                   <span className="block text-[10.5px] font-normal">{t("recommended")}</span>
                 ) : null}
@@ -88,13 +108,11 @@ export function CompareGrid({
                 {columns.map((column, i) => (
                   <td
                     key={column.dpPct}
-                    className={
-                      i === best
-                        ? "py-1.5 pr-3 font-semibold text-pass"
-                        : row.strong
-                          ? "py-1.5 pr-3 font-semibold"
-                          : "py-1.5 pr-3"
-                    }
+                    className={cn(
+                      "py-1.5 pr-3 text-right tabular-nums",
+                      column.dpPct === yoursPct && "bg-acbg",
+                      i === best ? "font-semibold text-pass" : row.strong && "font-semibold",
+                    )}
                   >
                     {row.value(column)}
                     {/*

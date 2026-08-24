@@ -12,6 +12,7 @@ import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { AMORTIZATION_SECTIONS } from "@/lib/sections";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
 import { SegmentedGroup } from "@/components/affordability/segmented-group";
 import { ScheduleChart } from "@/components/amortization/schedule-chart";
@@ -59,6 +60,8 @@ export default function AmortizationPage() {
   const extraInterest = result.totalInterest - baseline.totalInterest;
 
   const firstRenewal = result.rows.find((row) => row.renewed)?.t ?? null;
+  /** Where principal first outruns interest — the moment the chart names and the table did not. */
+  const flipYear = result.rows.find((row) => row.principal > row.interest)?.t ?? null;
   const shock = result.shock;
   const rising = shock > 0.5;
   const falling = shock < -0.5;
@@ -261,31 +264,58 @@ export default function AmortizationPage() {
               <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
                 <caption className="sr-only">{t("tableTitle")}</caption>
                 <thead>
-                  <tr className="border-b border-border text-left text-ink3">
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("yr")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("cRate")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("cPayment")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("cInterest")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("cPrincipal")}</th>
-                    <th scope="col" className="py-1.5 font-medium">{t("cBalance")}</th>
+                  <tr className="border-b border-border text-ink3">
+                    <th scope="col" className="py-1.5 pr-3 text-left font-medium">{t("yr")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cRate")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cPayment")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cInterest")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cPrincipal")}</th>
+                    <th scope="col" className="py-1.5 text-right font-medium">{t("cBalance")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {result.rows.map((row) => (
-                    <tr key={row.t} className="border-b border-hairline">
-                      <th scope="row" className="py-1.5 pr-3 text-left font-normal text-ink2">
-                        {row.t}
-                        {row.renewed ? (
-                          <span className="ml-1.5 text-[10.5px] text-caution">{t("termMark")}</span>
-                        ) : null}
-                      </th>
-                      <td className="py-1.5 pr-3">{pct(row.rate, 2)}</td>
-                      <td className="py-1.5 pr-3">{fmt(row.payment)}</td>
-                      <td className="py-1.5 pr-3">{fmt(row.interest)}</td>
-                      <td className="py-1.5 pr-3">{fmt(row.principal)}</td>
-                      <td className="py-1.5">{fmt(row.closing)}</td>
-                    </tr>
-                  ))}
+                  {result.rows.map((row) => {
+                    // The year principal first exceeds interest. The chart calls
+                    // it out and the table did not, so the one row worth finding
+                    // in thirty looked like the other twenty-nine.
+                    const crossover = row.t === flipYear;
+                    return (
+                      <tr
+                        key={row.t}
+                        className={
+                          crossover
+                            ? "border-b border-acbr bg-acbg"
+                            : "border-b border-hairline"
+                        }
+                      >
+                        <th
+                          scope="row"
+                          className={cn(
+                            "py-1.5 pr-3 text-left",
+                            crossover ? "font-semibold text-ac" : "font-normal text-ink2",
+                          )}
+                        >
+                          {row.t}
+                          {row.renewed ? (
+                            <span className="ml-1.5 text-[10.5px] font-normal text-caution">
+                              {t("termMark")}
+                            </span>
+                          ) : null}
+                          {crossover ? (
+                            <span className="ml-1.5 text-[10.5px] font-normal text-ac">
+                              {t("flipLabel")}
+                            </span>
+                          ) : null}
+                        </th>
+                        {/* Right-aligned and tabular: read down a column, digits aligned. */}
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{pct(row.rate, 2)}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.payment)}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.interest)}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.principal)}</td>
+                        <td className="py-1.5 text-right tabular-nums">{fmt(row.closing)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

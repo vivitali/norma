@@ -745,7 +745,8 @@
     "column": "{p} down",
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
-    "bestHere": "best of the four"
+    "bestHere": "best of the four",
+    "yours": "Your choice"
   },
   "Provenance": {
     "rule": "rule",

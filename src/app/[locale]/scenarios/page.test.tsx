@@ -46,6 +46,37 @@ describe("Scenarios — four columns, one recommendation", () => {
     }
   });
 
+  it("marks the reader's own column, separately from the recommended one", async () => {
+    // Four columns, and only the recommendation was marked -- so the one the
+    // reader had actually chosen looked like two they had not. When the two
+    // marks land on different columns, that gap is the finding.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    const own = screen
+      .getAllByRole("columnheader")
+      .filter((th) => th.getAttribute("aria-current") === "true");
+    expect(own).toHaveLength(1);
+    // 10% is the default down payment.
+    expect(own[0].textContent).toContain("10%");
+    expect(own[0].textContent).toContain("Your choice");
+  });
+
+  it("moves the mark when the reader changes their down payment", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    const purchase = within(
+      screen.getByRole("radiogroup", { name: /Down payment/ }),
+    );
+    await user.click(purchase.getByRole("radio", { name: "20%" }));
+    const own = screen
+      .getAllByRole("columnheader")
+      .filter((th) => th.getAttribute("aria-current") === "true");
+    expect(own).toHaveLength(1);
+    expect(own[0].textContent).toContain("20%");
+  });
+
   it("raises a below-minimum column to the legal floor and labels it", async () => {
     // 5% is legal below $500,000 and not above it, so this only appears once the
     // price crosses the threshold -- which is the rule doing the work, not a flag.

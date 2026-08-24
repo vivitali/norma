@@ -745,7 +745,8 @@
     "column": "{p} de mise de fonds",
     "tagYours": "Vos chiffres",
     "tagTypical": "Chiffres typiques",
-    "bestHere": "meilleur des quatre"
+    "bestHere": "meilleur des quatre",
+    "yours": "Votre choix"
   },
   "Provenance": {
     "rule": "règle",
