@@ -1,214 +1,330 @@
-import { afterEach, describe, expect, it, beforeEach } from "vitest";
-import { cleanup, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
-import { federal } from "@/domain/federal";
-import { getJurisdiction } from "@/domain/jurisdictions";
-import { affordability, money } from "@/domain/engine";
-import { JurisdictionPicker } from "@/components/jurisdiction-picker";
 import AffordabilityPage from "./page";
-import { AFFORDABILITY_DEFAULTS } from "@/lib/shared-inputs";
 
-function renderPage(locale?: "en" | "fr") {
-  return renderWithIntl(
+// The page now contains provenance links, which pull in next-intl's navigation.
+vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
+vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
+
+const renderPage = (locale: "en" | "fr" = "en") =>
+  renderWithIntl(
     <JurisdictionProvider>
       <AffordabilityPage />
     </JurisdictionProvider>,
     { locale },
   );
-}
 
-function renderPageWithPicker() {
-  return renderWithIntl(
-    <JurisdictionProvider>
-      <JurisdictionPicker />
-      <AffordabilityPage />
-    </JurisdictionProvider>,
-  );
-}
+beforeEach(() => window.localStorage.clear());
+afterEach(() => {
+  window.location.hash = "";
+});
 
-describe("Affordability page — input form", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
-
-  afterEach(() => {
-    cleanup();
-  });
-
-  it("renders the heading and every input with its default value", () => {
+describe("Affordability — the answer comes first", () => {
+  it("shows a real figure before any input is touched", async () => {
+    // No screen in this product opens on an empty form.
     renderPage();
-    expect(screen.getByRole("heading", { name: "What can you actually afford?" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Your annual income")).toHaveValue(70000);
-    expect(screen.getByLabelText("Purchase price you're considering")).toHaveValue(450000);
+    const verdict = await screen.findByRole("region", { name: /lender would decline|comfortably afford|above what you would be comfortable|not yet enough cash/i });
+    expect(verdict).toBeInTheDocument();
   });
 
-  it("updates a numeric field's value on change", async () => {
+  it("tags the untouched answer as typical, not as the user's", () => {
+    renderPage();
+    expect(screen.getByText("Typical for your city")).toBeInTheDocument();
+  });
+
+  it("flips to 'your numbers' once income is given", async () => {
     const user = userEvent.setup();
     renderPage();
-    const priceInput = screen.getByLabelText("Purchase price you're considering");
-    await user.clear(priceInput);
-    await user.type(priceInput, "600000");
-    expect(priceInput).toHaveValue(600000);
+    const income = screen.getByLabelText("Applicant 1, gross annual");
+    await user.clear(income);
+    await user.type(income, "95000");
+    await user.tab();
+    expect(screen.getByText("Your numbers")).toBeInTheDocument();
   });
 
-  it("toggles first-time buyer status", async () => {
-    const user = userEvent.setup();
+  it("renders all four stat-strip figures", () => {
     renderPage();
-    const ftbSwitch = screen.getByRole("switch", { name: "First-time buyer" });
-    expect(ftbSwitch).toBeChecked();
-    await user.click(ftbSwitch);
-    expect(ftbSwitch).not.toBeChecked();
-  });
-
-  it("persists a field change to localStorage", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    const priceInput = screen.getByLabelText("Purchase price you're considering");
-    await user.clear(priceInput);
-    await user.type(priceInput, "600000");
-    await screen.findByDisplayValue("600000");
-    const stored = JSON.parse(window.localStorage.getItem("norma.inputs.v1") ?? "{}");
-    expect(stored.price).toBe(600000);
+    // "True all-in monthly" is deliberately the label of both the stat and the
+    // comfort check's total row — the same figure, named the same way.
+    for (const label of [
+      "Comfortable price",
+      "Lender ceiling",
+      "True all-in monthly",
+      "Cash needed at closing",
+    ]) {
+      expect(screen.getAllByText(label).length, label).toBeGreaterThan(0);
+    }
   });
 });
 
-describe("Affordability page — output panels", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
-
-  afterEach(() => {
-    cleanup();
-  });
-
-  it("shows the engine's ceiling and comfort figures for the default household in the default jurisdiction (winnipeg)", async () => {
+describe("Affordability — the parity checklist", () => {
+  // Each registry section, asserted present, so dropping one fails the suite
+  // rather than quietly shipping a thinner screen.
+  it("renders every section present at the default depth", () => {
     renderPage();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
-
-    expect(await screen.findByText(money(expected.ceiling, "en-CA", false))).toBeInTheDocument();
-    expect(screen.getByText(money(expected.comfort, "en-CA", false))).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The three checks" })).toBeInTheDocument();
+    for (const name of ["Verdict", "The three checks", "The gap", "Adjust your numbers"]) {
+      expect(screen.getByRole("link", { name })).toBeInTheDocument();
+    }
   });
 
-  it("shows a passing approval badge when the price is within the lender ceiling", async () => {
+  it("does not render the math section at the default depth", () => {
     renderPage();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
-    expect(expected.approvalPass).toBe(true); // sanity check on the fixture itself
-    expect(await screen.findByText("Within reach at this price")).toBeInTheDocument();
-  });
-
-  it("recomputes the ceiling when an income field changes", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const before = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
-
-    const income1Input = screen.getByLabelText("Your annual income");
-    await user.clear(income1Input);
-    await user.type(income1Input, "120000");
-
-    const after = affordability(winnipeg, federal, { ...AFFORDABILITY_DEFAULTS, income1: 120000 });
-    expect(after.ceiling).toBeGreaterThan(before.ceiling);
-    expect(await screen.findByText(money(after.ceiling, "en-CA", false))).toBeInTheDocument();
-  });
-
-  it("renders the monthly breakdown total equal to the sum of its own line items", async () => {
-    renderPage();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
-    expect(await screen.findByText(money(expected.monthly.total, "en-CA", false))).toBeInTheDocument();
-    expect(screen.getByText(money(expected.monthly.pi, "en-CA", false))).toBeInTheDocument();
-  });
-
-  it("recomputes the numbers when the jurisdiction is switched in the header picker", async () => {
-    const user = userEvent.setup();
-    renderPageWithPicker();
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const toronto = getJurisdiction("toronto")!;
-    const winnipegResult = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
-    const torontoResult = affordability(toronto, federal, AFFORDABILITY_DEFAULTS);
-
-    expect(await screen.findByText(money(winnipegResult.ceiling, "en-CA", false))).toBeInTheDocument();
-
-    await user.click(screen.getByRole("combobox", { name: "Change location" }));
-    await user.click(await screen.findByRole("option", { name: "Toronto" }));
-
-    expect(await screen.findByText(money(torontoResult.ceiling, "en-CA", false))).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "The math, line by line" }),
+    ).not.toBeInTheDocument();
   });
 });
 
-describe("Affordability page — French locale", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
+describe("Affordability — depth", () => {
+  it("leaves the three checks collapsed at 'the answer'", () => {
+    renderPage();
+    for (const name of [/Approval/, /Comfort/, /Cash/]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-expanded", "false");
+    }
   });
 
-  afterEach(() => {
-    cleanup();
+  it("opens the three checks at 'why'", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("radio", { name: /Why/ }));
+    for (const name of [/Approval/, /Comfort/, /Cash/]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-expanded", "true");
+    }
   });
 
-  it("renders currency figures with a trailing symbol in fr, not the English leading-symbol form", async () => {
+  it("adds the math jump link at 'the math'", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("radio", { name: /The math/ }));
+    expect(screen.getByRole("link", { name: "The math, line by line" })).toBeInTheDocument();
+  });
+
+  it("survives a remount", async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderPage();
+    await user.click(screen.getByRole("radio", { name: /The math/ }));
+    unmount();
+    renderPage();
+    expect(await screen.findByRole("radio", { name: /The math/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+  });
+
+  it("lets a check be opened at 'the answer' and closed at 'the math'", async () => {
+    // The reference's own defect, asserted against: it pins every check open at
+    // depth >= 1 and leaves the toggle inoperative.
+    const user = userEvent.setup();
+    renderPage();
+    const comfort = () => screen.getByRole("button", { name: /Comfort/ });
+    await user.click(comfort());
+    expect(comfort()).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(screen.getByRole("radio", { name: /The math/ }));
+    await user.click(comfort());
+    expect(comfort()).toHaveAttribute("aria-expanded", "false");
+  });
+});
+
+describe("Affordability — deep links", () => {
+  it("opens the check the hash names and moves focus to its heading", async () => {
+    window.location.hash = "#check-comfort";
+    renderPage();
+    expect(await screen.findByRole("button", { name: /Comfort/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    // Scrolling without moving focus leaves a keyboard user where they started.
+    expect(document.getElementById("check-comfort")).toHaveFocus();
+    expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("is inert for an unknown hash", () => {
+    window.location.hash = "#not-a-section";
+    renderPage();
+    expect(screen.getByRole("button", { name: /Comfort/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+});
+
+describe("Affordability — the unanswered cash check", () => {
+  it("still shows the cash required, and asks for the one field it wants", async () => {
+    // Nothing is gated: cc.net is fully computable from defaults.
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Cash/ }));
+    expect(screen.getByText("Net cash at closing, after credits applied that day")).toBeVisible();
+    expect(screen.getByLabelText("Funds available for this purchase")).toBeVisible();
+  });
+
+  it("never reports shortCash while funds are unknown", () => {
+    renderPage();
+    expect(
+      screen.queryByText("You have enough income, but not yet enough cash to close."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reports a shortfall once funds are given and fall short", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Cash/ }));
+    const funds = screen.getByLabelText("Funds available for this purchase");
+    await user.type(funds, "1000");
+    await user.tab();
+    expect(screen.getByRole("button", { name: /Cash.*Blocked/ })).toBeInTheDocument();
+  });
+});
+
+describe("Affordability — the disclosure stays", () => {
+  it("keeps the unverified-figures wording visible", () => {
+    renderPage();
+    expect(screen.getByText("Placeholder figures — verify before relying on them")).toBeVisible();
+    expect(screen.getByText(/Rules last verified/)).toBeVisible();
+  });
+});
+
+describe("Affordability — number formatting end to end", () => {
+  it("never renders a sign inside the currency symbol in French", () => {
+    // money() emits "− 340 $" in fr and "− $340" in en. Never "$-340".
     renderPage("fr");
-    const winnipeg = getJurisdiction("winnipeg")!;
-    const expected = affordability(winnipeg, federal, AFFORDABILITY_DEFAULTS);
-
-    const expectedFr = money(expected.ceiling, "fr-CA", true);
-    // testing-library's default text normalizer collapses the French group separator (a
-    // non-breaking space) into a plain space, which would break an exact-string match against
-    // `expectedFr` (which still has the real NBSP) even though the render is correct — so match
-    // without whitespace normalization instead.
-    expect(
-      await screen.findByText(expectedFr, { normalizer: (text) => text }),
-    ).toBeInTheDocument();
-    // Guard the intent of the assertion above: a trailing-symbol figure never matches the
-    // leading-symbol form the pre-fix code always rendered, regardless of locale.
-    expect(expectedFr.endsWith(" $")).toBe(true);
-    expect(
-      screen.queryByText(money(expected.ceiling, "en-CA", false), { normalizer: (text) => text }),
-    ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/\$\s?-\d/);
   });
 });
 
-describe("Affordability page — unverified-data disclosure", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
+describe("Affordability — the gap band", () => {
+  it("names exactly one of the two zones, and never clamps the inverted case", () => {
+    renderPage();
+    // Whichever way round the two numbers land, exactly one of the two
+    // sentences must be on screen — never a clamped zero and no explanation.
+    const zone = screen.queryByText(/Lenders will approve into this zone/);
+    const inverted = screen.queryByText(/comfortable carrying more than a lender will approve/);
+    expect([zone, inverted].filter(Boolean)).toHaveLength(1);
+  });
+});
+
+describe("Affordability — inputs", () => {
+  it("groups the controls under four labelled headings", () => {
+    renderPage();
+    for (const name of ["Income", "Monthly debts", "The purchase", "Your limits"]) {
+      expect(screen.getByRole("group", { name })).toBeInTheDocument();
+    }
   });
 
-  afterEach(() => {
-    cleanup();
+  it("splits debts into four named fields", () => {
+    renderPage();
+    for (const label of [
+      "Car loan or lease",
+      "Student loan",
+      "Card or credit line minimum",
+      "Other obligations",
+    ]) {
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    }
   });
 
-  it("shows the placeholder-data disclosure and the verification date", async () => {
+  it("assumes no second applicant, and offers to add one", async () => {
+    const user = userEvent.setup();
     renderPage();
-    expect(
-      await screen.findByText("Placeholder figures — verify before relying on them"),
-    ).toBeInTheDocument();
-    expect(screen.getByText(`Rules last verified: ${federal.verified}`)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Applicant 2, gross annual")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add a second applicant" }));
+    expect(screen.getByLabelText("Applicant 2, gross annual")).toBeInTheDocument();
   });
 
-  it("shows the no-city-data note for a province-only jurisdiction (nb) but not a city-level one (winnipeg)", async () => {
-    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ jurId: "nb" }));
+  it("gives the haircut a real control, ending its life as dead state", async () => {
+    const user = userEvent.setup();
     renderPage();
-    expect(getJurisdiction("nb")!.cityData).toBe(false);
-    expect(
-      await screen.findByText(
-        "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates.",
-      ),
-    ).toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole("group", { name: "Income" })).getByRole("button", {
+        name: "Advanced",
+      }),
+    );
+    const slider = screen.getByRole("slider", {
+      name: "Lender income recognition haircut",
+    });
+    expect(slider).toHaveAttribute("aria-valuetext", "0%");
+  });
 
-    cleanup();
-    window.localStorage.clear();
-
-    const winnipeg = getJurisdiction("winnipeg")!;
-    expect(winnipeg.cityData).toBe(true);
+  it("says every field is pre-filled and overwritable", () => {
     renderPage();
-    await screen.findByText("Placeholder figures — verify before relying on them");
-    expect(
-      screen.queryByText(
-        "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates.",
-      ),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText(/Pre-filled from your city/)).toBeInTheDocument();
+  });
+
+  it("returns a blanked field to its derived default rather than to zero", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const price = screen.getByLabelText("Purchase price you're considering");
+    const derived = (price as HTMLInputElement).value;
+    await user.clear(price);
+    await user.type(price, "600000");
+    await user.tab();
+    expect(price).toHaveValue("600,000");
+    await user.clear(price);
+    await user.tab();
+    expect(price).toHaveValue(derived);
+  });
+});
+
+describe("Affordability — consequence", () => {
+  it("prices $100 of monthly debt when no debt is entered", () => {
+    renderPage();
+    expect(screen.getByText(/No monthly debts entered/)).toBeInTheDocument();
+  });
+
+  it("prices the entered debt in purchase-price terms", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const car = screen.getByLabelText("Car loan or lease");
+    await user.type(car, "550");
+    await user.tab();
+    expect(screen.getByText(/reduces what a lender will approve/)).toBeInTheDocument();
+  });
+});
+
+describe("Affordability — the math", () => {
+  it("shows both derivation columns and both ratio gauges at 'the math'", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("radio", { name: /The math/ }));
+    expect(screen.getByText("What a lender would approve")).toBeInTheDocument();
+    expect(screen.getByText("What you could comfortably carry")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /^GDS/ })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /^TDS/ })).toBeInTheDocument();
+  });
+
+  it("explains the heat allowance only where the ratios are shown", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    expect(screen.queryByText(/standard heating allowance/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: /The math/ }));
+    expect(screen.getByText(/standard heating allowance/)).toBeInTheDocument();
+  });
+});
+
+describe("Affordability — the change announcement", () => {
+  it("says nothing on load, when nothing has been asked for", () => {
+    // usePreviousResult sees hydration as a change like any other, so an
+    // ungated live region greets a returning user with an announcement.
+    renderPage();
+    const live = document.querySelector('[aria-live="polite"]');
+    expect(live).toBeInTheDocument();
+    expect(live).toHaveTextContent("");
+  });
+
+  it("announces the comfortable price once the user changes something", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const ceiling = screen.getByLabelText("Monthly all-in you would be relaxed about");
+    await user.type(ceiling, "4200");
+    await user.tab();
+    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(/Comfortable price/);
   });
 });

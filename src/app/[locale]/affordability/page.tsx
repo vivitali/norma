@@ -1,191 +1,152 @@
 "use client";
 
-import type { ChangeEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useSharedState } from "@/hooks/use-shared-state";
-import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { affordability } from "@/domain/engine";
 import { federal } from "@/domain/federal";
-import { useMoney } from "@/lib/format";
+import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useSharedState } from "@/hooks/use-shared-state";
+import { useDepth } from "@/hooks/use-depth";
+import { useHashTarget } from "@/hooks/use-hash-target";
+import { usePreviousResult } from "@/hooks/use-previous-result";
+import { AFFORDABILITY_DEFAULTS, AFFORDABILITY_KEYS } from "@/lib/shared-inputs";
+import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import {
-  AFFORDABILITY_KEYS,
-  AFFORDABILITY_DEFAULTS,
-  type AffordabilityFormState,
-} from "@/lib/shared-inputs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AFFORDABILITY_SECTIONS,
+  isDisclosureOpen,
+  visibleSections,
+  type Depth,
+} from "@/lib/sections";
+import { DepthControl } from "@/components/depth-control";
+import { JumpRail } from "@/components/jump-rail";
+import { VerdictCard } from "@/components/affordability/verdict-card";
+import { StatStrip } from "@/components/affordability/stat-strip";
+import { Checks } from "@/components/affordability/checks";
+import { GapBand } from "@/components/affordability/gap-band";
+import { InputGroups } from "@/components/affordability/input-groups";
+import { MathColumns } from "@/components/affordability/math-columns";
+import { StickyVerdict } from "@/components/affordability/sticky-verdict";
 
-type NumericKey = Exclude<keyof AffordabilityFormState, "ftb" | "ptype" | "elsewhere">;
-
+/**
+ * Answer first, inputs second, advanced detail reachable in place.
+ *
+ * Composition only: every number comes from src/domain/, every derived state
+ * and percentage from src/lib/, every string from messages/*.json. Stays a
+ * client component and inherits static rendering from the layout's single
+ * setRequestLocale — nothing here may reach for useSearchParams.
+ */
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
-  const [form, updateForm] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
-  const fmt = useMoney();
+  const tDepth = useTranslations("Depth");
   const [jurisdiction] = useJurisdiction();
-  const result = affordability(jurisdiction, federal, form);
+  const [stored, update, hydrated] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
+  const [depth, setDepth] = useDepth();
+  const hashTarget = useHashTarget();
 
-  const numberField = (key: NumericKey) => ({
-    id: key,
-    type: "number" as const,
-    value: form[key],
-    onChange: (e: ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.valueAsNumber;
-      updateForm({ [key]: Number.isNaN(value) ? 0 : value });
-    },
-  });
+  /** Explicit opens and closes, for this session only. Depth is a floor, not a state. */
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const toggle = (id: string, currentlyOpen: boolean) =>
+    setOverrides((prev) => ({ ...prev, [id]: !currentlyOpen }));
+
+  /**
+   * Focus for an ARRIVAL: someone opening /affordability#check-comfort from a
+   * shared link, where there is no click for JumpRail to hook. JumpRail handles
+   * its own clicks synchronously; this covers the case it cannot see.
+   */
+  useEffect(() => {
+    if (!hashTarget) return;
+    document.getElementById(hashTarget)?.focus({ preventScroll: true });
+  }, [hashTarget]);
+
+  const resolved = useMemo(
+    () => resolveInputs(stored, jurisdiction, federal),
+    [stored, jurisdiction],
+  );
+  const result = useMemo(
+    () => affordability(jurisdiction, federal, resolved),
+    [jurisdiction, resolved],
+  );
+  /*
+   * Gated on hydration rather than on a form edit: an edit flag would miss the
+   * header's jurisdiction picker, which writes through its own useSharedState
+   * instance and moves every figure on the page — the largest single change in
+   * the product — without touching this form at all.
+   */
+  const previous = usePreviousResult(result, { enabled: hydrated });
+
+  const sections = visibleSections(AFFORDABILITY_SECTIONS, depth);
+  const showMath = sections.some((s) => s.id === "math");
+  const openOf = (disclosureId: string) => {
+    const def = AFFORDABILITY_SECTIONS.flatMap((s) => s.disclosures ?? []).find(
+      (d) => d.id === disclosureId,
+    );
+    if (!def) return false;
+    return isDisclosureOpen({ def, depth, hashTarget, override: overrides[def.id] });
+  };
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 p-4 pb-24 sm:p-6 sm:pb-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t("heading")}</h1>
-        <p className="text-muted-foreground">{t("subheading")}</p>
+        <p className="micro text-text-faint">{t("aDeep")}</p>
+        <h1 className="text-[27px] leading-tight font-semibold tracking-tight">{t("aTitle")}</h1>
+        <p className="mt-1 max-w-prose text-[12.5px] text-muted-foreground">{t("aSub")}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="income1">{t("income1")}</Label>
-          <Input {...numberField("income1")} />
+      <div className="flex flex-wrap items-center gap-3 border-y border-border-hairline py-2">
+        {/*
+          Phone puts the depth control in a fixed bottom bar (main carries the
+          matching bottom padding); from `sm` it sits inline beside the rail.
+        */}
+        <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center border-t border-border bg-card p-2 sm:static sm:z-auto sm:border-0 sm:p-0">
+          <DepthControl
+            value={depth}
+            onChange={(d: Depth) => setDepth(d)}
+            label={tDepth("label")}
+            optionLabels={[tDepth("answer"), tDepth("why"), tDepth("math")]}
+          />
         </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="income2">{t("income2")}</Label>
-          <Input {...numberField("income2")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="otherIncome">{t("otherIncome")}</Label>
-          <Input {...numberField("otherIncome")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="debts">{t("debts")}</Label>
-          <Input {...numberField("debts")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="price">{t("price")}</Label>
-          <Input {...numberField("price")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="dpPct">{t("dpPct")}</Label>
-          <Input {...numberField("dpPct")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="amortYears">{t("amortYears")}</Label>
-          <Input {...numberField("amortYears")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="contractRate">{t("contractRate")}</Label>
-          <Input {...numberField("contractRate")} step="0.01" />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="comfortCeiling">{t("comfortCeiling")}</Label>
-          <Input {...numberField("comfortCeiling")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="insuranceAnnual">{t("insuranceAnnual")}</Label>
-          <Input {...numberField("insuranceAnnual")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="utilities">{t("utilities")}</Label>
-          <Input {...numberField("utilities")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="condoFee">{t("condoFee")}</Label>
-          <Input {...numberField("condoFee")} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="ptype">{t("ptype")}</Label>
-          <Select
-            value={form.ptype}
-            onValueChange={(ptype) => updateForm({ ptype: ptype as AffordabilityFormState["ptype"] })}
-          >
-            <SelectTrigger id="ptype">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="house">{t("ptypeHouse")}</SelectItem>
-              <SelectItem value="condo">{t("ptypeCondo")}</SelectItem>
-              <SelectItem value="newbuild">{t("ptypeNewbuild")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2 sm:col-span-2">
-          <Switch id="ftb" checked={form.ftb} onCheckedChange={(ftb) => updateForm({ ftb })} />
-          <Label htmlFor="ftb">{t("ftb")}</Label>
-        </div>
+        {/*
+          Rendered once. The reference omits the rail on phone entirely, which
+          would leave "advanced detail reachable in place" unmet on the device
+          where scrolling costs most; here it becomes a scrollable chip row.
+        */}
+        <JumpRail
+          label={tDepth("jumpTo")}
+          links={sections.map((s) => ({ id: s.id, label: t(s.labelKey) }))}
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("ceiling")}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <p className="text-3xl font-semibold tabular-nums">{fmt(result.ceiling)}</p>
-            <p className={result.approvalPass ? "text-primary" : "text-destructive"}>
-              {result.approvalPass ? t("approvalPass") : t("approvalFail")}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("comfort")}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <p className="text-3xl font-semibold tabular-nums">{fmt(result.comfort)}</p>
-            <p className={result.comfortPass ? "text-primary" : "text-destructive"}>
-              {result.comfortPass ? t("comfortPass") : t("comfortFail")}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <StickyVerdict result={result} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("monthlyBreakdown")}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("pi")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.pi)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("propTax")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.propTax)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("insuranceMonthly")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.insurance)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("utilities")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.utilities)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("condoFee")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.condoFee)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t("maintenance")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.maintenance)}</span>
-          </div>
-          <div className="mt-2 flex justify-between border-t border-border pt-2 font-semibold">
-            <span>{t("total")}</span>
-            <span className="tabular-nums">{fmt(result.monthly.total)}</span>
-          </div>
-        </CardContent>
-      </Card>
+      <VerdictCard result={result} personalised={isPersonalised(stored)} />
+      <StatStrip result={result} previous={previous} />
+      <Checks
+        result={result}
+        stored={stored}
+        resolved={resolved}
+        update={update}
+        isOpen={openOf}
+        onToggle={toggle}
+      />
 
-      <div className="text-xs text-muted-foreground">
+      <GapBand result={result} price={resolved.price} />
+
+      <InputGroups
+        stored={stored}
+        resolved={resolved}
+        result={result}
+        jurisdiction={jurisdiction}
+        update={update}
+        isOpen={openOf}
+        onToggle={toggle}
+      />
+
+      {showMath ? <MathColumns result={result} resolved={resolved} /> : null}
+
+      <div className="text-[10.5px] text-text-faint">
         <p>{t("unverifiedFlag")}</p>
         <p>
-          {t("lastVerified")}: {federal.verified}
+          {t("lastVerified")} {federal.verified}
         </p>
         {!jurisdiction.cityData ? <p>{t("noCityData")}</p> : null}
       </div>

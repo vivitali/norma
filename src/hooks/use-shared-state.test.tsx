@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { useSharedState } from "./use-shared-state";
+import { STORE_KEY_V2 } from "@/lib/storage";
 
 const KEYS = ["price", "jurId"] as const;
 const DEFAULTS = { price: 500000, jurId: "winnipeg" };
@@ -17,7 +18,7 @@ describe("useSharedState", () => {
   });
 
   it("hydrates from localStorage after mount", async () => {
-    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ price: 700000, jurId: "toronto" }));
+    window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ price: 700000, jurId: "toronto" }));
     const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS));
     await waitFor(() => expect(result.current[0].price).toBe(700000));
     expect(result.current[0].jurId).toBe("toronto");
@@ -27,17 +28,17 @@ describe("useSharedState", () => {
     const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS));
     act(() => result.current[1]({ price: 600000 }));
     await waitFor(() => {
-      const stored = JSON.parse(window.localStorage.getItem("norma.inputs.v1") ?? "{}");
+      const stored = JSON.parse(window.localStorage.getItem(STORE_KEY_V2) ?? "{}");
       expect(stored.price).toBe(600000);
     });
   });
 
   it("does not clobber keys owned by a different allowlist in the same storage blob", async () => {
-    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ otherHookKey: "keep-me" }));
+    window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ otherHookKey: "keep-me" }));
     const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS));
     act(() => result.current[1]({ price: 600000 }));
     await waitFor(() => {
-      const stored = JSON.parse(window.localStorage.getItem("norma.inputs.v1") ?? "{}");
+      const stored = JSON.parse(window.localStorage.getItem(STORE_KEY_V2) ?? "{}");
       expect(stored.otherHookKey).toBe("keep-me");
       expect(stored.price).toBe(600000);
     });
@@ -65,7 +66,7 @@ describe("useSharedState", () => {
         return store.size;
       },
     };
-    trackedStorage.setItem("norma.inputs.v1", JSON.stringify({ price: 700000, jurId: "toronto" }));
+    trackedStorage.setItem(STORE_KEY_V2, JSON.stringify({ price: 700000, jurId: "toronto" }));
     calls.length = 0; // don't count our own seed write above
 
     const originalLocalStorage = window.localStorage;
@@ -76,7 +77,7 @@ describe("useSharedState", () => {
       await waitFor(() => expect(result.current[0].price).toBe(700000));
 
       const wroteDefaults = calls.some(([key, value]) => {
-        if (key !== "norma.inputs.v1") return false;
+        if (key !== STORE_KEY_V2) return false;
         const parsed = JSON.parse(value);
         return parsed.price === DEFAULTS.price && parsed.jurId === DEFAULTS.jurId;
       });
