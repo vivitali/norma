@@ -106,7 +106,11 @@ export default function RrspHbpPage() {
         {section(
           "refund",
           play.withdraw > 0 ? "pass" : "none",
-          play.withdraw > 0 ? t("refund") : t("noWithdraw"),
+          // The two inputs the refund is the product of, rather than the word
+          // "refund" printed beside a section already called "The refund".
+          play.withdraw > 0
+            ? `${t("contribution")} ${fmt(play.contribution)} · ${t("marginal")} ${pct(rate * 100, 1)}`
+            : t("noWithdraw"),
           fmt(play.refund),
           t("refundWhy"),
           <>
@@ -195,8 +199,16 @@ export default function RrspHbpPage() {
         {section(
           "risk",
           play.withdraw > 0 ? "blocked" : "none",
-          t("inclusionIfMissed"),
-          fmt(play.inclusionIfMissed),
+          // `inclusionIfMissed` the COPY KEY reads "Added to your income for
+          // each year missed"; `play.taxIfMissed` the ENGINE FIELD is the tax on
+          // that income (repayAnnual × marginal rate). As the line beside that
+          // figure it mislabelled it by a factor of the marginal rate. The
+          // amount added to income is the annual repayment, so it is that
+          // number the phrase now sits next to.
+          play.withdraw > 0
+            ? `${t("inclusionIfMissed")} ${fmt(play.repayAnnual)} · ${t("marginal")} ${pct(rate * 100, 1)}`
+            : t("noWithdraw"),
+          fmt(play.taxIfMissed),
           t("riskWhy"),
           <>
             <PanelRow label={t("repaySchedule")} value={fmt(play.repayAnnual)} />
@@ -205,7 +217,7 @@ export default function RrspHbpPage() {
               value={pct(rate * 100, 1)}
               provenance={<Provenance kind="rule" />}
             />
-            <PanelRow label={t("taxOnMissed")} value={fmt(play.inclusionIfMissed)} strong />
+            <PanelRow label={t("taxOnMissed")} value={fmt(play.taxIfMissed)} strong />
             {/*
               No verdict. The reference computed one as refund + growth > 0, which
               is true whenever anything is withdrawn -- a verdict that could only

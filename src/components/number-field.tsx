@@ -97,7 +97,7 @@ export function NumberField({
           id={id}
           type="text"
           inputMode="decimal"
-          className="figure text-right font-medium"
+          className="text-right font-medium"
           value={display}
           placeholder={hint}
           aria-describedby={
@@ -112,7 +112,7 @@ export function NumberField({
           }}
         />
         {suffix ? (
-          <span id={suffixId} className="text-[10.5px] text-text-faint">
+          <span id={suffixId} className="text-[10.5px] text-ink3">
             {suffix}
           </span>
         ) : null}

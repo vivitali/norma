@@ -19,12 +19,14 @@ import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { FAVOURS_BUYING, FAVOURS_RENTING } from "./omissions";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 /** Modelled to 40 years regardless of horizon: the break-even can be past year 25. */
 const HORIZON_YEARS = 40;
 const HOLD_CHOICES = [3, 5, 10, 25] as const;
+
 
 export default function RentVsBuyPage() {
   const t = useTranslations("RentVsBuy");
@@ -132,11 +134,18 @@ export default function RentVsBuyPage() {
         stats={[
           {
             label: t("crossLabel"),
+            // The answer goes in the value. A bare em-dash with the finding
+            // pushed into `note` read as a rendering fault: the stat appeared
+            // broken, and the note then contradicted the label above it. `note`
+            // is a short qualifier, never the answer itself.
+            // `crossNever`, not `neverAhead`: the value slot is 22px and
+            // whitespace-nowrap, and `neverAhead` is a full sentence that wraps
+            // out of it. `neverAhead` still carries the same fact in the chart
+            // caption, where there is room for a sentence.
             value:
               result.breakEven === null
-                ? "—"
+                ? t("crossNever", { n: HORIZON_YEARS })
                 : t("crossYear", { n: result.breakEven }),
-            note: result.breakEven === null ? t("neverAhead") : "",
             mark: "estimate",
           },
           { label: t("buyWealth"), value: fmt(atHorizon.buyW), mark: "estimate" },
@@ -157,7 +166,11 @@ export default function RentVsBuyPage() {
           "verdict",
           buyWins ? (flatBuyWins ? "pass" : "caution") : "none",
           t("horizonLabel", { n: hold }),
-          result.breakEven === null ? "—" : t("crossYear", { n: result.breakEven }),
+          // No break-even is not a missing figure, so it does not get an
+          // em-dash: the figure slot is `whitespace-nowrap` and cannot carry the
+          // sentence that says so. It stays empty — the contract's marker for a
+          // section with no single number — and the head stat above states it.
+          result.breakEven === null ? "" : t("crossYear", { n: result.breakEven }),
           t("verdictWhy"),
           <>
             <WealthChart result={result} />
@@ -225,7 +238,11 @@ export default function RentVsBuyPage() {
         {section(
           "wealth",
           buyWins ? "pass" : "none",
-          buyWins ? t("buyWord") : t("rentWord"),
+          // A single word ("Buy") spent the row's one line of explanation
+          // saying less than the figure beside it already did. Naming the
+          // horizon the verdict is measured at is the part the figure cannot
+          // carry -- the advantage is only true at that year.
+          `${buyWins ? t("buyWord") : t("rentWord")} · ${t("atYear", { n: hold })}`,
           fmt(Math.abs(atHorizon.adv)),
           t("wealthWhy"),
           <>
@@ -268,12 +285,27 @@ export default function RentVsBuyPage() {
           </>,
         )}
 
-        {section("assumptions", "none", t("favBuy"), "", t("assumptionsWhy"), (
+        {/*
+          The line names BOTH sides. It used to be `favBuy` alone, which was a
+          near-copy of the section's own name and described half of what is
+          inside -- a reader who never opened it came away believing the
+          omissions all favour buying, which is the opposite of this section's
+          point.
+          The counts come from the arrays rather than being written into the
+          copy, so the sentence cannot drift out of step with the list it
+          describes.
+        */}
+        {section(
+          "assumptions",
+          "none",
+          t("assumptionsLine", { buy: FAVOURS_BUYING.length, rent: FAVOURS_RENTING.length }),
+          "",
+          t("assumptionsWhy"),
           <>
-            {notCaptured(t("favBuy"), [t("fb1"), t("fb2"), t("fb3"), t("fb4")])}
-            {notCaptured(t("favRent"), [t("fr1"), t("fr2"), t("fr3")])}
-          </>
-        ))}
+            {notCaptured(t("favBuy"), FAVOURS_BUYING.map((k) => t(k)))}
+            {notCaptured(t("favRent"), FAVOURS_RENTING.map((k) => t(k)))}
+          </>,
+        )}
       </div>
 
       <section aria-labelledby="rvb-inputs" className="mt-8 flex flex-col gap-3">
@@ -293,7 +325,7 @@ export default function RentVsBuyPage() {
             onChange={update}
           />
           <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
-            <legend className="micro px-1 text-text-faint">{t("rentWord")}</legend>
+            <legend className="micro px-1 text-ink3">{t("rentWord")}</legend>
             <NumberField
               id="rent"
               label={t("dRent")}

@@ -61,7 +61,7 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
             : "border-l-border",
       )}
     >
-      <span className="micro text-text-faint">{t("keyLever")}</span>
+      <span className="micro text-ink3">{t("keyLever")}</span>
       <p className="text-[11.5px] text-muted-foreground">
         {body.label}
         {body.figure ? (
@@ -69,7 +69,7 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
             {" "}
             <span
               className={cn(
-                "figure font-semibold",
+                "font-semibold",
                 state === "costly" ? "text-caution" : "text-foreground",
               )}
             >
@@ -79,14 +79,14 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
         ) : null}
       </p>
       {state === "costly" ? (
-        <span className="flex h-1 w-full overflow-hidden rounded-sm bg-surface-sunken">
+        <span className="flex h-1 w-full overflow-hidden rounded-sm bg-sunk">
           <span
             className="h-full bg-caution"
             style={{ width: `${impactWidth(result.debtCapacity, result.ceiling)}%` }}
           />
         </span>
       ) : null}
-      {body.foot ? <span className="text-[10.5px] text-text-faint">{body.foot}</span> : null}
+      {body.foot ? <span className="text-[10.5px] text-ink3">{body.foot}</span> : null}
     </div>
   );
 }

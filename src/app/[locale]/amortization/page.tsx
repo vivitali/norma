@@ -225,7 +225,13 @@ export default function AmortizationPage() {
         {section(
           "interest",
           "none",
-          t("rInterest"),
+          // The figure is interest PLUS premium, so a line reading "Total
+          // interest over the loan" labelled it as something it is not. Name
+          // the two parts when there are two; otherwise say what the loan costs
+          // in total, which the figure alone does not.
+          result.fin.premium > 0
+            ? `${t("rInterest")} ${fmt(result.totalInterest)} · ${t("premium")} ${fmt(result.fin.premium)}`
+            : `${t("totalPaid")} ${fmt(result.totalPaid)}`,
           fmt(result.totalInterest + result.fin.premium),
           t("interestWhy"),
           <>
@@ -243,7 +249,12 @@ export default function AmortizationPage() {
           </>,
         )}
 
-        {section("schedule", "none", t("tableTitle"), "", t("scheduleWhy"), (
+        {/*
+          `tableTitle` and this section's name are the same three words, so the
+          row printed "Year by year · Year by year". The schedule's one finding
+          the reader cannot get from the collapsed row is where it ends.
+        */}
+        {section("schedule", "none", t("payoffYear", { n: result.payoffYear }), "", t("scheduleWhy"), (
           <>
             <ScheduleChart result={result} />
             <div className="overflow-x-auto">

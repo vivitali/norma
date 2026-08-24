@@ -93,8 +93,15 @@ the last thing a headline figure can afford to do.
 | Hero stat value / gauge value | 22px / 17px | 600 | −0.02em |
 | Panel row | 13.5px | 400 / 600 strong | — |
 | Math row | 13px | 400 / 600 strong | — |
-| Micro (limit notes, stat labels) | 11.5–12.5px | 400 | — |
+| Micro (limit notes, stat labels, legends) | 11.5–12.5px | 400 | `.micro` |
+| Fine print (footnotes, unit suffixes, chart legends) | 10.5px | 400 | — |
 | Body base | 13.5px | 400 | — |
+
+The fine-print tier is documented rather than corrected: it is in use at twelve call sites
+across six files, which makes it a real tier the spec had simply never recorded. Ten carry
+`--ink3`, which clears 4.5:1 on every surface in both themes; two carry `--caution`, and
+one inherits its colour from the row it sits in. If the tier should not exist, the fix is to
+raise those call sites to 11.5px — not to leave the spec and the code disagreeing.
 
 **Form controls have a 16px floor** (`--control-font-size`), applied through `.control`.
 Below 16px iOS Safari zooms the viewport on focus, and this page has twelve fields. The
@@ -124,6 +131,7 @@ keep the sizes above.
 | `Gauges` | GDS and TDS on a shared 60% axis with the limit ticked. `role="img"` with a full label. |
 | `MathColumns` | Both derivations. A row whose input is zero is **absent**, not a zero row. |
 | `Provenance` | The `rule` / `estimate` mark. Describes derivation, never verification. |
+| `AppNav` | One disclosure at **every** width — a `Tools` trigger and a panel of the four journey groups. Not a desktop row plus a mobile drawer, and **not** because §8 forbids it (a row of links discloses nothing): because arrival is search-first onto a single tool, and because a flat bar cannot render Rent vs Buy's two groups honestly. Groups are a nested `ul` with `aria-labelledby` and explicit `role="list"`, **not** headings — the nav precedes page content, so `h2` group labels would open every page's outline before its own `h1`, and preflight's `list-style: none` makes VoiceOver drop an unroled list. |
 | `ImpactRow` | What debt costs in purchase price. Four states, gated on the input. |
 
 ### 5.1 Why the gap band's markers sit at three heights
@@ -139,7 +147,16 @@ never collide with the two markers that move.
 One keyframe: `v2-pulse`, 0.5s ease-out, keyed to a jurisdiction change so the answer
 visibly re-computes. Nothing else animates.
 
-`prefers-reduced-motion: reduce` zeroes every animation and transition globally.
+`prefers-reduced-motion: reduce` zeroes every animation and transition globally, with
+**one exception**: `v2-pulse` is exempt and keeps its fade.
+
+Reduced motion means less motion, not less feedback. The pulse is the only signal that the
+answer re-computed, and zeroing it left a jurisdiction change completely silent. It is
+`opacity: 0.35 → 1` — opacity only, nothing that moves — and a half-second fade is the
+canonical *safe substitute* under this query rather than something it exists to suppress.
+An earlier pass swapped it for a `step-end` cut, reasoning that this removed position and
+scale; there was never any position or scale, and a hard luminance step is a worse stimulus
+for a photosensitive reader than the fade. Exempting it is the whole fix.
 
 ## 7. Accessibility
 
@@ -147,7 +164,10 @@ WCAG 2.1 AA where practical — a working convention, not a claim anyone may mak
 externally (see PRODUCT.md).
 
 - Contrast is enforced by test across every foreground × surface × theme.
-- 44px minimum touch targets below `sm`; 16px control floor everywhere.
+- 44px minimum touch targets below `sm`; 16px control floor everywhere. Where a control is
+  deliberately smaller than 44px — the *Expand all* pill is 32px by design — the target is
+  reached by an invisible `after:` hit area rather than by growing the control, so the
+  geometry stays and the reach is still there.
 - Radiogroups with roving tabindex rather than sets of toggle buttons.
 - `aria-expanded` / `aria-controls` on every disclosure; panels use `hidden`, so a
   closed panel leaves the accessibility tree while `aria-controls` still resolves.

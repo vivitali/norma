@@ -150,7 +150,12 @@ export default function ClosingCostsPage() {
           def("credits"),
           creditsAtClosing > 0 ? "pass" : "none",
           creditsAtClosing > 0 ? t("creditsSub") : later > 0 ? t("noCreditLater") : t("noCreditAtAll"),
-          creditsAtClosing > 0 ? `− ${fmt(creditsAtClosing)}` : "—",
+          // No closing-day credit is an absence, not a value. An em-dash read
+          // as a figure that failed to compute, and "$0" would assert a credit
+          // exists here and happens to be nil -- the same false claim this
+          // page's line items refuse to make. The line beside it says which of
+          // "arrives later" or "does not exist here" is true.
+          creditsAtClosing > 0 ? `− ${fmt(creditsAtClosing)}` : "",
           t("creditsWhy"),
           <>
             {/* Timing is the point of this section, so the two groups are never merged. */}
@@ -273,7 +278,7 @@ export default function ClosingCostsPage() {
             onChange={update}
           />
           <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
-            <p className="micro text-text-faint">{t("mortgageAmount")}</p>
+            <p className="micro text-ink3">{t("mortgageAmount")}</p>
             <p className="text-[22px] font-semibold tracking-[-0.02em]">{fmt(total.fin.loan)}</p>
             <p className="text-[12.5px] leading-[1.55] text-ink3 text-pretty">
               {total.fin.insured ? t("insuredNote") : t("uninsuredNote")}

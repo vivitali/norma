@@ -26,7 +26,7 @@ import { SegmentedGroup } from "./segmented-group";
 function Group({ legend, children }: { legend: string; children: ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
-      <legend className="micro px-1 text-text-faint">{legend}</legend>
+      <legend className="micro px-1 text-ink3">{legend}</legend>
       {children}
     </fieldset>
   );
@@ -93,7 +93,7 @@ export function InputGroups({
               >
                 {t("cAddApp")}
               </Button>
-              <span className="text-[10.5px] text-text-faint">{t("addSecondApplicantHint")}</span>
+              <span className="text-[10.5px] text-ink3">{t("addSecondApplicantHint")}</span>
             </div>
           ) : (
             <div className="flex flex-col gap-1">
@@ -140,8 +140,8 @@ export function InputGroups({
                   onChange={(e) => update({ haircut: Number(e.target.value) })}
                   className="norma-range"
                 />
-                <span className="figure text-[10.5px] text-text-faint">{pct(resolved.haircut)}</span>
-                <span className="text-[10.5px] text-text-faint">{t("cHaircutWhy")}</span>
+                <span className="text-[10.5px] text-ink3">{pct(resolved.haircut)}</span>
+                <span className="text-[10.5px] text-ink3">{t("cHaircutWhy")}</span>
               </div>
             </>,
           )}
@@ -192,7 +192,7 @@ export function InputGroups({
             min={0}
             onCommit={(price) => update({ price })}
           />
-          <span className="figure -mt-1 text-[10.5px] text-text-faint">
+          <span className="-mt-1 text-[10.5px] text-ink3">
             {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(jurisdiction.bench[resolved.ptype])}
           </span>
           {/*

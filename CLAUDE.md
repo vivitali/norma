@@ -215,6 +215,16 @@ pending in `design-reference/` for later phases.
 - Don't hardcode province rules inline in components — they live in `src/domain/jurisdictions/*.ts`,
   one typed file per jurisdiction, ported from `design-reference/hbt-data.js`. See the Phase 1 spec.
 - Don't add a deploy target or CI workflow without asking — monetization (above) is still open.
+- **A figure may leave the app only if `src/domain` records a verification date covering it.**
+  The home page carries `FAQPage` structured data, whose whole function is to make claims
+  extractable by machines that strip the surrounding context — including the unverified-figures
+  disclosure sitting next to them. An FAQ answer may say *which rules exist and who levies them*
+  (Toronto stacks a municipal land transfer tax; Alberta charges land titles registration instead;
+  Manitoba levies the tax with no first-time-buyer rebate) because those are qualitative and
+  checkable. It may carry a **number** only where a verification date covers it — today that means
+  `federal.verified` and federal parameters only, and jurisdiction figures never travel. The rule
+  loosens by itself as [#5](https://github.com/vivitali/norma/issues/5) dates each jurisdiction, so
+  the next answer does not need re-arguing.
 - **Don't do SEO outreach, link-building or directory submissions until
   [#5](https://github.com/vivitali/norma/issues/5) lands** — every jurisdiction figure is still an
   unverified placeholder, and a wrong land transfer tax in a placed article becomes the story about

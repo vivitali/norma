@@ -88,6 +88,27 @@ describe("Amortization — the schedule", () => {
   });
 });
 
+describe("Amortization — the row line is not the row's name", () => {
+  it("says where the schedule ends instead of repeating 'Year by year'", () => {
+    // `tableTitle` and this section's name are the same three words, so the row
+    // printed them twice and told the reader nothing between them.
+    renderPage();
+    const row = screen.getByRole("button", { name: /Year by year/ });
+    expect(row.textContent).toMatch(/Paid off in year \d+/);
+    expect(row.textContent?.match(/Year by year/g)).toHaveLength(1);
+  });
+
+  it("names both parts of the cost of borrowing, which is what its figure is", () => {
+    // The figure is interest PLUS the insurance premium, and the line called it
+    // "Total interest over the loan" — labelling it as something it is not. At
+    // the default 10% down the mortgage is insured, so there are two parts.
+    renderPage();
+    const row = screen.getByRole("button", { name: /What it costs to borrow/ });
+    expect(row.textContent).toMatch(/Total interest over the loan \$[\d,]+/);
+    expect(row.textContent).toMatch(/Insurance premium added to the loan \$[\d,]+/);
+  });
+});
+
 describe("Amortization — French", () => {
   it("renders in French without leaking a message key, in every section", async () => {
     // Expanded first, deliberately. A missing ICU parameter makes next-intl

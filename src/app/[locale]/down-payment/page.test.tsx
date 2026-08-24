@@ -116,6 +116,36 @@ describe("Down payment — the glide path", () => {
   });
 });
 
+describe("Down payment — the row states what it found, and never a dash", () => {
+  it("shows no em-dash figure before any balance is given", () => {
+    // "—" in the figure slot reads as a figure that failed to render. Nothing
+    // drawn yet is an absent number, and the row carries no number at all.
+    renderPage();
+    for (const name of [/The funding order/, /Tax cost/, /The savings glide path/]) {
+      expect(screen.getByRole("button", { name }).textContent).not.toContain("—");
+    }
+  });
+
+  it("replaces the ordering rule with the shortfall once balances are given", async () => {
+    // "Cheapest money first" under a section called "The funding order" is the
+    // same fact twice. It is the ordering RULE, true whatever the numbers, so
+    // it holds the line only while there are no numbers.
+    const user = userEvent.setup();
+    renderPage();
+    const order = () => screen.getByRole("button", { name: /The funding order/ });
+    expect(order().textContent).toContain("Cheapest money first");
+
+    await open(user, /The funding order/);
+    const fhsa = screen.getByLabelText("FHSA");
+    await user.clear(fhsa);
+    await user.type(fhsa, "1000");
+    await user.tab();
+
+    expect(order().textContent).toMatch(/Short by \$[\d,]+/);
+    expect(order().textContent).not.toContain("Cheapest money first");
+  });
+});
+
 describe("Down payment — French", () => {
   it("renders in French without leaking a message key, in every section", async () => {
     // Expanded first, deliberately. A missing ICU parameter makes next-intl

@@ -234,7 +234,7 @@ describe("hbpPlay", () => {
     // The real risk of the manoeuvre, and permanent: the missed amount is added
     // to income and there is no way to put it back.
     const h = hbpPlay(federal, { contribution: 60000, marginalRate: 0.4, withdrawAmount: 60000 });
-    expect(h.inclusionIfMissed).toBeCloseTo((60000 / federal.hbp.repayYears) * 0.4, 6);
+    expect(h.taxIfMissed).toBeCloseTo((60000 / federal.hbp.repayYears) * 0.4, 6);
   });
 
   it("ships no worthIt verdict", () => {

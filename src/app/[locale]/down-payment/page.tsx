@@ -181,8 +181,19 @@ export default function DownPaymentPage() {
         {section(
           "waterfall",
           !described ? "none" : funded ? "pass" : "blocked",
-          t("cheapest"),
-          described ? fmt(flow.drawnTotal) : "—",
+          // With balances given the row states what the waterfall reached.
+          // "Cheapest money first" is the ordering RULE -- true of the section
+          // whatever the numbers, which is why it is kept only for the state
+          // where there are no numbers yet.
+          !described
+            ? t("cheapest")
+            : funded
+              ? `${t("surplusLabel")} ${fmt(flow.surplus)}`
+              : `${t("shortfallLabel")} ${fmt(flow.shortfall)}`,
+          // Nothing drawn yet is not a value of "—": an em-dash reads as a
+          // figure that failed to render. An empty figure is the contract's
+          // marker for a section with no number of its own yet.
+          described ? fmt(flow.drawnTotal) : "",
           t("waterfallWhy"),
           <>
             {flow.rows.map((row) => (
@@ -252,8 +263,19 @@ export default function DownPaymentPage() {
         {section(
           "cost",
           flow.taxTotal > 0 || obligations > 0 ? "caution" : "none",
-          flow.taxTotal > 0 || obligations > 0 ? t("costs") : t("noCostAtAll"),
-          flow.taxTotal > 0 ? fmt(flow.taxTotal) : "—",
+          // "Costs tax" under a section called "Tax cost" is the same two words
+          // reordered. What the reader cannot see from the figure is the rate
+          // it was struck at, or that an obligation exists with no tax at all.
+          flow.taxTotal > 0
+            ? `${t("marginal")} ${pct(flow.rate * 100, 1)}`
+            : obligations > 0
+              ? t("repayAnnual", { a: fmt(obligations), y: federal.hbp.repayYears })
+              : t("noCostAtAll"),
+          // No tax is an absence, not a value: "$0" would assert a tax bill
+          // exists and happens to be nil, and an em-dash reads as a figure that
+          // failed to render. The line carries which of the two is true, and it
+          // now distinguishes the case with no tax but a repayment obligation.
+          flow.taxTotal > 0 ? fmt(flow.taxTotal) : "",
           t("costWhy"),
           <>
             <PanelRow
@@ -302,7 +324,10 @@ export default function DownPaymentPage() {
               : glide.reach === null
                 ? t("never")
                 : t("reached", { m: glide.reach }),
-          described && flow.shortfall > 0.5 ? fmt(flow.shortfall) : "—",
+          // A shortfall that has been closed is not a shortfall, and no
+          // balances given at all is not a figure yet. The em-dash covered both
+          // and distinguished neither; the line says which one this is.
+          described && flow.shortfall > 0.5 ? fmt(flow.shortfall) : "",
           t("glideWhy"),
           <>
             {described && flow.shortfall > 0.5 ? (

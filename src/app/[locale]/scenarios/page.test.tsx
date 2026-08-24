@@ -142,6 +142,44 @@ describe("Scenarios — how to read it", () => {
   });
 });
 
+describe("Scenarios — the row line says what the section found", () => {
+  it("prices the dearest and cheapest columns instead of repeating the row's name", () => {
+    // The line was the string "Monthly cost" and so was the name beside it: one
+    // row printing its own name twice, spending the single line of explanation
+    // the reader gets on two words they had already read.
+    renderPage();
+    const row = screen.getByRole("button", { name: /Monthly cost/ });
+    const text = row.textContent ?? "";
+    expect(text).toMatch(/\d+% down \$[\d,]+ · \d+% down \$[\d,]+/);
+    expect(text.match(/Monthly cost/g)).toHaveLength(1);
+
+    // Dearest first, cheapest second — a spread, not two numbers in any order.
+    const [dearest, cheapest] = [...text.matchAll(/\$([\d,]+)/g)].map((m) =>
+      Number(m[1].replace(/,/g, "")),
+    );
+    expect(dearest).toBeGreaterThan(cheapest);
+  });
+
+  it("answers the cash row once funds are known, rather than restating the why", async () => {
+    // `gCashNote` is also the first sentence of `cashWhy`, so with the section
+    // open the reader met the same sentence twice, one line apart, whether or
+    // not the question it stands in for had been answered.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Can you fund it\?/);
+    expect(screen.getAllByText(/A cheaper scenario you cannot fund/).length).toBeGreaterThan(0);
+
+    const funds = screen.getByLabelText("Funds available");
+    await user.clear(funds);
+    await user.type(funds, "300000");
+    await user.tab();
+
+    const row = screen.getByRole("button", { name: /Can you fund it\?/ });
+    expect(row.textContent).toMatch(/You can fund it today/);
+    expect(row.textContent).not.toMatch(/A cheaper scenario you cannot fund/);
+  });
+});
+
 describe("Scenarios — French", () => {
   it("renders in French without leaking a message key, in every section", async () => {
     // Expanded first, deliberately. A missing ICU parameter makes next-intl

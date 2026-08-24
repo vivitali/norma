@@ -139,6 +139,24 @@ export default function ScenariosPage() {
     return best;
   };
 
+  /**
+   * The spread across the four columns, which is what this section found.
+   *
+   * The row's line used to be `gMonthly` -- the section's own name, printed
+   * twice on one row. The reader gets one line of explanation per section and
+   * that one spent it repeating two words they had already read. Selection over
+   * engine output, not arithmetic: the same lowestBy the table's `best` marks use.
+   */
+  const cheapestMonthly = columns[lowestBy((c) => c.monthly.total)(columns)];
+  const dearestMonthly = columns[lowestBy((c) => -c.monthly.total)(columns)];
+  // A spread needs two ends. When every column costs the same -- price 0, or any
+  // degenerate input -- naming the same column twice reads as a range that is not
+  // one, so the line falls back to the section's plain description.
+  const monthlyLine =
+    dearestMonthly.monthly.total - cheapestMonthly.monthly.total > 0.5
+      ? `${t("column", { p: pct(dearestMonthly.dpPct) })} ${fmt(dearestMonthly.monthly.total)} · ${t("column", { p: pct(cheapestMonthly.dpPct) })} ${fmt(cheapestMonthly.monthly.total)}`
+      : t("gMonthly");
+
   const monthlyRows: MetricRow[] = [
     { label: t("rDownAmt"), value: (c) => fmt(c.down) },
     { label: t("rBaseLoan"), value: (c) => fmt(c.baseLoan) },
@@ -238,7 +256,7 @@ export default function ScenariosPage() {
           collapseLabel={t("collapseAll")}
         />
 
-        {section("monthly", "none", t("gMonthly"), fmt(headline.monthly.total), t("monthlyWhy"), (
+        {section("monthly", "none", monthlyLine, fmt(headline.monthly.total), t("monthlyWhy"), (
           <>
             <CompareGrid
               columns={columns}
@@ -262,7 +280,10 @@ export default function ScenariosPage() {
           // approve returned "noneQualify" whether or not funds were ever given --
           // and this row painted itself green over a table of em-dashes.
           cashUnanswered ? "none" : cashFundable ? "pass" : "blocked",
-          t("gCashNote"),
+          // Once funds are known this row states the answer, not the principle.
+          // `gCashNote` is also the first sentence of `cashWhy`, so on an open
+          // section it was the same sentence twice, one line apart.
+          cashUnanswered ? t("gCashNote") : cashFundable ? t("fFundable") : t("fShort"),
           fmt(headline.net),
           t("cashWhy"),
           <>

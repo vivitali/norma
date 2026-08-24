@@ -27,7 +27,7 @@ export function Provenance({ kind }: { kind: ProvenanceKind }) {
       href={{ pathname: "/sources", hash: `#${kind}` }}
       title={t(kind === "rule" ? "ruleTitle" : "estimateTitle")}
       aria-label={t(kind === "rule" ? "ruleTitle" : "estimateTitle")}
-      className="micro ml-1 align-super text-text-faint underline decoration-dotted underline-offset-2"
+      className="micro ml-1 align-super text-ink3 underline decoration-dotted underline-offset-2"
     >
       {t(kind)}
     </Link>

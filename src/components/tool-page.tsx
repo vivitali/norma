@@ -60,7 +60,24 @@ export function AnswerHead({
 }) {
   return (
     <div className="pt-9 sm:pt-11">
-      <div className="eyebrow mb-5 text-ac">{eyebrow}</div>
+      {/*
+       * The h1 is the page NAME, not the answer figure.
+       *
+       * Both were candidates and they are not equivalent. A screen-reader user
+       * who lands here and jumps by heading, or who asks for the document
+       * title, wants "Affordability" — a bare "$398,398" as the only h1 names
+       * nothing, sorts into the headings list as a number, and is already read
+       * out immediately after this in document order along with the sentence
+       * that explains it. It also keeps the seven tool pages consistent with
+       * Home, Sources and 404, whose h1 is likewise the page name.
+       *
+       * Visually identical to the <div> it replaces: Tailwind preflight resets
+       * h1 font-size and weight to inherit and zeroes its margin (@layer base),
+       * and .eyebrow (@layer components) then sets the same 11px/600/0.1em/
+       * uppercase it always did — measured in the browser at 11px / 600 /
+       * 1.1px / uppercase / margin 0 0 20px, the div's own computed values.
+       */}
+      <h1 className="eyebrow mb-5 text-ac">{eyebrow}</h1>
       <div className="flex flex-wrap items-end gap-8 sm:gap-10">
         <div className="min-w-0 flex-1 sm:min-w-[420px]">
           <div
@@ -81,15 +98,26 @@ export function AnswerHead({
             </p>
           ) : null}
         </div>
+        {/*
+         * basis-full below sm, flex-none from sm.
+         *
+         * flex-none alone meant flex-shrink: 0 at EVERY width, so this column
+         * was sized to its max-content and could not give any of it back: at
+         * 320px a stat whose value and note sat on one un-shrinkable baseline
+         * row pushed the page wider than the viewport. Taking a full row of its
+         * own below sm is what it already did visually — flex-wrap put it there
+         * — it just did it without being allowed to fit.
+         */}
         {stats && stats.length > 0 ? (
-          <div className="flex flex-none flex-col gap-[18px] sm:min-w-[250px]">
+          <div className="flex min-w-0 basis-full flex-col gap-[18px] sm:basis-auto sm:min-w-[250px] sm:flex-none">
             {stats.map((stat) => (
-              <div key={stat.label}>
+              <div key={stat.label} className="min-w-0">
                 <div className="mb-[5px] text-[12.5px] text-ink3">
                   {stat.label}
                   {stat.mark ? <Provenance kind={stat.mark} /> : null}
                 </div>
-                <div className="flex items-baseline gap-2.5">
+                {/* The note wraps under the value rather than off the screen. */}
+                <div className="flex flex-wrap items-baseline gap-x-2.5">
                   <span className="text-[22px] font-semibold tracking-[-0.02em]">{stat.value}</span>
                   {stat.note ? (
                     <span className="text-[12px] leading-[1.35] text-ink3">{stat.note}</span>
@@ -124,11 +152,18 @@ export function SectionsHeader({
   return (
     <div className="flex items-baseline gap-3.5 pb-3">
       <span className="eyebrow flex-1 text-ink3">{label}</span>
+      {/*
+       * The pill is 32px tall by design and stays 32px tall. Below sm an
+       * invisible ::after centred on it takes the hit area to the 44px floor
+       * (DESIGN.md §7) without moving a pixel — growing the pill itself would
+       * have meant either a 44px pill, which is not the design, or padding that
+       * breaks the baseline alignment of the row it sits in.
+       */}
       <button
         type="button"
         onClick={onToggleAll}
         aria-expanded={expanded}
-        className="rounded-full border border-acbr px-3.5 py-1.5 text-[13px] font-medium text-ac hover:bg-acbg"
+        className="relative rounded-full border border-acbr px-3.5 py-1.5 text-[13px] font-medium text-ac after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 hover:bg-acbg sm:after:hidden"
       >
         {expanded ? collapseLabel : expandLabel}
       </button>

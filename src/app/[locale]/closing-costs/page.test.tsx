@@ -115,6 +115,20 @@ describe("Closing costs — credits, and when they arrive", () => {
   });
 });
 
+describe("Closing costs — an absent credit is an absence, not a dash", () => {
+  it("drops the figure rather than dashing it when nothing comes off that day", async () => {
+    // "—" in the figure slot reads as a figure that failed to compute, and "$0"
+    // would assert a credit exists here and happens to be nil — the same false
+    // claim this page refuses to make for a line item. The line carries which
+    // of "arrives later" and "does not exist here" is true.
+    renderPage();
+    const row = screen.getByRole("button", { name: /Credits back/ });
+    expect(row.textContent).toMatch(/no closing-day credit|arrives months later/);
+    expect(row.textContent).not.toContain("—");
+    expect(row.textContent).not.toContain("$0");
+  });
+});
+
 describe("Closing costs — the cash check", () => {
   it("asks for funds rather than assuming a balance", () => {
     renderPage();

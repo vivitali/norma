@@ -70,7 +70,7 @@ export function PurchaseInputs({
 
   return (
     <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
-      <legend className="micro px-1 text-text-faint">{t("purchase")}</legend>
+      <legend className="micro px-1 text-ink3">{t("purchase")}</legend>
 
       <NumberField
         id="price"

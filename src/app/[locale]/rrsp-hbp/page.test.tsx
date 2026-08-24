@@ -58,9 +58,20 @@ describe("RRSP → HBP — no verdict it cannot support", () => {
 
   it("prices the actual risk instead: a missed repayment year", () => {
     renderPage();
-    expect(
-      screen.getAllByText("Added to your income for each year missed").length,
-    ).toBeGreaterThan(0);
+    const row = screen.getByRole("button", { name: /What a missed year costs/ });
+    expect(row.textContent).toMatch(/Added to your income for each year missed/);
+  });
+
+  it("does not label the tax on a missed year as the income added", () => {
+    // The phrase names what is ADDED TO INCOME; the section's figure is the TAX
+    // on it, which is that amount times the marginal rate. The row used to put
+    // the phrase directly beside the tax, describing it as a number it is not,
+    // so the two must now be distinct amounts on the same row.
+    renderPage();
+    const row = screen.getByRole("button", { name: /What a missed year costs/ });
+    const amounts = [...(row.textContent ?? "").matchAll(/\$[\d,]+/g)].map((m) => m[0]);
+    expect(amounts.length).toBe(2);
+    expect(amounts[0]).not.toBe(amounts[1]);
   });
 });
 
