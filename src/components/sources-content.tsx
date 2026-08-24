@@ -32,7 +32,7 @@ function Section({
  */
 export function SourcesContent() {
   const t = useTranslations("Sources");
-  const tAff = useTranslations("Affordability");
+  const tDisc = useTranslations("Disclosure");
   const [jurisdiction] = useJurisdiction();
 
   const orgs = jurisdiction.orgs;
@@ -78,7 +78,7 @@ export function SourcesContent() {
         {list([t("osfi"), t("cmhc")])}
         <p className="max-w-prose text-[10.5px] text-text-faint">{t("provenanceNote")}</p>
         <p className="figure text-[10.5px] text-text-faint">
-          {tAff("lastVerified")} {federal.verified}
+          {tDisc("lastVerified")} {federal.verified}
         </p>
       </Section>
 
@@ -94,8 +94,8 @@ export function SourcesContent() {
       </Section>
 
       <div className="text-[10.5px] text-text-faint">
-        <p>{tAff("unverifiedFlag")}</p>
-        {!jurisdiction.cityData ? <p>{tAff("noCityData")}</p> : null}
+        <p>{tDisc("unverifiedFlag")}</p>
+        {!jurisdiction.cityData ? <p>{tDisc("noCityData")}</p> : null}
       </div>
     </main>
   );

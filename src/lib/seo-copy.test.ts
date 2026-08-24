@@ -4,7 +4,18 @@ import en from "../../messages/en.json";
 import fr from "../../messages/fr.json";
 
 const LOCALES = { en, fr } as const;
-const PAGES = ["home", "affordability", "sources", "notFound"] as const;
+const PAGES = [
+  "home",
+  "affordability",
+  "closingCosts",
+  "downPayment",
+  "rrspHbp",
+  "amortization",
+  "rentVsBuy",
+  "scenarios",
+  "sources",
+  "notFound",
+] as const;
 
 /**
  * Google truncates titles near 60 characters and descriptions near 155.

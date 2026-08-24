@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { defaultContractRate, minDown } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { getJurisdiction } from "@/domain/jurisdictions";
-import { AFFORDABILITY_DEFAULTS } from "./shared-inputs";
-import { DEFAULT_COMFORT_CEILING, isPersonalised, resolveInputs } from "./resolve-inputs";
+import { TOOL_DEFAULTS } from "./shared-inputs";
+import {
+  anySourceGiven,
+  DEFAULT_COMFORT_CEILING,
+  DEFAULT_RENT,
+  isPersonalised,
+  resolveInputs,
+} from "./resolve-inputs";
 
 const winnipeg = getJurisdiction("winnipeg")!;
 const vancouver = getJurisdiction("vancouver")!;
-const untouched = AFFORDABILITY_DEFAULTS;
+const untouched = TOOL_DEFAULTS;
 
 describe("resolveInputs", () => {
   it("derives price from the city benchmark for the chosen property type", () => {
@@ -95,12 +102,40 @@ describe("resolveInputs", () => {
     );
   });
 
-  it("produces no nulls except the two unknowns", () => {
+  it("produces no nulls except the unknowns and the one absent-by-meaning field", () => {
     const r = resolveInputs(untouched, winnipeg, federal);
     const nulls = Object.entries(r)
       .filter(([, v]) => v === null)
       .map(([k]) => k);
-    expect(nulls.sort()).toEqual(["funds", "save"]);
+    // funds and save are UNKNOWNS: nothing honest to assume. renewalRate is a
+    // third thing again -- null there means "no renewal shock modelled", which
+    // is a modelling choice, not a missing answer, and resolving it to a number
+    // would silently assert a rate the reader never predicted.
+    expect(nulls.sort()).toEqual(["funds", "renewalRate", "save"]);
+  });
+
+  it("resolves every down-payment source to a number, and remembers that none was given", () => {
+    // The two facts drive different screens. Zero is right for the arithmetic;
+    // reporting a shortfall on a first visit and blaming the reader is not.
+    const r = resolveInputs(untouched, winnipeg, federal);
+    expect([r.fhsa, r.cashSav, r.rrsp, r.tfsa, r.gift, r.nonreg]).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(anySourceGiven(untouched)).toBe(false);
+    expect(anySourceGiven({ ...untouched, tfsa: 12000 })).toBe(true);
+  });
+
+  it("takes taxable income from the household income already given", () => {
+    const r = resolveInputs({ ...untouched, income1: 80000, income2: 40000 }, winnipeg, federal);
+    expect(r.taxIncome).toBe(120000);
+  });
+
+  it("takes benchmark rent from the jurisdiction, not a universal constant", () => {
+    const r = resolveInputs(untouched, winnipeg, federal);
+    expect(r.rent).toBe(winnipeg.rent ?? DEFAULT_RENT);
+  });
+
+  it("converts rent inflation from the stored percentage to the fraction the engine takes", () => {
+    const r = resolveInputs({ ...untouched, rentInflation: 3 }, winnipeg, federal);
+    expect(r.rentInflation).toBeCloseTo(0.03, 10);
   });
 });
 
@@ -129,5 +164,94 @@ describe("isPersonalised", () => {
   it("is false for a price change alone", () => {
     // Price is the target being tested, not the household's situation.
     expect(isPersonalised({ ...untouched, price: 600000 })).toBe(false);
+  });
+});
+
+describe("isPersonalised — every page's own inputs count", () => {
+  // The predicate was written for Affordability and drives the typical/yours
+  // badge on all nine pages. A reader who filled in six account balances on Down
+  // Payment, or a contribution and a withdrawal on RRSP-HBP, was still told the
+  // answer above them was "typical".
+  const CASES: [string, Partial<typeof untouched>][] = [
+    ["a down-payment source", { tfsa: 30000 }],
+    ["every down-payment source", { fhsa: 1, cashSav: 1, rrsp: 1, tfsa: 1, gift: 1, nonreg: 1 }],
+    ["an HBP contribution", { hbpContribution: 40000 }],
+    ["an HBP withdrawal", { hbpWithdraw: 40000 }],
+    ["taxable income", { taxIncome: 120000 }],
+    ["the rent being compared against", { rent: 2400 }],
+    ["a monthly saving rate", { save: 800 }],
+  ];
+  for (const [what, patch] of CASES) {
+    it(`is true once the reader gives ${what}`, () => {
+      expect(isPersonalised({ ...untouched, ...patch })).toBe(true);
+    });
+  }
+
+  it("stays false for the question being asked, not the household asking it", () => {
+    // dpPct, amortization, property type and the rent-vs-buy assumptions all have
+    // non-null defaults. Counting them would pin the badge to "yours" forever.
+    expect(
+      isPersonalised({ ...untouched, dpPct: 25, amortYears: 25, ptype: "condo", holding: 25 }),
+    ).toBe(false);
+  });
+});
+
+describe("the legal minimum down payment", () => {
+  it("raises a request below the floor, and says it did", () => {
+    // 5% is legal below $500,000 and not above it. A page that amortized 5% on a
+    // $1.6M house would be quoting a mortgage no lender in Canada may write.
+    const r = resolveInputs({ ...untouched, price: 1600000, dpPct: 5 }, winnipeg, federal);
+    expect(r.belowMinimum).toBe(true);
+    expect(r.dpPctRequested).toBe(5);
+    expect(r.dpPct).toBeGreaterThan(5);
+    expect((r.price * r.dpPct) / 100).toBeCloseTo(minDown(1600000), 4);
+  });
+
+  it("leaves a legal request exactly alone", () => {
+    const r = resolveInputs({ ...untouched, price: 400000, dpPct: 5 }, winnipeg, federal);
+    expect(r.belowMinimum).toBe(false);
+    expect(r.dpPct).toBe(5);
+  });
+
+  it("prices the contract rate off the MODELLED percentage, not the requested one", () => {
+    // Being raised to 20% removes the insurance premium, which is exactly when
+    // the rate offered changes. Deriving it from the request would quote an
+    // insured rate on an uninsured mortgage.
+    const raised = resolveInputs({ ...untouched, price: 3000000, dpPct: 5 }, winnipeg, federal);
+    expect(raised.dpPct).toBeCloseTo(20, 6);
+    expect(raised.contractRate).toBeCloseTo(defaultContractRate(federal, 20), 10);
+  });
+});
+
+describe("the blended tier — where the floor is not a round number", () => {
+  // Between $500,000 and $1,500,000 the minimum is 5% on the first 500k and 10%
+  // above it, so the floor lands on values like 7.88%. This band is what makes
+  // binding a four-option control to the FLOORED percentage dangerous: no option
+  // matches, SegmentedGroup gives no button aria-checked, every button gets
+  // tabIndex -1, and the whole radiogroup leaves the tab order. The two prices
+  // originally tested ($400k and $1.6M) are precisely the two where that cannot
+  // happen -- one has no floor, the other floors to exactly 20.
+  const blended = { ...untouched, price: 900000, dpPct: 5 };
+
+  it("floors to a percentage that is not one of the offered options", () => {
+    const r = resolveInputs(blended, winnipeg, federal);
+    expect(r.belowMinimum).toBe(true);
+    expect([5, 10, 20, 25]).not.toContain(r.dpPct);
+    expect(r.dpPct).toBeGreaterThan(5);
+    expect(r.dpPct).toBeLessThan(10);
+  });
+
+  it("keeps the reader's own choice addressable, so a control can bind to it", () => {
+    expect(resolveInputs(blended, winnipeg, federal).dpPctRequested).toBe(5);
+  });
+
+  it("floors in dollars, matching the rule's own unit and scenario()'s threshold", () => {
+    // A request a fraction of a dollar under the floor is a rounding artefact,
+    // not someone asking for something illegal.
+    const price = 900000;
+    const exact = (minDown(price) / price) * 100;
+    const hair = ((minDown(price) - 0.25) / price) * 100;
+    expect(resolveInputs({ ...untouched, price, dpPct: exact }, winnipeg, federal).belowMinimum).toBe(false);
+    expect(resolveInputs({ ...untouched, price, dpPct: hair }, winnipeg, federal).belowMinimum).toBe(false);
   });
 });

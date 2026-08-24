@@ -52,6 +52,46 @@ export type SharedInputs = {
   // number they never gave.
   funds: number | null;
   save: number | null;
+
+  // Where the down payment comes from. Every one is an UNKNOWN: a balance we were
+  // never told is not a balance of zero, and the waterfall must not draw on one it
+  // invented. They resolve to 0 for arithmetic and the page asks for them in place.
+  fhsa: number | null;
+  cashSav: number | null;
+  rrsp: number | null;
+  tfsa: number | null;
+  gift: number | null;
+  nonreg: number | null;
+  /** Unrealised gain inside `nonreg`, which is what sizes the tax on selling it. */
+  nonregGain: number | null;
+  /** null = derive from the household income already given. */
+  taxIncome: number | null;
+
+  // The RRSP -> Home Buyers' Plan play
+  /** null = derive from the federal HBP maximum. */
+  hbpContribution: number | null;
+  /** null = withdraw the whole contribution. */
+  hbpWithdraw: number | null;
+
+  // Amortization
+  /** Years per mortgage term. Renewal happens at the end of each one. */
+  termYears: number;
+  /** Percentage. null = renew at the contract rate, i.e. model no shock at all. */
+  renewalRate: number | null;
+
+  // Rent vs buy
+  /** null = derive from the city's benchmark rent. */
+  rent: number | null;
+  /** Annual rent growth, as a percentage. */
+  rentInflation: number;
+  /** Years held before selling. */
+  holding: number;
+  /** Which appreciation assumption is in force. */
+  apprKey: "inflation" | "shelter" | "flat";
+  /** Which investment-return assumption is in force. */
+  retKey: "cash" | "balanced" | "growth";
+  investDiff: boolean;
+  appreciationOn: boolean;
 };
 
 export const SHARED_INPUT_DEFAULTS: SharedInputs = {
@@ -77,6 +117,25 @@ export const SHARED_INPUT_DEFAULTS: SharedInputs = {
   condoFee: null,
   funds: null,
   save: null,
+  fhsa: null,
+  cashSav: null,
+  rrsp: null,
+  tfsa: null,
+  gift: null,
+  nonreg: null,
+  nonregGain: null,
+  taxIncome: null,
+  hbpContribution: null,
+  hbpWithdraw: null,
+  termYears: 5,
+  renewalRate: null,
+  rent: null,
+  rentInflation: 3,
+  holding: 10,
+  apprKey: "shelter",
+  retKey: "balanced",
+  investDiff: true,
+  appreciationOn: true,
 };
 
 /**
@@ -113,6 +172,25 @@ export const SHARED_INPUT_SCHEMA: Record<keyof SharedInputs, FieldSchema> = {
   condoFee: { kind: "number", nullable: true, min: 0 },
   funds: { kind: "number", nullable: true, min: 0 },
   save: { kind: "number", nullable: true, min: 0 },
+  fhsa: { kind: "number", nullable: true, min: 0 },
+  cashSav: { kind: "number", nullable: true, min: 0 },
+  rrsp: { kind: "number", nullable: true, min: 0 },
+  tfsa: { kind: "number", nullable: true, min: 0 },
+  gift: { kind: "number", nullable: true, min: 0 },
+  nonreg: { kind: "number", nullable: true, min: 0 },
+  nonregGain: { kind: "number", nullable: true, min: 0 },
+  taxIncome: { kind: "number", nullable: true, min: 0 },
+  hbpContribution: { kind: "number", nullable: true, min: 0 },
+  hbpWithdraw: { kind: "number", nullable: true, min: 0 },
+  termYears: { kind: "numberEnum", values: [1, 2, 3, 4, 5, 7, 10] },
+  renewalRate: { kind: "number", nullable: true, min: 0, max: 30 },
+  rent: { kind: "number", nullable: true, min: 0 },
+  rentInflation: { kind: "number", nullable: false, min: 0, max: 20 },
+  holding: { kind: "number", nullable: false, min: 1, max: 40 },
+  apprKey: { kind: "enum", values: ["inflation", "shelter", "flat"] },
+  retKey: { kind: "enum", values: ["cash", "balanced", "growth"] },
+  investDiff: { kind: "boolean" },
+  appreciationOn: { kind: "boolean" },
 };
 
 function slice<K extends keyof SharedInputs>(keys: readonly K[]): Pick<SharedInputs, K> {
@@ -131,12 +209,25 @@ export const JURISDICTION_KEYS = ["jurId"] as const satisfies readonly (keyof Sh
 type JurisdictionState = Pick<SharedInputs, (typeof JURISDICTION_KEYS)[number]>;
 export const JURISDICTION_DEFAULTS: JurisdictionState = slice(JURISDICTION_KEYS);
 
-export const AFFORDABILITY_KEYS = [
+/**
+ * The app's working input set: every persisted key except the jurisdiction, which
+ * has its own provider and its own allowlist.
+ *
+ * ONE set, not one per page. The blob is shared, so a per-page allowlist would only
+ * decide which keys a page happens to rewrite on save -- never which keys exist --
+ * and two pages disagreeing about that is a data-loss bug waiting to be written.
+ * An untouched key is null and costs nothing.
+ */
+export const TOOL_KEYS = [
   "price", "dpPct", "amortYears", "ftb", "ptype", "elsewhere", "contractRate",
   "income1", "income2", "otherIncome", "haircut",
   "car", "student", "cc", "otherDebt",
   "comfortCeiling", "insuranceAnnual", "utilities", "condoFee",
   "funds", "save",
+  "fhsa", "cashSav", "rrsp", "tfsa", "gift", "nonreg", "nonregGain", "taxIncome",
+  "hbpContribution", "hbpWithdraw",
+  "termYears", "renewalRate",
+  "rent", "rentInflation", "holding", "apprKey", "retKey", "investDiff", "appreciationOn",
 ] as const satisfies readonly (keyof SharedInputs)[];
-export type AffordabilityFormState = Pick<SharedInputs, (typeof AFFORDABILITY_KEYS)[number]>;
-export const AFFORDABILITY_DEFAULTS: AffordabilityFormState = slice(AFFORDABILITY_KEYS);
+export type ToolFormState = Pick<SharedInputs, (typeof TOOL_KEYS)[number]>;
+export const TOOL_DEFAULTS: ToolFormState = slice(TOOL_KEYS);

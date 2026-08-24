@@ -3,8 +3,8 @@ import { defaultJurisdiction } from "@/domain/jurisdictions";
 import {
   SHARED_INPUT_DEFAULTS,
   SHARED_INPUT_SCHEMA,
-  AFFORDABILITY_KEYS,
-  AFFORDABILITY_DEFAULTS,
+  TOOL_KEYS,
+  TOOL_DEFAULTS,
   JURISDICTION_KEYS,
   JURISDICTION_DEFAULTS,
 } from "./shared-inputs";
@@ -13,7 +13,7 @@ describe("shared input registry", () => {
   it("gives every registry key a default value", () => {
     // Assert against the union of every page's key tuple, not Object.keys(SHARED_INPUT_DEFAULTS)
     // — iterating the registry's own keys back against itself passes vacuously even against {}.
-    const pageKeys = new Set<string>([...AFFORDABILITY_KEYS, ...JURISDICTION_KEYS]);
+    const pageKeys = new Set<string>([...TOOL_KEYS, ...JURISDICTION_KEYS]);
     expect(pageKeys.size).toBeGreaterThan(0);
     for (const key of pageKeys) {
       expect(SHARED_INPUT_DEFAULTS, key).toHaveProperty(key);
@@ -22,15 +22,15 @@ describe("shared input registry", () => {
   });
 
   it("derives each page slice from the registry with no extra or missing keys", () => {
-    expect(Object.keys(AFFORDABILITY_DEFAULTS).sort()).toEqual([...AFFORDABILITY_KEYS].sort());
+    expect(Object.keys(TOOL_DEFAULTS).sort()).toEqual([...TOOL_KEYS].sort());
     expect(Object.keys(JURISDICTION_DEFAULTS)).toEqual([...JURISDICTION_KEYS]);
   });
 
   // The point of the registry: a slice cannot hold a different default than the registry does,
   // so two pages can never disagree about what "default price" means.
   it("carries the registry's own value into every slice", () => {
-    for (const key of AFFORDABILITY_KEYS) {
-      expect(AFFORDABILITY_DEFAULTS[key], key).toBe(SHARED_INPUT_DEFAULTS[key]);
+    for (const key of TOOL_KEYS) {
+      expect(TOOL_DEFAULTS[key], key).toBe(SHARED_INPUT_DEFAULTS[key]);
     }
   });
 
@@ -58,7 +58,7 @@ describe("shared input registry", () => {
     // A key added to SharedInputs and to no tuple is never persisted and never
     // read — silently dead state, which is how `haircut` and `elsewhere` ended
     // up with no control at all.
-    const covered = new Set<string>([...JURISDICTION_KEYS, ...AFFORDABILITY_KEYS]);
+    const covered = new Set<string>([...JURISDICTION_KEYS, ...TOOL_KEYS]);
     expect(Object.keys(SHARED_INPUT_DEFAULTS).filter((k) => !covered.has(k))).toEqual([]);
   });
 

@@ -6,7 +6,7 @@ import type { AffordabilityResult } from "@/domain/engine";
 import type { Jurisdiction } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
-import type { AffordabilityFormState } from "@/lib/shared-inputs";
+import type { ToolFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
 import { NumberField } from "@/components/number-field";
 import { Button } from "@/components/ui/button";
@@ -33,11 +33,11 @@ function Group({ legend, children }: { legend: string; children: ReactNode }) {
 }
 
 export interface InputGroupsProps {
-  stored: AffordabilityFormState;
+  stored: ToolFormState;
   resolved: ResolvedInputs;
   result: AffordabilityResult;
   jurisdiction: Jurisdiction;
-  update: (patch: Partial<AffordabilityFormState>) => void;
+  update: (patch: Partial<ToolFormState>) => void;
 }
 
 export function InputGroups({
@@ -195,12 +195,25 @@ export function InputGroups({
           <span className="figure -mt-1 text-[10.5px] text-text-faint">
             {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(jurisdiction.bench[resolved.ptype])}
           </span>
+          {/*
+            Bound to what the reader PICKED, never to the floored value. In the
+            blended tier the legal floor is 10 − 2 500 000/price, which is never
+            one of these four options -- so binding it to resolved.dpPct left no
+            button with aria-checked, stripped every button's tabIndex, and took
+            the whole radiogroup out of the tab order. The raise is announced
+            below instead of being smuggled into the control.
+          */}
           <SegmentedGroup
             label={t("dpPct")}
-            value={resolved.dpPct}
+            value={stored.dpPct}
             onChange={(dpPct) => update({ dpPct })}
             options={[5, 10, 20, 25].map((v) => ({ value: v, label: pct(v) }))}
           />
+          {resolved.belowMinimum ? (
+            <span className="text-[11px] leading-[1.45] text-caution">
+              {t("belowMinimum", { p: pct(resolved.dpPct, 1), a: fmt((resolved.price * resolved.dpPct) / 100) })}
+            </span>
+          ) : null}
           <SegmentedGroup
             label={t("amortYears")}
             value={resolved.amortYears}

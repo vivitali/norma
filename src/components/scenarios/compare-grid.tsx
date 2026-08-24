@@ -1,0 +1,115 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import type { ScenarioResult } from "@/domain/engine";
+import { usePercent } from "@/lib/format";
+import { Provenance, type ProvenanceKind } from "@/components/provenance";
+
+export interface MetricRow {
+  label: string;
+  /** Rendered per column. */
+  value: (column: ScenarioResult) => string;
+  mark?: ProvenanceKind;
+  strong?: boolean;
+  /** Highlights the column this metric most favours. */
+  best?: (columns: readonly ScenarioResult[]) => number | null;
+}
+
+/**
+ * One metric group across the four down-payment columns.
+ *
+ * A real table, not a grid of divs: the columns ARE a comparison, so the header
+ * cells have to be header cells or a screen reader reads forty loose numbers.
+ * It scrolls inside its own container rather than widening the page.
+ */
+export function CompareGrid({
+  columns,
+  rows,
+  recommendedPct,
+  caption,
+}: {
+  columns: readonly ScenarioResult[];
+  rows: readonly MetricRow[];
+  recommendedPct: number | null;
+  /** Names the table. Four identically-shaped unnamed tables read as noise. */
+  caption: string;
+}) {
+  const t = useTranslations("Scenarios");
+  const pct = usePercent();
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
+        <caption className="sr-only">{caption}</caption>
+        <thead>
+          <tr className="border-b border-border text-left">
+            <th scope="col" className="py-1.5 pr-3 font-medium text-ink3">
+              {t("metric")}
+            </th>
+            {columns.map((column) => (
+              <th
+                key={column.dpPct}
+                scope="col"
+                className={
+                  column.dpPct === recommendedPct
+                    ? "py-1.5 pr-3 font-semibold text-ac"
+                    : "py-1.5 pr-3 font-medium text-ink2"
+                }
+              >
+                {t("column", { p: pct(column.dpPct) })}
+                {column.dpPct === recommendedPct ? (
+                  <span className="block text-[10.5px] font-normal">{t("recommended")}</span>
+                ) : null}
+                {column.belowMinimum ? (
+                  <span className="block text-[10.5px] font-normal text-caution">
+                    {t("fMinimum", { p: pct(column.dpPctEff, 1) })}
+                  </span>
+                ) : null}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const best = row.best?.(columns) ?? null;
+            return (
+              <tr key={row.label} className="border-b border-hairline">
+                <th
+                  scope="row"
+                  className={
+                    row.strong
+                      ? "py-1.5 pr-3 text-left font-semibold"
+                      : "py-1.5 pr-3 text-left font-normal text-ink2"
+                  }
+                >
+                  {row.label}
+                  {row.mark ? <Provenance kind={row.mark} /> : null}
+                </th>
+                {columns.map((column, i) => (
+                  <td
+                    key={column.dpPct}
+                    className={
+                      i === best
+                        ? "py-1.5 pr-3 font-semibold text-pass"
+                        : row.strong
+                          ? "py-1.5 pr-3 font-semibold"
+                          : "py-1.5 pr-3"
+                    }
+                  >
+                    {row.value(column)}
+                    {/*
+                      The single fact this grid exists to convey cannot be carried
+                      by colour alone. text-pass is the visual encoding; this is
+                      the one a screen reader and a colour-blind reader get.
+                    */}
+                    {i === best ? <span className="sr-only"> · {t("bestHere")}</span> : null}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}

@@ -30,28 +30,28 @@ export const NAV: readonly NavGroup[] = [
     heading: "afford",
     entries: [
       { route: "/affordability", label: "affordability", built: true },
-      { route: "/rent-vs-buy", label: "rentVsBuy", built: false },
+      { route: "/rent-vs-buy", label: "rentVsBuy", built: true },
     ],
   },
   {
     heading: "buy",
     entries: [
-      { route: "/closing-costs", label: "closingCosts", built: false },
-      { route: "/down-payment", label: "downPayment", built: false },
-      { route: "/rrsp-hbp", label: "rrspHbp", built: false },
+      { route: "/closing-costs", label: "closingCosts", built: true },
+      { route: "/down-payment", label: "downPayment", built: true },
+      { route: "/rrsp-hbp", label: "rrspHbp", built: true },
     ],
   },
   {
     heading: "own",
     entries: [
-      { route: "/amortization", label: "amortization", built: false },
-      { route: "/rent-vs-buy", label: "rentVsBuy", built: false },
+      { route: "/amortization", label: "amortization", built: true },
+      { route: "/rent-vs-buy", label: "rentVsBuy", built: true },
     ],
   },
   {
     heading: "utility",
     entries: [
-      { route: "/scenarios", label: "scenarios", built: false },
+      { route: "/scenarios", label: "scenarios", built: true },
       { route: "/sources", label: "sources", built: true },
     ],
   },

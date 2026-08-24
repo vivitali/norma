@@ -30,7 +30,20 @@ describe("nav registry", () => {
   it("exposes only routes whose page exists", () => {
     // Home is not a nav entry. Sources shipped with the interaction-model rebuild but had no
     // way in until pathnames existed — the provenance marks were its only entry point.
-    expect(NAV.flatMap(builtEntries).map((e) => e.route)).toEqual(["/affordability", "/sources"]);
+    // Rent vs Buy appears TWICE, deliberately -- once under "afford" and once
+    // under "own". See the test above: flat URLs are what let one page answer
+    // two different questions honestly.
+    expect(NAV.flatMap(builtEntries).map((e) => e.route)).toEqual([
+      "/affordability",
+      "/rent-vs-buy",
+      "/closing-costs",
+      "/down-payment",
+      "/rrsp-hbp",
+      "/amortization",
+      "/rent-vs-buy",
+      "/scenarios",
+      "/sources",
+    ]);
   });
 
   it("never lists the home route as a nav entry", () => {

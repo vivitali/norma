@@ -1,21 +1,27 @@
 /**
- * The five sections of the affordability screen, in order.
+ * Every drillable section in the app, and the mechanics that open them.
  *
  * v2 collapses four separate ways to go deeper — a three-level depth switcher, a
  * jump rail, per-check expanders and a hidden advanced-inputs panel — into ONE
- * gesture. The three checks, the gap and the derivation are all just sections in
- * this list; learn the gesture once and every part of the product is drillable.
+ * gesture. A check, a gap, a schedule and a derivation are all just sections in a
+ * list; learn the gesture once and every part of the product is drillable.
  *
  * There is no depth axis any more, so there is no `minDepth`, and no nested
  * disclosure type: a section IS the disclosure.
+ *
+ * The registries live together rather than beside their pages so ONE test can
+ * hold every page to the same contract — unique ids, and a real message key in
+ * both locales. A page that invents its own list somewhere else escapes that.
  */
-export type SectionId = "approval" | "comfort" | "cash" | "gap" | "math";
 
 export interface SectionDef {
-  id: SectionId;
-  /** Message key, relative to the page's namespace. */
+  /** Also the URL hash target, so it must be unique within its page. */
+  id: string;
+  /** Message key, relative to the page's own namespace. */
   labelKey: string;
 }
+
+export type AffordabilitySectionId = "approval" | "comfort" | "cash" | "gap" | "math";
 
 export const AFFORDABILITY_SECTIONS: readonly SectionDef[] = [
   { id: "approval", labelKey: "ckApproval" },
@@ -25,9 +31,67 @@ export const AFFORDABILITY_SECTIONS: readonly SectionDef[] = [
   { id: "math", labelKey: "mTitle" },
 ] as const;
 
-export const SECTION_IDS: readonly SectionId[] = AFFORDABILITY_SECTIONS.map((s) => s.id);
+export const CLOSING_SECTIONS: readonly SectionDef[] = [
+  { id: "government", labelKey: "secGovernment" },
+  { id: "professional", labelKey: "secProfessional" },
+  { id: "adjustments", labelKey: "secAdjustments" },
+  { id: "credits", labelKey: "secCredits" },
+  { id: "cash", labelKey: "secCash" },
+] as const;
 
-export type OpenMap = Partial<Record<SectionId, boolean>>;
+export const DOWN_PAYMENT_SECTIONS: readonly SectionDef[] = [
+  { id: "target", labelKey: "secTarget" },
+  { id: "waterfall", labelKey: "secWaterfall" },
+  { id: "cost", labelKey: "secCost" },
+  { id: "glide", labelKey: "secGlide" },
+] as const;
+
+export const RRSP_HBP_SECTIONS: readonly SectionDef[] = [
+  { id: "refund", labelKey: "secRefund" },
+  { id: "rules", labelKey: "secRules" },
+  { id: "repayment", labelKey: "secRepayment" },
+  { id: "risk", labelKey: "secRisk" },
+] as const;
+
+export const AMORTIZATION_SECTIONS: readonly SectionDef[] = [
+  { id: "payment", labelKey: "secPayment" },
+  { id: "renewal", labelKey: "secRenewal" },
+  { id: "interest", labelKey: "secInterest" },
+  { id: "schedule", labelKey: "secSchedule" },
+] as const;
+
+export const RENT_VS_BUY_SECTIONS: readonly SectionDef[] = [
+  { id: "verdict", labelKey: "secVerdict" },
+  { id: "outlay", labelKey: "secOutlay" },
+  { id: "wealth", labelKey: "secWealth" },
+  { id: "assumptions", labelKey: "secAssumptions" },
+] as const;
+
+export const SCENARIOS_SECTIONS: readonly SectionDef[] = [
+  { id: "monthly", labelKey: "secMonthly" },
+  { id: "cash", labelKey: "secCash" },
+  { id: "approval", labelKey: "secApproval" },
+  { id: "lifetime", labelKey: "secLifetime" },
+] as const;
+
+/** Every registry, with the message namespace its label keys resolve against. */
+export const SECTION_REGISTRIES: readonly { namespace: string; sections: readonly SectionDef[] }[] = [
+  { namespace: "Affordability", sections: AFFORDABILITY_SECTIONS },
+  { namespace: "ClosingCosts", sections: CLOSING_SECTIONS },
+  { namespace: "DownPayment", sections: DOWN_PAYMENT_SECTIONS },
+  { namespace: "RrspHbp", sections: RRSP_HBP_SECTIONS },
+  { namespace: "Amortization", sections: AMORTIZATION_SECTIONS },
+  { namespace: "RentVsBuy", sections: RENT_VS_BUY_SECTIONS },
+  { namespace: "Scenarios", sections: SCENARIOS_SECTIONS },
+];
+
+export const SECTION_IDS: readonly string[] = AFFORDABILITY_SECTIONS.map((s) => s.id);
+
+export function sectionIds(defs: readonly SectionDef[]): readonly string[] {
+  return defs.map((s) => s.id);
+}
+
+export type OpenMap = Record<string, boolean | undefined>;
 
 /**
  * A section is open when the reader opened it, when Expand all opened it, or
@@ -39,7 +103,7 @@ export function isSectionOpen({
   open,
   hashTarget,
 }: {
-  id: SectionId;
+  id: string;
   open: OpenMap;
   hashTarget: string | null;
 }): boolean {
@@ -49,10 +113,14 @@ export function isSectionOpen({
 }
 
 /** Expand all is a toggle: if anything is open, the control collapses instead. */
-export function anySectionOpen(open: OpenMap, hashTarget: string | null): boolean {
-  return SECTION_IDS.some((id) => isSectionOpen({ id, open, hashTarget }));
+export function anySectionOpen(
+  ids: readonly string[],
+  open: OpenMap,
+  hashTarget: string | null,
+): boolean {
+  return ids.some((id) => isSectionOpen({ id, open, hashTarget }));
 }
 
-export function setAllSections(value: boolean): OpenMap {
-  return Object.fromEntries(SECTION_IDS.map((id) => [id, value])) as OpenMap;
+export function setAllSections(ids: readonly string[], value: boolean): OpenMap {
+  return Object.fromEntries(ids.map((id) => [id, value]));
 }

@@ -103,31 +103,69 @@ prerendered pages as free static assets, but bills dynamic routes as Worker invo
 jurisdictions, calculation engine), the reusable `AppHeader` chrome, and two pages: Home and
 `/affordability`.
 
-**The interaction-model rebuild is complete** — branch `claude/interaction-model`. It ported the
-reference visual system app-wide (palette, four semantic state triples, IBM Plex, 1/2/3px radii),
-added the section registry / depth control / disclosure / jump rail / hash targeting, moved storage
-to `norma.inputs.v2` with a coerce step and a v1 migration, replaced hardcoded defaults with
-`resolveInputs()`, rebuilt `/affordability` answer-first, and added `/sources` with per-figure
-provenance marks. **Next up is phase 1.5: `pathnames` with French slugs, and the nav shell** — until
-it lands, `/sources` has no French slug and no link in the header, and the provenance marks are its
-only entry point.
+**The interaction-model rebuild is complete** — it ported the reference visual system app-wide,
+added the section registry, hash targeting and the disclosure gesture, moved storage to
+`norma.inputs.v2` with a coerce step and a v1 migration, replaced hardcoded defaults with
+`resolveInputs()`, rebuilt `/affordability` answer-first, and added `/sources`.
+
+**The v2 visual system replaced it** (PR [#15](https://github.com/vivitali/norma/pull/15)) —
+`design-reference/` turned out to be a stale snapshot and seven of eight screens had moved to a new
+visual system. v2 collapses four disclosure mechanisms into ONE gesture: `DepthControl`,
+`JumpRail`, `DisclosureSection`, `useDepth` and the `depth` registry key are **deleted**, not
+restyled. The rulebook is `DESIGN.md`, written at the finish from the built world, and it names
+`design-reference/Affordability v2.dc.html` as the authority over itself.
+
+**Phase 1.5 landed with it** — `pathnames` with French slugs, `src/lib/routes.ts` (the nav
+registry), and `AppNav`.
+
+**ALL NINE PAGES ARE BUILT.** Home · Affordability · Closing Costs · Down Payment · RRSP-HBP ·
+Amortization · Rent vs Buy · Scenarios · Sources. Eleven routes, every one prerendered.
+
+**Adding or changing a page — the seams, in order:**
+1. `src/i18n/routing.ts` — the route key and its French slug
+2. `src/lib/routes.ts` — the nav entry and its `built` flag
+3. `src/lib/sections.ts` — the page's section registry, added to `SECTION_REGISTRIES` so the
+   message-key test covers it. **Add it when the page ships, not before**: a registry naming a
+   namespace that does not exist yet cannot be checked, and a test that skips it is not a test.
+4. `src/lib/seo.ts` — `INDEXABLE_ROUTES`, plus `Metadata.<page>` copy and the page's entry in
+   `seo-copy.test.ts`'s `PAGES`
+5. `src/app/[locale]/<route>/layout.tsx` — metadata only. `page.tsx` is a client component and
+   cannot export `generateMetadata`.
+
+**Shared page chrome** lives in `src/components/tool-page.tsx` (`ToolMain`, `AnswerHead`,
+`SectionsHeader`, `FigureFooter`), `src/hooks/use-sections.ts` (the one disclosure gesture, incl.
+moving FOCUS on a hash arrival, not just scroll), and `src/components/purchase-inputs.tsx`. This
+markup IS the Affordability screen's markup — extracted from it, not designed ahead of it.
+
+**Copy is mined from `design-reference/`, en and fr, never newly written.** The reference tables
+are `hbt-data.js`'s global `t` (Closing Costs, Down Payment, RRSP-HBP) and a per-page `S = {...}`
+literal inside each `.dc.html` (Amortization, Rent vs Buy, Scenarios), each value a
+`[en, fr, uk, es]` tuple. `src/lib/messages.test.ts` fails if en and fr ever diverge — next-intl
+renders the raw key when one is missing, which reaches a French reader as `RentVsBuy.secWealth`.
+
+**Three engine departures from the reference, all deliberate:**
+- `amortization()` drops the jurisdiction parameter — the reference took one and never read it.
+- `hbpPlay()` ships **no `worthIt` verdict**. The reference computed it as
+  `refund + waitGrowth > 0 && withdraw > 0`, true whenever anything is withdrawn at all. It is
+  replaced by `inclusionIfMissed` and a sentence handing the decision back.
+- `scenario()` returns `null`, not `0`, for `surplus`/`fundable`/`months` when funds were never
+  given.
 
 **Before starting the next milestone, read in this order:**
-1. `docs/superpowers/specs/2026-08-18-interaction-model-design.md` — the current interaction model,
-   incl. §14, which defines phases 1.5 through 4+
-2. `docs/superpowers/plans/2026-08-18-interaction-model-plan.md` — how it was built, incl. the seven
-   places the plan challenges its own specs
-3. `docs/superpowers/specs/2026-08-18-visual-system-port.md` — the design system, with the two
-   corrections (`--tx3` contrast, the 16px control floor) that `src/app/globals.test.ts` guards
-4. `docs/superpowers/specs/2026-08-17-phase1-affordability-design.md` — the older spec, still the
-   authority on the Scalability constraint that later pages must be additive, not rewrites
+1. `DESIGN.md` — the v2 visual system as built
+2. `docs/superpowers/specs/2026-08-18-interaction-model-design.md` — the interaction model, incl.
+   §14, which defines phases 1.5 through 4+
+3. `docs/superpowers/specs/2026-08-18-visual-system-port.md` — the two corrections (`--tx3`
+   contrast, the 16px control floor) that `src/app/globals.test.ts` guards
+4. `docs/superpowers/specs/2026-08-17-phase1-affordability-design.md` — still the authority on the
+   Scalability constraint that later pages must be additive, not rewrites
 5. Open issues below
 
-**Remaining pages**, each its own spec → plan → implementation cycle, all built on the existing
-`src/domain/` engine (the source prototype in `design-reference/` already has working
-implementations of every one of these — port, don't invent):
-Closing Costs · Down Payment (funding waterfall) · RRSP-HBP · Amortization (with renewal) ·
-Rent vs Buy · Scenarios
+**What is left is data, not pages.** Every jurisdiction figure in `src/domain/` is still an
+unverified placeholder. Two visible consequences already: Rent vs Buy ships a default verdict of
+"renting wins" that is driven entirely by the placeholder benchmark price and rent (the model is
+sound — the verdict flips at a rent-to-price ratio around 0.5% a month, and the sensitivity is
+under test), and `capacityPer100` is zero at every income for debt-free households.
 
 **Open issues:**
 - [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists in `design-reference/hbt-data.js`)
