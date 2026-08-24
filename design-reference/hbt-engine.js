@@ -235,8 +235,8 @@
     const r = Math.round(n * (dp ? 100 : 1)) / (dp ? 100 : 1);
     const q = r === 0 ? 0 : r;
     const v = new Intl.NumberFormat(loc, { minimumFractionDigits: dp || 0, maximumFractionDigits: dp || 0 }).format(Math.abs(q));
-    const body = trailing ? v + ' $' : '$' + v;
-    return q < 0 ? '− ' + body : body;
+    const body = trailing ? v + '\u00a0$' : '$' + v;
+    return q < 0 ? '\u2212\u2009' + body : body;
   }
 
   /* Rent vs buy terminal wealth. Mirrors the Rent vs Buy tab, extended from 15 to 40 years.
