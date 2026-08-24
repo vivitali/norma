@@ -12,6 +12,7 @@ import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { AMORTIZATION_SECTIONS } from "@/lib/sections";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
 import { SegmentedGroup } from "@/components/affordability/segmented-group";
 import { ScheduleChart } from "@/components/amortization/schedule-chart";
@@ -26,7 +27,13 @@ export default function AmortizationPage() {
   const t = useTranslations("Amortization");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(AMORTIZATION_SECTIONS);
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    AMORTIZATION_SECTIONS,
+    // Renewal when a renewal rate has been set, because that is then the whole
+    // subject; the opening payment otherwise. The head already calls renewal
+    // "the risk nobody models" -- it should not then be a closed row.
+    stored.renewalRate === null ? "payment" : "renewal",
+  );
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -59,6 +66,8 @@ export default function AmortizationPage() {
   const extraInterest = result.totalInterest - baseline.totalInterest;
 
   const firstRenewal = result.rows.find((row) => row.renewed)?.t ?? null;
+  /** Where principal first outruns interest — the moment the chart names and the table did not. */
+  const flipYear = result.rows.find((row) => row.principal > row.interest)?.t ?? null;
   const shock = result.shock;
   const rising = shock > 0.5;
   const falling = shock < -0.5;
@@ -225,7 +234,13 @@ export default function AmortizationPage() {
         {section(
           "interest",
           "none",
-          t("rInterest"),
+          // The figure is interest PLUS premium, so a line reading "Total
+          // interest over the loan" labelled it as something it is not. Name
+          // the two parts when there are two; otherwise say what the loan costs
+          // in total, which the figure alone does not.
+          result.fin.premium > 0
+            ? `${t("rInterest")} ${fmt(result.totalInterest)} · ${t("premium")} ${fmt(result.fin.premium)}`
+            : `${t("totalPaid")} ${fmt(result.totalPaid)}`,
           fmt(result.totalInterest + result.fin.premium),
           t("interestWhy"),
           <>
@@ -243,38 +258,77 @@ export default function AmortizationPage() {
           </>,
         )}
 
-        {section("schedule", "none", t("tableTitle"), "", t("scheduleWhy"), (
+        {/*
+          `tableTitle` and this section's name are the same three words, so the
+          row printed "Year by year · Year by year". The schedule's one finding
+          the reader cannot get from the collapsed row is where it ends.
+        */}
+        {section("schedule", "none", t("payoffYear", { n: result.payoffYear }), "", t("scheduleWhy"), (
           <>
             <ScheduleChart result={result} />
-            <div className="overflow-x-auto">
+            <div
+              // min-w-0 is load-bearing: this is a flex item, and `min-width: auto` is
+              // the flex default, so without it the container refuses to shrink below
+              // the 560px table and overflow-x-auto never engages — the PAGE scrolls
+              // sideways instead of the table. Only visible with the section open, which
+              // is why it survived a sweep that measured closed pages.
+              className="relative min-w-0 overflow-x-auto"
+            >
               <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
                 <caption className="sr-only">{t("tableTitle")}</caption>
                 <thead>
-                  <tr className="border-b border-border text-left text-ink3">
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("yr")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("cRate")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("cPayment")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("cInterest")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("cPrincipal")}</th>
-                    <th scope="col" className="py-1.5 font-medium">{t("cBalance")}</th>
+                  <tr className="border-b border-border text-ink3">
+                    <th scope="col" className="py-1.5 pr-3 text-left font-medium">{t("yr")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cRate")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cPayment")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cInterest")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cPrincipal")}</th>
+                    <th scope="col" className="py-1.5 text-right font-medium">{t("cBalance")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {result.rows.map((row) => (
-                    <tr key={row.t} className="border-b border-hairline">
-                      <th scope="row" className="py-1.5 pr-3 text-left font-normal text-ink2">
-                        {row.t}
-                        {row.renewed ? (
-                          <span className="ml-1.5 text-[10.5px] text-caution">{t("termMark")}</span>
-                        ) : null}
-                      </th>
-                      <td className="py-1.5 pr-3">{pct(row.rate, 2)}</td>
-                      <td className="py-1.5 pr-3">{fmt(row.payment)}</td>
-                      <td className="py-1.5 pr-3">{fmt(row.interest)}</td>
-                      <td className="py-1.5 pr-3">{fmt(row.principal)}</td>
-                      <td className="py-1.5">{fmt(row.closing)}</td>
-                    </tr>
-                  ))}
+                  {result.rows.map((row) => {
+                    // The year principal first exceeds interest. The chart calls
+                    // it out and the table did not, so the one row worth finding
+                    // in thirty looked like the other twenty-nine.
+                    const crossover = row.t === flipYear;
+                    return (
+                      <tr
+                        key={row.t}
+                        className={
+                          crossover
+                            ? "border-b border-acbr bg-acbg"
+                            : "border-b border-hairline"
+                        }
+                      >
+                        <th
+                          scope="row"
+                          className={cn(
+                            "py-1.5 pr-3 text-left",
+                            crossover ? "font-semibold text-ac" : "font-normal text-ink2",
+                          )}
+                        >
+                          {row.t}
+                          {row.renewed ? (
+                            <span className="ml-1.5 text-[10.5px] font-normal text-caution">
+                              {t("termMark")}
+                            </span>
+                          ) : null}
+                          {crossover ? (
+                            <span className="ml-1.5 text-[10.5px] font-normal text-ac">
+                              {t("flipLabel")}
+                            </span>
+                          ) : null}
+                        </th>
+                        {/* Right-aligned and tabular: read down a column, digits aligned. */}
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{pct(row.rate, 2)}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.payment)}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.interest)}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.principal)}</td>
+                        <td className="py-1.5 text-right tabular-nums">{fmt(row.closing)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

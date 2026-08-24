@@ -17,7 +17,11 @@ const renderPage = (locale: "en" | "fr" = "en") =>
   );
 
 async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
-  await user.click(screen.getByRole("button", { name }));
+  // Idempotent. One section opens itself on arrival — the one whose check
+  // produced the verdict — so an unconditional click closed it instead.
+  const button = screen.getByRole("button", { name });
+  if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+  return button;
 }
 
 beforeEach(() => window.localStorage.clear());
@@ -79,12 +83,46 @@ describe("Amortization — the schedule", () => {
     expect(screen.getAllByText("Renewal").length).toBeGreaterThan(0);
   });
 
+  it("marks the crossover row in the table, not only in the chart caption", async () => {
+    // Thirty near-identical rows, one of which is the moment the loan turns from
+    // mostly-interest to mostly-principal. The chart named it and the table did
+    // not, so the row worth finding looked like the twenty-nine that were not.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Year by year/);
+    const marked = [...screen.getByRole("table").querySelectorAll("tbody tr")].filter((tr) =>
+      /Principal overtakes interest/.test(tr.textContent ?? ""),
+    );
+    expect(marked).toHaveLength(1);
+  });
+
   it("states the crossover year in text, not only in the chart", async () => {
     // The shape is the argument, and someone who cannot see it still gets the fact.
     const user = userEvent.setup();
     renderPage();
     await open(user, /Year by year/);
     expect(screen.getAllByText(/Principal overtakes interest/).length).toBeGreaterThan(0);
+  });
+});
+
+describe("Amortization — the row line is not the row's name", () => {
+  it("says where the schedule ends instead of repeating 'Year by year'", () => {
+    // `tableTitle` and this section's name are the same three words, so the row
+    // printed them twice and told the reader nothing between them.
+    renderPage();
+    const row = screen.getByRole("button", { name: /Year by year/ });
+    expect(row.textContent).toMatch(/Paid off in year \d+/);
+    expect(row.textContent?.match(/Year by year/g)).toHaveLength(1);
+  });
+
+  it("names both parts of the cost of borrowing, which is what its figure is", () => {
+    // The figure is interest PLUS the insurance premium, and the line called it
+    // "Total interest over the loan" — labelling it as something it is not. At
+    // the default 10% down the mortgage is insured, so there are two parts.
+    renderPage();
+    const row = screen.getByRole("button", { name: /What it costs to borrow/ });
+    expect(row.textContent).toMatch(/Total interest over the loan \$[\d,]+/);
+    expect(row.textContent).toMatch(/Insurance premium added to the loan \$[\d,]+/);
   });
 });
 

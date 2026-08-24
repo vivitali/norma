@@ -12,25 +12,36 @@ import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { RENT_VS_BUY_SECTIONS } from "@/lib/sections";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
 import { SegmentedGroup } from "@/components/affordability/segmented-group";
+import { CrossLink } from "@/components/cross-link";
 import { WealthChart } from "@/components/rent-vs-buy/wealth-chart";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { FAVOURS_BUYING, FAVOURS_RENTING } from "./omissions";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 /** Modelled to 40 years regardless of horizon: the break-even can be past year 25. */
 const HORIZON_YEARS = 40;
 const HOLD_CHOICES = [3, 5, 10, 25] as const;
+/** The rows of the by-holding-period table. The reader's own horizon is marked among them. */
+const HOLDING_PERIODS = [3, 5, 10, 15, 25, 40] as const;
+
 
 export default function RentVsBuyPage() {
   const t = useTranslations("RentVsBuy");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(RENT_VS_BUY_SECTIONS);
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    RENT_VS_BUY_SECTIONS,
+    // Always the verdict: this page has exactly one question, and the break-even
+    // year is the only number that answers it.
+    "verdict",
+  );
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -132,11 +143,18 @@ export default function RentVsBuyPage() {
         stats={[
           {
             label: t("crossLabel"),
+            // The answer goes in the value. A bare em-dash with the finding
+            // pushed into `note` read as a rendering fault: the stat appeared
+            // broken, and the note then contradicted the label above it. `note`
+            // is a short qualifier, never the answer itself.
+            // `crossNever`, not `neverAhead`: the value slot is 22px and
+            // whitespace-nowrap, and `neverAhead` is a full sentence that wraps
+            // out of it. `neverAhead` still carries the same fact in the chart
+            // caption, where there is room for a sentence.
             value:
               result.breakEven === null
-                ? "—"
+                ? t("crossNever", { n: HORIZON_YEARS })
                 : t("crossYear", { n: result.breakEven }),
-            note: result.breakEven === null ? t("neverAhead") : "",
             mark: "estimate",
           },
           { label: t("buyWealth"), value: fmt(atHorizon.buyW), mark: "estimate" },
@@ -157,35 +175,94 @@ export default function RentVsBuyPage() {
           "verdict",
           buyWins ? (flatBuyWins ? "pass" : "caution") : "none",
           t("horizonLabel", { n: hold }),
-          result.breakEven === null ? "—" : t("crossYear", { n: result.breakEven }),
+          // No break-even is not a missing figure, so it does not get an
+          // em-dash: the figure slot is `whitespace-nowrap` and cannot carry the
+          // sentence that says so. It stays empty — the contract's marker for a
+          // section with no single number — and the head stat above states it.
+          result.breakEven === null ? "" : t("crossYear", { n: result.breakEven }),
           t("verdictWhy"),
           <>
             <WealthChart result={result} />
             <p className="pb-2 text-[12.5px] text-ink3">{t("byHorizonNote")}</p>
-            <div className="overflow-x-auto">
+            <div
+              // min-w-0 is load-bearing: this is a flex item, and `min-width: auto` is
+              // the flex default, so without it the container refuses to shrink below
+              // the 560px table and overflow-x-auto never engages — the PAGE scrolls
+              // sideways instead of the table. Only visible with the section open, which
+              // is why it survived a sweep that measured closed pages.
+              className="relative min-w-0 overflow-x-auto"
+            >
               <table className="w-full min-w-[480px] border-collapse text-[12.5px]">
                 <caption className="sr-only">{t("byHorizon")}</caption>
                 <thead>
-                  <tr className="border-b border-border text-left text-ink3">
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("holdFor")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("buyWealth")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("rentWealth")}</th>
-                    <th scope="col" className="py-1.5 pr-3 font-medium">{t("advantage")}</th>
+                  <tr className="border-b border-border text-ink3">
+                    <th scope="col" className="py-1.5 pr-3 text-left font-medium">{t("holdFor")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("buyWealth")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("rentWealth")}</th>
+                    <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("advantage")}</th>
                     <th scope="col" className="py-1.5 font-medium">{t("winner")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[3, 5, 10, 15, 25, 40].map((year) => {
+                  {HOLDING_PERIODS.map((year) => {
                     const row = rowAt(result.rows, year);
+                    // The reader's own horizon, among five that are not theirs.
+                    const mine = year === hold;
                     return (
-                      <tr key={year} className="border-b border-hairline">
-                        <th scope="row" className="py-1.5 pr-3 text-left font-normal text-ink2">
+                      <tr
+                        key={year}
+                        // aria-current carries to a screen reader what the tint
+                        // carries visually: of six rows, this is the one that
+                        // answers the question the reader actually asked.
+                        aria-current={mine ? "true" : undefined}
+                        className={
+                          mine
+                            ? "border-b border-acbr bg-acbg"
+                            : "border-b border-hairline"
+                        }
+                      >
+                        <th
+                          scope="row"
+                          className={
+                            mine
+                              ? "py-1.5 pr-3 text-left font-semibold text-ac"
+                              : "py-1.5 pr-3 text-left font-normal text-ink2"
+                          }
+                        >
                           {`${year} ${t("years")}`}
+                          {mine ? <span className="sr-only"> · {t("horizonLabel", { n: hold })}</span> : null}
                         </th>
-                        <td className="py-1.5 pr-3">{fmt(row.buyW)}</td>
-                        <td className="py-1.5 pr-3">{fmt(row.rentW)}</td>
-                        <td className="py-1.5 pr-3">{fmt(Math.abs(row.adv))}</td>
-                        <td className={row.adv > 0 ? "py-1.5 text-pass" : "py-1.5 text-ink2"}>
+                        {/*
+                          Right-aligned: this table exists to be read down a
+                          column, and left-aligned currency puts the thousands
+                          digit of one row over the hundreds of the next.
+                        */}
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.buyW)}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.rentW)}</td>
+                        {/*
+                          SIGNED, not Math.abs. The column is "Advantage of
+                          buying" and it was printing the absolute value, so a
+                          row where buying trails by $648,135 read as an
+                          advantage OF $648,135. money() puts the sign outside
+                          the symbol, so the minus does the work.
+                        */}
+                        <td
+                          className={cn(
+                            "py-1.5 pr-3 text-right font-medium tabular-nums",
+                            row.adv > 0 ? "text-pass" : "text-ink",
+                          )}
+                        >
+                          {fmt(row.adv)}
+                        </td>
+                        {/*
+                          Both outcomes in full ink. The winner used to be
+                          pass-green for buying and muted grey for renting, which
+                          rendered every winner on the default data as the quiet
+                          one -- and said renting winning is an absence rather
+                          than a result. PRODUCT.md holds buyers and renters
+                          co-equal; neither answer is a pass or a fail.
+                        */}
+                        <td className="py-1.5 font-semibold">
                           {row.adv > 0 ? t("buyWord") : t("rentWord")}
                         </td>
                       </tr>
@@ -210,6 +287,12 @@ export default function RentVsBuyPage() {
           t("outlayWhy"),
           <>
             <PanelRow label={t("upFront")} value={fmt(result.upFront)} strong />
+            {/*
+              TRACE. upFront is the down payment plus closingTotal()'s bill —
+              the closing-costs page's own answer, printed here with no way to
+              reach its derivation.
+            */}
+            <CrossLink namespace="RentVsBuy" id="xClosing" href="/closing-costs" placement="row" />
             <PanelRow label={t("cOwner")} value={fmt(atHorizon.ownerOutlay)} provenance={<Provenance kind="estimate" />} />
             <PanelRow label={t("cRenter")} value={fmt(atHorizon.renterOutlay)} provenance={<Provenance kind="estimate" />} />
             <PanelRow label={t("cBalance")} value={fmt(atHorizon.balance)} />
@@ -225,7 +308,11 @@ export default function RentVsBuyPage() {
         {section(
           "wealth",
           buyWins ? "pass" : "none",
-          buyWins ? t("buyWord") : t("rentWord"),
+          // A single word ("Buy") spent the row's one line of explanation
+          // saying less than the figure beside it already did. Naming the
+          // horizon the verdict is measured at is the part the figure cannot
+          // carry -- the advantage is only true at that year.
+          `${buyWins ? t("buyWord") : t("rentWord")} · ${t("atYear", { n: hold })}`,
           fmt(Math.abs(atHorizon.adv)),
           t("wealthWhy"),
           <>
@@ -268,12 +355,27 @@ export default function RentVsBuyPage() {
           </>,
         )}
 
-        {section("assumptions", "none", t("favBuy"), "", t("assumptionsWhy"), (
+        {/*
+          The line names BOTH sides. It used to be `favBuy` alone, which was a
+          near-copy of the section's own name and described half of what is
+          inside -- a reader who never opened it came away believing the
+          omissions all favour buying, which is the opposite of this section's
+          point.
+          The counts come from the arrays rather than being written into the
+          copy, so the sentence cannot drift out of step with the list it
+          describes.
+        */}
+        {section(
+          "assumptions",
+          "none",
+          t("assumptionsLine", { buy: FAVOURS_BUYING.length, rent: FAVOURS_RENTING.length }),
+          "",
+          t("assumptionsWhy"),
           <>
-            {notCaptured(t("favBuy"), [t("fb1"), t("fb2"), t("fb3"), t("fb4")])}
-            {notCaptured(t("favRent"), [t("fr1"), t("fr2"), t("fr3")])}
-          </>
-        ))}
+            {notCaptured(t("favBuy"), FAVOURS_BUYING.map((k) => t(k)))}
+            {notCaptured(t("favRent"), FAVOURS_RENTING.map((k) => t(k)))}
+          </>,
+        )}
       </div>
 
       <section aria-labelledby="rvb-inputs" className="mt-8 flex flex-col gap-3">
@@ -293,7 +395,7 @@ export default function RentVsBuyPage() {
             onChange={update}
           />
           <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
-            <legend className="micro px-1 text-text-faint">{t("rentWord")}</legend>
+            <legend className="micro px-1 text-ink3">{t("rentWord")}</legend>
             <NumberField
               id="rent"
               label={t("dRent")}

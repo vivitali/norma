@@ -74,7 +74,7 @@
   --ink3: oklch(0.5342 0.0100 264.48);   /* #6A6D73 (ref #8B9097) */
   --ac: oklch(0.4690 0.2274 273.80);     /* #3D3BD6 electric indigo */
   --ac2: oklch(0.5709 0.1945 278.95);    /* #6462E6 */
-  --acbg: oklch(0.9481 0.0228 285.96);   /* #ECECFD */
+  --acbg: oklch(0.9535 0.0201 286.01);   /* #EEEEFD */
   --acbr: oklch(0.8774 0.0549 286.36);   /* #D3D2FA */
 
   --pass: oklch(0.4707 0.0937 162.46);   /* #176B4B */
@@ -117,6 +117,12 @@
        splits $398,398 into two numbers at display size, which is the last thing
        the headline figure can afford to do. */
     font-variant-numeric: tabular-nums lining-nums;
+    /* Last resort at 320px, where a single unbreakable token — a long figure, a
+       compound French label — is otherwise wider than the whole viewport.
+       break-word (not anywhere) breaks only when the word would overflow, so it
+       never changes a line that already fits, and it never affects min-content
+       sizing: the flex children that must give way still carry min-w-0. */
+    overflow-wrap: break-word;
   }
   html {
     @apply font-sans;
@@ -137,6 +143,28 @@
       animation-duration: 0s !important;
       transition-duration: 0s !important;
     }
+    /* The blanket rule above removed the ONE animation this app has: v2-pulse,
+     * keyed to a jurisdiction change so the answer visibly re-computes. Deleting
+     * it put nothing in its place -- switch province under reduced motion and
+     * every figure changed silently.
+     *
+     * v2-pulse is `opacity: 0.35 -> 1`. Opacity only: no transform, no position,
+     * no scale, nothing that moves. A half-second opacity fade is the canonical
+     * SAFE substitute under prefers-reduced-motion, not something the query
+     * exists to suppress -- so the honest fix is to exempt it and keep the fade.
+     *
+     * An earlier pass replaced it with a step-end cut, reasoning that this
+     * removed "position and scale". There was never any position or scale, and a
+     * hard luminance step is a worse stimulus for a photosensitive reader than
+     * the fade it replaced. Reverted.
+     *
+     * This override must live inside @layer base, after the blanket rule.
+     * Important declarations invert layer order, so an unlayered !important
+     * would LOSE to the layered one above; inside the same layer .v2-pulse
+     * (0,1,0) beats * (0,0,0) and wins. */
+    .v2-pulse {
+      animation: v2-pulse 0.5s ease-out !important;
+    }
   }
 }
 
@@ -147,6 +175,22 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+  }
+  /*
+   * The micro tier: fieldset legends, stat labels, limit notes, the provenance
+   * mark. DESIGN.md §3 sizes it 11.5-12.5px.
+   *
+   * This class was used at seven call sites and had never been defined — a v1
+   * leftover the redesign missed. Undefined means Tailwind emits nothing, so
+   * every one of those elements rendered at the inherited 13.5px body size, two
+   * points above the tier they were marked as. Colour is a separate decision and
+   * stays at the call site (--ink3 for all seven).
+   *
+   * In @layer components so a call site that sets an explicit text-[Npx] utility
+   * still wins — utilities are a later layer.
+   */
+  .micro {
+    font-size: 11.5px;
   }
   .control {
     font-size: var(--control-font-size);
@@ -161,6 +205,8 @@
     opacity: 1;
   }
 }
+/* The reduced-motion substitute. Same duration, same two stops, no tween — the
+   figure is held muted and then cuts to full. See the @media block above. */
 .v2-pulse {
   animation: v2-pulse 0.5s ease-out;
 }

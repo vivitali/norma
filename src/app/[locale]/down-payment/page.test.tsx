@@ -17,7 +17,11 @@ const renderPage = (locale: "en" | "fr" = "en") =>
   );
 
 async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
-  await user.click(screen.getByRole("button", { name }));
+  // Idempotent. One section opens itself on arrival — the one whose check
+  // produced the verdict — so an unconditional click closed it instead.
+  const button = screen.getByRole("button", { name });
+  if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+  return button;
 }
 
 beforeEach(() => window.localStorage.clear());
@@ -113,6 +117,36 @@ describe("Down payment — the glide path", () => {
     await user.tab();
 
     expect(screen.getAllByText(/Not reached within 36 months/).length).toBeGreaterThan(0);
+  });
+});
+
+describe("Down payment — the row states what it found, and never a dash", () => {
+  it("shows no em-dash figure before any balance is given", () => {
+    // "—" in the figure slot reads as a figure that failed to render. Nothing
+    // drawn yet is an absent number, and the row carries no number at all.
+    renderPage();
+    for (const name of [/The funding order/, /Tax cost/, /The savings glide path/]) {
+      expect(screen.getByRole("button", { name }).textContent).not.toContain("—");
+    }
+  });
+
+  it("replaces the ordering rule with the shortfall once balances are given", async () => {
+    // "Cheapest money first" under a section called "The funding order" is the
+    // same fact twice. It is the ordering RULE, true whatever the numbers, so
+    // it holds the line only while there are no numbers.
+    const user = userEvent.setup();
+    renderPage();
+    const order = () => screen.getByRole("button", { name: /The funding order/ });
+    expect(order().textContent).toContain("Cheapest money first");
+
+    await open(user, /The funding order/);
+    const fhsa = screen.getByLabelText("FHSA");
+    await user.clear(fhsa);
+    await user.type(fhsa, "1000");
+    await user.tab();
+
+    expect(order().textContent).toMatch(/Short by \$[\d,]+/);
+    expect(order().textContent).not.toContain("Cheapest money first");
   });
 });
 

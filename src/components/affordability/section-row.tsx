@@ -52,7 +52,14 @@ export function SectionRow({
           className="flex w-full items-center gap-4 py-4 text-left hover:opacity-75 sm:gap-5 sm:py-[19px]"
         >
           <span aria-hidden="true" className={cn("size-[7px] flex-none rounded-full", dotClass(tone))} />
-          <span className="flex-none text-[16.5px] font-semibold tracking-[-0.015em] sm:w-[180px]">
+          {/*
+           * Below sm the name takes the free space and may wrap; from sm it is
+           * the fixed 180px column again. It used to be flex-none at every
+           * width — sized to max-content and unable to shrink — so a long name
+           * ("Le jeu REER → Régime d'accession à la propriété" is a real one)
+           * beside a two-word figure ran off a 320px screen.
+           */}
+          <span className="min-w-0 flex-1 text-[16.5px] font-semibold tracking-[-0.015em] sm:w-[180px] sm:flex-none">
             {name}
           </span>
           <span className="hidden min-w-0 flex-1 text-[13.5px] leading-[1.45] text-ink2 sm:block">
@@ -61,7 +68,11 @@ export function SectionRow({
           {figure ? (
             <span
               className={cn(
-                "ml-auto text-[17px] font-semibold tracking-[-0.02em] whitespace-nowrap sm:ml-0",
+                // A figure is often "$1,240 headroom", not just a number: below
+                // sm it wraps at the space rather than overflowing, and stays
+                // right-aligned to the edge it is pinned to. From sm the row is
+                // wide enough that a wrap would only look like a mistake.
+                "ml-auto min-w-0 text-right text-[17px] font-semibold tracking-[-0.02em] sm:ml-0 sm:text-left sm:whitespace-nowrap",
                 figureClass(tone),
               )}
             >
@@ -70,7 +81,9 @@ export function SectionRow({
           ) : null}
           <span
             aria-hidden="true"
-            className={cn("w-3.5 flex-none text-right text-[11px] text-ink3", !figure && "ml-auto")}
+            // --ink2, not --ink3: at 11px this glyph is the only affordance saying a row
+            // opens, and on paper the micro tier is too quiet to carry that job alone.
+            className={cn("w-3.5 flex-none text-right text-[11px] text-ink2", !figure && "ml-auto")}
           >
             {open ? "–" : "+"}
           </span>

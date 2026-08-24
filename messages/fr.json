@@ -1,7 +1,7 @@
 {
   "Metadata": {
     "home": {
-      "title": "Que pouvez-vous vraiment vous permettre ?",
+      "title": "Quelle maison pouvez-vous vous permettre ? — AffordMath",
       "description": "Ce que vous pouvez réellement vous permettre d’acheter au Canada, calculé sur le revenu net et les coûts réels, selon les règles de votre province."
     },
     "affordability": {
@@ -44,9 +44,52 @@
     }
   },
   "Home": {
-    "heading": "Que pouvez-vous vraiment vous permettre?",
-    "subheading": "Pas ce qu'une banque approuvera — les vraies règles fiscales et les coûts réels de votre province, appliqués à vos vrais chiffres.",
-    "cta": "Voir ce que vous pouvez vous permettre"
+    "eyebrow": "Canada · 14 juridictions",
+    "heading": "Que pouvez-vous vraiment vous permettre ?",
+    "lede": "Deux plafonds, calculés côte à côte : ce qu’une banque approuverait, et ce que vos revenus portent réellement une fois payés les coûts de la propriété. C’est le plus bas des deux qui décide — et il est nommé.",
+    "ledeSub": "Presque tous les calculateurs d’abordabilité renvoient un seul chiffre, et c’est celui du prêteur. Ce chiffre répond au risque que la banque accepte de prendre. Il ne dit rien de ce à quoi ressemble votre mois ensuite.",
+    "cta": "Voir ce que vous pouvez vous permettre",
+    "ctaSecondary": "Comparer louer et acheter",
+    "heroNote": "Aucun compte, aucune connexion, rien n’est envoyé à un serveur : ce que vous saisissez reste dans ce navigateur.",
+    "ceilingsHeading": "Deux plafonds, pas un seul",
+    "ceilingsIntro": "Les deux sortent des mêmes données et sont présentés ensemble, parce que l’écart entre eux est précisément la partie de la décision qu’on ne vous remet jamais.",
+    "ceilingLender": "Ce qu’un prêteur approuve",
+    "ceilingLenderBody": "Le revenu brut soumis aux ratios ABD et ATD, qualifié au taux de la simulation de crise — votre taux contractuel plus deux points, ou le plancher réglementaire, selon le plus élevé. C’est ce que mesure une préapprobation : le risque que le prêteur accepte de prendre.",
+    "ceilingCarry": "Ce que vos revenus portent",
+    "ceilingCarryBody": "Le revenu net après impôt, moins la taxe foncière, l’assurance, les frais de copropriété, les services publics et une réserve d’entretien. Ce qui survit à cette soustraction est ce dont sort le versement hypothécaire, chaque mois, pendant des décennies.",
+    "ceilingBinding": "Lequel des deux contraint",
+    "ceilingBindingBody": "C’est le plafond le plus bas qui fixe le prix; l’autre n’est que du bruit. Le nommer — et montrer ce qu’un dollar de dette mensuelle de plus vous coûte en prix d’achat — est plus utile que le chiffre affiché en gros.",
+    "rulesHeading": "Les règles provinciales, pas des moyennes nationales",
+    "rulesIntro": "Quatorze juridictions sont modélisées une à une — huit marchés urbains, six provinces et territoires — chacune avec sa propre structure de droits de mutation, ses remboursements, ses frais d’enregistrement et ses usages en matière d’honoraires. Ce ne sont pas des variantes d’un même gabarit.",
+    "rulesOntarioLabel": "Ontario",
+    "rulesOntario": "Toronto superpose des droits de mutation municipaux à ceux de la province, avec sa propre grille de tranches et son propre plafond de remboursement pour un premier achat.",
+    "rulesAlbertaLabel": "Alberta",
+    "rulesAlberta": "Aucun droit de mutation. Le bureau des titres fonciers perçoit des frais d’enregistrement sur le prix, et d’autres sur l’hypothèque.",
+    "rulesManitobaLabel": "Manitoba",
+    "rulesManitoba": "Les droits de mutation s’appliquent en entier : aucun remboursement pour un premier achat ne vient les réduire.",
+    "rulesNote": "C’est pourquoi la réponse bouge dès que vous changez de ville, et pourquoi une moyenne nationale serait fausse dans les quatorze cas à la fois.",
+    "rulesUnverified": "Une réserve, dite clairement : les valeurs propres aux juridictions sont provisoires, reprises du prototype d’origine et non relevées sur les barèmes gouvernementaux de 2026. Chaque valeur de l’application est marquée comme règle ou estimation — <sources>sources et provenance</sources> explique laquelle est laquelle, et nomme les organismes auprès desquels elles doivent être vérifiées.",
+    "toolsHeading": "Ce que répond chaque outil",
+    "toolsIntro": "Tous les outils reposent sur le même moteur et les mêmes données saisies : un chiffre entré une fois vous suit partout. Rien n’est verrouillé derrière autre chose — commencez là où se trouve votre question.",
+    "tool_affordability": "Ce que vos revenus portent réellement, avec le maximum qualifié par un prêteur à côté, et la limite contraignante nommée.",
+    "tool_rentVsBuy": "L’année du seuil de rentabilité — combien de temps il faudrait rester pour que l’achat l’emporte, frais de vente et test de marché stagnant compris.",
+    "tool_closingCosts": "Ce qui est dû le jour de la clôture, ligne par ligne : droits de mutation, frais juridiques, assurance titres, ajustements, et les remboursements qui arrivent vraiment.",
+    "tool_downPayment": "D’où l’argent devrait venir — CELIAPP, comptant, RAP, CELI, don, puis placements — et ce que chaque source vous coûte à utiliser.",
+    "tool_rrspHbp": "Ce que vaut un retrait REER une fois le remboursement d’impôt encaissé, et ce que quinze ans de remises font aux années suivantes.",
+    "tool_amortization": "Personne ne garde le même taux pendant vingt-cinq ans. Ce qu’un renouvellement à un taux plus élevé fait au versement, et aux intérêts sur toute la durée.",
+    "tool_scenarios": "Quatre mises de fonds à un même prix, comparées sur le coût mensuel, le comptant à la clôture, l’approbation du prêteur et les intérêts totaux. Le versement le plus bas gagne rarement.",
+    "tool_sources": "Quels chiffres viennent d’une règle, lesquels sont des estimations, et lesquels ne sont pas encore vérifiés.",
+    "faqHeading": "Les questions auxquelles ceci répond",
+    "faqQ_afford": "Quelle maison puis-je me permettre au Canada ?",
+    "faqA_afford": "Cela dépend du plafond qui contraint. Donnez à l’outil de capacité d’achat votre revenu, votre ville et votre mise de fonds : il calcule les deux — le maximum qu’un prêteur qualifierait, et le prix que votre revenu net porte une fois les coûts de propriété payés — puis nomme le plus bas.",
+    "faqQ_preapproval": "Pourquoi ma préapprobation dépasse-t-elle ce que je peux me permettre ?",
+    "faqA_preapproval": "Une préapprobation confronte le revenu brut aux ratios ABD et ATD. Elle ne soustrait ni la taxe foncière, ni l’assurance, ni les frais de copropriété, ni les services publics, ni l’entretien qui arrivent avec la maison, et elle n’a aucun avis sur ce que vous voulez faire du reste de votre mois. L’écart entre les deux chiffres atteint plusieurs centaines de dollars par mois.",
+    "faqQ_stressTest": "Qu’est-ce que la simulation de crise hypothécaire ?",
+    "faqA_stressTest": "Vous êtes qualifié au plus élevé de votre taux contractuel plus deux points de pourcentage et du plancher réglementaire : le versement testé par le prêteur est donc plus gros que celui que vous feriez. Les deux taux et les deux versements sont affichés, plutôt que fondus en un seul résultat.",
+    "faqQ_jurisdiction": "Est-ce que cela fonctionne ailleurs qu’en Ontario ?",
+    "faqA_jurisdiction": "Quatorze juridictions sont modélisées séparément. L’Alberta et la Saskatchewan perçoivent des frais d’enregistrement des titres plutôt qu’un droit de mutation; Toronto ajoute des droits municipaux à ceux de l’Ontario; le Manitoba perçoit les droits sans aucun remboursement pour un premier achat.",
+    "faqQ_verified": "Les chiffres sont-ils vérifiés ?",
+    "faqA_verified": "Pas encore. Chaque valeur propre à une juridiction est provisoire, reprise du prototype d’origine et non tirée d’un barème gouvernemental de 2026. Chaque valeur est marquée comme règle ou estimation, et la page des sources explique les marques et nomme les organismes auprès desquels chaque valeur doit être vérifiée. Vérifiez tout ce sur quoi vous vous apprêtez à agir."
   },
   "AppHeader": {
     "theme": "Thème",
@@ -55,7 +98,7 @@
     "changeLocation": "Changer de lieu"
   },
   "Nav": {
-    "menu": "Menu",
+    "menu": "Outils",
     "afford": "Capacité",
     "buy": "Acheter",
     "own": "Posséder",
@@ -134,8 +177,6 @@
     "wPass": "Réussi",
     "wCaution": "Attention",
     "wBlocked": "Bloqué",
-    "ckApOk": "Un prêteur approuverait à ce prix.",
-    "ckApNo": "Un prêteur refuserait à ce prix.",
     "ckTds": "Vos autres dettes sont la limite, pas la maison.",
     "ckGds": "Le coût du logement est la limite, pas vos autres dettes.",
     "ckCfOk": "Sous le plafond mensuel que vous avez fixé.",
@@ -245,7 +286,13 @@
     "limitWord": "limite",
     "perYear": "brut, par an",
     "impactNoneFree": "Aucune dette mensuelle — et à ce prix, les 100 premiers dollars ne vous coûteraient rien : c’est le coût du logement qui limite.",
-    "belowMinimum": "Relevé au minimum légal pour ce prix : {p} · {a}"
+    "belowMinimum": "Relevé au minimum légal pour ce prix : {p} · {a}",
+    "ckApGds": "L’ABD plafonne les frais de logement à {a} par mois — la limite qu’un prêteur applique avant même de compter vos autres dettes.",
+    "ckApTds": "L’ATD plafonne logement et dettes ensemble à {a} par mois, et {d} par mois de dettes s’y imputent.",
+    "xClosing": "Chaque ligne derrière ce montant de frais de clôture — droits de mutation, frais juridiques, crédits reçus le jour même — se trouve sur <link>la page des frais de clôture</link>, calculée à partir de ces mêmes chiffres.",
+    "xDownPayment": "D’où pourraient venir ces {a} — CELIAPP, comptant, RAP, dans l’ordre qui coûte le moins — c’est la question de <link>la page de la mise de fonds</link>.",
+    "xScenariosSome": "À {p} de mise de fonds, un prêteur approuverait. <link>La page des scénarios</link> compare les quatre.",
+    "xScenariosNone": "Aucune mise de fonds ne règle cela : les quatre sont refusées à ce prix. <link>La page des scénarios</link> montre l’écart pour chacune."
   },
   "ClosingCosts": {
     "title": "Frais de clôture",
@@ -329,7 +376,6 @@
     "breakdown": "La facture",
     "expandAll": "Tout ouvrir",
     "collapseAll": "Tout fermer",
-    "items": "{n} éléments",
     "noCreditLater": "Rien ne réduit la facture le jour de la clôture ici. Ce que vous recevez arrive des mois plus tard.",
     "noCreditAtAll": "Cette juridiction n’offre aucun crédit à la clôture. La facture ci-dessus est la facture.",
     "govWhy": "Taxes et frais d’enregistrement fixés par la province, et dans certaines villes par la municipalité en plus. Ce sont des règles, pas des devis — exactes selon la table des règles.",
@@ -341,7 +387,10 @@
     "monthlySavings": "Épargne mensuelle pour la clôture",
     "noSaveRate": "Ajoutez un montant d’épargne mensuel pour voir en combien de temps l’écart se comble.",
     "tagYours": "Vos chiffres",
-    "tagTypical": "Chiffres typiques"
+    "tagTypical": "Chiffres typiques",
+    "groupLine": "{name} {a} — le plus élevé de {n, plural, one {# ligne} other {# lignes}}",
+    "xDownPayment": "<link>La page de la mise de fonds</link> classe vos comptes face à cette facture, l’argent le moins cher d’abord.",
+    "xDownPaymentAsk": "<link>La page de la mise de fonds</link> peut classer vos comptes face à cette facture, l’argent le moins cher d’abord, dès que vous indiquez ce que contient chacun."
   },
   "DownPayment": {
     "title": "Sources de la mise de fonds",
@@ -412,7 +461,8 @@
     "tagTypical": "Chiffres typiques",
     "month": "mois {m}",
     "obligationsLabel": "Obligations de remboursement créées",
-    "fullyFundedBeforeTax": "Vos comptes suffisent, et il reste {a} — avant les {tax} d’impôt que la vente déclenche."
+    "fullyFundedBeforeTax": "Vos comptes suffisent, et il reste {a} — avant les {tax} d’impôt que la vente déclenche.",
+    "xRrspHbp": "Le Régime d’accession à la propriété a <link>sa propre page</link> : ce que vaut le remboursement d’impôt, et ce que coûtent quinze ans de remboursement."
   },
   "RrspHbp": {
     "title": "Le jeu REER → Régime d’accession à la propriété",
@@ -608,7 +658,10 @@
     "atYear": "à l’année {n}",
     "fInsurance": "Assurance habitation, annuelle",
     "fUtilities": "Services publics et chauffage, mensuel",
-    "fCondo": "Frais de copropriété, mensuels"
+    "fCondo": "Frais de copropriété, mensuels",
+    "crossNever": "Jamais en {n} ans",
+    "assumptionsLine": "Des deux côtés : {buy, plural, one {# favorise} other {# favorisent}} l’achat, {rent, plural, one {# favorise} other {# favorisent}} la location.",
+    "xClosing": "Le capital engagé au départ, c’est la mise de fonds plus la facture du jour de la clôture, détaillée sur <link>la page des frais de clôture</link>."
   },
   "Scenarios": {
     "title": "Scénarios de mise de fonds",
@@ -700,7 +753,8 @@
     "column": "{p} de mise de fonds",
     "tagYours": "Vos chiffres",
     "tagTypical": "Chiffres typiques",
-    "bestHere": "meilleur des quatre"
+    "bestHere": "meilleur des quatre",
+    "yours": "Votre choix"
   },
   "Provenance": {
     "rule": "règle",

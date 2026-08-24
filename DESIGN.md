@@ -52,7 +52,7 @@ and no background/border triples.
 | `--ink3` | tertiary text ⚠ corrected | `#6A6D73` | `#82878D` |
 | `--ac` | the one accent | `#3D3BD6` | `#8886FF` |
 | `--ac2` | accent, lighter | `#6462E6` | `#A5A3FF` |
-| `--acbg` / `--acbr` | accent surface / border | `#ECECFD` / `#D3D2FA` | `#1B1B33` / `#2E2E52` |
+| `--acbg` / `--acbr` | accent surface / border | `#EEEEFD` / `#D3D2FA` | `#1B1B33` / `#2E2E52` |
 | `--pass` | state: pass | `#176B4B` | `#55C293` |
 | `--caut` | state: caution | `#8A5A12` | `#D9A94E` |
 | `--blk` | state: blocked | `#A32B2B` | `#E88A8A` |
@@ -93,8 +93,15 @@ the last thing a headline figure can afford to do.
 | Hero stat value / gauge value | 22px / 17px | 600 | −0.02em |
 | Panel row | 13.5px | 400 / 600 strong | — |
 | Math row | 13px | 400 / 600 strong | — |
-| Micro (limit notes, stat labels) | 11.5–12.5px | 400 | — |
+| Micro (limit notes, stat labels, legends) | 11.5–12.5px | 400 | `.micro` |
+| Fine print (footnotes, unit suffixes, chart legends) | 10.5px | 400 | — |
 | Body base | 13.5px | 400 | — |
+
+The fine-print tier is documented rather than corrected: it is in use at twelve call sites
+across six files, which makes it a real tier the spec had simply never recorded. Ten carry
+`--ink3`, which clears 4.5:1 on every surface in both themes; two carry `--caution`, and
+one inherits its colour from the row it sits in. If the tier should not exist, the fix is to
+raise those call sites to 11.5px — not to leave the spec and the code disagreeing.
 
 **Form controls have a 16px floor** (`--control-font-size`), applied through `.control`.
 Below 16px iOS Safari zooms the viewport on focus, and this page has twelve fields. The
@@ -124,7 +131,49 @@ keep the sizes above.
 | `Gauges` | GDS and TDS on a shared 60% axis with the limit ticked. `role="img"` with a full label. |
 | `MathColumns` | Both derivations. A row whose input is zero is **absent**, not a zero row. |
 | `Provenance` | The `rule` / `estimate` mark. Describes derivation, never verification. |
+| `CrossLink` | One sentence pointing at the page that derives a figure this panel already shows. `placement="row"` is a note under its figure, in the `ex_` treatment; `placement="foot"` is the panel's last line. Not a widget and not a related-links block — see §5.2. |
+| `AppNav` | One disclosure at **every** width — a `Tools` trigger and a panel of the four journey groups. Not a desktop row plus a mobile drawer, and **not** because §8 forbids it (a row of links discloses nothing): because arrival is search-first onto a single tool, and because a flat bar cannot render Rent vs Buy's two groups honestly. Groups are a nested `ul` with `aria-labelledby` and explicit `role="list"`, **not** headings — the nav precedes page content, so `h2` group labels would open every page's outline before its own `h1`, and preflight's `list-style: none` makes VoiceOver drop an unroled list. |
 | `ImpactRow` | What debt costs in purchase price. Four states, gated on the input. |
+
+### 5.2 Cross-page links, and the rules that keep them from becoming ads
+
+Three panels print another page's answer — Affordability's cash check shows
+`closingTotal()`'s figure, Rent vs Buy shows the same bill as `upFront`, Down
+Payment reprints it entire — each with a provenance mark that explains what
+"estimate" means and nothing about where the number came from. Principle 3 says
+every figure traces; these did not. The link is that figure's missing provenance,
+and discovery is the side effect rather than the purpose.
+
+A link ships only if it passes one of two tests:
+
+- **Trace** — this panel shows a figure that *is* another page's answer.
+- **Verdict** — this page's current state creates a question another page answers.
+
+And then:
+
+1. **At most two per page**, counted on the rendered page in each state, not in
+   the source: two verdict links can be mutually exclusive and a static count
+   reads them both.
+2. **Verdict links render only in their state.** A session with no problem sees
+   no invitations, because it has no question.
+3. **Last line of a panel, or a note under the row it traces.** Never in the
+   answer head, never in a closed row's line, never a section of its own — those
+   belong to this page's own computation.
+4. **A figure travels only when its inputs were answered**, and only out of a
+   `src/domain` function. Down Payment's "$0 available" must never travel: it
+   would assert an empty bank account.
+5. **The sentence has to be worth reading unclicked.** No "learn more", no
+   "explore", no benefit claims — name what the other page computes. A test bans
+   the vocabulary in both locales.
+
+This is **not** a second disclosure mechanism: §8 forbids a second way to
+*reveal*, and a link reveals nothing. `Provenance` has been an inline `Link`
+inside a `PanelRow` since v2, so this is the established pattern.
+
+**Deliberately absent: Affordability → Rent vs Buy.** A "have you considered
+renting" line under a declined verdict is the product editorialising about the
+reader's life. Renters get a front door — Home's second CTA, and the nav's
+`afford` group — not a consolation exit on a buying page.
 
 ### 5.1 Why the gap band's markers sit at three heights
 
@@ -139,15 +188,32 @@ never collide with the two markers that move.
 One keyframe: `v2-pulse`, 0.5s ease-out, keyed to a jurisdiction change so the answer
 visibly re-computes. Nothing else animates.
 
-`prefers-reduced-motion: reduce` zeroes every animation and transition globally.
+`prefers-reduced-motion: reduce` zeroes every animation and transition globally, with
+**one exception**: `v2-pulse` is exempt and keeps its fade.
+
+Reduced motion means less motion, not less feedback. The pulse is the only signal that the
+answer re-computed, and zeroing it left a jurisdiction change completely silent. It is
+`opacity: 0.35 → 1` — opacity only, nothing that moves — and a half-second fade is the
+canonical *safe substitute* under this query rather than something it exists to suppress.
+An earlier pass swapped it for a `step-end` cut, reasoning that this removed position and
+scale; there was never any position or scale, and a hard luminance step is a worse stimulus
+for a photosensitive reader than the fade. Exempting it is the whole fix.
 
 ## 7. Accessibility
 
 WCAG 2.1 AA where practical — a working convention, not a claim anyone may make
 externally (see PRODUCT.md).
 
-- Contrast is enforced by test across every foreground × surface × theme.
-- 44px minimum touch targets below `sm`; 16px control floor everywhere.
+- Contrast is enforced by test across every foreground × surface × theme, **including
+  `--acbg`**. That surface was outside the sweep until the rent-vs-buy table tinted the
+  reader's own row with it, at which point `--ink3` on it measured 4.44:1 — under AA, on a
+  pairing nothing in the app used yet. `--acbg` moved two points lighter (`#ECECFD` →
+  `#EEEEFD`, imperceptible) so the palette is safe to combine freely rather than safe only
+  in the combinations that happen to exist today.
+- 44px minimum touch targets below `sm`; 16px control floor everywhere. Where a control is
+  deliberately smaller than 44px — the *Expand all* pill is 32px by design — the target is
+  reached by an invisible `after:` hit area rather than by growing the control, so the
+  geometry stays and the reach is still there.
 - Radiogroups with roving tabindex rather than sets of toggle buttons.
 - `aria-expanded` / `aria-controls` on every disclosure; panels use `hidden`, so a
   closed panel leaves the accessibility tree while `aria-controls` still resolves.

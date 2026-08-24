@@ -17,7 +17,11 @@ const renderPage = (locale: "en" | "fr" = "en") =>
   );
 
 async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
-  await user.click(screen.getByRole("button", { name }));
+  // Idempotent. One section opens itself on arrival — the one whose check
+  // produced the verdict — so an unconditional click closed it instead.
+  const button = screen.getByRole("button", { name });
+  if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+  return button;
 }
 
 beforeEach(() => window.localStorage.clear());
@@ -44,6 +48,39 @@ describe("Scenarios — four columns, one recommendation", () => {
     for (const cell of within(row).getAllByRole("cell")) {
       expect(cell.textContent).toBe("—");
     }
+  });
+
+  it("marks the reader's own column, separately from the recommended one", async () => {
+    // Four columns, and only the recommendation was marked -- so the one the
+    // reader had actually chosen looked like two they had not. When the two
+    // marks land on different columns, that gap is the finding.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    // Scoped to one table: a grid renders per open section, and every one of
+    // them marks the reader's column, so an unscoped query counts it twice.
+    const own = [
+      ...screen.getAllByRole("table")[0].querySelectorAll('th[aria-current="true"]'),
+    ];
+    expect(own).toHaveLength(1);
+    // 10% is the default down payment.
+    expect(own[0].textContent).toContain("10%");
+    expect(own[0].textContent).toContain("Your choice");
+  });
+
+  it("moves the mark when the reader changes their down payment", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    const purchase = within(
+      screen.getByRole("radiogroup", { name: /Down payment/ }),
+    );
+    await user.click(purchase.getByRole("radio", { name: "20%" }));
+    const own = [
+      ...screen.getAllByRole("table")[0].querySelectorAll('th[aria-current="true"]'),
+    ];
+    expect(own).toHaveLength(1);
+    expect(own[0].textContent).toContain("20%");
   });
 
   it("raises a below-minimum column to the legal floor and labels it", async () => {
@@ -139,6 +176,44 @@ describe("Scenarios — how to read it", () => {
     await open(user, /Lifetime cost/);
     expect(screen.getByText(/Above 20% is a much weaker case/)).toBeInTheDocument();
     expect(screen.getByText(/not tax-deductible in Canada/)).toBeInTheDocument();
+  });
+});
+
+describe("Scenarios — the row line says what the section found", () => {
+  it("prices the dearest and cheapest columns instead of repeating the row's name", () => {
+    // The line was the string "Monthly cost" and so was the name beside it: one
+    // row printing its own name twice, spending the single line of explanation
+    // the reader gets on two words they had already read.
+    renderPage();
+    const row = screen.getByRole("button", { name: /Monthly cost/ });
+    const text = row.textContent ?? "";
+    expect(text).toMatch(/\d+% down \$[\d,]+ · \d+% down \$[\d,]+/);
+    expect(text.match(/Monthly cost/g)).toHaveLength(1);
+
+    // Dearest first, cheapest second — a spread, not two numbers in any order.
+    const [dearest, cheapest] = [...text.matchAll(/\$([\d,]+)/g)].map((m) =>
+      Number(m[1].replace(/,/g, "")),
+    );
+    expect(dearest).toBeGreaterThan(cheapest);
+  });
+
+  it("answers the cash row once funds are known, rather than restating the why", async () => {
+    // `gCashNote` is also the first sentence of `cashWhy`, so with the section
+    // open the reader met the same sentence twice, one line apart, whether or
+    // not the question it stands in for had been answered.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Can you fund it\?/);
+    expect(screen.getAllByText(/A cheaper scenario you cannot fund/).length).toBeGreaterThan(0);
+
+    const funds = screen.getByLabelText("Funds available");
+    await user.clear(funds);
+    await user.type(funds, "300000");
+    await user.tab();
+
+    const row = screen.getByRole("button", { name: /Can you fund it\?/ });
+    expect(row.textContent).toMatch(/You can fund it today/);
+    expect(row.textContent).not.toMatch(/A cheaper scenario you cannot fund/);
   });
 });
 

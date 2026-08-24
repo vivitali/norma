@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import en from "../../messages/en.json";
+import { NAV } from "./routes";
+import { HOME_FAQ_KEYS } from "@/components/home-content";
 
 /**
  * Every message key must have a call site in a file that renders its namespace.
@@ -35,6 +37,22 @@ const DYNAMIC_PREFIXES = [
   // Renewal presets: t(preset.key).
   "preset",
 ];
+
+/**
+ * Home's computed keys, DERIVED rather than exempted by prefix.
+ *
+ * Blanket-prefixing `tool_`, `faqQ_` and `faqA_` waived 17 of Home's ~40 keys in
+ * the same change that brought Home under this guard — so a stray `faqQ_x` with
+ * no entry in HOME_FAQ_KEYS would have lived in both locales forever, which is
+ * exactly the half-wired FAQ someone later feeds to the JSON-LD. Reading the two
+ * registries instead means an orphan is still an orphan.
+ */
+function derivedHomeKeys(): string[] {
+  return [
+    ...NAV.flatMap((group) => group.entries.map((entry) => `tool_${entry.label}`)),
+    ...HOME_FAQ_KEYS.flatMap((key) => [`faqQ_${key}`, `faqA_${key}`]),
+  ];
+}
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -95,6 +113,9 @@ const KNOWN_ORPHANS: Record<string, readonly string[]> = {
  */
 
 const NAMESPACES = [
+  // Home was outside this guard while it held three keys; at forty-odd it is exactly the kind of
+  // namespace the guard exists for.
+  "Home",
   "Affordability", "ClosingCosts", "DownPayment", "RrspHbp",
   "Amortization", "RentVsBuy", "Scenarios", "Inputs", "Disclosure", "Provenance", "Nav",
 ] as const;
@@ -111,6 +132,7 @@ describe("message coverage", () => {
       const orphans = keys.filter(
         (key) =>
           !DYNAMIC_PREFIXES.some((prefix) => key.startsWith(prefix)) &&
+          !(namespace === "Home" && derivedHomeKeys().includes(key)) &&
           !source.includes(`"${key}"`) &&
           !source.includes(`'${key}'`),
       );

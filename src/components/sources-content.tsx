@@ -33,6 +33,7 @@ function Section({
 export function SourcesContent() {
   const t = useTranslations("Sources");
   const tDisc = useTranslations("Disclosure");
+  const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
 
   const orgs = jurisdiction.orgs;
@@ -42,6 +43,16 @@ export function SourcesContent() {
 
   // An absent org renders the "none" line, never an empty row — matching
   // buildLines' own convention that a non-applicable line is absent, not a zero.
+  /*
+   * --ink2 here, --ink3 for the notes further down, and the difference is the
+   * type tier rather than an oversight: this is 11.5px CONTENT (the source names
+   * themselves), the notes are the 10.5px fine-print tier. Flattening them to one
+   * colour would put the content and its footnotes at the same weight.
+   *
+   * Both branches of the ternary match each other exactly, which is the part that
+   * would actually be a defect: an empty state quieter than the populated one
+   * says "there are no sources" more faintly than it says what they are.
+   */
   const list = (items: readonly string[]) =>
     items.length > 0 ? (
       <ul className="flex list-disc flex-col gap-1 pl-4 text-[11.5px] text-muted-foreground">
@@ -50,7 +61,7 @@ export function SourcesContent() {
         ))}
       </ul>
     ) : (
-      <p className="text-[11.5px] text-text-faint">{t("none")}</p>
+      <p className="text-[11.5px] text-muted-foreground">{t("none")}</p>
     );
 
   return (
@@ -76,15 +87,18 @@ export function SourcesContent() {
 
       <Section id="federal" heading={t("federalHeading")}>
         {list([t("osfi"), t("cmhc")])}
-        <p className="max-w-prose text-[10.5px] text-text-faint">{t("provenanceNote")}</p>
-        <p className="figure text-[10.5px] text-text-faint">
+        <p className="max-w-prose text-[10.5px] text-ink3">{t("provenanceNote")}</p>
+        <p className="text-[10.5px] text-ink3">
           {tDisc("lastVerified")} {federal.verified}
         </p>
       </Section>
 
       <Section id="provincial" heading={t("provincialHeading")}>
-        <p className="micro text-text-faint">
-          {t("forJurisdiction", { city: jurisdiction.city ?? jurisdiction.prov })}
+        <p className="micro text-ink3">
+          {/* Through the Jurisdictions namespace, like every other surface that names
+              one. `jurisdiction.city` is the lowercase record key, so this rendered
+              "For winnipeg" to the reader. */}
+          {t("forJurisdiction", { city: tJur(jurisdiction.id) })}
         </p>
         {list(provincial)}
       </Section>
@@ -93,7 +107,7 @@ export function SourcesContent() {
         {list(orgs.market ? [orgs.market] : [])}
       </Section>
 
-      <div className="text-[10.5px] text-text-faint">
+      <div className="text-[10.5px] text-ink3">
         <p>{tDisc("unverifiedFlag")}</p>
         {!jurisdiction.cityData ? <p>{tDisc("noCityData")}</p> : null}
       </div>

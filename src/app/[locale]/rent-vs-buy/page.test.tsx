@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import RentVsBuyPage from "./page";
+import { FAVOURS_BUYING, FAVOURS_RENTING } from "./omissions";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
@@ -17,7 +18,11 @@ const renderPage = (locale: "en" | "fr" = "en") =>
   );
 
 async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
-  await user.click(screen.getByRole("button", { name }));
+  // Idempotent. One section opens itself on arrival — the one whose check
+  // produced the verdict — so an unconditional click closed it instead.
+  const button = screen.getByRole("button", { name });
+  if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+  return button;
 }
 
 beforeEach(() => window.localStorage.clear());
@@ -55,6 +60,44 @@ describe("Rent vs buy — the horizon decides", () => {
 
     expect(screen.getAllByText(/Buying wins/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/never pulls ahead/)).not.toBeInTheDocument();
+  });
+
+  it("signs the advantage column instead of printing its absolute value", async () => {
+    // The header says "Advantage of buying". Printing Math.abs meant a row where
+    // buying TRAILS by $648,135 read as an advantage OF $648,135 -- a wrong
+    // number under a correct label, which is worse than either alone.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The verdict/);
+    const table = screen.getAllByRole("table")[0];
+    const advantages = [...table.querySelectorAll("tbody tr")].map(
+      (tr) => tr.children[3].textContent ?? "",
+    );
+    // On the placeholder figures buying never pulls ahead, so every row is negative.
+    expect(advantages.every((v) => v.includes("−"))).toBe(true);
+  });
+
+  it("marks the reader's own horizon among the rows that are not theirs", async () => {
+    // Six holding periods, one of which answers the question actually asked.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The verdict/);
+    const current = [...screen.getAllByRole("table")[0].querySelectorAll("tbody tr")].filter(
+      (tr) => tr.getAttribute("aria-current") === "true",
+    );
+    expect(current).toHaveLength(1);
+    expect(current[0].textContent).toContain("10 years");
+
+    // And it follows the control rather than being pinned to the default.
+    const horizon = within(
+      screen.getByRole("radiogroup", { name: "How long you expect to stay" }),
+    );
+    await user.click(horizon.getByRole("radio", { name: "25 years" }));
+    const moved = [...screen.getAllByRole("table")[0].querySelectorAll("tbody tr")].filter(
+      (tr) => tr.getAttribute("aria-current") === "true",
+    );
+    expect(moved).toHaveLength(1);
+    expect(moved[0].textContent).toContain("25 years");
   });
 
   it("respects the horizon control", async () => {
@@ -103,8 +146,54 @@ describe("Rent vs buy — what the model leaves out", () => {
     await open(user, /What is not captured/);
     expect(screen.getAllByText(/these favour buying/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/these favour renting/).length).toBeGreaterThan(0);
+    // On the collapsed row too. The line named only the buying side, so a
+    // reader who never opened this came away believing every omission favours
+    // buying — the opposite of what the section is for.
+    //
+    // The counts are asserted against the arrays rather than against literals:
+    // the sentence is generated from them, so a hardcoded "4" here would pass
+    // while the copy silently drifted out of step with the list it describes.
+    const row = screen.getByRole("button", { name: /What is not captured/ });
+    expect(row.textContent).toContain(`${FAVOURS_BUYING.length} favour buying`);
+    expect(row.textContent).toContain(`${FAVOURS_RENTING.length} favour renting`);
     expect(screen.getByText(/Concentration risk/)).toBeInTheDocument();
     expect(screen.getByText(/Forced savings/)).toBeInTheDocument();
+  });
+});
+
+describe("Rent vs buy — an absent break-even is a finding, not a blank", () => {
+  it("puts the answer in the stat's value instead of a dash with a note beside it", () => {
+    // "Buying pulls ahead — · Buying never pulls ahead within 40 years" read as
+    // a rendering fault: an em-dash where the figure goes, and a note that
+    // contradicted the label above it. `note` is a short qualifier, never the
+    // answer. At the placeholder rent for this city there is no break-even.
+    renderPage();
+    // Innermost match: getAllByText matches ancestors too, in document order.
+    const label = screen.getAllByText(/Buying pulls ahead/).at(-1)!;
+    const stat = label.parentElement!;
+    // The short form, because the value slot is 22px and whitespace-nowrap.
+    // The full sentence still carries the same fact in the chart caption, where
+    // there is room for it.
+    expect(stat.textContent).toContain("Not within 40 years");
+    expect(stat.textContent).not.toContain("—");
+  });
+
+  it("leaves the verdict row's figure empty rather than dashing it", () => {
+    // The figure slot is whitespace-nowrap and cannot carry the sentence that
+    // says there is no break-even, so it carries nothing — the contract's
+    // marker for a section with no single number.
+    renderPage();
+    const row = screen.getByRole("button", { name: /The verdict/ });
+    expect(row.textContent).not.toContain("—");
+    expect(row.textContent).toMatch(/Your horizon: \d+ years/);
+  });
+
+  it("names the winning side and the horizon it wins at", () => {
+    // The line was the single word "Buy" or "Rent", which said less than the
+    // figure beside it. The advantage is only true at a stated horizon.
+    renderPage();
+    const row = screen.getByRole("button", { name: /Where you end up/ });
+    expect(row.textContent).toMatch(/Rent · at year 10/);
   });
 });
 

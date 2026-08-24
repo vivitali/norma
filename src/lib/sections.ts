@@ -102,23 +102,52 @@ export function isSectionOpen({
   id,
   open,
   hashTarget,
+  defaultId,
 }: {
   id: string;
   open: OpenMap;
   hashTarget: string | null;
+  /**
+   * The section whose check produced the verdict, open on arrival.
+   *
+   * The marking IS being open. Every closed row looks alike, so the section that
+   * actually decided the answer was indistinguishable from the four that did
+   * not — and the page's most useful fact sat behind a caret with nothing saying
+   * it was the one worth opening. This also does the second job: a reader meets
+   * the disclosure gesture already performed once, rather than having to guess
+   * that a `+` is worth pressing.
+   *
+   * Deliberately NOT an accent tint. `--acbg` now means "the reader's own
+   * position" — their horizon row, their down-payment column, their crossover
+   * year — and reusing it one level up to mean "important" would fork the only
+   * accent in the system. A permanent highlight on a closed row is also chrome
+   * the reader cannot dismiss, which is the filled-panel energy §8 keeps out.
+   */
+  defaultId?: string | null;
 }): boolean {
+  // An explicit click wins for the session, in both directions.
   const override = open[id];
   if (override !== undefined) return override;
-  return hashTarget === id;
+  // A hash names one section; it suppresses the default so focus follows the link.
+  if (hashTarget) return hashTarget === id;
+  return id === defaultId;
 }
 
-/** Expand all is a toggle: if anything is open, the control collapses instead. */
-export function anySectionOpen(
+/**
+ * Whether EVERY section is open, which is what the bulk control keys off.
+ *
+ * Not "any": one section is open on arrival by design, and an any-test made the
+ * pill read "Collapse all" on first paint — offering to undo something the
+ * reader had not done. The control now offers to expand until there is nothing
+ * left to expand.
+ */
+export function allSectionsOpen(
   ids: readonly string[],
   open: OpenMap,
   hashTarget: string | null,
+  defaultId?: string | null,
 ): boolean {
-  return ids.some((id) => isSectionOpen({ id, open, hashTarget }));
+  return ids.every((id) => isSectionOpen({ id, open, hashTarget, defaultId }));
 }
 
 export function setAllSections(ids: readonly string[], value: boolean): OpenMap {

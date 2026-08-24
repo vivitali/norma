@@ -30,7 +30,6 @@ export default function ScenariosPage() {
   const t = useTranslations("Scenarios");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(SCENARIOS_SECTIONS);
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -68,6 +67,14 @@ export default function ScenariosPage() {
   const rec = recommend(columns);
   const cashUnanswered = columns.every((c) => c.fundable === null);
   const cashFundable = columns.some((c) => c.fundable === true);
+
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    SCENARIOS_SECTIONS,
+    // Approval first: no deposit fixes an income problem, so when nothing
+    // qualifies that is the finding. Then fundability. Then the comparison the
+    // page exists for.
+    rec.kind === "noneQualify" ? "approval" : rec.kind === "noneCash" ? "cash" : "monthly",
+  );
   const recommendedPct = rec.kind === "twenty" ? rec.pct : rec.kind === "only" ? rec.pct : null;
 
   const head =
@@ -138,6 +145,24 @@ export default function ScenariosPage() {
     });
     return best;
   };
+
+  /**
+   * The spread across the four columns, which is what this section found.
+   *
+   * The row's line used to be `gMonthly` -- the section's own name, printed
+   * twice on one row. The reader gets one line of explanation per section and
+   * that one spent it repeating two words they had already read. Selection over
+   * engine output, not arithmetic: the same lowestBy the table's `best` marks use.
+   */
+  const cheapestMonthly = columns[lowestBy((c) => c.monthly.total)(columns)];
+  const dearestMonthly = columns[lowestBy((c) => -c.monthly.total)(columns)];
+  // A spread needs two ends. When every column costs the same -- price 0, or any
+  // degenerate input -- naming the same column twice reads as a range that is not
+  // one, so the line falls back to the section's plain description.
+  const monthlyLine =
+    dearestMonthly.monthly.total - cheapestMonthly.monthly.total > 0.5
+      ? `${t("column", { p: pct(dearestMonthly.dpPct) })} ${fmt(dearestMonthly.monthly.total)} · ${t("column", { p: pct(cheapestMonthly.dpPct) })} ${fmt(cheapestMonthly.monthly.total)}`
+      : t("gMonthly");
 
   const monthlyRows: MetricRow[] = [
     { label: t("rDownAmt"), value: (c) => fmt(c.down) },
@@ -238,12 +263,13 @@ export default function ScenariosPage() {
           collapseLabel={t("collapseAll")}
         />
 
-        {section("monthly", "none", t("gMonthly"), fmt(headline.monthly.total), t("monthlyWhy"), (
+        {section("monthly", "none", monthlyLine, fmt(headline.monthly.total), t("monthlyWhy"), (
           <>
             <CompareGrid
               columns={columns}
               rows={monthlyRows}
               recommendedPct={recommendedPct}
+              yoursPct={stored.dpPct}
               caption={`${t("gMortgage")} · ${t("gMonthly")}`}
             />
             <p className="pt-3 text-[12px] leading-[1.6] text-ink3">
@@ -262,7 +288,10 @@ export default function ScenariosPage() {
           // approve returned "noneQualify" whether or not funds were ever given --
           // and this row painted itself green over a table of em-dashes.
           cashUnanswered ? "none" : cashFundable ? "pass" : "blocked",
-          t("gCashNote"),
+          // Once funds are known this row states the answer, not the principle.
+          // `gCashNote` is also the first sentence of `cashWhy`, so on an open
+          // section it was the same sentence twice, one line apart.
+          cashUnanswered ? t("gCashNote") : cashFundable ? t("fFundable") : t("fShort"),
           fmt(headline.net),
           t("cashWhy"),
           <>
@@ -270,6 +299,7 @@ export default function ScenariosPage() {
               columns={columns}
               rows={cashRows}
               recommendedPct={recommendedPct}
+              yoursPct={stored.dpPct}
               caption={t("gCash")}
             />
             <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyPremTax")}</p>
@@ -296,6 +326,7 @@ export default function ScenariosPage() {
               columns={columns}
               rows={qualRows}
               recommendedPct={recommendedPct}
+              yoursPct={stored.dpPct}
               caption={t("gQual")}
             />
             <div className="mt-4 grid max-w-[520px] gap-3 sm:grid-cols-2">
@@ -332,6 +363,7 @@ export default function ScenariosPage() {
               columns={columns}
               rows={lifeRows}
               recommendedPct={recommendedPct}
+              yoursPct={stored.dpPct}
               caption={t("gLifetime")}
             />
 

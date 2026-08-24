@@ -1,7 +1,7 @@
 {
   "Metadata": {
     "home": {
-      "title": "What can you actually afford? — AffordMath",
+      "title": "How much house can you afford in Canada? — AffordMath",
       "description": "See what you can genuinely afford to buy in Canada — from real net income and real carrying costs, with your province's rules applied."
     },
     "affordability": {
@@ -44,9 +44,52 @@
     }
   },
   "Home": {
+    "eyebrow": "Canada · 14 jurisdictions",
     "heading": "What can you actually afford?",
-    "subheading": "Not what a bank will approve — your province's real tax and cost-of-ownership rules, applied to your real numbers.",
-    "cta": "See what you can afford"
+    "lede": "Two ceilings, computed side by side: what a lender would approve, and what your income actually carries once the costs of owning are paid. The lower one decides — and it is named.",
+    "ledeSub": "Almost every affordability calculator returns a single number, and it is the lender's. That number answers what a bank is willing to risk. It does not answer what your month looks like afterwards.",
+    "cta": "See what you can afford",
+    "ctaSecondary": "Compare renting and buying",
+    "heroNote": "No account, no sign-in, nothing sent to a server: what you type stays in this browser.",
+    "ceilingsHeading": "Two ceilings, not one",
+    "ceilingsIntro": "Both come out of the same inputs and are shown together, because the distance between them is the part of the decision nobody is handed.",
+    "ceilingLender": "What a lender approves",
+    "ceilingLenderBody": "Gross income against the GDS and TDS ratios, qualified at the stress-test rate — your contract rate plus two points, or the regulatory floor, whichever is higher. This is what a pre-approval measures: the risk the lender is willing to take.",
+    "ceilingCarry": "What your income carries",
+    "ceilingCarryBody": "Net income after tax, minus property tax, insurance, condo or strata fees, utilities and a maintenance reserve. Whatever survives that subtraction is what a mortgage payment comes out of, every month, for decades.",
+    "ceilingBinding": "Which one binds",
+    "ceilingBindingBody": "The lower ceiling sets the price and the other one is noise. Naming it — and showing what one more dollar of monthly debt costs you in purchase price — is more useful than the headline figure.",
+    "rulesHeading": "Provincial rules, not national averages",
+    "rulesIntro": "Fourteen jurisdictions are modelled one at a time — eight city markets, six provinces and territories — each with its own transfer tax structure, rebates, registration fees and professional-fee conventions. They are not variations on a template.",
+    "rulesOntarioLabel": "Ontario",
+    "rulesOntario": "Toronto stacks a municipal land transfer tax on top of the provincial one, with its own bracket table and its own first-time-buyer rebate cap.",
+    "rulesAlbertaLabel": "Alberta",
+    "rulesAlberta": "No land transfer tax at all. Land Titles charges a registration fee on the price, and a second one on the mortgage.",
+    "rulesManitobaLabel": "Manitoba",
+    "rulesManitoba": "The land transfer tax applies in full: there is no first-time-buyer rebate to reduce it.",
+    "rulesNote": "Which is why the answer moves when you change the city, and why a national average would be wrong in all fourteen places at once.",
+    "rulesUnverified": "One caveat, stated plainly: the jurisdiction figures are placeholders carried over from the prototype this was built from, not read off 2026 government schedules. Every figure in the app is marked as a rule or an estimate — <sources>sources and provenance</sources> explains which is which, and names the bodies the figures must be checked against.",
+    "toolsHeading": "What each tool answers",
+    "toolsIntro": "Every tool runs on the same engine and the same inputs, so a number you enter once follows you across all of them. Nothing is gated behind anything else — start wherever your question is.",
+    "tool_affordability": "What your income actually carries, with the lender's qualified maximum beside it and the binding limit named.",
+    "tool_rentVsBuy": "The break-even year — how long you would have to stay for buying to come out ahead, with the cost of selling and a flat-market test included.",
+    "tool_closingCosts": "What is owed on closing day, line by line: land transfer tax, legal fees, title insurance, adjustments, and which rebates actually arrive.",
+    "tool_downPayment": "Where the money should come from — FHSA, cash, the RRSP Home Buyers' Plan, TFSA, a gift, then investments — and what each source costs you to use.",
+    "tool_rrspHbp": "What an RRSP withdrawal is worth once the refund lands, and what fifteen years of repayments do to the years after.",
+    "tool_amortization": "Nobody holds one rate for twenty-five years. What renewing into a higher rate does to the payment, and to the interest over the whole loan.",
+    "tool_scenarios": "Four down payments at one price, compared on monthly cost, cash at closing, lender approval and lifetime interest. The cheapest month rarely wins.",
+    "tool_sources": "Which figures come from a rule, which are estimates, and which are not verified yet.",
+    "faqHeading": "Questions this answers",
+    "faqQ_afford": "How much house can I afford in Canada?",
+    "faqA_afford": "It depends which ceiling binds. Give the affordability tool your income, your city and your down payment and it computes both — the maximum a lender would qualify you for, and the price your net income carries after ownership costs — then names the lower one.",
+    "faqQ_preapproval": "Why is my pre-approval higher than what I can afford?",
+    "faqA_preapproval": "A pre-approval tests gross income against the GDS and TDS ratios. It does not subtract the property tax, insurance, condo fees, utilities and maintenance that arrive with the house, and it takes no view on what you want the rest of your month to contain. The gap between the two figures runs to several hundred dollars a month.",
+    "faqQ_stressTest": "What is the mortgage stress test?",
+    "faqA_stressTest": "You qualify at the higher of your contract rate plus two percentage points and the regulatory floor, so the payment a lender tests you against is larger than the one you would make. Both rates and both payments are shown rather than folded into one result.",
+    "faqQ_jurisdiction": "Does this work outside Ontario?",
+    "faqA_jurisdiction": "Fourteen jurisdictions are modelled separately. Alberta and Saskatchewan charge land titles registration instead of a transfer tax; Toronto adds a municipal land transfer tax to Ontario's; Manitoba levies the tax with no first-time-buyer rebate against it.",
+    "faqQ_verified": "Are the numbers verified?",
+    "faqA_verified": "Not yet. Every jurisdiction figure is a placeholder carried over from the prototype this was built from, not taken from a 2026 government schedule. Each figure is marked as a rule or an estimate, and the sources page explains the marks and names the bodies each figure has to be checked against. Confirm anything you are about to act on."
   },
   "AppHeader": {
     "theme": "Theme",
@@ -55,7 +98,7 @@
     "changeLocation": "Change location"
   },
   "Nav": {
-    "menu": "Menu",
+    "menu": "Tools",
     "afford": "Afford",
     "buy": "Buy",
     "own": "Own",
@@ -134,8 +177,6 @@
     "wPass": "Pass",
     "wCaution": "Attention",
     "wBlocked": "Blocked",
-    "ckApOk": "A lender would approve at this price.",
-    "ckApNo": "A lender would decline at this price.",
     "ckTds": "Your other debts are the limit, not the house.",
     "ckGds": "Housing cost is the limit, not your other debts.",
     "ckCfOk": "Inside the monthly ceiling you set.",
@@ -245,7 +286,13 @@
     "limitWord": "limit",
     "perYear": "gross, per year",
     "impactNoneFree": "No monthly debts entered — and at this price the first $100 would cost you nothing, because housing cost is the binding constraint.",
-    "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}"
+    "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}",
+    "ckApGds": "GDS caps housing cost at {a} a month — the limit a lender applies before your other debts count.",
+    "ckApTds": "TDS caps housing and debts together at {a} a month, and {d} a month of debts count against it.",
+    "xClosing": "Every line behind that closing-costs figure — transfer tax, legal fees, which credits arrive on the day — is on <link>the closing-costs page</link>, computed from these numbers.",
+    "xDownPayment": "Where the {a} could come from — FHSA, cash, the Home Buyers' Plan, in the order that costs least — is <link>the down-payment page</link>'s question.",
+    "xScenariosSome": "At {p} down a lender would approve. <link>The scenarios page</link> compares all four.",
+    "xScenariosNone": "No down payment fixes this: all four are declined at this price. <link>The scenarios page</link> shows how far off each one is."
   },
   "ClosingCosts": {
     "title": "Closing costs",
@@ -329,7 +376,6 @@
     "breakdown": "The bill",
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
-    "items": "{n} items",
     "noCreditLater": "Nothing comes off the bill on closing day here. What you do get arrives months later.",
     "noCreditAtAll": "This jurisdiction offers no closing-day credit. The bill above is the bill.",
     "govWhy": "Taxes and registration fees set by the province, and in some cities by the municipality on top. These are rules, not quotes — exact given the rules table.",
@@ -341,7 +387,10 @@
     "monthlySavings": "Saved toward closing each month",
     "noSaveRate": "Add a monthly saving rate to see how long the gap takes to close.",
     "tagYours": "Your figures",
-    "tagTypical": "Typical figures"
+    "tagTypical": "Typical figures",
+    "groupLine": "{name} {a} — largest of {n, plural, one {# line} other {# lines}}",
+    "xDownPayment": "<link>The down-payment page</link> orders your accounts against this bill, cheapest money first.",
+    "xDownPaymentAsk": "<link>The down-payment page</link> can order your accounts against this bill, cheapest money first, once you say what is in each."
   },
   "DownPayment": {
     "title": "Down payment sources",
@@ -412,7 +461,8 @@
     "tagTypical": "Typical figures",
     "month": "month {m}",
     "obligationsLabel": "Repayment obligations created",
-    "fullyFundedBeforeTax": "Your accounts cover it, with {a} left over — before the {tax} of tax that selling triggers."
+    "fullyFundedBeforeTax": "Your accounts cover it, with {a} left over — before the {tax} of tax that selling triggers.",
+    "xRrspHbp": "The Home Buyers' Plan is <link>a page of its own</link>: what the refund is worth, and what fifteen years of repayment costs."
   },
   "RrspHbp": {
     "title": "The RRSP → Home Buyers’ Plan play",
@@ -608,7 +658,10 @@
     "atYear": "at year {n}",
     "fInsurance": "Home insurance, annual",
     "fUtilities": "Utilities and heat, monthly",
-    "fCondo": "Condo fee, monthly"
+    "fCondo": "Condo fee, monthly",
+    "crossNever": "Not within {n} years",
+    "assumptionsLine": "Both sides — {buy, plural, one {# favours} other {# favour}} buying, {rent, plural, one {# favours} other {# favour}} renting.",
+    "xClosing": "Capital deployed up front is the down payment plus closing day's bill, itemised on <link>the closing-costs page</link>."
   },
   "Scenarios": {
     "title": "Down payment scenarios",
@@ -700,7 +753,8 @@
     "column": "{p} down",
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
-    "bestHere": "best of the four"
+    "bestHere": "best of the four",
+    "yours": "Your choice"
   },
   "Provenance": {
     "rule": "rule",

@@ -2,18 +2,19 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { buildLines, closingTotal, credits, monthsToSave } from "@/domain/engine";
+import { buildLines, closingTotal, credits, monthsToSave, type LineItem } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
-import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
+import { anySourceGiven, isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { CLOSING_SECTIONS } from "@/lib/sections";
 import { cashState } from "@/lib/closing-view";
 import type { Tone } from "@/lib/tone";
 import { useMoney } from "@/lib/format";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
+import { CrossLink } from "@/components/cross-link";
 import { LineRows } from "@/components/closing-costs/line-rows";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
@@ -24,7 +25,6 @@ export default function ClosingCostsPage() {
   const t = useTranslations("ClosingCosts");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(CLOSING_SECTIONS);
   const fmt = useMoney();
 
   const resolved = useMemo(
@@ -45,6 +45,24 @@ export default function ClosingCostsPage() {
   );
 
   const cash = cashState({ net: total.net, funds: resolved.funds });
+
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    CLOSING_SECTIONS,
+    // Taxes and government fees, always.
+    //
+    // Every other page opens the section that answers its own question, and this
+    // page's question is what THIS jurisdiction charges. That group is the only
+    // one whose contents change with location — Toronto stacks a municipal tax on
+    // the provincial one, Alberta has no transfer tax and shows land titles
+    // registration instead — so it is both the subject and the positioning claim
+    // made concrete.
+    //
+    // "The largest group" was the obvious rule and is a bad proxy for it: in
+    // Winnipeg, the default jurisdiction, adjustments and moving in is the
+    // heaviest at $5,459, so the rule opened the one group that is the same
+    // everywhere.
+    "government",
+  );
   const creditsAtClosing = total.creditsAtClosing;
   const later = credit.later.reduce((sum, c) => sum + c.amount, 0);
 
@@ -79,7 +97,18 @@ export default function ClosingCostsPage() {
   );
 
   const def = (id: string) => CLOSING_SECTIONS.find((s) => s.id === id)!.labelKey;
-  const items = (n: number) => t("items", { n });
+  /**
+   * A group's line: its heaviest item, with the figure, and how many there are.
+   *
+   * It used to be "{n} items" — a count, which tells the reader the COST of
+   * opening rather than any reason to. The line is the one thing a closed
+   * section always shows, and on the three biggest groups on the page it was
+   * spent on inventory.
+   */
+  const groupLine = (group: readonly LineItem[]) => {
+    const largest = group.reduce((a, b) => (b.amount > a.amount ? b : a));
+    return t("groupLine", { name: t(largest.key), a: fmt(largest.amount), n: group.length });
+  };
 
   return (
     <ToolMain>
@@ -112,7 +141,7 @@ export default function ClosingCostsPage() {
           "government",
           def("government"),
           "none",
-          items(lines.gov.length),
+          groupLine(lines.gov),
           fmt(lines.gov.reduce((s, l) => s + l.amount, 0)),
           t("govWhy"),
           <>
@@ -129,7 +158,7 @@ export default function ClosingCostsPage() {
           "professional",
           def("professional"),
           "none",
-          items(lines.pro.length),
+          groupLine(lines.pro),
           fmt(lines.pro.reduce((s, l) => s + l.amount, 0)),
           t("proWhy"),
           <LineRows items={lines.pro} namespace="ClosingCosts" />,
@@ -139,7 +168,7 @@ export default function ClosingCostsPage() {
           "adjustments",
           def("adjustments"),
           "none",
-          items(lines.adj.length),
+          groupLine(lines.adj),
           fmt(lines.adj.reduce((s, l) => s + l.amount, 0)),
           t("adjWhy"),
           <LineRows items={lines.adj} namespace="ClosingCosts" />,
@@ -150,7 +179,12 @@ export default function ClosingCostsPage() {
           def("credits"),
           creditsAtClosing > 0 ? "pass" : "none",
           creditsAtClosing > 0 ? t("creditsSub") : later > 0 ? t("noCreditLater") : t("noCreditAtAll"),
-          creditsAtClosing > 0 ? `− ${fmt(creditsAtClosing)}` : "—",
+          // No closing-day credit is an absence, not a value. An em-dash read
+          // as a figure that failed to compute, and "$0" would assert a credit
+          // exists here and happens to be nil -- the same false claim this
+          // page's line items refuse to make. The line beside it says which of
+          // "arrives later" or "does not exist here" is true.
+          creditsAtClosing > 0 ? `− ${fmt(creditsAtClosing)}` : "",
           t("creditsWhy"),
           <>
             {/* Timing is the point of this section, so the two groups are never merged. */}
@@ -231,6 +265,20 @@ export default function ClosingCostsPage() {
             {gap !== null && gap < 0 && months === null ? (
               <p className="mt-2 text-[12.5px] text-ink3">{t("noSaveRate")}</p>
             ) : null}
+            {/*
+              VERDICT. Only when the bill is not comfortably covered — a reader
+              with a reserve has no funding question. Two forms: with balances
+              given it states what the other page does; without them it names
+              what it will ask for, rather than travelling a "$0 available"
+              figure that would assert an empty bank account.
+            */}
+            {cash === "blocked" || cash === "caution" ? (
+              <CrossLink
+                namespace="ClosingCosts"
+                id={anySourceGiven(stored) ? "xDownPayment" : "xDownPaymentAsk"}
+                href="/down-payment"
+              />
+            ) : null}
             <div className="mt-4 flex max-w-[420px] flex-col gap-3 rounded-lg border border-acbr bg-acbg p-3">
               {cash === "unanswered" ? (
                 <p className="text-[13px] leading-[1.5] text-ink2 text-pretty">{t("cashUnanswered")}</p>
@@ -273,7 +321,7 @@ export default function ClosingCostsPage() {
             onChange={update}
           />
           <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
-            <p className="micro text-text-faint">{t("mortgageAmount")}</p>
+            <p className="micro text-ink3">{t("mortgageAmount")}</p>
             <p className="text-[22px] font-semibold tracking-[-0.02em]">{fmt(total.fin.loan)}</p>
             <p className="text-[12.5px] leading-[1.55] text-ink3 text-pretty">
               {total.fin.insured ? t("insuredNote") : t("uninsuredNote")}

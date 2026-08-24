@@ -719,7 +719,7 @@ export interface HbpInput {
  *
  * - `refund` — real cash, this year, and the reason the manoeuvre exists.
  * - `repayAnnual` — the obligation it creates, for fifteen years.
- * - `inclusionIfMissed` — what a missed repayment year costs, because that is
+ * - `taxIfMissed` — what a missed repayment year costs, because that is
  *   the real risk: the missed amount is added to income and taxed at the
  *   marginal rate, permanently, with no way to put it back.
  *
@@ -746,8 +746,18 @@ export function hbpPlay(F: FederalRules, o: HbpInput) {
     withdraw,
     repayAnnual,
     schedule,
-    /** Income added, and taxed, for each repayment year missed. */
-    inclusionIfMissed: repayAnnual * o.marginalRate,
+    /**
+     * The TAX on a missed repayment year, not the income added.
+     *
+     * The income added is `repayAnnual` — miss a year and that amount is
+     * included in income. This is what that inclusion costs at the marginal
+     * rate. It was called `inclusionIfMissed`, which in tax vocabulary names the
+     * income inclusion rather than the tax on it, and the RRSP-HBP screen duly
+     * printed "Added to your income for each year missed" beside this value —
+     * out by a factor of the marginal rate. Renamed so the next reader cannot
+     * make the same substitution.
+     */
+    taxIfMissed: repayAnnual * o.marginalRate,
     /**
      * WITHDRAWAL room left under the federal maximum — not contribution room.
      * `F.hbp.max` caps what you may take out, so measuring it against the

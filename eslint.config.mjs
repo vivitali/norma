@@ -15,6 +15,13 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Pulled Claude Design prototype — reference material, not app source.
     "design-reference/**",
+    // Installed tooling, not app source. Left unlinted for the same reason
+    // design-reference is: it is vendored code this repo does not author. It was
+    // emitting 304 warnings on an otherwise clean tree, which destroys the
+    // signal scripts/check exists to give.
+    ".claude/skills/**",
+    ".github/skills/**",
+    ".github/agents/**",
   ]),
 ]);
 

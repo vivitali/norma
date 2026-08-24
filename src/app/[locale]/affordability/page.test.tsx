@@ -60,14 +60,31 @@ describe("Affordability — one disclosure gesture", () => {
     }
   });
 
-  it("starts with every section closed", () => {
+  it("opens exactly the section that decided the answer, and no other", () => {
+    // The marking IS being open. Every closed row looked alike, so the section
+    // whose check produced the verdict was indistinguishable from the four that
+    // decided nothing — and PRODUCT.md's fourth principle, that the binding
+    // constraint is the insight, sat behind a caret. On the placeholder figures
+    // a lender declines, so Approval is the deciding section.
     renderPage();
-    for (const name of SECTIONS) {
-      expect(screen.getByRole("button", { name: new RegExp(name) })).toHaveAttribute(
-        "aria-expanded",
-        "false",
-      );
-    }
+    const open = SECTIONS.filter(
+      (name) =>
+        screen.getByRole("button", { name: new RegExp(name) }).getAttribute("aria-expanded") ===
+        "true",
+    );
+    expect(open).toEqual(["Approval"]);
+  });
+
+  it("lets the reader close the section that opened itself", async () => {
+    // A default the reader cannot dismiss is chrome. An explicit click wins in
+    // both directions, for the rest of the session.
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Approval/ }));
+    expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
   });
 
   it("opens one section in place, leaving the others closed", async () => {
@@ -75,7 +92,21 @@ describe("Affordability — one disclosure gesture", () => {
     renderPage();
     await user.click(screen.getByRole("button", { name: /Comfort/ }));
     expect(screen.getByRole("button", { name: /Comfort/ })).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /The gap/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("offers to expand until there is nothing left to expand", async () => {
+    // Keyed off ALL sections, not any: with one open on arrival, an any-test made
+    // the control read "Collapse all" on first paint, offering to undo something
+    // the reader had not done.
+    const user = userEvent.setup();
+    renderPage();
+    expect(screen.getByRole("button", { name: "Expand all" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Expand all" }));
+    expect(screen.getByRole("button", { name: "Collapse all" })).toBeInTheDocument();
   });
 
   it("reaches the derivation with the same gesture as a check", async () => {
