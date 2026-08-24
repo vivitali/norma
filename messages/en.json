@@ -359,7 +359,10 @@
     "tagTypical": "Typical figures",
     "groupLine": "{name} {a} — largest of {n, plural, one {# line} other {# lines}}",
     "xDownPayment": "<link>The down-payment page</link> orders your accounts against this bill, cheapest money first.",
-    "xDownPaymentAsk": "<link>The down-payment page</link> can order your accounts against this bill, cheapest money first, once you say what is in each."
+    "xDownPaymentAsk": "<link>The down-payment page</link> can order your accounts against this bill, cheapest money first, once you say what is in each.",
+    "ex_pttFurther": "British Columbia levies a further 2% on the residential value of a property above $3 million, on top of the general property transfer tax.",
+    "ex_qcAccess": "Quebec refunds first-time buyers 100% of the first $5,000 of transfer duties plus 25% of the rest, up to $5,875. This refundable credit for access to ownership is claimed on your tax return, not at closing.",
+    "ex_nsNewBuildHst": "Nova Scotia rebates part of the provincial HST on a newly built home for first-time buyers, up to $3,000. It does not apply to a resale purchase."
   },
   "DownPayment": {
     "title": "Down payment sources",

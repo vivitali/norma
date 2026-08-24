@@ -359,7 +359,10 @@
     "tagTypical": "Chiffres typiques",
     "groupLine": "{name} {a} — le plus élevé de {n, plural, one {# ligne} other {# lignes}}",
     "xDownPayment": "<link>La page de la mise de fonds</link> classe vos comptes face à cette facture, l’argent le moins cher d’abord.",
-    "xDownPaymentAsk": "<link>La page de la mise de fonds</link> peut classer vos comptes face à cette facture, l’argent le moins cher d’abord, dès que vous indiquez ce que contient chacun."
+    "xDownPaymentAsk": "<link>La page de la mise de fonds</link> peut classer vos comptes face à cette facture, l’argent le moins cher d’abord, dès que vous indiquez ce que contient chacun.",
+    "ex_pttFurther": "La Colombie-Britannique perçoit 2 % supplémentaires sur la valeur résidentielle d'une propriété au-delà de 3 millions de dollars, en sus de la taxe générale sur les mutations immobilières.",
+    "ex_qcAccess": "Le Québec rembourse aux premiers acheteurs 100 % des premiers 5 000 $ de droits de mutation immobilière, plus 25 % du reste, jusqu'à 5 875 $. Ce crédit d'impôt remboursable pour l'accès à la propriété est réclamé dans votre déclaration de revenus, non à la clôture.",
+    "ex_nsNewBuildHst": "La Nouvelle-Écosse rembourse une partie de la TVH provinciale sur une habitation neuve pour les premiers acheteurs, jusqu'à 3 000 $. Ne s'applique pas à une revente."
   },
   "DownPayment": {
     "title": "Sources de la mise de fonds",
