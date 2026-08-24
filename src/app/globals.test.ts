@@ -68,6 +68,20 @@ describe("contrast", () => {
   }
 });
 
+describe("touch targets", () => {
+  it("gives the switch a 44px hit area below sm without growing the control", () => {
+    // DESIGN.md §7: a deliberately small control reaches 44px through an
+    // invisible hit area, never by being grown. shadcn's stock `-inset-y-2` only
+    // reached 34.4px on an 18.4px switch — measured in a browser at 320px, where
+    // it failed a hit test at ±21px from centre. Below `sm` the inset opens to
+    // 13px a side: 18.4 + 26 = 44.4. Above `sm` the stock value is correct.
+    const source = readFileSync("src/components/ui/switch.tsx", "utf8");
+    expect(source).toContain("max-sm:after:-inset-y-[13px]");
+    // The control itself must not have been resized to get there.
+    expect(source).toContain("data-[size=default]:h-[18.4px]");
+  });
+});
+
 describe("geometry", () => {
   it("form controls have a 16px floor", () => {
     // iOS Safari zooms the viewport on focus of any control under 16px, and this

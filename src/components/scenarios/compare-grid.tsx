@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { ScenarioResult } from "@/domain/engine";
 import { usePercent } from "@/lib/format";
@@ -48,9 +49,49 @@ export function CompareGrid({
 }) {
   const t = useTranslations("Scenarios");
   const pct = usePercent();
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const ownRef = useRef<HTMLTableCellElement>(null);
+
+  /**
+   * Bring the reader's own column into the scroller when it would start off
+   * screen.
+   *
+   * At 320px the scroller is 280px wide and the four columns run to 560px, so
+   * the metric column plus one data column is all that fits. With the default
+   * 10% down the reader's own column began at x=277 — inside the box by three
+   * pixels, which is to say invisible. An accent marking a column you have to go
+   * looking for is worth nothing.
+   *
+   * No dependency array, and a "have I done this yet" ref rather than a
+   * ResizeObserver. Three of the four grids on this page live inside `hidden`
+   * panels, and an observer attached to a `display: none` element did not fire
+   * when the panel opened — measured: one grid aligned, three sat at
+   * scrollLeft 0. Running after every render instead cannot miss, because the
+   * page re-renders when a section opens, and the ref makes it a single scroll
+   * per choice rather than a fight with a reader scrolling the table themselves.
+   */
+  const alignedFor = useRef<number | null>(null);
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const own = ownRef.current;
+    // clientWidth is 0 while the panel is closed: nothing to measure against yet.
+    if (!scroller || !own || scroller.clientWidth === 0) return;
+    if (alignedFor.current === yoursPct) return;
+    alignedFor.current = yoursPct;
+
+    const visible =
+      own.offsetLeft >= scroller.scrollLeft &&
+      own.offsetLeft + own.offsetWidth <= scroller.scrollLeft + scroller.clientWidth;
+    if (visible) return;
+    scroller.scrollLeft = Math.max(
+      0,
+      own.offsetLeft - (scroller.clientWidth - own.offsetWidth) / 2,
+    );
+  });
 
   return (
     <div
+      ref={scrollerRef}
       // Two classes, both load-bearing, both for the same symptom.
       //
       // `min-w-0`: this is a flex item and `min-width: auto` is the flex default,
@@ -78,6 +119,7 @@ export function CompareGrid({
             {columns.map((column) => (
               <th
                 key={column.dpPct}
+                ref={column.dpPct === yoursPct ? ownRef : undefined}
                 scope="col"
                 // aria-current marks the reader's own column for a screen reader,
                 // which the tint does visually. "Recommended" stays a label
