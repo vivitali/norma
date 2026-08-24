@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { federal } from "@/domain/federal";
 import { getJurisdiction } from "@/domain/jurisdictions";
-import { AFFORDABILITY_DEFAULTS } from "./shared-inputs";
-import { DEFAULT_COMFORT_CEILING, isPersonalised, resolveInputs } from "./resolve-inputs";
+import { TOOL_DEFAULTS } from "./shared-inputs";
+import {
+  anySourceGiven,
+  DEFAULT_COMFORT_CEILING,
+  DEFAULT_RENT,
+  isPersonalised,
+  resolveInputs,
+} from "./resolve-inputs";
 
 const winnipeg = getJurisdiction("winnipeg")!;
 const vancouver = getJurisdiction("vancouver")!;
-const untouched = AFFORDABILITY_DEFAULTS;
+const untouched = TOOL_DEFAULTS;
 
 describe("resolveInputs", () => {
   it("derives price from the city benchmark for the chosen property type", () => {
@@ -95,12 +101,40 @@ describe("resolveInputs", () => {
     );
   });
 
-  it("produces no nulls except the two unknowns", () => {
+  it("produces no nulls except the unknowns and the one absent-by-meaning field", () => {
     const r = resolveInputs(untouched, winnipeg, federal);
     const nulls = Object.entries(r)
       .filter(([, v]) => v === null)
       .map(([k]) => k);
-    expect(nulls.sort()).toEqual(["funds", "save"]);
+    // funds and save are UNKNOWNS: nothing honest to assume. renewalRate is a
+    // third thing again -- null there means "no renewal shock modelled", which
+    // is a modelling choice, not a missing answer, and resolving it to a number
+    // would silently assert a rate the reader never predicted.
+    expect(nulls.sort()).toEqual(["funds", "renewalRate", "save"]);
+  });
+
+  it("resolves every down-payment source to a number, and remembers that none was given", () => {
+    // The two facts drive different screens. Zero is right for the arithmetic;
+    // reporting a shortfall on a first visit and blaming the reader is not.
+    const r = resolveInputs(untouched, winnipeg, federal);
+    expect([r.fhsa, r.cashSav, r.rrsp, r.tfsa, r.gift, r.nonreg]).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(anySourceGiven(untouched)).toBe(false);
+    expect(anySourceGiven({ ...untouched, tfsa: 12000 })).toBe(true);
+  });
+
+  it("takes taxable income from the household income already given", () => {
+    const r = resolveInputs({ ...untouched, income1: 80000, income2: 40000 }, winnipeg, federal);
+    expect(r.taxIncome).toBe(120000);
+  });
+
+  it("takes benchmark rent from the jurisdiction, not a universal constant", () => {
+    const r = resolveInputs(untouched, winnipeg, federal);
+    expect(r.rent).toBe(winnipeg.rent ?? DEFAULT_RENT);
+  });
+
+  it("converts rent inflation from the stored percentage to the fraction the engine takes", () => {
+    const r = resolveInputs({ ...untouched, rentInflation: 3 }, winnipeg, federal);
+    expect(r.rentInflation).toBeCloseTo(0.03, 10);
   });
 });
 

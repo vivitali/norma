@@ -7,7 +7,7 @@ import {
   STORE_KEY_V2,
   writeStored,
 } from "./storage";
-import { AFFORDABILITY_KEYS } from "./shared-inputs";
+import { TOOL_KEYS } from "./shared-inputs";
 
 beforeEach(() => window.localStorage.clear());
 
@@ -95,7 +95,7 @@ describe("readStored", () => {
         ptype: "condo",
       }),
     );
-    const out = readStored(AFFORDABILITY_KEYS);
+    const out = readStored(TOOL_KEYS);
     expect(out.price).toBeNull();
     expect(out.contractRate).toBeNull();
     expect(out.otherDebt).toBe(300);
@@ -106,19 +106,19 @@ describe("readStored", () => {
 
   it("leaves v1 in place, so the migration is re-runnable while it is new", () => {
     window.localStorage.setItem(STORE_KEY_V1, JSON.stringify({ debts: 300 }));
-    readStored(AFFORDABILITY_KEYS);
+    readStored(TOOL_KEYS);
     expect(window.localStorage.getItem(STORE_KEY_V1)).not.toBeNull();
   });
 
   it("prefers v2 when both exist", () => {
     window.localStorage.setItem(STORE_KEY_V1, JSON.stringify({ income1: 1 }));
     window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ income1: 2 }));
-    expect(readStored(AFFORDABILITY_KEYS).income1).toBe(2);
+    expect(readStored(TOOL_KEYS).income1).toBe(2);
   });
 
   it("returns {} for unparseable content instead of throwing", () => {
     window.localStorage.setItem(STORE_KEY_V2, "{not json");
-    expect(readStored(AFFORDABILITY_KEYS)).toEqual({});
+    expect(readStored(TOOL_KEYS)).toEqual({});
   });
 
   it("does NOT resurrect v1 when v2 is corrupt", () => {
@@ -127,7 +127,7 @@ describe("readStored", () => {
     // pre-migration snapshot -- and then write it back over v2, permanently.
     window.localStorage.setItem(STORE_KEY_V1, JSON.stringify({ income1: 11111 }));
     window.localStorage.setItem(STORE_KEY_V2, "{not json");
-    expect(readStored(AFFORDABILITY_KEYS)).toEqual({});
+    expect(readStored(TOOL_KEYS)).toEqual({});
     expect(window.localStorage.getItem(STORE_KEY_V2)).toBe("{not json");
   });
 
@@ -136,7 +136,7 @@ describe("readStored", () => {
       STORE_KEY_V1,
       JSON.stringify({ debts: 300, notAKey: "junk", dpPct: 900 }),
     );
-    readStored(AFFORDABILITY_KEYS);
+    readStored(TOOL_KEYS);
     const blob = JSON.parse(window.localStorage.getItem(STORE_KEY_V2)!);
     expect(blob.notAKey).toBeUndefined();
     expect(blob.dpPct).toBe(100);

@@ -5,14 +5,14 @@ import { affordability } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { getJurisdiction } from "@/domain/jurisdictions";
 import { resolveInputs } from "@/lib/resolve-inputs";
-import { AFFORDABILITY_DEFAULTS } from "@/lib/shared-inputs";
+import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
 import { ImpactRow } from "./impact-row";
-import type { AffordabilityFormState } from "@/lib/shared-inputs";
+import type { ToolFormState } from "@/lib/shared-inputs";
 
 const winnipeg = getJurisdiction("winnipeg")!;
 
-function render(over: Partial<AffordabilityFormState>) {
-  const resolved = resolveInputs({ ...AFFORDABILITY_DEFAULTS, ...over }, winnipeg, federal);
+function render(over: Partial<ToolFormState>) {
+  const resolved = resolveInputs({ ...TOOL_DEFAULTS, ...over }, winnipeg, federal);
   const result = affordability(winnipeg, federal, resolved);
   renderWithIntl(<ImpactRow result={result} debts={resolved.debts} />);
   return result;

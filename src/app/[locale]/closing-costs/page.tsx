@@ -7,7 +7,7 @@ import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
-import { AFFORDABILITY_DEFAULTS, AFFORDABILITY_KEYS } from "@/lib/shared-inputs";
+import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
 import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { CLOSING_SECTIONS } from "@/lib/sections";
 import { cashState } from "@/lib/closing-view";
@@ -23,7 +23,7 @@ import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components
 export default function ClosingCostsPage() {
   const t = useTranslations("ClosingCosts");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
+  const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(CLOSING_SECTIONS);
   const fmt = useMoney();
 

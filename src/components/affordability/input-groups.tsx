@@ -6,7 +6,7 @@ import type { AffordabilityResult } from "@/domain/engine";
 import type { Jurisdiction } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
-import type { AffordabilityFormState } from "@/lib/shared-inputs";
+import type { ToolFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
 import { NumberField } from "@/components/number-field";
 import { Button } from "@/components/ui/button";
@@ -33,11 +33,11 @@ function Group({ legend, children }: { legend: string; children: ReactNode }) {
 }
 
 export interface InputGroupsProps {
-  stored: AffordabilityFormState;
+  stored: ToolFormState;
   resolved: ResolvedInputs;
   result: AffordabilityResult;
   jurisdiction: Jurisdiction;
-  update: (patch: Partial<AffordabilityFormState>) => void;
+  update: (patch: Partial<ToolFormState>) => void;
 }
 
 export function InputGroups({

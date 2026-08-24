@@ -7,7 +7,7 @@ import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { useSections } from "@/hooks/use-sections";
-import { AFFORDABILITY_DEFAULTS, AFFORDABILITY_KEYS } from "@/lib/shared-inputs";
+import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
 import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { AFFORDABILITY_SECTIONS, type AffordabilitySectionId } from "@/lib/sections";
 import {
@@ -39,7 +39,7 @@ const TONE: Record<CheckState, Tone> = {
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
+  const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(AFFORDABILITY_SECTIONS);
   const fmt = useMoney();
   const pct = usePercent();
