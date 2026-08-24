@@ -46,7 +46,6 @@ export default function DownPaymentPage() {
   const t = useTranslations("DownPayment");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(DOWN_PAYMENT_SECTIONS);
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -87,6 +86,14 @@ export default function DownPaymentPage() {
   );
 
   const described = anySourceGiven(stored);
+
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    DOWN_PAYMENT_SECTIONS,
+    // Nothing is described on a first visit, so the target -- what has to be
+    // assembled -- is the only section with something to say. Once balances
+    // exist, the waterfall is the answer.
+    described ? "waterfall" : "target",
+  );
   const funded = described && flow.shortfall <= 0.5;
   const obligations = flow.rows.reduce((sum, row) => sum + row.repayAnnual, 0);
 

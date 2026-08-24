@@ -177,8 +177,6 @@
     "wPass": "Pass",
     "wCaution": "Attention",
     "wBlocked": "Blocked",
-    "ckApOk": "A lender would approve at this price.",
-    "ckApNo": "A lender would decline at this price.",
     "ckTds": "Your other debts are the limit, not the house.",
     "ckGds": "Housing cost is the limit, not your other debts.",
     "ckCfOk": "Inside the monthly ceiling you set.",
@@ -288,7 +286,9 @@
     "limitWord": "limit",
     "perYear": "gross, per year",
     "impactNoneFree": "No monthly debts entered — and at this price the first $100 would cost you nothing, because housing cost is the binding constraint.",
-    "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}"
+    "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}",
+    "ckApGds": "GDS caps housing cost at {a} a month — the limit a lender applies before your other debts count.",
+    "ckApTds": "TDS caps housing and debts together at {a} a month, and {d} a month of debts count against it."
   },
   "ClosingCosts": {
     "title": "Closing costs",

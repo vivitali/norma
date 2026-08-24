@@ -1,5 +1,6 @@
 import type { AffordabilityResult } from "@/domain/engine";
 import type { Tone } from "./tone";
+import type { AffordabilitySectionId } from "./sections";
 
 export type VerdictKey = "declined" | "shortCash" | "over" | "comfortable";
 export type CheckState = "pass" | "caution" | "blocked" | "unanswered";
@@ -67,3 +68,29 @@ const CHECK_ICON: Record<CheckState, string> = {
 };
 
 export const checkIcon = (state: CheckState): string => CHECK_ICON[state];
+
+/**
+ * The section whose check produced the verdict — the one that opens on arrival.
+ *
+ * PRODUCT.md's fourth principle: "the binding constraint is the insight — which
+ * limit binds, and what a dollar of debt actually costs in purchase price, is
+ * more useful than the headline number, and almost nobody knows it." That fact
+ * lived inside a collapsed panel, on a row that looked exactly like the four
+ * that did not decide anything.
+ *
+ * `comfortable` resolves to the gap rather than to nothing: when every check
+ * passes, "which limit binds" IS the distance between the two ceilings, and the
+ * gap band is the picture of it.
+ */
+export function decidingSectionId(result: AffordabilityResult): AffordabilitySectionId {
+  switch (verdictKey(result)) {
+    case "declined":
+      return "approval";
+    case "over":
+      return "comfort";
+    case "shortCash":
+      return "cash";
+    default:
+      return "gap";
+  }
+}

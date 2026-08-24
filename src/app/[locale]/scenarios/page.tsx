@@ -30,7 +30,6 @@ export default function ScenariosPage() {
   const t = useTranslations("Scenarios");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(SCENARIOS_SECTIONS);
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -68,6 +67,14 @@ export default function ScenariosPage() {
   const rec = recommend(columns);
   const cashUnanswered = columns.every((c) => c.fundable === null);
   const cashFundable = columns.some((c) => c.fundable === true);
+
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    SCENARIOS_SECTIONS,
+    // Approval first: no deposit fixes an income problem, so when nothing
+    // qualifies that is the finding. Then fundability. Then the comparison the
+    // page exists for.
+    rec.kind === "noneQualify" ? "approval" : rec.kind === "noneCash" ? "cash" : "monthly",
+  );
   const recommendedPct = rec.kind === "twenty" ? rec.pct : rec.kind === "only" ? rec.pct : null;
 
   const head =

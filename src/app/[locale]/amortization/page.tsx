@@ -27,7 +27,13 @@ export default function AmortizationPage() {
   const t = useTranslations("Amortization");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(AMORTIZATION_SECTIONS);
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    AMORTIZATION_SECTIONS,
+    // Renewal when a renewal rate has been set, because that is then the whole
+    // subject; the opening payment otherwise. The head already calls renewal
+    // "the risk nobody models" -- it should not then be a closed row.
+    stored.renewalRate === null ? "payment" : "renewal",
+  );
   const fmt = useMoney();
   const pct = usePercent();
 

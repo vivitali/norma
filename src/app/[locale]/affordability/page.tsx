@@ -14,6 +14,7 @@ import {
   approvalState,
   cashState,
   comfortState,
+  decidingSectionId,
   verdictKey,
   type CheckState,
 } from "@/lib/affordability-view";
@@ -40,7 +41,6 @@ export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(AFFORDABILITY_SECTIONS);
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -51,6 +51,14 @@ export default function AffordabilityPage() {
   const result = useMemo(
     () => affordability(jurisdiction, federal, resolved),
     [jurisdiction, resolved],
+  );
+
+  // The section whose check produced the verdict, open on arrival. Derived from
+  // the same result the answer is, so the prerendered paint and the hydrated one
+  // each open whichever section their own figures make decisive.
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    AFFORDABILITY_SECTIONS,
+    decidingSectionId(result),
   );
 
   const verdict = verdictKey(result);
@@ -145,7 +153,12 @@ export default function AffordabilityPage() {
         {section(
           "approval",
           TONE[approval],
-          `${approval === "pass" ? t("ckApOk") : t("ckApNo")} ${result.tdsBinds ? t("ckTds") : t("ckGds")}`,
+          // NOT `ckApNo + ckGds` — that was the head's first sentence plus the
+          // sub-line verbatim, both a few hundred pixels above. The deciding
+          // section's one always-visible line has to earn its place.
+          result.tdsBinds
+            ? t("ckApTds", { a: fmt(result.binding), d: fmt(resolved.debts) })
+            : t("ckApGds", { a: fmt(result.binding) }),
           fmt(result.ceiling),
           t("mStressWhy", { floor: pct(federal.stressTest.floor, 2) }),
           <>

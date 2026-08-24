@@ -17,7 +17,11 @@ const renderPage = (locale: "en" | "fr" = "en") =>
   );
 
 async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
-  await user.click(screen.getByRole("button", { name }));
+  // Idempotent. One section opens itself on arrival — the one whose check
+  // produced the verdict — so an unconditional click closed it instead.
+  const button = screen.getByRole("button", { name });
+  if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+  return button;
 }
 
 beforeEach(() => window.localStorage.clear());
@@ -53,9 +57,11 @@ describe("Scenarios — four columns, one recommendation", () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /Monthly cost/);
-    const own = screen
-      .getAllByRole("columnheader")
-      .filter((th) => th.getAttribute("aria-current") === "true");
+    // Scoped to one table: a grid renders per open section, and every one of
+    // them marks the reader's column, so an unscoped query counts it twice.
+    const own = [
+      ...screen.getAllByRole("table")[0].querySelectorAll('th[aria-current="true"]'),
+    ];
     expect(own).toHaveLength(1);
     // 10% is the default down payment.
     expect(own[0].textContent).toContain("10%");
@@ -70,9 +76,9 @@ describe("Scenarios — four columns, one recommendation", () => {
       screen.getByRole("radiogroup", { name: /Down payment/ }),
     );
     await user.click(purchase.getByRole("radio", { name: "20%" }));
-    const own = screen
-      .getAllByRole("columnheader")
-      .filter((th) => th.getAttribute("aria-current") === "true");
+    const own = [
+      ...screen.getAllByRole("table")[0].querySelectorAll('th[aria-current="true"]'),
+    ];
     expect(own).toHaveLength(1);
     expect(own[0].textContent).toContain("20%");
   });

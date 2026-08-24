@@ -50,6 +50,39 @@ const GARBAGE = /NaN|Infinity|\bundefined\b|\[object Object\]/;
 
 beforeEach(() => window.localStorage.clear());
 
+describe("exactly one section opens on arrival", () => {
+  // The marking IS being open. Every closed row looks alike, so the section whose
+  // check produced the verdict was indistinguishable from the ones that decided
+  // nothing — and it doubles as the invitation, since the reader meets the
+  // disclosure gesture already performed once rather than guessing that a bare
+  // "+" is worth pressing.
+  //
+  // Asserted as a contract across every page, not per page, because the failure
+  // mode is a page forgetting to pass a deciding section at all — which looks
+  // exactly like the old behaviour and would otherwise go unnoticed.
+  for (const [name, Page] of PAGES) {
+    it(name, () => {
+      renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+      );
+      expect(screen.getAllByRole("button", { expanded: true })).toHaveLength(1);
+    });
+  }
+
+  it("offers to expand rather than to collapse, with one already open", () => {
+    // Keyed off ALL sections, not any: an any-test made the bulk control read
+    // "Collapse all" on first paint, offering to undo something nobody did.
+    renderWithIntl(
+      <JurisdictionProvider>
+        <AffordabilityPage />
+      </JurisdictionProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Expand all" })).toBeInTheDocument();
+  });
+});
+
 describe("no screen renders a non-finite figure", () => {
   for (const [name, Page] of PAGES) {
     it(`${name}, every section open`, async () => {

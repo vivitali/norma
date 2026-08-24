@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useHashTarget } from "@/hooks/use-hash-target";
 import {
-  anySectionOpen,
+  allSectionsOpen,
   isSectionOpen,
   sectionIds,
   setAllSections,
@@ -22,8 +22,13 @@ import {
  *
  * `defs` must be a module-level constant. It keys a memo and an effect, so an
  * inline literal re-runs both on every render.
+ *
+ * `defaultId` names the section that opens on arrival — the one whose check
+ * produced the verdict. It is derived from the same result the answer is, so the
+ * prerendered paint and the hydrated one each open the section their own figures
+ * make decisive.
  */
-export function useSections(defs: readonly SectionDef[]) {
+export function useSections(defs: readonly SectionDef[], defaultId?: string | null) {
   const hashTarget = useHashTarget();
   const [open, setOpen] = useState<OpenMap>({});
   const ids = useMemo(() => sectionIds(defs), [defs]);
@@ -34,14 +39,18 @@ export function useSections(defs: readonly SectionDef[]) {
   }, [hashTarget]);
 
   const isOpen = useCallback(
-    (id: string) => isSectionOpen({ id, open, hashTarget }),
-    [open, hashTarget],
+    (id: string) => isSectionOpen({ id, open, hashTarget, defaultId }),
+    [open, hashTarget, defaultId],
   );
   const toggle = useCallback(
-    (id: string) => setOpen((prev) => ({ ...prev, [id]: !isSectionOpen({ id, open: prev, hashTarget }) })),
-    [hashTarget],
+    (id: string) =>
+      setOpen((prev) => ({
+        ...prev,
+        [id]: !isSectionOpen({ id, open: prev, hashTarget, defaultId }),
+      })),
+    [hashTarget, defaultId],
   );
-  const expanded = anySectionOpen(ids, open, hashTarget);
+  const expanded = allSectionsOpen(ids, open, hashTarget, defaultId);
   const toggleAll = useCallback(() => setOpen(setAllSections(ids, !expanded)), [ids, expanded]);
 
   return { isOpen, toggle, expanded, toggleAll, hashTarget };

@@ -35,7 +35,12 @@ export default function RentVsBuyPage() {
   const t = useTranslations("RentVsBuy");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(RENT_VS_BUY_SECTIONS);
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    RENT_VS_BUY_SECTIONS,
+    // Always the verdict: this page has exactly one question, and the break-even
+    // year is the only number that answers it.
+    "verdict",
+  );
   const fmt = useMoney();
   const pct = usePercent();
 

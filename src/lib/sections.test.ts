@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   AFFORDABILITY_SECTIONS,
-  anySectionOpen,
+  allSectionsOpen,
   isSectionOpen,
   setAllSections,
   SECTION_IDS,
@@ -51,24 +51,57 @@ describe("isSectionOpen", () => {
 });
 
 describe("expand all", () => {
-  it("reports nothing open on a fresh page", () => {
-    expect(anySectionOpen(SECTION_IDS, {}, null)).toBe(false);
+  it("does not report everything open on a fresh page", () => {
+    expect(allSectionsOpen(SECTION_IDS, {}, null)).toBe(false);
   });
-  it("reports open when the hash alone opened one", () => {
-    expect(anySectionOpen(SECTION_IDS, {}, "math")).toBe(true);
+  it("does not report everything open when the hash opened one", () => {
+    expect(allSectionsOpen(SECTION_IDS, {}, "math")).toBe(false);
+  });
+  it("reports everything open only when nothing is left to expand", () => {
+    // Keyed off ALL, not ANY. With one section open on arrival by design, an
+    // any-test made the control read "Collapse all" on first paint — offering to
+    // undo something the reader had not done.
+    expect(allSectionsOpen(SECTION_IDS, setAllSections(SECTION_IDS, true), null)).toBe(true);
+    expect(allSectionsOpen(SECTION_IDS, { approval: true }, null)).toBe(false);
   });
   it("opens and closes every section at once", () => {
     expect(Object.values(setAllSections(SECTION_IDS, true))).toEqual([true, true, true, true, true]);
-    expect(anySectionOpen(SECTION_IDS, setAllSections(SECTION_IDS, false), null)).toBe(false);
+    expect(allSectionsOpen(SECTION_IDS, setAllSections(SECTION_IDS, false), null)).toBe(false);
   });
   it("collapse all beats a hash that would otherwise open one", () => {
-    expect(anySectionOpen(SECTION_IDS, setAllSections(SECTION_IDS, false), "math")).toBe(false);
+    expect(allSectionsOpen(SECTION_IDS, setAllSections(SECTION_IDS, false), "math")).toBe(false);
   });
   it("ignores sections belonging to another page", () => {
     // The map is keyed by bare id and ids are only unique WITHIN a page, so a
     // page must never ask about a list it does not own. Two pages both have a
     // "cash" section; expanding one must not report the other as open.
-    expect(anySectionOpen(["cash"], setAllSections(SECTION_IDS, false), null)).toBe(false);
+    expect(allSectionsOpen(["cash"], setAllSections(SECTION_IDS, false), null)).toBe(false);
+  });
+});
+
+describe("the deciding section opens on arrival", () => {
+  it("opens the named section and nothing else", () => {
+    const open = (id: string) => isSectionOpen({ id, open: {}, hashTarget: null, defaultId: "approval" });
+    expect(open("approval")).toBe(true);
+    expect(SECTION_IDS.filter(open)).toEqual(["approval"]);
+  });
+
+  it("lets a hash win, so a link still lands where it points", () => {
+    const at = (id: string) =>
+      isSectionOpen({ id, open: {}, hashTarget: "math", defaultId: "approval" });
+    expect(at("math")).toBe(true);
+    expect(at("approval")).toBe(false);
+  });
+
+  it("lets the reader close it, and it stays closed", () => {
+    expect(
+      isSectionOpen({ id: "approval", open: { approval: false }, hashTarget: null, defaultId: "approval" }),
+    ).toBe(false);
+  });
+
+  it("opens nothing when no section decided anything", () => {
+    const open = (id: string) => isSectionOpen({ id, open: {}, hashTarget: null, defaultId: null });
+    expect(SECTION_IDS.filter(open)).toEqual([]);
   });
 });
 

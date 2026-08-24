@@ -17,9 +17,11 @@ const renderPage = (locale: "en" | "fr" = "en") =>
   );
 
 /** Open a section by its heading button and return its panel. */
-async function openSection(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+  // Idempotent. One section opens itself on arrival — the one whose check
+  // produced the verdict — so an unconditional click closed it instead.
   const button = screen.getByRole("button", { name });
-  await user.click(button);
+  if (button.getAttribute("aria-expanded") === "false") await user.click(button);
   return button;
 }
 
@@ -70,7 +72,7 @@ describe("Closing costs — the jurisdiction drives the bill", () => {
     // record has it, not because a component knows about Toronto.
     const user = userEvent.setup();
     renderPage();
-    await openSection(user, /Taxes and government fees/);
+    await open(user, /Taxes and government fees/);
     expect(screen.getAllByText(/land transfer tax/i).length).toBeGreaterThan(0);
   });
 
@@ -86,7 +88,7 @@ describe("Closing costs — the jurisdiction drives the bill", () => {
   it("shows the bracket breakdown on demand, not by default", async () => {
     const user = userEvent.setup();
     renderPage();
-    await openSection(user, /Taxes and government fees/);
+    await open(user, /Taxes and government fees/);
     expect(screen.queryByText(/on the first/)).not.toBeInTheDocument();
     await user.click(screen.getAllByRole("button", { name: "Bracket breakdown" })[0]);
     expect(screen.getAllByText(/on the first/).length).toBeGreaterThan(0);
@@ -97,7 +99,7 @@ describe("Closing costs — credits, and when they arrive", () => {
   it("separates closing-day credits from ones that arrive at tax time", async () => {
     const user = userEvent.setup();
     renderPage();
-    await openSection(user, /Credits back/);
+    await open(user, /Credits back/);
     expect(screen.getByText("Applied on closing day")).toBeInTheDocument();
   });
 
@@ -107,7 +109,7 @@ describe("Closing costs — credits, and when they arrive", () => {
     // has a tax-time credit for a first-time buyer, so this is deterministic.
     const user = userEvent.setup();
     renderPage();
-    await openSection(user, /Credits back/);
+    await open(user, /Credits back/);
     expect(screen.getByText("Arrives later, at tax time")).toBeInTheDocument();
     expect(
       screen.getByText(/do not budget it as closing-day money/),

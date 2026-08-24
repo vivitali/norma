@@ -24,7 +24,6 @@ export default function ClosingCostsPage() {
   const t = useTranslations("ClosingCosts");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(CLOSING_SECTIONS);
   const fmt = useMoney();
 
   const resolved = useMemo(
@@ -44,7 +43,26 @@ export default function ClosingCostsPage() {
     [jurisdiction, resolved],
   );
 
+  /** The heaviest of the three fee groups — the one worth opening first. */
+  const largestGroup = (
+    [
+      ["government", lines.gov],
+      ["professional", lines.pro],
+      ["adjustments", lines.adj],
+    ] as const
+  ).reduce((heaviest, [id, items]) => {
+    const sum = items.reduce((t, l) => t + l.amount, 0);
+    return sum > heaviest.sum ? { id, sum } : heaviest;
+  }, { id: "government", sum: -1 }).id;
+
   const cash = cashState({ net: total.net, funds: resolved.funds });
+
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    CLOSING_SECTIONS,
+    // The largest of the three fee groups. Almost always taxes and government
+    // fees, which is also the provincial-rules claim made concrete.
+    largestGroup,
+  );
   const creditsAtClosing = total.creditsAtClosing;
   const later = credit.later.reduce((sum, c) => sum + c.amount, 0);
 

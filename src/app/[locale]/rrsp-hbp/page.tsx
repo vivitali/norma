@@ -21,7 +21,12 @@ export default function RrspHbpPage() {
   const t = useTranslations("RrspHbp");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
-  const { isOpen, toggle, expanded, toggleAll } = useSections(RRSP_HBP_SECTIONS);
+  const { isOpen, toggle, expanded, toggleAll } = useSections(
+    RRSP_HBP_SECTIONS,
+    // The refund is why anyone does this at all, and it is the only figure here
+    // that is unambiguously a gain.
+    "refund",
+  );
   const fmt = useMoney();
   const pct = usePercent();
 
