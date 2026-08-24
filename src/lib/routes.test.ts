@@ -30,7 +30,11 @@ describe("nav registry", () => {
   it("exposes only routes whose page exists", () => {
     // Home is not a nav entry. Sources shipped with the interaction-model rebuild but had no
     // way in until pathnames existed — the provenance marks were its only entry point.
-    expect(NAV.flatMap(builtEntries).map((e) => e.route)).toEqual(["/affordability", "/sources"]);
+    expect(NAV.flatMap(builtEntries).map((e) => e.route)).toEqual([
+      "/affordability",
+      "/closing-costs",
+      "/sources",
+    ]);
   });
 
   it("never lists the home route as a nav entry", () => {

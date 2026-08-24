@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { affordability } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSharedState } from "@/hooks/use-shared-state";
-import { useHashTarget } from "@/hooks/use-hash-target";
+import { useSections } from "@/hooks/use-sections";
 import { AFFORDABILITY_DEFAULTS, AFFORDABILITY_KEYS } from "@/lib/shared-inputs";
 import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
-import {
-  AFFORDABILITY_SECTIONS,
-  anySectionOpen,
-  isSectionOpen,
-  setAllSections,
-  type OpenMap,
-  type SectionId,
-} from "@/lib/sections";
+import { AFFORDABILITY_SECTIONS, type AffordabilitySectionId } from "@/lib/sections";
 import {
   approvalState,
   cashState,
@@ -33,6 +26,7 @@ import { MathColumns } from "@/components/affordability/math-columns";
 import { InputGroups } from "@/components/affordability/input-groups";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
+import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
 
 /** A check state maps onto a dot tone; the derivation has no state at all. */
 const TONE: Record<CheckState, Tone> = {
@@ -46,8 +40,7 @@ export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(AFFORDABILITY_KEYS, AFFORDABILITY_DEFAULTS);
-  const hashTarget = useHashTarget();
-  const [open, setOpen] = useState<OpenMap>({});
+  const { isOpen, toggle, expanded, toggleAll } = useSections(AFFORDABILITY_SECTIONS);
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -59,17 +52,6 @@ export default function AffordabilityPage() {
     () => affordability(jurisdiction, federal, resolved),
     [jurisdiction, resolved],
   );
-
-  // A hash arrival moves focus to the section it names — scrolling without
-  // moving focus leaves a keyboard user where they started.
-  useEffect(() => {
-    if (!hashTarget) return;
-    document.getElementById(hashTarget)?.querySelector("button")?.focus({ preventScroll: true });
-  }, [hashTarget]);
-
-  const isOpen = (id: SectionId) => isSectionOpen({ id, open, hashTarget });
-  const toggle = (id: SectionId) => setOpen((prev) => ({ ...prev, [id]: !isOpen(id) }));
-  const expanded = anySectionOpen(open, hashTarget);
 
   const verdict = verdictKey(result);
   const approval = approvalState(result);
@@ -110,7 +92,7 @@ export default function AffordabilityPage() {
   };
 
   const section = (
-    id: SectionId,
+    id: AffordabilitySectionId,
     tone: Tone,
     line: string,
     figure: string,
@@ -136,59 +118,29 @@ export default function AffordabilityPage() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10">
-      <div className="pt-9 sm:pt-11">
-        <div className="eyebrow mb-5 text-ac">{t("aTitle")}</div>
-        <div className="flex flex-wrap items-end gap-8 sm:gap-10">
-          <div className="min-w-0 flex-1 sm:min-w-[420px]">
-            {/* The answer, at the scale of an answer. */}
-            <div
-              key={jurisdiction.id}
-              className="v2-pulse text-[52px] leading-none font-bold tracking-[-0.045em] text-ac sm:text-[72px]"
-            >
-              {fmt(result.comfort)}
-            </div>
-            <p className="mt-4 max-w-[560px] text-[17px] leading-[1.45] font-medium tracking-[-0.01em] text-pretty sm:text-[19px]">
-              {head}
-            </p>
-            <p className="mt-2 max-w-[560px] text-[14.5px] leading-[1.6] text-ink2 text-pretty">{sub}</p>
-            <p className="eyebrow mt-4 inline-block rounded-full border border-acbr px-2.5 py-1 text-ac">
-              {isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
-            </p>
-          </div>
-          <div className="flex flex-none flex-col gap-[18px] sm:min-w-[250px]">
-            {[
-              { label: t("stCeiling"), value: fmt(result.ceiling), note: t("stCeilingNote"), mark: "rule" as const },
-              { label: t("stMonthly"), value: fmt(result.monthly.total), note: headroom(result.comfortGap), mark: "estimate" as const },
-              { label: t("stCash"), value: fmt(result.cc.net), note: "", mark: undefined },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div className="mb-[5px] text-[12.5px] text-ink3">
-                  {stat.label}
-                  {stat.mark ? <Provenance kind={stat.mark} /> : null}
-                </div>
-                <div className="flex items-baseline gap-2.5">
-                  <span className="text-[22px] font-semibold tracking-[-0.02em]">{stat.value}</span>
-                  <span className="text-[12px] leading-[1.35] text-ink3">{stat.note}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <ToolMain>
+      <AnswerHead
+        eyebrow={t("aTitle")}
+        figure={fmt(result.comfort)}
+        pulseKey={jurisdiction.id}
+        head={head}
+        sub={sub}
+        tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+        stats={[
+          { label: t("stCeiling"), value: fmt(result.ceiling), note: t("stCeilingNote"), mark: "rule" },
+          { label: t("stMonthly"), value: fmt(result.monthly.total), note: headroom(result.comfortGap), mark: "estimate" },
+          { label: t("stCash"), value: fmt(result.cc.net) },
+        ]}
+      />
 
       <div className="pt-8 sm:pt-[34px]">
-        <div className="flex items-baseline gap-3.5 pb-3">
-          <span className="eyebrow flex-1 text-ink3">{t("breakdown")}</span>
-          <button
-            type="button"
-            onClick={() => setOpen(setAllSections(!expanded))}
-            aria-expanded={expanded}
-            className="rounded-full border border-acbr px-3.5 py-1.5 text-[13px] font-medium text-ac hover:bg-acbg"
-          >
-            {expanded ? t("collapseAll") : t("expandAll")}
-          </button>
-        </div>
+        <SectionsHeader
+          label={t("breakdown")}
+          expanded={expanded}
+          onToggleAll={toggleAll}
+          expandLabel={t("expandAll")}
+          collapseLabel={t("collapseAll")}
+        />
 
         {section(
           "approval",
@@ -307,14 +259,8 @@ export default function AffordabilityPage() {
         update={update}
       />
 
-      <div className="mt-10 border-t border-border pt-4 text-[11.5px] text-ink3">
-        <p>{t("unverifiedFlag")}</p>
-        <p>
-          {t("lastVerified")} {federal.verified}
-        </p>
-        {!jurisdiction.cityData ? <p>{t("noCityData")}</p> : null}
-      </div>
-    </main>
+      <FigureFooter jurisdiction={jurisdiction} />
+    </ToolMain>
   );
 }
 
