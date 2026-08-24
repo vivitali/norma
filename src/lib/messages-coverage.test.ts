@@ -87,23 +87,37 @@ function sourceFor(namespace: string): string {
 }
 
 /**
- * Dead copy that predates this guard, in a namespace this work did not touch.
+ * Dead copy that predates this guard, recorded by name rather than deleted.
  *
- * Recorded rather than deleted: pruning Affordability's copy is its own change,
- * with its own review, and doing it inside a six-page branch would mean nobody
- * reviews it properly. Listed by name so this doubles as the checklist for that
- * follow-up, and so a NEW orphan fails the test like any other.
+ * EMPTY, and that is the point. It held 32 Affordability keys until issue #21
+ * resolved them one at a time: every one was v1 copy the v2 rebuild dropped,
+ * verified against `design-reference/Affordability v2.dc.html` — the file
+ * DESIGN.md names as the authority — where none of them appears as a copy key.
+ * Their content either moved to a v2 key that IS rendered (`pi` → `mPi`,
+ * `ceiling` → `mLender`, `comfortFail` → `ckCfNo`) or belonged to an
+ * interaction v2 deleted (`aDeep` was the depth switcher, `cHide` the
+ * advanced-inputs toggle, `wPass`/`wCaution`/`wBlocked` the verdict words the
+ * tone dot and the section's always-visible line replaced).
+ *
+ * The one that took an argument was `perYear` ("gross, per year"), which v2 DOES
+ * render — as a hint beside a label v2 shortened to "Applicant 1". Our copy
+ * keeps v1's fuller wording throughout (`cApp1` is "Applicant 1, gross annual",
+ * as are `stMonthly`, `mTitle`, `mStated` and a dozen more), so the unit already
+ * reaches the reader inside the label. Rendering `perYear` would have meant
+ * shortening `cApp1`/`cApp2` to match — reversing that project-wide choice for
+ * one hint, and saying "gross" twice until it was.
+ *
+ * A 33rd went with them that this scanner never flagged: `Affordability.comfort`
+ * ("What fits your real budget", v1's pair to `ceiling`). The scan matches a
+ * bare quoted string, and `section("comfort", …)` in the page passes a SECTION
+ * ID by that name — so an id and a message key that happen to spell the same
+ * word cover for each other. Worth knowing before trusting a green run: this
+ * catches orphans whose names are unique, not every orphan.
+ *
+ * The seam stays for the next namespace that needs it. Nothing is exempt today,
+ * so any orphan anywhere fails outright.
  */
-const KNOWN_ORPHANS: Record<string, readonly string[]> = {
-  Affordability: [
-    "heading", "subheading", "debts", "ceiling", "approvalPass", "approvalFail",
-    "comfortPass", "comfortFail", "monthlyBreakdown", "pi", "propTax",
-    "insuranceMonthly", "maintenance", "total", "aDeep", "aSub", "stComfortNote",
-    "ckTitle", "ckSub", "wPass", "wCaution", "wBlocked", "gapOf", "gapOfInv",
-    "cHide", "mSub", "mRatios", "mGdsFull", "mTdsFull", "mLimitWord", "tagComfort",
-    "perYear",
-  ],
-};
+const KNOWN_ORPHANS: Record<string, readonly string[]> = {};
 
 /**
  * What this does NOT prove: that a key is reached on any particular code path,
