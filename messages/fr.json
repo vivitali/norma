@@ -30,6 +30,21 @@
     "brand": "AffordMath",
     "changeLocation": "Changer de lieu"
   },
+  "Nav": {
+    "menu": "Menu",
+    "afford": "Capacité",
+    "buy": "Acheter",
+    "own": "Posséder",
+    "utility": "Plus",
+    "affordability": "Capacité d'achat",
+    "rentVsBuy": "Louer ou acheter",
+    "closingCosts": "Frais de clôture",
+    "downPayment": "Mise de fonds",
+    "rrspHbp": "REER et RAP",
+    "amortization": "Amortissement",
+    "scenarios": "Scénarios",
+    "sources": "Sources"
+  },
   "Jurisdictions": {
     "toronto": "Toronto",
     "ottawa": "Ottawa",

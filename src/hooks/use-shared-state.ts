@@ -17,6 +17,10 @@ import { readStored, writeStored } from "@/lib/storage";
  * StrictMode's double-invoke-effects behavior — both invocations within one render see the same
  * stale (ready=false) closure, so neither can write stale defaults before the real hydrated
  * state has landed.
+ *
+ * The third element, `hydrated`, is that same `ready` flag. Pages gate any DERIVED figure on it —
+ * prerendered HTML necessarily shows defaults first, and a returning user must not be shown a
+ * dollar amount that is about to change. Input controls never gate on it; they render immediately.
  */
 export function useSharedState<T extends Record<string, unknown>>(
   allowlist: readonly (keyof T & string)[],
