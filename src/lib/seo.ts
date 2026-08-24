@@ -10,7 +10,13 @@ export const SITE_URL = "https://affordmath.com";
 export const SITE_NAME = "AffordMath";
 
 /** Routes that belong in the sitemap. Extend as pages ship. */
-export const INDEXABLE_ROUTES = ["/", "/affordability", "/closing-costs", "/sources"] as const;
+export const INDEXABLE_ROUTES = [
+  "/",
+  "/affordability",
+  "/closing-costs",
+  "/down-payment",
+  "/sources",
+] as const;
 
 export type IndexableRoute = (typeof INDEXABLE_ROUTES)[number];
 

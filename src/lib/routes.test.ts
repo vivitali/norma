@@ -33,6 +33,7 @@ describe("nav registry", () => {
     expect(NAV.flatMap(builtEntries).map((e) => e.route)).toEqual([
       "/affordability",
       "/closing-costs",
+      "/down-payment",
       "/sources",
     ]);
   });
