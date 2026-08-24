@@ -78,9 +78,16 @@ describe("locale prefixing", () => {
     expect(absoluteUrl("en", "/affordability")).toBe(
       `${SITE_URL}/en/affordability`,
     );
+    // The French canonical is the French SLUG, not the route key. A canonical that
+    // names a URL the site never serves is worse than no canonical at all, so this
+    // has to resolve through `pathnames` rather than concatenating the key.
     expect(absoluteUrl("fr", "/affordability")).toBe(
-      `${SITE_URL}/fr/affordability`,
+      `${SITE_URL}/fr/abordabilite`,
     );
+  });
+
+  it("leaves a route with no localized slug on its English key", () => {
+    expect(absoluteUrl("fr", "/sources")).toBe(`${SITE_URL}/fr/sources`);
   });
 
   it("maps the root to a bare locale path with no trailing slash", () => {

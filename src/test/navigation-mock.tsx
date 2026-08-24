@@ -19,8 +19,21 @@ export const nextNavigation = {
 export const intlNavigation = {
   usePathname: () => "/",
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
-  Link: ({ href, children, ...props }: { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
+  /**
+   * Accepts both href forms. Typed `pathnames` makes `href` a union of route keys, so a
+   * link carrying a hash has to pass `{ pathname, hash }` — see src/components/provenance.tsx.
+   * The double formats it the way next-intl would for the default locale; it does NOT
+   * localize the slug, which is why assertions here use the English key.
+   */
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname: string; hash?: string };
+    children: ReactNode;
+  }) => (
+    <a href={typeof href === "string" ? href : `${href.pathname}${href.hash ?? ""}`} {...props}>
       {children}
     </a>
   ),

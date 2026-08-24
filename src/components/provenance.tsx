@@ -21,7 +21,10 @@ export function Provenance({ kind }: { kind: ProvenanceKind }) {
   const t = useTranslations("Provenance");
   return (
     <Link
-      href={`/sources#${kind}`}
+      // Object form, not `/sources#rule`: `pathnames` makes href a union of route
+      // keys, and a key with a hash glued on is not a member of it. The hash rides
+      // alongside the pathname so the French slug still resolves.
+      href={{ pathname: "/sources", hash: `#${kind}` }}
       title={t(kind === "rule" ? "ruleTitle" : "estimateTitle")}
       aria-label={t(kind === "rule" ? "ruleTitle" : "estimateTitle")}
       className="micro ml-1 align-super text-text-faint underline decoration-dotted underline-offset-2"
