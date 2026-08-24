@@ -31,6 +31,13 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Without this the action tries to mint a Claude Code GitHub App
+          # token to post its review, and fails with "401 Unauthorized - Claude
+          # Code is not installed on this repository". The workflow's own token
+          # already carries the pull-requests: write granted above, so the App
+          # installation is not needed. Install the App at
+          # https://github.com/apps/claude and this line can go.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             Review this pull request against the conventions in CLAUDE.md and
             AGENTS.md at the repo root.
