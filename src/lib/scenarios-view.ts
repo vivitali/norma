@@ -28,12 +28,22 @@ export type Recommendation =
  *
  * **The rationale here used to be "more than a dollar back per extra dollar of
  * deposit", and that is false.** Swept across the insurable range at the rates
- * currently in federal.ts, `returnOnExtra` runs 0.88 to 0.95 and never reaches
- * 1.0: the premium saved does not outrun fifteen extra points of deposit over
- * twenty-five undiscounted years at a 10-basis-point insured/uninsured spread.
- * The ratio is reported as a fact and is rate-dependent — at the 5–6% rates the
- * source model assumed it clears 1.0 comfortably — but it is not the reason, and
- * a recommendation resting on it would be one the page's own table refutes.
+ * in federal.ts, `returnOnExtra` runs 0.88 to 0.95 and never reaches 1.0: the
+ * premium saved does not outrun fifteen extra points of deposit over twenty-five
+ * undiscounted years at a 10-basis-point insured/uninsured spread.
+ *
+ * The reference shipped that claim at THESE rates — design-reference/hbt-data.js
+ * carries the same 3.94/4.04 now in federal.ts — so it was wrong against its own
+ * data rather than written for a different rate environment. Worth stating
+ * plainly, because src/domain/ is a port of that file and a maintainer who
+ * assumed otherwise would restore the copy the first time rates moved.
+ *
+ * And the SPREAD matters at least as much as the level. At 5.5/5.6 the ratio
+ * runs 1.20–1.28 and at 6.0/6.1 it runs 1.31–1.40, but at 6.0/6.5 — a realistic
+ * insured/uninsured gap rather than the current ten basis points — it falls back
+ * to 0.91 across the whole range. So verifying rates upward does not by itself
+ * bring the old claim back, and the sweep test guarding this will not fire
+ * unless the spread stays narrow too.
  *
  * Returns `unanswered` when funds were never given: fundability is unknowable
  * then, and guessing it would put a verdict on the screen the reader never

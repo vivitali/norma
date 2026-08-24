@@ -91,9 +91,12 @@ describe("returnOnExtra is reported, never relied on", () => {
   it("is below 1.00 at every price the product can model, on the shipped rates", () => {
     // This is why the recommendation's rationale had to be rewritten. The
     // premium saved does not outrun fifteen extra points of deposit over 25
-    // undiscounted years at a 10-basis-point insured/uninsured spread. If this
-    // test ever fails, the rates were verified upward and the copy about what
-    // 20% buys can be revisited -- that is a good failure, not a bad one.
+    // undiscounted years at a 10-basis-point insured/uninsured spread.
+    //
+    // If this fails, read it as an invitation, not a break: the rates moved and
+    // the claim about what the extra cash returns may be live again. But check
+    // the SPREAD before restoring any copy -- at 6.0/6.5 the ratio is back under
+    // 1.0 at every price, so a higher level alone does not do it.
     for (const price of [400000, 600000, 900000, 1200000, 1400000]) {
       const result = recommend(columns({ price, qualIncome: price / 2, funds: price }));
       if (result.kind !== "twenty") throw new Error(`expected twenty at ${price}`);
