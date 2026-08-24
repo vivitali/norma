@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { AppHeader } from "@/components/app-header";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
+import { Analytics } from "@/components/analytics";
 import "../globals.css";
 
 /**
@@ -87,6 +88,7 @@ export default async function LocaleLayout({
             </JurisdictionProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   );
