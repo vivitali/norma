@@ -282,13 +282,19 @@ describe("benchmarkPrice", () => {
     expect(r.benchmark).toBe(winnipeg.bench.house);
   });
 
-  it("still has a published benchmark for every jurisdiction and property type", () => {
-    // The guard behind resolveInputs' `?? 0` last rung: while this holds, that rung is
-    // unreachable. When the per-region verification tasks null out the territories, this
-    // test is the one that has to be narrowed, deliberately, with the UI that asks.
+  it("has a published benchmark everywhere except where provenance says nobody publishes one", () => {
+    // NARROWED, deliberately, as this test's previous comment said it would have to be: the
+    // per-region verification tasks null out the benchmarks no publisher produces, starting
+    // with Saskatoon's apartment series. The invariant is not dropped, it is re-pointed — a
+    // benchmark may be null ONLY where that record's own provenance records conf "none" for
+    // the field, which is the milestone's rule that an unsourced figure is never displayed.
+    // So resolveInputs' `?? 0` last rung is now reachable, and `benchmark === null` is the
+    // fact a screen branches on; the UI that ASKS for a price is the Closing Costs milestone.
     for (const j of jurisdictions) {
       for (const ptype of ["house", "condo", "newbuild"] as const) {
-        expect(benchmarkPrice(j, ptype), `${j.id}.${ptype}`).not.toBeNull();
+        if (benchmarkPrice(j, ptype) !== null) continue;
+        const field = ptype === "newbuild" ? "house" : ptype;
+        expect(j.provenance[`bench.${field}`]?.conf, `${j.id}.${ptype} is null`).toBe("none");
       }
     }
   });
