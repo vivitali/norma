@@ -14,6 +14,11 @@ permissions:
   contents: read
   pull-requests: write
   issues: read
+  # claude-code-action authenticates by exchanging a GitHub OIDC token. Without
+  # this the action retries three times and fails the job with "Unable to get
+  # ACTIONS_ID_TOKEN_REQUEST_URL env variable" — on every PR, regardless of its
+  # contents. GitHub only injects that variable when id-token: write is granted.
+  id-token: write
 
 jobs:
   review:
