@@ -34,6 +34,7 @@ const HOLDING_PERIODS = [3, 5, 10, 15, 25, 40] as const;
 
 export default function RentVsBuyPage() {
   const t = useTranslations("RentVsBuy");
+  const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
@@ -407,7 +408,12 @@ export default function RentVsBuyPage() {
             />
             {stored.rent === null ? (
               <p className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
-                {t("rentTag", { city: jurisdiction.city ?? jurisdiction.prov })}
+                {/* Not `jurisdiction.city`, which is the lowercase record key — it rendered
+                    "winnipeg" to the reader. `sources-content.tsx` already resolves this the
+                    right way and documents why; this is the same fix. It matters more now that
+                    the territorial records carry a city, so the fallback to `prov` no longer
+                    hides it behind "YT". */}
+                {t("rentTag", { city: tJur(jurisdiction.id) })}
               </p>
             ) : null}
             <NumberField

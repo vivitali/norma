@@ -208,3 +208,16 @@ describe("Rent vs buy — French", () => {
     expect(document.body.textContent).not.toMatch(/RentVsBuy\./);
   });
 });
+
+describe("the rent placeholder names the jurisdiction the way a reader writes it", () => {
+  it("renders the translated jurisdiction name, not the lowercase record key", () => {
+    // `jurisdiction.city` is the record key ("winnipeg"), and it used to reach the reader raw.
+    // sources-content.tsx had already hit this and resolved it via the Jurisdictions namespace;
+    // this asserts the same page does. Regression guard, not a style preference: it became more
+    // visible when the territorial records gained a `city`, because the old
+    // `city ?? prov` fallback had been hiding it behind "YT".
+    renderPage();
+    expect(screen.getByText(/Typical for Winnipeg/)).toBeInTheDocument();
+    expect(screen.queryByText(/Typical for winnipeg/)).not.toBeInTheDocument();
+  });
+});
