@@ -67,6 +67,13 @@ export const RENT_VS_BUY_SECTIONS: readonly SectionDef[] = [
   { id: "assumptions", labelKey: "secAssumptions" },
 ] as const;
 
+export const SCENARIOS_SECTIONS: readonly SectionDef[] = [
+  { id: "monthly", labelKey: "secMonthly" },
+  { id: "cash", labelKey: "secCash" },
+  { id: "approval", labelKey: "secApproval" },
+  { id: "lifetime", labelKey: "secLifetime" },
+] as const;
+
 /** Every registry, with the message namespace its label keys resolve against. */
 export const SECTION_REGISTRIES: readonly { namespace: string; sections: readonly SectionDef[] }[] = [
   { namespace: "Affordability", sections: AFFORDABILITY_SECTIONS },
@@ -75,6 +82,7 @@ export const SECTION_REGISTRIES: readonly { namespace: string; sections: readonl
   { namespace: "RrspHbp", sections: RRSP_HBP_SECTIONS },
   { namespace: "Amortization", sections: AMORTIZATION_SECTIONS },
   { namespace: "RentVsBuy", sections: RENT_VS_BUY_SECTIONS },
+  { namespace: "Scenarios", sections: SCENARIOS_SECTIONS },
 ];
 
 export const SECTION_IDS: readonly string[] = AFFORDABILITY_SECTIONS.map((s) => s.id);

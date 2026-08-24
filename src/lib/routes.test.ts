@@ -41,6 +41,7 @@ describe("nav registry", () => {
       "/rrsp-hbp",
       "/amortization",
       "/rent-vs-buy",
+      "/scenarios",
       "/sources",
     ]);
   });

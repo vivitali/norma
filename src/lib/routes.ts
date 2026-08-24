@@ -51,7 +51,7 @@ export const NAV: readonly NavGroup[] = [
   {
     heading: "utility",
     entries: [
-      { route: "/scenarios", label: "scenarios", built: false },
+      { route: "/scenarios", label: "scenarios", built: true },
       { route: "/sources", label: "sources", built: true },
     ],
   },

@@ -29,10 +29,20 @@ describe("AppNav", () => {
     cleanup();
   });
 
-  it("links only to pages that exist", () => {
+  it("links to every built page and to nothing else", () => {
+    // Derived from NAV in both directions rather than naming two routes. Naming
+    // "Scenarios" as the unbuilt example made this fail the day Scenarios
+    // shipped, which is not the same event as the behaviour breaking. Now that
+    // every page is built the second half asserts nothing -- and correctly so.
     renderWithIntl(<AppNav />);
-    expect(screen.getByRole("link", { name: "Affordability" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Scenarios" })).not.toBeInTheDocument();
+    const label = (key: string) => enMessages.Nav[key as keyof typeof enMessages.Nav];
+    for (const group of NAV) {
+      for (const entry of group.entries) {
+        const link = screen.queryAllByRole("link", { name: label(entry.label) });
+        if (entry.built) expect(link.length, entry.route).toBeGreaterThan(0);
+        else expect(link.length, entry.route).toBe(0);
+      }
+    }
   });
 
   it("points the link at the localized slug", () => {
