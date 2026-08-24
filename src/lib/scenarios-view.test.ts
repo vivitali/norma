@@ -86,3 +86,31 @@ describe("recommend", () => {
     }
   });
 });
+
+describe("returnOnExtra is reported, never relied on", () => {
+  it("is below 1.00 at every price the product can model, on the shipped rates", () => {
+    // This is why the recommendation's rationale had to be rewritten. The
+    // premium saved does not outrun fifteen extra points of deposit over 25
+    // undiscounted years at a 10-basis-point insured/uninsured spread. If this
+    // test ever fails, the rates were verified upward and the copy about what
+    // 20% buys can be revisited -- that is a good failure, not a bad one.
+    for (const price of [400000, 600000, 900000, 1200000, 1400000]) {
+      const result = recommend(columns({ price, qualIncome: price / 2, funds: price }));
+      if (result.kind !== "twenty") throw new Error(`expected twenty at ${price}`);
+      expect(result.returnOnExtra, `at ${price}`).toBeLessThan(1);
+      expect(result.returnOnExtra, `at ${price}`).toBeGreaterThan(0.8);
+    }
+  });
+
+  it("still recommends 20%, on the ground that does survive", () => {
+    // The premium goes to zero and the payment falls. Both are unconditional and
+    // neither depends on the ratio.
+    const cols = columns({ funds: 400000 });
+    const five = cols[0];
+    const twenty = cols.find((c) => c.dpPct === 20)!;
+    expect(recommend(cols).kind).toBe("twenty");
+    expect(five.premium).toBeGreaterThan(0);
+    expect(twenty.premium).toBe(0);
+    expect(twenty.monthly.total).toBeLessThan(five.monthly.total);
+  });
+});

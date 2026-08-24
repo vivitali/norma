@@ -72,10 +72,20 @@ function sourceFor(namespace: string): string {
  * Dead copy that predates this guard, in a namespace this work did not touch.
  *
  * Recorded rather than deleted: pruning Affordability's copy is its own change,
- * with its own review. What the baseline buys is that the number cannot grow —
- * a new orphan in that namespace fails the test like any other.
+ * with its own review, and doing it inside a six-page branch would mean nobody
+ * reviews it properly. Listed by name so this doubles as the checklist for that
+ * follow-up, and so a NEW orphan fails the test like any other.
  */
-const KNOWN_ORPHANS: Record<string, number> = { Affordability: 32 };
+const KNOWN_ORPHANS: Record<string, readonly string[]> = {
+  Affordability: [
+    "heading", "subheading", "debts", "ceiling", "approvalPass", "approvalFail",
+    "comfortPass", "comfortFail", "monthlyBreakdown", "pi", "propTax",
+    "insuranceMonthly", "maintenance", "total", "aDeep", "aSub", "stComfortNote",
+    "ckTitle", "ckSub", "wPass", "wCaution", "wBlocked", "gapOf", "gapOfInv",
+    "cHide", "mSub", "mRatios", "mGdsFull", "mTdsFull", "mLimitWord", "tagComfort",
+    "perYear",
+  ],
+};
 
 /**
  * What this does NOT prove: that a key is reached on any particular code path,
@@ -104,13 +114,15 @@ describe("message coverage", () => {
           !source.includes(`"${key}"`) &&
           !source.includes(`'${key}'`),
       );
-      const allowed = KNOWN_ORPHANS[namespace] ?? 0;
-      if (allowed === 0) {
-        expect(orphans, `${namespace} keys with no call site`).toEqual([]);
-      } else {
-        // Must shrink or hold, never grow. Drop the baseline when it reaches 0.
-        expect(orphans.length, `${namespace} orphan copy`).toBeLessThanOrEqual(allowed);
-      }
+      const allowed = KNOWN_ORPHANS[namespace] ?? [];
+      // Named, not counted. A count lets one orphan be deleted and another added
+      // with the total unmoved, and the number is a property of THIS SCANNER
+      // rather than of the copy -- it went 27 to 32 when the scan tightened, with
+      // nobody having written a line. Delete keys from the list as they go.
+      expect(
+        orphans.filter((key) => !allowed.includes(key)),
+        `${namespace} keys with no call site`,
+      ).toEqual([]);
     });
   }
 });

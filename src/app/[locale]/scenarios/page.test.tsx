@@ -93,6 +93,31 @@ describe("Scenarios — the recommendation", () => {
     expect(screen.getAllByText("Recommended").length).toBeGreaterThan(0);
   });
 
+  it("reconciles the saving against the cash it costs, in one sentence", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Qualification/);
+    const income = screen.getByLabelText("Household income");
+    await user.clear(income);
+    await user.type(income, "180000");
+    await user.tab();
+    await open(user, /Can you fund it\?/);
+    const funds = screen.getByLabelText("Funds available");
+    await user.clear(funds);
+    await user.type(funds, "300000");
+    await user.tab();
+
+    // The head says "saves $76,010" and the table says "0.91×". Shown together
+    // with nothing connecting them, the reader has two magnitudes and no way to
+    // relate them. Asserting the phrase alone passed either way, because both
+    // the head and the old second branch carried "over the life of the mortgage".
+    const sub = screen.getAllByText(/back per dollar of extra deposit/)[0];
+    expect(sub).toBeInTheDocument();
+    expect(sub.textContent).toMatch(/\$[\d,]+ of interest/);
+    expect(sub.textContent).toMatch(/\$[\d,]+ more at closing/);
+    expect(sub.textContent).toMatch(/\d\.\d\d×/);
+  });
+
   it("says a deposit cannot fix an income problem", async () => {
     const user = userEvent.setup();
     renderPage();

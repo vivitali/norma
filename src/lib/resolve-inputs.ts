@@ -115,8 +115,6 @@ export function resolveInputs(
   const income2 = stored.income2 ?? 0;
   const otherIncome = stored.otherIncome ?? 0;
   const price = stored.price ?? j.bench[stored.ptype];
-  // Half a dollar of slack: a percentage that lands a rounding error under the
-  // floor is not a reader asking for something illegal.
   // Half a dollar of slack, matching scenario()'s own test in engine.ts: a
   // percentage that lands a rounding error under the floor is not a reader
   // asking for something illegal. Expressed in dollars, not percentage points,

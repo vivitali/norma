@@ -362,16 +362,19 @@ export default function RentVsBuyPage() {
               min={0}
               onCommit={(utilities) => update({ utilities })}
             />
-            {stored.ptype === "condo" ? (
-              <NumberField
-                id="condoFee"
-                label={t("fCondo")}
-                value={stored.condoFee}
-                placeholder={resolved.condoFee}
-                min={0}
-                onCommit={(condoFee) => update({ condoFee })}
-              />
-            ) : null}
+            {/*
+              Ungated. rentVsBuy() adds condoFee to owner outlay whatever the
+              property type, so hiding the control on a house strands a fee the
+              model is still charging -- the same defect one property type over.
+            */}
+            <NumberField
+              id="condoFee"
+              label={t("fCondo")}
+              value={stored.condoFee}
+              placeholder={resolved.condoFee}
+              min={0}
+              onCommit={(condoFee) => update({ condoFee })}
+            />
             <p className="text-[11.5px] leading-[1.5] text-ink3 text-pretty">{t("leverNote")}</p>
           </fieldset>
         </div>

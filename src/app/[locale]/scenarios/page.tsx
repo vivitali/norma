@@ -82,15 +82,15 @@ export default function ScenariosPage() {
             : t("subtitle");
   const sub =
     rec.kind === "twenty"
-      ? // Stated in the SAME unit as the table row two sections down. Rendering
-        // the ratio as "91%" claimed a guaranteed 91% return for a figure the
-        // page's own note defines as below break-even.
-        rec.returnOnExtra >= 1
-        ? t("recTwentySub", { ret: `${rec.returnOnExtra.toFixed(2)}×`, extra: fmt(rec.extraCash) })
-        : t("recTwentyBelow", {
-            ret: `${rec.returnOnExtra.toFixed(2)}×`,
-            extra: fmt(rec.extraCash),
-          })
+      ? // ONE string, in the same unit as the table row below. Two branches on
+        // `returnOnExtra >= 1` left the >= 1 copy unreachable at every price the
+        // product can model, and the reader with "saves $76,010" and "returns
+        // 0.91x" in one block with nothing reconciling the two magnitudes.
+        t("recTwentySub", {
+          save: fmt(rec.saving),
+          extra: fmt(rec.extraCash),
+          ret: `${rec.returnOnExtra.toFixed(2)}×`,
+        })
       : rec.kind === "only"
         ? t("recOnlySub", {
             extra: fmt(rec.extraCash),

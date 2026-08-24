@@ -22,9 +22,18 @@ export type Recommendation =
  * 2. **Then fundability.** A cheaper column you cannot fund is not an option, so
  *    a recommendation the reader cannot act on is not a recommendation.
  * 3. **Then 20%,** because it is the only threshold that removes the insurance
- *    premium outright — a guaranteed, tax-free return that is genuinely hard to
- *    beat. Above 20% each extra dollar earns exactly the mortgage rate, which is
- *    a much weaker case, so the page does not push past it.
+ *    premium outright and lowers the payment for the life of the loan. Above 20%
+ *    each extra dollar earns exactly the mortgage rate, a much weaker case, so
+ *    the page does not push past it.
+ *
+ * **The rationale here used to be "more than a dollar back per extra dollar of
+ * deposit", and that is false.** Swept across the insurable range at the rates
+ * currently in federal.ts, `returnOnExtra` runs 0.88 to 0.95 and never reaches
+ * 1.0: the premium saved does not outrun fifteen extra points of deposit over
+ * twenty-five undiscounted years at a 10-basis-point insured/uninsured spread.
+ * The ratio is reported as a fact and is rate-dependent — at the 5–6% rates the
+ * source model assumed it clears 1.0 comfortably — but it is not the reason, and
+ * a recommendation resting on it would be one the page's own table refutes.
  *
  * Returns `unanswered` when funds were never given: fundability is unknowable
  * then, and guessing it would put a verdict on the screen the reader never
@@ -55,8 +64,9 @@ export function recommend(columns: readonly ScenarioResult[]): Recommendation {
       pct: PREMIUM_FREE_PCT,
       saving: lowest.costOfBorrowing - twenty.costOfBorrowing,
       extraCash: twenty.net - lowest.net,
-      // Lifetime saving per dollar of extra deposit. Above 1.0, every extra
-      // dollar returned more than a dollar -- guaranteed and tax-free.
+      // Lifetime saving per dollar of extra deposit, undiscounted: nominal
+      // interest over 25 years against dollars paid today. Reported, never
+      // relied on -- see the note above about what it actually comes out at.
       returnOnExtra:
         twenty.net - lowest.net > 0
           ? (lowest.costOfBorrowing - twenty.costOfBorrowing) / (twenty.net - lowest.net)

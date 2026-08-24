@@ -427,7 +427,7 @@
     "step4": "4. Withdraw",
     "step4Body": "Withdraw up to {cap} tax-free under the Home Buyers’ Plan, using Form T1036.",
     "step5": "5. Repay",
-    "step5Body": "Starting the second year after the withdrawal, repay one {n}th of it each year for {y} years. Skip a payment and that amount is added to your income for the year.",
+    "step5Body": "Starting the second year after the withdrawal, repay an equal share of it each year for {y} years. Skip a payment and that amount is added to your income for the year.",
     "contribution": "Your RRSP contribution",
     "refund": "Refund at your marginal rate",
     "withdraw": "Amount withdrawn tax-free",
@@ -668,7 +668,7 @@
     "nOrderTitle": "Fill tax-advantaged room first",
     "nOrderBody": "FHSA, then RRSP, then TFSA. Those beat the mortgage rate before any prepayment does, and the FHSA is deductible going in and tax-free coming out.",
     "recTwenty": "Getting to 20% saves {save} over the life of the mortgage.",
-    "recTwentySub": "Every extra dollar of deposit returns {ret} in lifetime borrowing cost, and the insurance premium disappears entirely. Above 1.00× the extra cash more than pays for itself; below it, it does not.",
+    "recTwentySub": "It saves {save} of interest for {extra} more at closing — {ret} back per dollar of extra deposit, undiscounted. Above 1.00× the extra cash repays itself in interest alone; below it, what 20% buys is the end of the insurance premium and a lower payment for the life of the loan.",
     "recOnly": "At this price, {p} down is the only option you can fund today.",
     "recOnlySub": "Reaching 20% would cost {extra} more at closing — about {n} months of saving at your current rate. It would save {save} over the life of the mortgage.",
     "recNoneCash": "You cannot fund any of these scenarios yet.",
@@ -700,8 +700,7 @@
     "column": "{p} down",
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
-    "bestHere": "best of the four",
-    "recTwentyBelow": "Getting to 20% removes the insurance premium, but at these figures the extra {extra} returns {ret} — less than a dollar per dollar over the life of the mortgage."
+    "bestHere": "best of the four"
   },
   "Provenance": {
     "rule": "rule",

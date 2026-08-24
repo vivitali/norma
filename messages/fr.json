@@ -427,7 +427,7 @@
     "step4": "4. Retirer",
     "step4Body": "Retirez jusqu’à {cap} sans impôt dans le cadre du RAP, avec le formulaire T1036.",
     "step5": "5. Rembourser",
-    "step5Body": "À compter de la deuxième année suivant le retrait, remboursez un {n}e du montant chaque année pendant {y} ans. Une année sautée est ajoutée à votre revenu.",
+    "step5Body": "À compter de la deuxième année suivant le retrait, remboursez une part égale chaque année pendant {y} ans. Une année sautée est ajoutée à votre revenu.",
     "contribution": "Votre cotisation REER",
     "refund": "Remboursement à votre taux marginal",
     "withdraw": "Montant retiré sans impôt",
@@ -668,7 +668,7 @@
     "nOrderTitle": "Remplissez d’abord vos droits fiscaux",
     "nOrderBody": "CELIAPP, puis REER, puis CELI. Ils battent le taux hypothécaire avant tout remboursement anticipé, et le CELIAPP est déductible à l’entrée et libre d’impôt à la sortie.",
     "recTwenty": "Atteindre 20 % économise {save} sur la durée du prêt.",
-    "recTwentySub": "Chaque dollar additionnel de mise de fonds rapporte {ret} en coût d’emprunt sur la durée, et la prime d’assurance disparaît entièrement. Au-dessus de 1,00×, le comptant additionnel se rembourse plus qu’intégralement ; en dessous, non.",
+    "recTwentySub": "Cela économise {save} d’intérêts pour {extra} de plus à la clôture — {ret} par dollar de mise de fonds additionnelle, non actualisé. Au-dessus de 1,00×, le comptant additionnel se rembourse par les seuls intérêts ; en dessous, ce que 20 % achète, c’est la fin de la prime d’assurance et un paiement plus bas pour toute la durée du prêt.",
     "recOnly": "À ce prix, {p} de mise de fonds est la seule option que vous pouvez financer aujourd’hui.",
     "recOnlySub": "Atteindre 20 % coûterait {extra} de plus à la clôture — environ {n} mois d’épargne à votre rythme. Cela économiserait {save} sur la durée du prêt.",
     "recNoneCash": "Vous ne pouvez encore financer aucun de ces scénarios.",
@@ -700,8 +700,7 @@
     "column": "{p} de mise de fonds",
     "tagYours": "Vos chiffres",
     "tagTypical": "Chiffres typiques",
-    "bestHere": "meilleur des quatre",
-    "recTwentyBelow": "Atteindre 20 % supprime la prime d’assurance, mais avec ces chiffres les {extra} additionnels rapportent {ret} — moins d’un dollar par dollar sur la durée du prêt."
+    "bestHere": "meilleur des quatre"
   },
   "Provenance": {
     "rule": "règle",
