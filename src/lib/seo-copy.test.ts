@@ -10,6 +10,7 @@ const PAGES = [
   "closingCosts",
   "downPayment",
   "rrspHbp",
+  "amortization",
   "sources",
   "notFound",
 ] as const;
