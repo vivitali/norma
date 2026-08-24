@@ -1,6 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "norma",
+  // Production serves only from the custom domain. Leaving workers.dev enabled
+  // gives the site a second reachable hostname; Cloudflare marks it noindex,
+  // but one canonical host is the point. Preview deploys from
+  // `scripts/ship --preview` keep their own versioned hostnames and are
+  // unaffected.
+  "workers_dev": false,
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-04-15",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],

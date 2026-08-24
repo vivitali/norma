@@ -1,7 +1,23 @@
 {
   "Metadata": {
-    "title": "norma",
-    "description": "See what you can genuinely afford, with your province's real rules built in."
+    "home": {
+      "title": "What can you actually afford? — AffordMath",
+      "description": "See what you can genuinely afford to buy in Canada — from real net income and real carrying costs, with your province's rules applied."
+    },
+    "affordability": {
+      "title": "Affordability calculator — real cost, not pre-approval",
+      "description": "Two ceilings side by side: what a lender would approve, and what fits your actual monthly budget. Your province's tax and cost rules included."
+    },
+    "sources": {
+      "title": "Sources and provenance — AffordMath",
+      "description": "Where every figure comes from: which are exact provincial rules, which are estimates, and which are not yet verified."
+    },
+    "notFound": {
+      "title": "Page not found — AffordMath",
+      "description": "That page does not exist. The affordability calculator and the sources page are linked below.",
+      "body": "That page does not exist.",
+      "cta": "Go to the affordability calculator"
+    }
   },
   "Home": {
     "heading": "What can you actually afford?",
@@ -11,7 +27,7 @@
   "AppHeader": {
     "theme": "Theme",
     "changeLanguage": "Change language",
-    "brand": "norma",
+    "brand": "AffordMath",
     "changeLocation": "Change location"
   },
   "Jurisdictions": {

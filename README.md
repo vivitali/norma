@@ -1,3 +1,6 @@
+The product ships as **AffordMath** on `affordmath.com`; `norma` is the repository name and
+internal codename.
+
 **norma** — named for the constellation Norma, the Level (Carpenter's Square): the instrument that tells you what is actually true and straight, not what merely looks fine. Latin *norma* means "rule, standard" — a fitting name for a tool built on each province's real rules.
 
 ## Purpose
