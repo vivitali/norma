@@ -24,7 +24,7 @@ describe("palette", () => {
       "--paper": "#FAF9F6", "--panel": "#FFFFFF", "--sunk": "#F1EFEA",
       "--line": "#E4E1DA", "--line2": "#EFEDE8",
       "--ink": "#14151A", "--ink2": "#5B5F66", "--ink3": "#6A6D73",
-      "--ac": "#3D3BD6", "--ac2": "#6462E6", "--acbg": "#ECECFD", "--acbr": "#D3D2FA",
+      "--ac": "#3D3BD6", "--ac2": "#6462E6", "--acbg": "#EEEEFD", "--acbr": "#D3D2FA",
       "--pass": "#176B4B", "--caut": "#8A5A12", "--blk": "#A32B2B",
     },
     dark: {
@@ -47,8 +47,11 @@ describe("palette", () => {
 
 describe("contrast", () => {
   // v2 has no semantic surfaces — state is a dot and a figure colour on the page
-  // ground — so every meaningful pair is a foreground against one of these three.
-  const SURFACES = ["--paper", "--panel", "--sunk"] as const;
+  // ground. --acbg is the one exception and always was: the inline-ask box, the
+  // open menu trigger, the personalisation tag and the reader's own row in the
+  // rent-vs-buy table all put text on it. It was outside this sweep until that
+  // last one was added, which is exactly how an untested surface accumulates.
+  const SURFACES = ["--paper", "--panel", "--sunk", "--acbg"] as const;
   const FOREGROUNDS = ["--ink", "--ink2", "--ink3", "--ac", "--pass", "--caut", "--blk"] as const;
 
   for (const [theme, tokens] of [["light", light], ["dark", dark]] as const) {

@@ -58,6 +58,44 @@ describe("Rent vs buy — the horizon decides", () => {
     expect(screen.queryByText(/never pulls ahead/)).not.toBeInTheDocument();
   });
 
+  it("signs the advantage column instead of printing its absolute value", async () => {
+    // The header says "Advantage of buying". Printing Math.abs meant a row where
+    // buying TRAILS by $648,135 read as an advantage OF $648,135 -- a wrong
+    // number under a correct label, which is worse than either alone.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The verdict/);
+    const table = screen.getAllByRole("table")[0];
+    const advantages = [...table.querySelectorAll("tbody tr")].map(
+      (tr) => tr.children[3].textContent ?? "",
+    );
+    // On the placeholder figures buying never pulls ahead, so every row is negative.
+    expect(advantages.every((v) => v.includes("−"))).toBe(true);
+  });
+
+  it("marks the reader's own horizon among the rows that are not theirs", async () => {
+    // Six holding periods, one of which answers the question actually asked.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The verdict/);
+    const current = [...screen.getAllByRole("table")[0].querySelectorAll("tbody tr")].filter(
+      (tr) => tr.getAttribute("aria-current") === "true",
+    );
+    expect(current).toHaveLength(1);
+    expect(current[0].textContent).toContain("10 years");
+
+    // And it follows the control rather than being pinned to the default.
+    const horizon = within(
+      screen.getByRole("radiogroup", { name: "How long you expect to stay" }),
+    );
+    await user.click(horizon.getByRole("radio", { name: "25 years" }));
+    const moved = [...screen.getAllByRole("table")[0].querySelectorAll("tbody tr")].filter(
+      (tr) => tr.getAttribute("aria-current") === "true",
+    );
+    expect(moved).toHaveLength(1);
+    expect(moved[0].textContent).toContain("25 years");
+  });
+
   it("respects the horizon control", async () => {
     // Scoped to the holding group: amortization offers "25 years" too, and an
     // unscoped query silently picks whichever comes first in the DOM.

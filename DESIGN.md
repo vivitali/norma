@@ -52,7 +52,7 @@ and no background/border triples.
 | `--ink3` | tertiary text ⚠ corrected | `#6A6D73` | `#82878D` |
 | `--ac` | the one accent | `#3D3BD6` | `#8886FF` |
 | `--ac2` | accent, lighter | `#6462E6` | `#A5A3FF` |
-| `--acbg` / `--acbr` | accent surface / border | `#ECECFD` / `#D3D2FA` | `#1B1B33` / `#2E2E52` |
+| `--acbg` / `--acbr` | accent surface / border | `#EEEEFD` / `#D3D2FA` | `#1B1B33` / `#2E2E52` |
 | `--pass` | state: pass | `#176B4B` | `#55C293` |
 | `--caut` | state: caution | `#8A5A12` | `#D9A94E` |
 | `--blk` | state: blocked | `#A32B2B` | `#E88A8A` |
@@ -163,7 +163,12 @@ for a photosensitive reader than the fade. Exempting it is the whole fix.
 WCAG 2.1 AA where practical — a working convention, not a claim anyone may make
 externally (see PRODUCT.md).
 
-- Contrast is enforced by test across every foreground × surface × theme.
+- Contrast is enforced by test across every foreground × surface × theme, **including
+  `--acbg`**. That surface was outside the sweep until the rent-vs-buy table tinted the
+  reader's own row with it, at which point `--ink3` on it measured 4.44:1 — under AA, on a
+  pairing nothing in the app used yet. `--acbg` moved two points lighter (`#ECECFD` →
+  `#EEEEFD`, imperceptible) so the palette is safe to combine freely rather than safe only
+  in the combinations that happen to exist today.
 - 44px minimum touch targets below `sm`; 16px control floor everywhere. Where a control is
   deliberately smaller than 44px — the *Expand all* pill is 32px by design — the target is
   reached by an invisible `after:` hit area rather than by growing the control, so the

@@ -12,6 +12,7 @@ import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { RENT_VS_BUY_SECTIONS } from "@/lib/sections";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
 import { SegmentedGroup } from "@/components/affordability/segmented-group";
 import { WealthChart } from "@/components/rent-vs-buy/wealth-chart";
@@ -26,6 +27,8 @@ import { Switch } from "@/components/ui/switch";
 /** Modelled to 40 years regardless of horizon: the break-even can be past year 25. */
 const HORIZON_YEARS = 40;
 const HOLD_CHOICES = [3, 5, 10, 25] as const;
+/** The rows of the by-holding-period table. The reader's own horizon is marked among them. */
+const HOLDING_PERIODS = [3, 5, 10, 15, 25, 40] as const;
 
 
 export default function RentVsBuyPage() {
@@ -188,17 +191,65 @@ export default function RentVsBuyPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[3, 5, 10, 15, 25, 40].map((year) => {
+                  {HOLDING_PERIODS.map((year) => {
                     const row = rowAt(result.rows, year);
+                    // The reader's own horizon, among five that are not theirs.
+                    const mine = year === hold;
                     return (
-                      <tr key={year} className="border-b border-hairline">
-                        <th scope="row" className="py-1.5 pr-3 text-left font-normal text-ink2">
+                      <tr
+                        key={year}
+                        // aria-current carries to a screen reader what the tint
+                        // carries visually: of six rows, this is the one that
+                        // answers the question the reader actually asked.
+                        aria-current={mine ? "true" : undefined}
+                        className={
+                          mine
+                            ? "border-b border-acbr bg-acbg"
+                            : "border-b border-hairline"
+                        }
+                      >
+                        <th
+                          scope="row"
+                          className={
+                            mine
+                              ? "py-1.5 pr-3 text-left font-semibold text-ac"
+                              : "py-1.5 pr-3 text-left font-normal text-ink2"
+                          }
+                        >
                           {`${year} ${t("years")}`}
+                          {mine ? <span className="sr-only"> · {t("horizonLabel", { n: hold })}</span> : null}
                         </th>
-                        <td className="py-1.5 pr-3">{fmt(row.buyW)}</td>
-                        <td className="py-1.5 pr-3">{fmt(row.rentW)}</td>
-                        <td className="py-1.5 pr-3">{fmt(Math.abs(row.adv))}</td>
-                        <td className={row.adv > 0 ? "py-1.5 text-pass" : "py-1.5 text-ink2"}>
+                        {/*
+                          Right-aligned: this table exists to be read down a
+                          column, and left-aligned currency puts the thousands
+                          digit of one row over the hundreds of the next.
+                        */}
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.buyW)}</td>
+                        <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.rentW)}</td>
+                        {/*
+                          SIGNED, not Math.abs. The column is "Advantage of
+                          buying" and it was printing the absolute value, so a
+                          row where buying trails by $648,135 read as an
+                          advantage OF $648,135. money() puts the sign outside
+                          the symbol, so the minus does the work.
+                        */}
+                        <td
+                          className={cn(
+                            "py-1.5 pr-3 text-right font-medium tabular-nums",
+                            row.adv > 0 ? "text-pass" : "text-ink",
+                          )}
+                        >
+                          {fmt(row.adv)}
+                        </td>
+                        {/*
+                          Both outcomes in full ink. The winner used to be
+                          pass-green for buying and muted grey for renting, which
+                          rendered every winner on the default data as the quiet
+                          one -- and said renting winning is an absence rather
+                          than a result. PRODUCT.md holds buyers and renters
+                          co-equal; neither answer is a pass or a fail.
+                        */}
+                        <td className="py-1.5 font-semibold">
                           {row.adv > 0 ? t("buyWord") : t("rentWord")}
                         </td>
                       </tr>
