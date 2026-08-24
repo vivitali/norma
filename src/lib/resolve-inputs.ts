@@ -1,4 +1,4 @@
-import type { FederalRules, Jurisdiction, PropertyType } from "@/domain/types";
+import type { FederalRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
 import { defaultContractRate, minDown } from "@/domain/engine";
 import type { ToolFormState } from "./shared-inputs";
 
@@ -41,6 +41,7 @@ export interface ResolvedInputs {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  residency: Residency;
   contractRate: number;
   income1: number;
   income2: number;
@@ -136,6 +137,7 @@ export function resolveInputs(
     ftb: stored.ftb,
     ptype: stored.ptype,
     elsewhere: stored.elsewhere,
+    residency: stored.residency,
     contractRate: stored.contractRate ?? defaultContractRate(F, dpPct),
     income1,
     // null means "no second applicant", not "a second applicant earning nothing".

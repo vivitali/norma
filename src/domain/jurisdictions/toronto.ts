@@ -22,6 +22,9 @@ export const toronto: Jurisdiction = {
       key: "li_lttMuni",
       ex: "ex_lttMuni",
       tier: "municipal",
+      // Buying elsewhere in Ontario means outside the City of Toronto, so the MLTT does not
+      // apply. Toronto is the only Ontario municipality that levies one.
+      when: { elsewhere: false },
       kind: "brackets",
       brackets: [
         [55000, 0.005], [250000, 0.01], [400000, 0.015], [2000000, 0.02],
@@ -32,8 +35,8 @@ export const toronto: Jurisdiction = {
   ],
   premiumTax: { rate: 0.08, label: "Ontario retail sales tax, 8%" },
   rebates: [
-    { key: "cr_lttRebateProv", kind: "cap", cap: 4000, on: "li_lttProv", timing: "closing" },
-    { key: "cr_lttRebateMuni", kind: "cap", cap: 4475, on: "li_lttMuni", timing: "closing" },
+    { key: "cr_lttRebateProv", kind: "cap", cap: 4000, on: "li_lttProv", timing: "closing", when: { ftb: true } },
+    { key: "cr_lttRebateMuni", kind: "cap", cap: 4475, on: "li_lttMuni", timing: "closing", when: { ftb: true } },
   ],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 2200, titleIns: 400, inspect: 650, appraisal: 400, statusCert: 110, moving: 1500, setup: 650 },

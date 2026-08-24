@@ -1,4 +1,10 @@
-import type { Jurisdiction, FederalRules, PropertyType } from "./types";
+import type {
+  Applicability,
+  FederalRules,
+  Jurisdiction,
+  PropertyType,
+  Residency,
+} from "./types";
 
 export interface BracketPart {
   from: number;
@@ -107,6 +113,7 @@ export interface ClosingInput extends FinancingInput {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  residency: Residency;
 }
 
 export interface LineItem {
@@ -120,12 +127,32 @@ export interface LineItem {
   sub?: string;
 }
 
+/**
+ * Which keys of `when` the input fails. Empty means the item applies. Callers need the list,
+ * not just a boolean: `credits` renders a rebate that fails ONLY its `ftb` test as an
+ * "ftbOnly" row so the user learns why they get nothing, but drops one that fails a `ptype`
+ * or `residency` test entirely, matching buildLines' absent-not-zero convention.
+ */
+export function unmetBy(when: Applicability | undefined, o: ClosingInput): (keyof Applicability)[] {
+  const unmet: (keyof Applicability)[] = [];
+  if (!when) return unmet;
+  if (when.ftb !== undefined && when.ftb !== o.ftb) unmet.push("ftb");
+  if (when.ptype !== undefined && when.ptype !== o.ptype) unmet.push("ptype");
+  if (when.residency !== undefined && when.residency !== o.residency) unmet.push("residency");
+  if (when.elsewhere !== undefined && when.elsewhere !== o.elsewhere) unmet.push("elsewhere");
+  return unmet;
+}
+
+export function applies(when: Applicability | undefined, o: ClosingInput): boolean {
+  return unmetBy(when, o).length === 0;
+}
+
 /** A non-applicable line item is ABSENT from the result, never a zero row. */
 export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
   const fin = financing(F, o);
   const gov: LineItem[] = [];
   for (const it of j.transfer) {
-    if (o.elsewhere && it.tier === "municipal" && j.prov === "ON") continue;
+    if (!applies(it.when, o)) continue;
     let amt = 0;
     let parts: LineItem["parts"] = null;
     if (it.kind === "brackets") {
@@ -179,11 +206,12 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
 
 export interface CreditLine {
   key: string;
-  kind: "cap" | "exemptBand" | "fullExempt" | "none";
+  kind: "cap" | "exemptBand" | "fullExempt" | "tieredPhaseOut" | "none";
   amount: number;
-  st: "applied" | "capped" | "phasedOut" | "none" | "ftbOnly";
+  st: "applied" | "capped" | "phasedOut" | "overCeiling" | "superseded" | "none" | "ftbOnly";
   target: string;
   cap?: number;
+  group?: string;
   noTax?: boolean;
 }
 
@@ -204,9 +232,16 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     const raw = target.amount;
     let amount = 0;
     let st: CreditLine["st"] = "none";
+    const unmet = unmetBy(rb.when, o);
+    // Failing only the first-time-buyer test is worth SAYING — the user learns why they get
+    // nothing. Failing any other test means the programme is irrelevant to this purchase, so
+    // the row is absent, matching buildLines.
+    const ftbOnly = unmet.length === 1 && unmet[0] === "ftb";
+    if (unmet.length > 0 && !ftbOnly) continue;
+
     if (rb.kind === "none") {
       st = "none";
-    } else if (!o.ftb) {
+    } else if (ftbOnly) {
       st = "ftbOnly";
     } else if (rb.kind === "cap") {
       amount = Math.min(rb.cap, raw);
@@ -230,17 +265,53 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
         st = "phasedOut";
       }
     }
-    atClosing.push({
+    const line: CreditLine = {
       key: rb.key,
       kind: rb.kind,
       amount,
       st,
       target: target.key,
       cap: rb.kind === "cap" ? rb.cap : undefined,
+      group: rb.group,
       noTax: rb.noTax,
-    });
+    };
+    // A rebate claimed on a tax return is not money the buyer brings to the closing table.
+    // The asymmetry is deliberate: a zero-amount atClosing row is kept, because it carries
+    // `st` and that is the whole point of ftbOnly, while a zero-amount later row is dropped
+    // — LaterCredit has no status field, so it would render as a meaningless "$0" line.
+    if (rb.timing === "taxTime") {
+      if (amount > 0) later.push({ key: rb.key, ex: rb.ex, amount });
+    } else {
+      atClosing.push(line);
+    }
   }
-  if (o.ftb) for (const c of j.taxTime) later.push({ key: c.key, ex: c.ex, amount: c.amount });
+  // Two programmes in the same group are alternatives, not a stack: BC's first-time-buyer and
+  // newly-built exemptions are each claimable, but only one of them. Keeping the loser visible
+  // as a superseded row lets the UI explain the choice instead of silently hiding a programme
+  // the buyer qualified for.
+  const groups = new Map<string, CreditLine[]>();
+  for (const c of atClosing) {
+    if (!c.group) continue;
+    const bucket = groups.get(c.group);
+    if (bucket) bucket.push(c);
+    else groups.set(c.group, [c]);
+  }
+  for (const bucket of groups.values()) {
+    if (bucket.length < 2) continue;
+    const best = bucket.reduce((a, b) => (b.amount > a.amount ? b : a));
+    for (const c of bucket) {
+      if (c === best) continue;
+      c.amount = 0;
+      c.st = "superseded";
+    }
+  }
+
+  for (const c of j.taxTime) {
+    // Tax-time credits are first-time-buyer credits by default; `when` narrows further.
+    if (!o.ftb) continue;
+    if (!applies(c.when, o)) continue;
+    later.push({ key: c.key, ex: c.ex, amount: c.amount });
+  }
   if (o.ftb && o.ptype === "newbuild") {
     const g = F.gstFthb;
     const gst = o.price * g.rate;
@@ -291,6 +362,7 @@ export interface AffordabilityInput {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  residency: Residency;
   /** Funds available at closing. null = not told; there is nothing honest to assume. */
   funds?: number | null;
   /** Monthly saving toward the purchase. null = not told. */
@@ -353,6 +425,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
     ptype: o.ptype,
     amortYears: o.amortYears,
     elsewhere: o.elsewhere,
+    residency: o.residency,
   });
   // Priced off the entered contract rate — the same rate that drives the comfort ceiling above
   // — so the "what fits your budget" card and the monthly P&I row can never disagree, and the

@@ -20,7 +20,7 @@ export const ottawa: Jurisdiction = {
     },
   ],
   premiumTax: { rate: 0.08, label: "Ontario retail sales tax, 8%" },
-  rebates: [{ key: "cr_lttRebateProv", kind: "cap", cap: 4000, on: "li_lttProv", timing: "closing" }],
+  rebates: [{ key: "cr_lttRebateProv", kind: "cap", cap: 4000, on: "li_lttProv", timing: "closing", when: { ftb: true } }],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 1900, titleIns: 375, inspect: 550, appraisal: 400, statusCert: 110, moving: 1300, setup: 600 },
   orgs: {

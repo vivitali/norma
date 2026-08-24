@@ -8,10 +8,26 @@ export type PropertyType = "house" | "condo" | "newbuild";
 export type BracketTable = readonly (readonly [number | null, number])[];
 export type MarginalTable = readonly (readonly [number | null, number])[];
 
+export type Residency = "resident" | "nonResident";
+
+/**
+ * A condition on a transfer line or rebate. Every key that is PRESENT must match the
+ * corresponding `ClosingInput` field; absent keys mean "don't care". One predicate covers
+ * BC's newly-built exemption (ptype, not ftb), NS's non-resident tax (residency), and
+ * Ontario's elsewhere skip — which used to be `j.prov === "ON"` hardcoded in the engine.
+ */
+export interface Applicability {
+  ftb?: boolean;
+  ptype?: PropertyType;
+  residency?: Residency;
+  elsewhere?: boolean;
+}
+
 interface TransferLineBase {
   key: string;
   ex?: string;
   tier: "provincial" | "municipal";
+  when?: Applicability;
 }
 
 export interface BracketTransferLine extends TransferLineBase {
@@ -63,6 +79,15 @@ interface RebateBase {
   on: string;
   timing: "closing" | "taxTime";
   noTax?: boolean;
+  when?: Applicability;
+  /**
+   * Mutually exclusive programmes share a group name. Within one, the largest rebate applies
+   * and the rest emit as `superseded` — BC's first-time-buyer and newly-built PTT exemptions
+   * are each claimable, but only one of them.
+   */
+  group?: string;
+  /** Explainer message key, for a rebate that lands in `later` rather than at closing. */
+  ex?: string;
 }
 
 export interface CapRebate extends RebateBase {
@@ -91,6 +116,8 @@ export interface TaxTimeCredit {
   key: string;
   ex?: string;
   amount: number;
+  /** Narrows beyond the implicit first-time-buyer gate — NS's new-build HST rebate needs it. */
+  when?: Applicability;
 }
 
 export interface JurisdictionFees {

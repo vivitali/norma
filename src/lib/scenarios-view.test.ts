@@ -6,7 +6,7 @@ import { recommend, SCENARIO_PERCENTS } from "./scenarios-view";
 
 const toronto = getJurisdiction("toronto")!;
 const base: Omit<Parameters<typeof scenario>[2], "dpPct"> = {
-  price: 600000, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false,
+  price: 600000, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident",
   insuranceAnnual: 1500, utilities: 300, condoFee: 0, comfortCeiling: 3200,
   qualIncome: 160000, debts: 400, funds: 250000, save: 1000,
 };

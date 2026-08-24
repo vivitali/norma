@@ -1,4 +1,4 @@
-import type { PropertyType } from "@/domain/types";
+import type { PropertyType, Residency } from "@/domain/types";
 import { defaultJurisdiction, jurisdictions } from "@/domain/jurisdictions";
 
 /**
@@ -24,6 +24,12 @@ export type SharedInputs = {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  /**
+   * Whether the buyer lives in Canada. Drives NS's non-resident Provincial Deed Transfer
+   * Tax, which is a closing cost — so the control belongs to the Closing Costs page, and
+   * until it ships this flows through at its default like any other key.
+   */
+  residency: Residency;
   /** null = derive from dpPct against the federal insured/uninsured spread. */
   contractRate: number | null;
 
@@ -102,6 +108,7 @@ export const SHARED_INPUT_DEFAULTS: SharedInputs = {
   ftb: true,
   ptype: "house",
   elsewhere: false,
+  residency: "resident",
   contractRate: null,
   income1: null,
   income2: null,
@@ -157,6 +164,7 @@ export const SHARED_INPUT_SCHEMA: Record<keyof SharedInputs, FieldSchema> = {
   ftb: { kind: "boolean" },
   ptype: { kind: "enum", values: ["house", "condo", "newbuild"] },
   elsewhere: { kind: "boolean" },
+  residency: { kind: "enum", values: ["resident", "nonResident"] },
   contractRate: { kind: "number", nullable: true, min: 0, max: 30 },
   income1: { kind: "number", nullable: true, min: 0 },
   income2: { kind: "number", nullable: true, min: 0 },
@@ -219,7 +227,7 @@ export const JURISDICTION_DEFAULTS: JurisdictionState = slice(JURISDICTION_KEYS)
  * An untouched key is null and costs nothing.
  */
 export const TOOL_KEYS = [
-  "price", "dpPct", "amortYears", "ftb", "ptype", "elsewhere", "contractRate",
+  "price", "dpPct", "amortYears", "ftb", "ptype", "elsewhere", "residency", "contractRate",
   "income1", "income2", "otherIncome", "haircut",
   "car", "student", "cc", "otherDebt",
   "comfortCeiling", "insuranceAnnual", "utilities", "condoFee",

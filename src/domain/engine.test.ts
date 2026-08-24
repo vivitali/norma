@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   affordability,
+  applies,
   bracketTax,
   buildLines,
   closingTotal,
@@ -10,9 +11,12 @@ import {
   minDown,
   money,
   payFactor,
+  unmetBy,
+  type ClosingInput,
 } from "./engine";
 import { federal } from "./federal";
 import { getJurisdiction } from "./jurisdictions";
+import type { Jurisdiction } from "./types";
 
 describe("money", () => {
   it("formats a positive amount with the symbol first in en", () => {
@@ -116,6 +120,35 @@ describe("financing", () => {
   });
 });
 
+describe("applies / unmetBy", () => {
+  const o = {
+    price: 500000, dpPct: 10, amortYears: 25,
+    ftb: true, ptype: "house", elsewhere: false, residency: "resident",
+  } as const satisfies ClosingInput;
+
+  it("applies when there is no predicate at all", () => {
+    expect(applies(undefined, o)).toBe(true);
+    expect(unmetBy(undefined, o)).toEqual([]);
+  });
+
+  it("ignores keys the predicate does not mention", () => {
+    expect(applies({ ptype: "house" }, o)).toBe(true);
+  });
+
+  it("fails on a key whose value differs", () => {
+    expect(applies({ ptype: "newbuild" }, o)).toBe(false);
+    expect(unmetBy({ ptype: "newbuild" }, o)).toEqual(["ptype"]);
+  });
+
+  it("reports every unmet key, not just the first", () => {
+    expect(unmetBy({ ftb: false, ptype: "condo" }, o).sort()).toEqual(["ftb", "ptype"]);
+  });
+
+  it("matches a false predicate against a false input", () => {
+    expect(applies({ elsewhere: false }, o)).toBe(true);
+  });
+});
+
 describe("buildLines", () => {
   const winnipeg = getJurisdiction("winnipeg")!;
   const toronto = getJurisdiction("toronto")!;
@@ -123,42 +156,62 @@ describe("buildLines", () => {
   it("omits a non-applicable line item entirely rather than rendering it as zero", () => {
     // Winnipeg has no premiumTax, so no li_premTax line should ever appear.
     const lines = buildLines(winnipeg, federal, {
-      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false, residency: "resident" as const,
     });
     expect(lines.gov.some((l) => l.key === "li_premTax")).toBe(false);
   });
 
   it("includes a premium-tax line only when the jurisdiction has one and CMHC premium is charged", () => {
     const lines = buildLines(toronto, federal, {
-      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false, residency: "resident" as const,
     });
     expect(lines.gov.some((l) => l.key === "li_premTax")).toBe(true);
   });
 
   it("skips Toronto's municipal LTT line when elsewhere-in-Ontario is selected", () => {
     const lines = buildLines(toronto, federal, {
-      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house", elsewhere: true,
+      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house", elsewhere: true, residency: "resident" as const,
     });
     expect(lines.gov.some((l) => l.key === "li_lttMuni")).toBe(false);
   });
 
+  // The counterpart to the Toronto skip above: `elsewhere` is an Ontario-only rule, carried on
+  // Toronto's own line as `when: { elsewhere: false }`. Every other province's municipal line
+  // must survive the toggle, which is what stops the skip being generalised back into buildLines.
+  it("keeps a municipal line outside Ontario when elsewhere-in-Ontario is selected", () => {
+    const halifax = getJurisdiction("halifax")!;
+    const lines = buildLines(halifax, federal, {
+      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house", elsewhere: true, residency: "resident",
+    });
+    expect(lines.gov.some((l) => l.key === "li_deedMuni")).toBe(true);
+  });
+
   it("only adds a condo status-certificate fee line for condo purchases", () => {
     const house = buildLines(toronto, federal, {
-      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house", elsewhere: false, residency: "resident" as const,
     });
     const condo = buildLines(toronto, federal, {
-      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "condo", elsewhere: false,
+      price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "condo", elsewhere: false, residency: "resident" as const,
     });
     expect(house.pro.some((l) => l.key === "li_statusCert")).toBe(false);
     expect(condo.pro.some((l) => l.key === "li_statusCert")).toBe(true);
   });
 });
 
+/**
+ * A plain resident first-time buyer at a mid-market price. Shared by the rebate suites below
+ * so each one varies only the fact it is about.
+ */
+const base = {
+  price: 500000, dpPct: 20, amortYears: 25,
+  ftb: true, ptype: "house", elsewhere: false, residency: "resident",
+} as const satisfies ClosingInput;
+
 describe("credits", () => {
   const toronto = getJurisdiction("toronto")!;
 
   it("caps a rebate at the line item's rule cap when the raw tax exceeds it", () => {
-    const input = { price: 2000000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const input = { price: 2000000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const };
     const lines = buildLines(toronto, federal, input);
     const result = credits(toronto, federal, input, lines.gov);
     const provRebate = result.atClosing.find((c) => c.key === "cr_lttRebateProv")!;
@@ -167,7 +220,7 @@ describe("credits", () => {
   });
 
   it("marks a rebate ftbOnly when the buyer is not a first-time buyer", () => {
-    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: false, ptype: "house" as const, elsewhere: false };
+    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: false, ptype: "house" as const, elsewhere: false, residency: "resident" as const };
     const lines = buildLines(toronto, federal, input);
     const result = credits(toronto, federal, input, lines.gov);
     // Toronto has 2 rebates (provincial + municipal) and elsewhere is false, so both transfer
@@ -179,7 +232,7 @@ describe("credits", () => {
 
   it("phases out Vancouver's exempt-band PTT rebate above the partial threshold", () => {
     const vancouver = getJurisdiction("vancouver")!;
-    const input = { price: 900000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const input = { price: 900000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const };
     const lines = buildLines(vancouver, federal, input);
     const result = credits(vancouver, federal, input, lines.gov);
     const pttRebate = result.atClosing.find((c) => c.key === "cr_pttExempt")!;
@@ -194,7 +247,7 @@ describe("credits", () => {
 
   it("fully applies Vancouver's exempt-band PTT rebate at or below the full threshold", () => {
     const vancouver = getJurisdiction("vancouver")!;
-    const input = { price: 800000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const input = { price: 800000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const };
     const lines = buildLines(vancouver, federal, input);
     const result = credits(vancouver, federal, input, lines.gov);
     const pttRebate = result.atClosing.find((c) => c.key === "cr_pttExempt")!;
@@ -205,7 +258,7 @@ describe("credits", () => {
   it("linearly interpolates Vancouver's exempt-band PTT rebate strictly between the full and partial thresholds", () => {
     const vancouver = getJurisdiction("vancouver")!;
     // 840000 is strictly between full (835000) and partial (860000).
-    const input = { price: 840000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const input = { price: 840000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const };
     const lines = buildLines(vancouver, federal, input);
     const result = credits(vancouver, federal, input, lines.gov);
     const pttRebate = result.atClosing.find((c) => c.key === "cr_pttExempt")!;
@@ -217,7 +270,7 @@ describe("credits", () => {
   it("halves Vancouver's exempt-band rebate at the exact midpoint of the phase-out band (linearity check)", () => {
     const vancouver = getJurisdiction("vancouver")!;
     // Midpoint of [835000, 860000] is 847500.
-    const input = { price: 847500, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const input = { price: 847500, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const };
     const lines = buildLines(vancouver, federal, input);
     const result = credits(vancouver, federal, input, lines.gov);
     const pttRebate = result.atClosing.find((c) => c.key === "cr_pttExempt")!;
@@ -230,7 +283,7 @@ describe("credits", () => {
   // premium-tax line — granting a municipal rebate that does not exist. Unreachable from the
   // Phase 1 UI (no `elsewhere` control), reachable the moment Closing Costs ships one.
   it("grants no municipal rebate when the municipal line is absent (buying elsewhere in Ontario)", () => {
-    const input = { price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true };
+    const input = { price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true, residency: "resident" as const };
     const lines = buildLines(toronto, federal, input);
     const result = credits(toronto, federal, input, lines.gov);
     expect(lines.gov.map((l) => l.key)).toEqual(["li_lttProv", "li_premTax"]);
@@ -238,14 +291,14 @@ describe("credits", () => {
   });
 
   it("counts only the provincial rebate at closing when buying elsewhere in Ontario", () => {
-    const input = { price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true };
+    const input = { price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true, residency: "resident" as const };
     // Ontario LTT on $500,000 is $6,475, above the $4,000 cap, so the provincial rebate is
     // exactly the cap and nothing else may be added to it.
     expect(closingTotal(toronto, federal, input).creditsAtClosing).toBeCloseTo(4000, 5);
   });
 
   it("resolves each rebate to its own transfer line, not to whatever sits at that index", () => {
-    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false };
+    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const };
     const lines = buildLines(toronto, federal, input);
     const result = credits(toronto, federal, input, lines.gov);
     expect(result.atClosing.find((c) => c.key === "cr_lttRebateProv")!.target).toBe("li_lttProv");
@@ -259,10 +312,123 @@ describe("credits", () => {
   // elsewhere: true and this rebate would silently disappear instead of rendering as unavailable.
   it("still emits Halifax's municipal-tier rebate row under elsewhere: true (not an Ontario-only line)", () => {
     const halifax = getJurisdiction("halifax")!;
-    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true };
+    const input = { price: 500000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: true, residency: "resident" as const };
     const lines = buildLines(halifax, federal, input);
     const result = credits(halifax, federal, input, lines.gov);
     expect(result.atClosing.some((c) => c.key === "cr_lttRebateProv")).toBe(true);
+  });
+});
+
+describe("credits — Applicability", () => {
+  it("emits an ftbOnly row when the buyer fails only the ftb test", () => {
+    const toronto = getJurisdiction("toronto")!;
+    const o = { ...base, ftb: false };
+    const L = buildLines(toronto, federal, o);
+    const C = credits(toronto, federal, o, L.gov);
+    const prov = C.atClosing.find((c) => c.key === "cr_lttRebateProv");
+    expect(prov?.st).toBe("ftbOnly");
+    expect(prov?.amount).toBe(0);
+  });
+
+  it("drops a rebate entirely when it fails a non-ftb test", () => {
+    // A rebate gated on ptype is absent for the wrong ptype, not a zero row — matching
+    // buildLines' convention. Uses a synthetic jurisdiction so the test does not depend on
+    // which real rebates happen to be gated today.
+    const j: Jurisdiction = {
+      ...getJurisdiction("calgary")!,
+      rebates: [{
+        key: "cr_test", kind: "cap", cap: 1000, on: "li_titleReg",
+        timing: "closing", when: { ptype: "newbuild" },
+      }],
+    };
+    const o = { ...base, ptype: "house" as const };
+    const C = credits(j, federal, o, buildLines(j, federal, o).gov);
+    expect(C.atClosing.find((c) => c.key === "cr_test")).toBeUndefined();
+  });
+
+  it("applies a ptype-gated rebate to a non-first-time buyer", () => {
+    // The BC newly-built case: not first-time-buyer restricted. Before this task the
+    // blanket !o.ftb short-circuit made it unreachable.
+    const j: Jurisdiction = {
+      ...getJurisdiction("calgary")!,
+      rebates: [{
+        key: "cr_test", kind: "cap", cap: 1000, on: "li_titleReg",
+        timing: "closing", when: { ptype: "newbuild" },
+      }],
+    };
+    const o = { ...base, ftb: false, ptype: "newbuild" as const };
+    const C = credits(j, federal, o, buildLines(j, federal, o).gov);
+    expect(C.atClosing.find((c) => c.key === "cr_test")?.st).toBe("applied");
+  });
+
+  it("omits a ptype-gated tax-time credit for the wrong property type", () => {
+    const j: Jurisdiction = {
+      ...getJurisdiction("halifax")!,
+      taxTime: [{ key: "cr_test", amount: 3000, when: { ptype: "newbuild" } }],
+    };
+    const resale = credits(j, federal, { ...base, ptype: "house" }, buildLines(j, federal, base).gov);
+    expect(resale.later.find((c) => c.key === "cr_test")).toBeUndefined();
+
+    const o = { ...base, ptype: "newbuild" as const };
+    const newbuild = credits(j, federal, o, buildLines(j, federal, o).gov);
+    expect(newbuild.later.find((c) => c.key === "cr_test")?.amount).toBe(3000);
+  });
+});
+
+describe("credits — timing", () => {
+  const withTiming = (timing: "closing" | "taxTime"): Jurisdiction => ({
+    ...getJurisdiction("toronto")!,
+    rebates: [{ key: "cr_test", kind: "cap", cap: 1000, on: "li_lttProv", timing, when: { ftb: true } }],
+  });
+
+  it("puts a closing-timed rebate in atClosing and counts it against cash", () => {
+    const j = withTiming("closing");
+    const C = credits(j, federal, base, buildLines(j, federal, base).gov);
+    expect(C.atClosing.find((c) => c.key === "cr_test")?.amount).toBe(1000);
+    expect(C.later.find((c) => c.key === "cr_test")).toBeUndefined();
+  });
+
+  it("puts a taxTime-timed rebate in later, not atClosing", () => {
+    const j = withTiming("taxTime");
+    const C = credits(j, federal, base, buildLines(j, federal, base).gov);
+    expect(C.atClosing.find((c) => c.key === "cr_test")).toBeUndefined();
+    expect(C.later.find((c) => c.key === "cr_test")?.amount).toBe(1000);
+  });
+
+  it("does not reduce cash at closing for a taxTime rebate", () => {
+    const j = withTiming("taxTime");
+    const o = { ...base, price: 600000 };
+    expect(closingTotal(j, federal, o).creditsAtClosing).toBe(0);
+  });
+});
+
+describe("credits — mutually exclusive rebate groups", () => {
+  const twoInAGroup: Jurisdiction = {
+    ...getJurisdiction("vancouver")!,
+    rebates: [
+      { key: "cr_small", kind: "cap", cap: 1000, on: "li_ptt", timing: "closing", group: "bcPtt" },
+      { key: "cr_big", kind: "cap", cap: 9000, on: "li_ptt", timing: "closing", group: "bcPtt" },
+    ],
+  };
+
+  it("keeps only the largest rebate in a group", () => {
+    const o = { ...base, price: 900000 };
+    const C = credits(twoInAGroup, federal, o, buildLines(twoInAGroup, federal, o).gov);
+    expect(C.atClosing.find((c) => c.key === "cr_big")?.amount).toBe(9000);
+    expect(C.atClosing.find((c) => c.key === "cr_small")?.amount).toBe(0);
+  });
+
+  it("marks the losing rebate superseded rather than dropping it", () => {
+    const o = { ...base, price: 900000 };
+    const C = credits(twoInAGroup, federal, o, buildLines(twoInAGroup, federal, o).gov);
+    expect(C.atClosing.find((c) => c.key === "cr_small")?.st).toBe("superseded");
+  });
+
+  it("leaves ungrouped rebates alone", () => {
+    const toronto = getJurisdiction("toronto")!;
+    const C = credits(toronto, federal, base, buildLines(toronto, federal, base).gov);
+    const nonZero = C.atClosing.filter((c) => c.amount > 0);
+    expect(nonZero.length).toBeGreaterThan(1);
   });
 });
 
@@ -270,7 +436,7 @@ describe("closingTotal", () => {
   it("returns cash equal to down payment plus total closing costs", () => {
     const winnipeg = getJurisdiction("winnipeg")!;
     const result = closingTotal(winnipeg, federal, {
-      price: 400000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+      price: 400000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false, residency: "resident" as const,
     });
     expect(result.cash).toBeCloseTo(result.fin.down + result.total, 5);
   });
@@ -278,7 +444,7 @@ describe("closingTotal", () => {
   it("returns net cash at or below cash (credits never make it more expensive)", () => {
     const toronto = getJurisdiction("toronto")!;
     const result = closingTotal(toronto, federal, {
-      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false,
+      price: 500000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house", elsewhere: false, residency: "resident" as const,
     });
     expect(result.net).toBeLessThanOrEqual(result.cash);
   });
@@ -303,7 +469,7 @@ describe("affordability", () => {
     dpPct: 10,
     ftb: true,
     ptype: "house" as const,
-    elsewhere: false,
+    elsewhere: false, residency: "resident" as const,
   };
 
   it("returns a positive ceiling and comfort figure for a plausible household", () => {
@@ -406,7 +572,7 @@ describe("affordability cash and debt-cost outputs", () => {
     dpPct: 10,
     ftb: true,
     ptype: "house" as const,
-    elsewhere: false,
+    elsewhere: false, residency: "resident" as const,
   };
 
   it("reports cashGap as null when funds are unknown", () => {

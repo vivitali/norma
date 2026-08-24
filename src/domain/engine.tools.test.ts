@@ -248,7 +248,7 @@ describe("hbpPlay", () => {
 
 describe("rentVsBuy", () => {
   const base = {
-    price: 700000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false,
+    price: 700000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const,
     insuranceAnnual: 1500, utilities: 300, condoFee: 0,
     rent: 2400, rentInflation: 0.03, appreciation: 0.031, appreciationOn: true,
     investReturn: 0.046, investDiff: true, years: 40,
@@ -312,7 +312,7 @@ describe("rentVsBuy", () => {
 
 describe("scenario", () => {
   const base = {
-    price: 600000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false,
+    price: 600000, dpPct: 10, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const,
     insuranceAnnual: 1500, utilities: 300, condoFee: 0, comfortCeiling: 3200,
     qualIncome: 120000, debts: 400, funds: 100000, save: 1000,
   };

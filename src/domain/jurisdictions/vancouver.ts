@@ -21,7 +21,7 @@ export const vancouver: Jurisdiction = {
   ],
   premiumTax: null,
   rebates: [
-    { key: "cr_pttExempt", kind: "exemptBand", full: 835000, partial: 860000, capBase: 500000, on: "li_ptt", timing: "closing" },
+    { key: "cr_pttExempt", kind: "exemptBand", full: 835000, partial: 860000, capBase: 500000, on: "li_ptt", timing: "closing", when: { ftb: true } },
   ],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
   fees: { lawyer: 1600, titleIns: 350, inspect: 700, appraisal: 450, statusCert: 60, moving: 1600, setup: 650 },

@@ -25,10 +25,10 @@ describe("every jurisdiction's line-item keys have copy", () => {
   // Property types and buyer status change WHICH lines are built, so the sweep
   // has to cover the combinations, not just the default one.
   const CASES = [
-    { ptype: "house" as const, ftb: true, elsewhere: false },
-    { ptype: "condo" as const, ftb: false, elsewhere: false },
-    { ptype: "newbuild" as const, ftb: true, elsewhere: false },
-    { ptype: "house" as const, ftb: true, elsewhere: true },
+    { ptype: "house" as const, ftb: true, elsewhere: false, residency: "resident" as const },
+    { ptype: "condo" as const, ftb: false, elsewhere: false, residency: "resident" as const },
+    { ptype: "newbuild" as const, ftb: true, elsewhere: false, residency: "resident" as const },
+    { ptype: "house" as const, ftb: true, elsewhere: true, residency: "resident" as const },
   ];
 
   for (const jurisdiction of jurisdictions) {

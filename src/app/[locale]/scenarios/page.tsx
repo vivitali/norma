@@ -48,6 +48,7 @@ export default function ScenariosPage() {
           ftb: resolved.ftb,
           ptype: resolved.ptype,
           elsewhere: resolved.elsewhere,
+          residency: resolved.residency,
           insuranceAnnual: resolved.insuranceAnnual,
           utilities: resolved.utilities,
           condoFee: resolved.condoFee,
