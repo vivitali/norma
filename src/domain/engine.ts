@@ -140,6 +140,7 @@ export function unmetBy(when: Applicability | undefined, o: ClosingInput): (keyo
   if (when.ptype !== undefined && when.ptype !== o.ptype) unmet.push("ptype");
   if (when.residency !== undefined && when.residency !== o.residency) unmet.push("residency");
   if (when.elsewhere !== undefined && when.elsewhere !== o.elsewhere) unmet.push("elsewhere");
+  if (when.overPrice !== undefined && !(o.price > when.overPrice)) unmet.push("overPrice");
   return unmet;
 }
 

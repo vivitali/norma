@@ -147,6 +147,19 @@ describe("applies / unmetBy", () => {
   it("matches a false predicate against a false input", () => {
     expect(applies({ elsewhere: false }, o)).toBe(true);
   });
+
+  it("treats overPrice as a STRICTLY-above bound", () => {
+    // Exclusive because the statutes needing it are written that way: BC levies its further 2%
+    // on residential value "over $3,000,000", so the charge does not exist at exactly $3M.
+    expect(applies({ overPrice: 500000 }, o)).toBe(false);
+    expect(unmetBy({ overPrice: 500000 }, o)).toEqual(["overPrice"]);
+    expect(applies({ overPrice: 499999 }, o)).toBe(true);
+    expect(applies({ overPrice: 500001 }, o)).toBe(false);
+  });
+
+  it("reports overPrice alongside the other unmet keys, not instead of them", () => {
+    expect(unmetBy({ ftb: false, overPrice: 900000 }, o).sort()).toEqual(["ftb", "overPrice"]);
+  });
 });
 
 describe("buildLines", () => {

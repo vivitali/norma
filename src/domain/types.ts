@@ -21,6 +21,18 @@ export interface Applicability {
   ptype?: PropertyType;
   residency?: Residency;
   elsewhere?: boolean;
+  /**
+   * Applies only when the price is STRICTLY above this. Exclusive because the statutes that
+   * need it are written that way: BC levies its further 2% on residential value "over
+   * $3,000,000", so at exactly $3M the charge does not exist.
+   *
+   * Without it, a bracket line whose first band is zero-rated still renders — BC's further 2%
+   * put a "Further 2% tax — $0" row on Closing Costs for every buyer under $3M, contradicting
+   * buildLines' own absent-not-zero convention. Suppressing zero-AMOUNT lines generally would
+   * have been the wrong fix: a fee that is genuinely zero is worth showing, and the reason this
+   * line is absent is that the charge does not apply, not that it happens to compute to nothing.
+   */
+  overPrice?: number;
 }
 
 interface TransferLineBase {

@@ -65,6 +65,13 @@ export const vancouver: Jurisdiction = {
       // on top of the general rate. Identical arithmetic to a flat 5% top bracket for a wholly
       // residential property, but modelled separately because it is a separate tax: on mixed
       // class property it reaches only the residential portion, which one bracket cannot say.
+      //
+      // `overPrice` is what keeps the split honest. The zero-rated first band means the line
+      // computes $0 below the threshold, and buildLines pushes every applicable line regardless
+      // of amount — so without this the Closing Costs page carried a "Further 2% tax — $0" row
+      // for every BC buyer under $3M. The statute says "over $3,000,000", so the bound is
+      // exclusive and the charge does not exist at exactly $3M.
+      when: { overPrice: 3000000 },
       brackets: [[3000000, 0], [null, 0.02]],
     },
   ],

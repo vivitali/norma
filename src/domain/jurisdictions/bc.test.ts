@@ -104,11 +104,25 @@ describe("BC property transfer tax structure", () => {
     expect(ptt).toBeCloseTo(118000, 2);
   });
 
-  it("charges nothing further below $3M", () => {
+  it("omits the further-2% line entirely below $3M, rather than showing it at zero", () => {
+    // Not `amount === 0`: buildLines' documented convention is that a non-applicable line is
+    // ABSENT, never a zero row. The line's zero-rated first band makes it compute $0 below the
+    // threshold, so without `when: { overPrice }` the Closing Costs page carried a
+    // "Further 2% tax — $0" row for every BC buyer under $3M.
     const o = { ...base, price: 2500000 };
     const gov = buildLines(van(), federal, o).gov;
-    expect(gov.find((l) => l.key === "li_pttFurther")?.amount).toBe(0);
+    expect(gov.find((l) => l.key === "li_pttFurther")).toBeUndefined();
     expect(gov.find((l) => l.key === "li_ptt")?.amount).toBeCloseTo(53000, 2);
+  });
+
+  it("omits it at exactly $3M — the statute says 'over $3,000,000'", () => {
+    const gov = buildLines(van(), federal, { ...base, price: 3000000 }).gov;
+    expect(gov.find((l) => l.key === "li_pttFurther")).toBeUndefined();
+  });
+
+  it("includes it one dollar above the threshold", () => {
+    const gov = buildLines(van(), federal, { ...base, price: 3000001 }).gov;
+    expect(gov.find((l) => l.key === "li_pttFurther")?.amount).toBeCloseTo(0.02, 2);
   });
 });
 
