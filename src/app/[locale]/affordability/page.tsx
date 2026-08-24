@@ -22,7 +22,7 @@ import { SCENARIO_PERCENTS } from "@/lib/scenarios-view";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
-import { CrossLink } from "@/components/cross-link";
+import { CrossLink, TraceLabel } from "@/components/cross-link";
 import { GapBand } from "@/components/affordability/gap-band";
 import { Gauges } from "@/components/affordability/gauges";
 import { MathColumns } from "@/components/affordability/math-columns";
@@ -230,7 +230,30 @@ export default function AffordabilityPage() {
           headroom(result.comfortGap),
           t("subComfort"),
           <>
-            <PanelRow label={t("mPi")} value={fmt(result.monthly.pi)} />
+            {/*
+              TRACE, on the label. `monthly.pi` is `cc.fin.loan *
+              payFactor(contractRate, amortYears)` and `amortization()`'s
+              `firstPayment` is the same expression on the same financing off the
+              same shared inputs — not "related to", identical to the dollar. It
+              is also the largest row in this panel and the one the reader is most
+              likely to want taken apart, and taking it apart is the whole of the
+              amortization page. The hash lands them on the section that derives
+              it rather than on the page's own default.
+
+              The comfort panel carries no sentence: the two this page is allowed
+              are spent in approval and cash, which is exactly why a third
+              question had no way to be answered until the label could carry it.
+            */}
+            <PanelRow
+              label={
+                <TraceLabel
+                  namespace="Affordability"
+                  id="mPi"
+                  href={{ pathname: "/amortization", hash: "#payment" }}
+                />
+              }
+              value={fmt(result.monthly.pi)}
+            />
             <PanelRow label={t("mPropTax")} value={fmt(result.monthly.propTax)} provenance={<Provenance kind="estimate" />} />
             <PanelRow label={t("cInsurance")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
             <PanelRow label={t("cUtilities")} value={fmt(result.monthly.utilities)} provenance={<Provenance kind="estimate" />} />

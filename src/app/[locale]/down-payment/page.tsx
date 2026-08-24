@@ -13,7 +13,7 @@ import { DOWN_PAYMENT_SECTIONS } from "@/lib/sections";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
-import { CrossLink } from "@/components/cross-link";
+import { CrossLink, TraceLabel } from "@/components/cross-link";
 import { GlideChart } from "@/components/down-payment/glide-chart";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
@@ -174,8 +174,19 @@ export default function DownPaymentPage() {
             {resolved.belowMinimum ? (
               <p className="pt-1 text-[12.5px] text-caution">{t("belowMin")}</p>
             ) : null}
+            {/*
+              TRACE, on the label rather than under it. DESIGN.md §5.2 names this
+              panel — "Down Payment reprints it entire" — as one of the three
+              printing another page's answer with a provenance mark that says
+              what "estimate" means and nothing about where the figure came from.
+              It IS closingTotal().total, the closing-costs page's headline, off
+              the same shared inputs.
+
+              A sentence here would have cost this page one of its two, to say in
+              prose what the two words already say. The words are the link.
+            */}
             <PanelRow
-              label={t("closingCosts")}
+              label={<TraceLabel namespace="DownPayment" id="closingCosts" href="/closing-costs" />}
               value={fmt(closing.total)}
               provenance={<Provenance kind="rule" />}
             />

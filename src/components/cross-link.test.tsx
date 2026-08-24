@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { CrossLink } from "./cross-link";
+import { CrossLink, TraceLabel } from "./cross-link";
 import { routing } from "@/i18n/routing";
+import { NAV } from "@/lib/routes";
+import { SECTION_REGISTRIES } from "@/lib/sections";
 import en from "../../messages/en.json";
 import fr from "../../messages/fr.json";
 import { vi } from "vitest";
@@ -71,32 +73,132 @@ describe("the cross-link rules", () => {
     }
   });
 
+  const PAGES = [
+    "affordability", "closing-costs", "down-payment",
+    "rrsp-hbp", "amortization", "rent-vs-buy", "scenarios",
+  ];
+
+  /**
+   * Every cross-page destination written on a tool page, in either shape.
+   *
+   * Source-level and one scanner for BOTH components, because the rules are
+   * about where a link may point rather than about which component renders it —
+   * and because the object form (`{{ pathname, hash }}`) is the only way a
+   * link can name a section, so a scan that only understood `href="…"` would
+   * silently stop covering exactly the links that carry a hash.
+   */
+  function destinations(page: string): { component: string; route: string; hash?: string }[] {
+    const source = readFileSync(`src/app/[locale]/${page}/page.tsx`, "utf8");
+    const pattern =
+      /<(CrossLink|TraceLabel)\b[\s\S]*?href=(?:"([^"]+)"|\{\{\s*pathname:\s*"([^"]+)",\s*hash:\s*"#([^"]+)"\s*\}\})/g;
+    return [...source.matchAll(pattern)].map((m) => ({
+      component: m[1],
+      route: m[2] ?? m[3],
+      hash: m[4],
+    }));
+  }
+
+  it("finds links on every page that has them, so the scans cannot pass vacuously", () => {
+    const found = PAGES.flatMap(destinations);
+    expect(found.filter((d) => d.component === "CrossLink").length).toBeGreaterThan(0);
+    expect(found.filter((d) => d.component === "TraceLabel").length).toBeGreaterThan(0);
+    expect(found.filter((d) => d.hash !== undefined).length).toBeGreaterThan(0);
+  });
+
   it("never lets a page point at itself", () => {
-    const PAGES = [
-      "affordability", "closing-costs", "down-payment",
-      "rrsp-hbp", "amortization", "rent-vs-buy", "scenarios",
-    ];
     for (const page of PAGES) {
-      const source = readFileSync(`src/app/[locale]/${page}/page.tsx`, "utf8");
-      for (const m of source.matchAll(/<CrossLink[\s\S]*?href="([^"]+)"/g)) {
-        expect(m[1], `${page} links to itself`).not.toBe(`/${page}`);
+      for (const { route } of destinations(page)) {
+        expect(route, `${page} links to itself`).not.toBe(`/${page}`);
       }
     }
   });
 
   it("points every link at a route that exists", () => {
     const routes = new Set(Object.keys(routing.pathnames));
-    const PAGES = [
-      "affordability", "closing-costs", "down-payment",
-      "rrsp-hbp", "amortization", "rent-vs-buy", "scenarios",
-    ];
     for (const page of PAGES) {
-      const source = readFileSync(`src/app/[locale]/${page}/page.tsx`, "utf8");
-      for (const m of source.matchAll(/<CrossLink[\s\S]*?href="([^"]+)"/g)) {
-        expect(routes, `${page} -> ${m[1]}`).toContain(m[1]);
-        // Rule: a page never points at itself.
-        expect(m[1]).not.toBe(`/${page}`);
+      for (const { route } of destinations(page)) {
+        expect(routes, `${page} -> ${route}`).toContain(route);
       }
     }
+  });
+
+  it("points every link at a page that is actually built", () => {
+    // The nav registry renders only built entries, so an unbuilt route is a
+    // reachable 404 the navigation itself would never have offered.
+    const built = new Set(
+      NAV.flatMap((group) => group.entries).filter((e) => e.built).map((e) => e.route as string),
+    );
+    for (const page of PAGES) {
+      for (const { route } of destinations(page)) {
+        expect(built, `${page} -> ${route} is not built`).toContain(route);
+      }
+    }
+  });
+
+  it("names a real section when it carries a hash", () => {
+    // A hash suppresses the destination page's own default section and moves
+    // focus to the one it names. A hash naming nothing lands the reader on a
+    // page with EVERY section closed and their focus unmoved -- worse than the
+    // plain route, and invisible until someone follows the link.
+    const ids = (namespace: string): readonly string[] =>
+      SECTION_REGISTRIES.find((r) => r.namespace === namespace)!.sections.map((s) => s.id);
+    const sectionsFor: Record<string, readonly string[]> = {
+      "/affordability": ids("Affordability"),
+      "/closing-costs": ids("ClosingCosts"),
+      "/down-payment": ids("DownPayment"),
+      "/rrsp-hbp": ids("RrspHbp"),
+      "/amortization": ids("Amortization"),
+      "/rent-vs-buy": ids("RentVsBuy"),
+      "/scenarios": ids("Scenarios"),
+    };
+    for (const page of PAGES) {
+      for (const { route, hash } of destinations(page)) {
+        if (hash === undefined) continue;
+        expect(sectionsFor[route], `${page} -> ${route}#${hash}`).toContain(hash);
+      }
+    }
+  });
+
+  it("carries the reader's numbers to wherever it points", () => {
+    // A link that drops the inputs is worse than no link: the reader arrives at
+    // a page of default figures that look like theirs. Nothing is passed in the
+    // URL -- the shared blob does it -- so what has to hold is that the
+    // destination reads the SAME allowlist. A page inventing its own is how that
+    // guarantee would be lost, and it would look fine until someone clicked.
+    for (const page of PAGES) {
+      for (const { route } of destinations(page)) {
+        const target = readFileSync(`src/app/[locale]${route}/page.tsx`, "utf8");
+        expect(target, `${route} does not read the shared inputs`).toContain(
+          "useSharedState(TOOL_KEYS, TOOL_DEFAULTS)",
+        );
+      }
+    }
+  });
+});
+
+describe("TraceLabel", () => {
+  it("links the row's own label, and writes no copy of its own", () => {
+    renderWithIntl(
+      <TraceLabel
+        namespace="Affordability"
+        id="mPi"
+        href={{ pathname: "/amortization", hash: "#payment" }}
+      />,
+    );
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("href", "/amortization#payment");
+    // The whole point: the accessible name IS the label the row already shows,
+    // so there is no second string to translate and none to drift.
+    expect(link.textContent).toBe((en as unknown as Catalogue).Affordability.mPi);
+    expect(link.textContent).not.toMatch(/^\s*$/);
+  });
+
+  it("makes sense in a screen reader's link list", () => {
+    // WCAG 2.4.4: the name has to survive being read out of context. A label
+    // that is one word, or a bare figure, does not.
+    renderWithIntl(<TraceLabel namespace="DownPayment" id="closingCosts" href="/closing-costs" />);
+    const name = screen.getByRole("link").textContent ?? "";
+    expect(name.trim().length).toBeGreaterThan(4);
+    expect(name).not.toMatch(/\d/);
   });
 });

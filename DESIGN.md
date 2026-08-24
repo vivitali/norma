@@ -132,6 +132,7 @@ keep the sizes above.
 | `MathColumns` | Both derivations. A row whose input is zero is **absent**, not a zero row. |
 | `Provenance` | The `rule` / `estimate` mark. Describes derivation, never verification. |
 | `CrossLink` | One sentence pointing at the page that derives a figure this panel already shows. `placement="row"` is a note under its figure, in the `ex_` treatment; `placement="foot"` is the panel's last line. Not a widget and not a related-links block — see §5.2. |
+| `TraceLabel` | The other shape: a `PanelRow`'s own label made navigable, so the words that NAME the figure carry the reader to the page deriving it. No new copy — `id` is the row's existing label key. Inline, exempt from the 44px floor per WCAG 2.5.8. See §5.2. |
 | `AppNav` | One disclosure at **every** width — a `Tools` trigger and a panel of the four journey groups. Not a desktop row plus a mobile drawer, and **not** because §8 forbids it (a row of links discloses nothing): because arrival is search-first onto a single tool, and because a flat bar cannot render Rent vs Buy's two groups honestly. Groups are a nested `ul` with `aria-labelledby` and explicit `role="list"`, **not** headings — the nav precedes page content, so `h2` group labels would open every page's outline before its own `h1`, and preflight's `list-style: none` makes VoiceOver drop an unroled list. |
 | `ImpactRow` | What debt costs in purchase price. Four states, gated on the input. |
 
@@ -151,14 +152,14 @@ A link ships only if it passes one of two tests:
 
 And then:
 
-1. **At most two per page**, counted on the rendered page in each state, not in
-   the source: two verdict links can be mutually exclusive and a static count
-   reads them both.
+1. **At most two SENTENCES per page**, counted on the rendered page in each
+   state, not in the source: two verdict links can be mutually exclusive and a
+   static count reads them both. Trace labels are capped separately — see below.
 2. **Verdict links render only in their state.** A session with no problem sees
    no invitations, because it has no question.
-3. **Last line of a panel, or a note under the row it traces.** Never in the
-   answer head, never in a closed row's line, never a section of its own — those
-   belong to this page's own computation.
+3. **Last line of a panel, a note under the row it traces, or the row's own
+   label.** Never in the answer head, never in a closed row's line, never a
+   section of its own — those belong to this page's own computation.
 4. **A figure travels only when its inputs were answered**, and only out of a
    `src/domain` function. Down Payment's "$0 available" must never travel: it
    would assert an empty bank account.
@@ -169,6 +170,37 @@ And then:
 This is **not** a second disclosure mechanism: §8 forbids a second way to
 *reveal*, and a link reveals nothing. `Provenance` has been an inline `Link`
 inside a `PanelRow` since v2, so this is the established pattern.
+
+**The second shape: the row's own label (`TraceLabel`).** On a row whose figure
+literally IS another page's answer, the sentence is the wrong instrument — it
+adds a line of prose to say what the label already says, and rule 1 then spends
+one of a page's two sentences on a restatement. So on those rows the *words that
+name the figure* become the link: Down Payment's `Closing costs` is
+`closingTotal().total`; Affordability's `Principal and interest` is
+`amortization().firstPayment` — the same loan through the same `payFactor`, not
+"related to" but identical to the dollar, and it links to
+`/amortization#payment` so the reader lands on the section deriving it. The
+label is the *existing* message key, so this shape writes no copy at all, in
+either locale, and the accessible name is by construction the name the row
+shows.
+
+It is **trace only, never verdict**: a verdict is a claim about the reader's
+situation and needs a sentence to make it; a label cannot make a claim, which is
+exactly why it cannot editorialise. Rules 3–5 hold unchanged; rule 5 comes free.
+
+Rule 1 does not: trace labels are capped **at most one per panel**, counted
+separately from sentences. The two-per-page cap exists to stop sentences piling
+up into a related-links block, and a linked label cannot pile up into anything —
+it occupies no space that was not already spent and adds no prose. Counting them
+together would mean a page could buy a link on the words naming its figure only
+by giving up a sentence saying something the reader cannot otherwise learn. Both
+caps are enforced on the rendered page in `src/app/page-contracts.test.tsx`,
+which also fails on any tool-route link declaring neither shape, so the split
+cannot be used to smuggle one in.
+
+Inline targets are exempt from §7's 44px floor per WCAG 2.5.8, and padding these
+into blocks would put a finger-height tap target inside a 13.5px derivation row.
+They stay inline.
 
 **Deliberately absent: Affordability → Rent vs Buy.** A "have you considered
 renting" line under a declined verdict is the product editorialising about the

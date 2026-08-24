@@ -108,7 +108,12 @@ export function PanelRow({
   strong,
   provenance,
 }: {
-  label: string;
+  /**
+   * Usually a string. A node so that the words naming the figure can BE the link
+   * to the page deriving it (`TraceLabel`) — the label stays the label, the row
+   * gains no second element, and nothing else about the row changes.
+   */
+  label: ReactNode;
   value: string;
   strong?: boolean;
   provenance?: ReactNode;

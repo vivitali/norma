@@ -129,25 +129,57 @@ describe("no screen renders a non-finite figure", () => {
 
 describe("cross-page links stay within their cap", () => {
   /**
-   * Rule 2: at most two cross-page sentences per page, at most one per panel.
+   * DESIGN.md §5.2: at most two cross-page SENTENCES per page, and at most one
+   * TRACE LABEL per panel.
    *
    * Counted on the RENDERED page, in each state, not by grepping the source. A
-   * static count reads three on Affordability and is wrong: the two verdict
-   * links are mutually exclusive — the down-payment line renders only when cash
-   * is short, the scenarios line only when it is not — so at most two can ever
-   * be on screen. The cap is a property of what the reader sees.
+   * static count reads three sentences on Affordability and is wrong: the two
+   * verdict links are mutually exclusive — the down-payment line renders only
+   * when cash is short, the scenarios line only when it is not — so at most two
+   * can ever be on screen. The cap is a property of what the reader sees.
+   *
+   * **The two shapes are capped separately, deliberately.** The two-per-page cap
+   * exists to stop sentences piling up into a related-links block; a linked row
+   * label cannot pile up into anything, because it is the label that was already
+   * there and it adds no line to the panel. Counting them together would have
+   * meant a page could buy a link on the words naming its figure only by giving
+   * up a sentence that says something the reader cannot otherwise learn — a
+   * trade with nothing to recommend it.
+   *
+   * The third assertion is what keeps the split from being a loophole: every
+   * link to a tool route must declare which shape it is, so a bare <Link> to
+   * another page is a failure rather than an uncounted link.
    */
   const TOOL_ROUTES = [
     "/affordability", "/closing-costs", "/down-payment",
     "/rrsp-hbp", "/amortization", "/rent-vs-buy", "/scenarios",
   ];
 
-  function crossLinks(): string[] {
+  function crossLinks(): HTMLElement[] {
     return screen
       .getAllByRole("link")
-      .map((a) => a.getAttribute("href") ?? "")
       // Provenance marks point at /sources and are per-figure, not cross-page.
-      .filter((href) => TOOL_ROUTES.some((route) => href.startsWith(route)));
+      .filter((a) => TOOL_ROUTES.some((route) => (a.getAttribute("href") ?? "").startsWith(route)));
+  }
+
+  const shaped = (kind: string) =>
+    crossLinks().filter((a) => a.getAttribute("data-cross") === kind);
+
+  /**
+   * Open every section, and only the sections.
+   *
+   * `getAllByRole("button", { expanded: false })` alone does NOT do that: the
+   * *Expand all* pill carries `aria-expanded` too and sorts first in document
+   * order, so clicking the list in order opened everything and then closed each
+   * section again one by one — leaving exactly the panels that were open on
+   * arrival. A cap counted on links that live inside panels was measuring a
+   * screen the reader never sees. The section rows are the buttons with
+   * `aria-controls`; the pill controls nothing in particular and has none.
+   */
+  async function openEverySection(user: ReturnType<typeof userEvent.setup>) {
+    for (const button of screen.getAllByRole("button", { expanded: false })) {
+      if (button.hasAttribute("aria-controls")) await user.click(button);
+    }
   }
 
   const STATES: [string, Record<string, unknown>][] = [
@@ -167,13 +199,58 @@ describe("cross-page links stay within their cap", () => {
             <Page />
           </JurisdictionProvider>,
         );
-        for (const button of screen.getAllByRole("button", { expanded: false })) {
-          await user.click(button);
+        await openEverySection(user);
+        expect(shaped("sentence").length, `${name} / ${state} sentences`).toBeLessThanOrEqual(2);
+        expect(crossLinks(), `${name} / ${state} untagged cross-page link`).toHaveLength(
+          shaped("sentence").length + shaped("trace").length,
+        );
+        // One per panel, not one per page: the rule is that a derivation never
+        // turns into a list of exits, and a panel is the unit a reader reads.
+        for (const panel of document.querySelectorAll('[id$="-panel"]')) {
+          expect(
+            panel.querySelectorAll('[data-cross="trace"]').length,
+            `${name} / ${state} / ${panel.id} traces`,
+          ).toBeLessThanOrEqual(1);
         }
-        expect(crossLinks().length, `${name} / ${state}`).toBeLessThanOrEqual(2);
       });
     }
   }
+
+  it("finds both shapes on one page, so the caps cannot pass vacuously", async () => {
+    // Down Payment carries one of each: the trace label on the closing-costs row
+    // in `target`, and the RRSP-HBP sentence at the foot of `waterfall`. If
+    // either count goes to zero the caps above are measuring nothing.
+    const user = userEvent.setup();
+    renderWithIntl(
+      <JurisdictionProvider>
+        <DownPaymentPage />
+      </JurisdictionProvider>,
+    );
+    await openEverySection(user);
+    expect(shaped("trace").length).toBe(1);
+    expect(shaped("sentence").length).toBe(1);
+  });
+
+  it("lets a page carry both caps at once", async () => {
+    // Affordability, short on cash, is the densest state the product has: two
+    // sentences (the closing-costs trace in `cash`, the down-payment verdict
+    // beneath it) plus the payment label in `comfort` — a panel that had no way
+    // to answer its own biggest row until the label could carry the link, because
+    // the page's two sentences were already spent elsewhere.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ price: 875000, income1: 142000, funds: 20000, save: 500 }),
+    );
+    const user = userEvent.setup();
+    renderWithIntl(
+      <JurisdictionProvider>
+        <AffordabilityPage />
+      </JurisdictionProvider>,
+    );
+    await openEverySection(user);
+    expect(shaped("sentence").length).toBe(2);
+    expect(shaped("trace").map((a) => a.getAttribute("href"))).toEqual(["/amortization#payment"]);
+  });
 });
 
 describe("horizontal scroll stays inside the element that owns it", () => {
