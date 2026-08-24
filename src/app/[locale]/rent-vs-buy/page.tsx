@@ -285,6 +285,8 @@ export default function RentVsBuyPage() {
             price={stored.price}
             pricePlaceholder={resolved.price}
             dpPct={stored.dpPct}
+            dpPctEffective={resolved.dpPct}
+            belowMinimum={resolved.belowMinimum}
             amortYears={stored.amortYears}
             ptype={stored.ptype}
             jurisdiction={jurisdiction}
@@ -339,6 +341,37 @@ export default function RentVsBuyPage() {
                 { value: "growth" as const, label: t("retGrowth") },
               ]}
             />
+            {/*
+              The carrying costs this page's own model applies to the owner side.
+              They moved the answer and had no control on the screen that used
+              them, which left the reader nothing to argue with.
+            */}
+            <NumberField
+              id="insuranceAnnual"
+              label={t("fInsurance")}
+              value={stored.insuranceAnnual}
+              placeholder={resolved.insuranceAnnual}
+              min={0}
+              onCommit={(insuranceAnnual) => update({ insuranceAnnual })}
+            />
+            <NumberField
+              id="utilities"
+              label={t("fUtilities")}
+              value={stored.utilities}
+              placeholder={resolved.utilities}
+              min={0}
+              onCommit={(utilities) => update({ utilities })}
+            />
+            {stored.ptype === "condo" ? (
+              <NumberField
+                id="condoFee"
+                label={t("fCondo")}
+                value={stored.condoFee}
+                placeholder={resolved.condoFee}
+                min={0}
+                onCommit={(condoFee) => update({ condoFee })}
+              />
+            ) : null}
             <p className="text-[11.5px] leading-[1.5] text-ink3 text-pretty">{t("leverNote")}</p>
           </fieldset>
         </div>

@@ -222,3 +222,36 @@ describe("the legal minimum down payment", () => {
     expect(raised.contractRate).toBeCloseTo(defaultContractRate(federal, 20), 10);
   });
 });
+
+describe("the blended tier — where the floor is not a round number", () => {
+  // Between $500,000 and $1,500,000 the minimum is 5% on the first 500k and 10%
+  // above it, so the floor lands on values like 7.88%. This band is what makes
+  // binding a four-option control to the FLOORED percentage dangerous: no option
+  // matches, SegmentedGroup gives no button aria-checked, every button gets
+  // tabIndex -1, and the whole radiogroup leaves the tab order. The two prices
+  // originally tested ($400k and $1.6M) are precisely the two where that cannot
+  // happen -- one has no floor, the other floors to exactly 20.
+  const blended = { ...untouched, price: 900000, dpPct: 5 };
+
+  it("floors to a percentage that is not one of the offered options", () => {
+    const r = resolveInputs(blended, winnipeg, federal);
+    expect(r.belowMinimum).toBe(true);
+    expect([5, 10, 20, 25]).not.toContain(r.dpPct);
+    expect(r.dpPct).toBeGreaterThan(5);
+    expect(r.dpPct).toBeLessThan(10);
+  });
+
+  it("keeps the reader's own choice addressable, so a control can bind to it", () => {
+    expect(resolveInputs(blended, winnipeg, federal).dpPctRequested).toBe(5);
+  });
+
+  it("floors in dollars, matching the rule's own unit and scenario()'s threshold", () => {
+    // A request a fraction of a dollar under the floor is a rounding artefact,
+    // not someone asking for something illegal.
+    const price = 900000;
+    const exact = (minDown(price) / price) * 100;
+    const hair = ((minDown(price) - 0.25) / price) * 100;
+    expect(resolveInputs({ ...untouched, price, dpPct: exact }, winnipeg, federal).belowMinimum).toBe(false);
+    expect(resolveInputs({ ...untouched, price, dpPct: hair }, winnipeg, federal).belowMinimum).toBe(false);
+  });
+});

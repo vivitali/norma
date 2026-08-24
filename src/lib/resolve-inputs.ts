@@ -117,9 +117,13 @@ export function resolveInputs(
   const price = stored.price ?? j.bench[stored.ptype];
   // Half a dollar of slack: a percentage that lands a rounding error under the
   // floor is not a reader asking for something illegal.
+  // Half a dollar of slack, matching scenario()'s own test in engine.ts: a
+  // percentage that lands a rounding error under the floor is not a reader
+  // asking for something illegal. Expressed in dollars, not percentage points,
+  // because that is the unit the rule is written in.
   const floorPct = price > 0 ? (minDown(price) / price) * 100 : stored.dpPct;
-  const belowMinimum = stored.dpPct < floorPct - 1e-9 && price > 0;
-  const dpPct = Math.max(stored.dpPct, belowMinimum ? floorPct : stored.dpPct);
+  const belowMinimum = price > 0 && (price * stored.dpPct) / 100 < minDown(price) - 0.5;
+  const dpPct = belowMinimum ? floorPct : stored.dpPct;
   const car = stored.car ?? 0;
   const student = stored.student ?? 0;
   const cc = stored.cc ?? 0;

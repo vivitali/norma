@@ -82,7 +82,15 @@ export default function ScenariosPage() {
             : t("subtitle");
   const sub =
     rec.kind === "twenty"
-      ? t("recTwentySub", { ret: pct(rec.returnOnExtra * 100, 0), extra: fmt(rec.extraCash) })
+      ? // Stated in the SAME unit as the table row two sections down. Rendering
+        // the ratio as "91%" claimed a guaranteed 91% return for a figure the
+        // page's own note defines as below break-even.
+        rec.returnOnExtra >= 1
+        ? t("recTwentySub", { ret: `${rec.returnOnExtra.toFixed(2)}×`, extra: fmt(rec.extraCash) })
+        : t("recTwentyBelow", {
+            ret: `${rec.returnOnExtra.toFixed(2)}×`,
+            extra: fmt(rec.extraCash),
+          })
       : rec.kind === "only"
         ? t("recOnlySub", {
             extra: fmt(rec.extraCash),
@@ -152,13 +160,14 @@ export default function ScenariosPage() {
     { label: t("rClosing"), value: (c) => fmt(c.closingTotal), mark: "rule" },
     { label: t("rPremTax"), value: (c) => (c.premiumTaxLine > 0 ? fmt(c.premiumTaxLine) : "—"), mark: "rule" },
     { label: t("rCash"), value: (c) => fmt(c.net), strong: true, best: lowestBy((c) => c.net) },
-    { label: t("rFunds"), value: () => (resolved.funds === null ? "—" : fmt(resolved.funds)) },
     { label: t("rSurplus"), value: (c) => (c.surplus === null ? "—" : fmt(c.surplus)) },
     {
       label: t("rMonths"),
       // Three distinguishable answers, from one engine helper: 0 means you can
       // already close, "—" means no saving rate was given, a number is months.
-      value: (c) => (c.months === null ? "—" : t("fMonths", { n: c.months })),
+      // 0 is "you can already close", not "0 months of saving away".
+      value: (c) =>
+        c.months === null ? "—" : c.months === 0 ? t("fFundable") : t("fMonths", { n: c.months }),
     },
     {
       label: t("gCash"),
@@ -242,6 +251,7 @@ export default function ScenariosPage() {
             </p>
             <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyPremium")}</p>
             <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyContract")}</p>
+            <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyVsCeiling")}</p>
           </>
         ))}
 
@@ -324,7 +334,7 @@ export default function ScenariosPage() {
               recommendedPct={recommendedPct}
               caption={t("gLifetime")}
             />
-            <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyVsCeiling")}</p>
+
             <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyReturn")}</p>
             <div className="mt-4">
               <p className="eyebrow pb-1 text-ink3">{t("howToRead")}</p>
@@ -346,6 +356,8 @@ export default function ScenariosPage() {
             price={stored.price}
             pricePlaceholder={resolved.price}
             dpPct={stored.dpPct}
+            dpPctEffective={resolved.dpPct}
+            belowMinimum={resolved.belowMinimum}
             amortYears={stored.amortYears}
             ptype={stored.ptype}
             ftb={stored.ftb}

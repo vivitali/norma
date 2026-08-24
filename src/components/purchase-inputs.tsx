@@ -23,7 +23,15 @@ export interface PurchaseInputsProps {
   price: number | null;
   /** What price resolves to when the reader has not set one — shown as placeholder, never as value. */
   pricePlaceholder: number;
+  /** What the reader picked. The control binds to this, so a chip is always selected. */
   dpPct: number;
+  /**
+   * What the app actually models, with the legal minimum applied. When it differs
+   * from `dpPct` the component says so — otherwise the chip asserts one deposit
+   * while the mortgage above it is built on another.
+   */
+  dpPctEffective: number;
+  belowMinimum: boolean;
   amortYears?: number;
   ptype?: PropertyType;
   ftb?: boolean;
@@ -46,6 +54,8 @@ export function PurchaseInputs({
   price,
   pricePlaceholder,
   dpPct,
+  dpPctEffective,
+  belowMinimum,
   amortYears,
   ptype,
   ftb,
@@ -72,11 +82,19 @@ export function PurchaseInputs({
       />
 
       <SegmentedGroup
-        label={`${t("downPayment")} · ${fmt((effectivePrice * dpPct) / 100)}`}
+        label={`${t("downPayment")} · ${fmt((effectivePrice * dpPctEffective) / 100)}`}
         value={dpPct}
         onChange={(next) => onChange({ dpPct: next })}
         options={DP_CHOICES.map((v) => ({ value: v, label: pct(v) }))}
       />
+      {belowMinimum ? (
+        <p className="-mt-1 text-[11px] leading-[1.45] text-caution">
+          {t("belowMinimum", {
+            p: pct(dpPctEffective, 1),
+            a: fmt((effectivePrice * dpPctEffective) / 100),
+          })}
+        </p>
+      ) : null}
 
       {amortYears !== undefined ? (
         <SegmentedGroup

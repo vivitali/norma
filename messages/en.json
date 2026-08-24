@@ -244,7 +244,8 @@
     "tdsShort": "all debt over income",
     "limitWord": "limit",
     "perYear": "gross, per year",
-    "impactNoneFree": "No monthly debts entered — and at this price the first $100 would cost you nothing, because housing cost is the binding constraint."
+    "impactNoneFree": "No monthly debts entered — and at this price the first $100 would cost you nothing, because housing cost is the binding constraint.",
+    "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}"
   },
   "ClosingCosts": {
     "title": "Closing costs",
@@ -339,7 +340,6 @@
     "cashUnanswered": "Tell us what you have available and this becomes a yes or a no.",
     "monthlySavings": "Saved toward closing each month",
     "noSaveRate": "Add a monthly saving rate to see how long the gap takes to close.",
-    "vMonths": "About {n} months of saving closes the gap.",
     "tagYours": "Your figures",
     "tagTypical": "Typical figures"
   },
@@ -375,7 +375,7 @@
     "srcCash": "Cash and savings",
     "srcCashWhy": "Already taxed. Nothing further to pay to use it.",
     "srcHbp": "RRSP through the Home Buyers’ Plan",
-    "srcHbpWhy": "No tax on withdrawal, but you must repay it over 15 years. Miss a payment and that part is added to your income.",
+    "srcHbpWhy": "No tax on withdrawal, but you must repay it over {y} years. Miss a payment and that part is added to your income.",
     "srcTfsa": "TFSA",
     "srcTfsaWhy": "No tax to withdraw. The contribution room comes back, but not until the next calendar year.",
     "srcGift": "Gift",
@@ -389,7 +389,6 @@
     "closingCosts": "Closing costs",
     "grpAtClosing": "Reduces your cash at closing",
     "netCash": "Net cash at closing, after credits applied that day",
-    "available": "Funds available for this purchase",
     "breakdown": "Where it comes from",
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
@@ -423,17 +422,17 @@
     "step2": "2. Deduct",
     "step2Body": "Claim the contribution as a deduction on your tax return. This is where the refund comes from.",
     "step3": "3. Wait {d} days",
-    "step3Body": "The contribution must sit in the RRSP for at least 90 days before you withdraw it under the HBP. Withdraw sooner and that portion is not deductible.",
+    "step3Body": "The contribution must sit in the RRSP for at least {d} days before you withdraw it under the HBP. Withdraw sooner and that portion is not deductible.",
     "step3Warn": "This rule is absolute. There is no exception and no appeal — miss it and the withdrawal becomes fully taxable income.",
     "step4": "4. Withdraw",
     "step4Body": "Withdraw up to {cap} tax-free under the Home Buyers’ Plan, using Form T1036.",
     "step5": "5. Repay",
-    "step5Body": "Starting the second year after the withdrawal, repay one fifteenth of it each year for 15 years. Skip a payment and that amount is added to your income for the year.",
+    "step5Body": "Starting the second year after the withdrawal, repay one {n}th of it each year for {y} years. Skip a payment and that amount is added to your income for the year.",
     "contribution": "Your RRSP contribution",
     "refund": "Refund at your marginal rate",
     "withdraw": "Amount withdrawn tax-free",
     "repaySchedule": "Repayment schedule",
-    "repayPerYear": "per year for 15 years",
+    "repayPerYear": "per year for {y} years",
     "noWithdraw": "Enter a withdrawal amount to see what this is worth.",
     "marginal": "Your marginal rate",
     "income": "Taxable income",
@@ -529,10 +528,8 @@
   },
   "RentVsBuy": {
     "title": "Rent versus buy",
-    "subtitle": "Buying is not better or worse in the abstract. It depends almost entirely on how long you stay.",
     "buyWord": "Buy",
     "rentWord": "Rent",
-    "yr": "Yr",
     "crossLabel": "Buying pulls ahead",
     "crossYear": "year {n}",
     "neverAhead": "Buying never pulls ahead within 40 years",
@@ -608,7 +605,10 @@
     "upFront": "Capital deployed up front",
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
-    "atYear": "at year {n}"
+    "atYear": "at year {n}",
+    "fInsurance": "Home insurance, annual",
+    "fUtilities": "Utilities and heat, monthly",
+    "fCondo": "Condo fee, monthly"
   },
   "Scenarios": {
     "title": "Down payment scenarios",
@@ -639,7 +639,6 @@
     "rClosing": "Closing costs",
     "rPremTax": "Tax on the CMHC premium",
     "rCash": "Cash required at closing",
-    "rFunds": "Your available funds",
     "rSurplus": "Surplus or shortfall",
     "rMonths": "Months of saving to reach it",
     "rQualRate": "Qualifying rate",
@@ -669,7 +668,7 @@
     "nOrderTitle": "Fill tax-advantaged room first",
     "nOrderBody": "FHSA, then RRSP, then TFSA. Those beat the mortgage rate before any prepayment does, and the FHSA is deductible going in and tax-free coming out.",
     "recTwenty": "Getting to 20% saves {save} over the life of the mortgage.",
-    "recTwentySub": "A guaranteed, tax-free return of {ret} on the extra {extra} you put down, and it removes the insurance premium entirely.",
+    "recTwentySub": "Every extra dollar of deposit returns {ret} in lifetime borrowing cost, and the insurance premium disappears entirely. Above 1.00× the extra cash more than pays for itself; below it, it does not.",
     "recOnly": "At this price, {p} down is the only option you can fund today.",
     "recOnlySub": "Reaching 20% would cost {extra} more at closing — about {n} months of saving at your current rate. It would save {save} over the life of the mortgage.",
     "recNoneCash": "You cannot fund any of these scenarios yet.",
@@ -685,7 +684,7 @@
     "whyPremium": "The premium is a percentage of the loan, set by the loan-to-value band at origination, plus 20 basis points for a 30-year amortization. It is added to the mortgage, so you pay interest on it for the full term.",
     "whyContract": "Insured mortgages price below uninsured ones, because the lender’s risk is covered. Putting 20% down removes the premium but moves you to the higher rate.",
     "whyPremTax": "Some provinces charge sales tax on the insurance premium. The premium can be financed; the tax on it cannot, so it is cash on closing day and it varies by column.",
-    "whyReturn": "Lifetime saving divided by the extra cash you had to put down. Above 1.0 means every extra dollar returned more than a dollar. It is guaranteed and tax-free, unlike an investment return.",
+    "whyReturn": "Lifetime saving divided by the extra cash you had to put down. Above 1.0 means every extra dollar returned more than a dollar. It is guaranteed and tax-free, unlike an investment return — but it is undiscounted nominal interest measured against today's dollars, so 1.0 is a weaker bar than it looks.",
     "whyVsCeiling": "Positive means the monthly cost fits inside the ceiling you set. This is the number to anchor on, not the lender’s approval.",
     "secMonthly": "Monthly cost",
     "secCash": "Can you fund it?",
@@ -701,7 +700,8 @@
     "column": "{p} down",
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
-    "bestHere": "best of the four"
+    "bestHere": "best of the four",
+    "recTwentyBelow": "Getting to 20% removes the insurance premium, but at these figures the extra {extra} returns {ret} — less than a dollar per dollar over the life of the mortgage."
   },
   "Provenance": {
     "rule": "rule",
@@ -721,7 +721,8 @@
     "amortization": "Amortization",
     "years": "{n} years",
     "purchase": "The purchase",
-    "elsewhereWhy": "Outside Toronto there is no municipal land transfer tax on top of the provincial one."
+    "elsewhereWhy": "Outside Toronto there is no municipal land transfer tax on top of the provincial one.",
+    "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}"
   },
   "Disclosure": {
     "unverifiedFlag": "Placeholder figures — verify before relying on them",

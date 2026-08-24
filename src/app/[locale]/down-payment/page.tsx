@@ -193,7 +193,7 @@ export default function DownPaymentPage() {
                   strong={row.drawn > 0}
                 />
                 <p className="pt-1 text-[12px] leading-[1.55] text-ink3 text-pretty">
-                  {t(`${SOURCE_LABEL[row.key]}Why`)}
+                  {t(`${SOURCE_LABEL[row.key]}Why`, { y: federal.hbp.repayYears })}
                 </p>
                 {row.drawn > 0 && row.repayAnnual > 0 ? (
                   <p className="pt-1 text-[12px] text-caution">
@@ -347,6 +347,8 @@ export default function DownPaymentPage() {
             price={stored.price}
             pricePlaceholder={resolved.price}
             dpPct={stored.dpPct}
+            dpPctEffective={resolved.dpPct}
+            belowMinimum={resolved.belowMinimum}
             amortYears={stored.amortYears}
             ptype={stored.ptype}
             ftb={stored.ftb}

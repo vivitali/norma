@@ -291,6 +291,8 @@ export default function AmortizationPage() {
             price={stored.price}
             pricePlaceholder={resolved.price}
             dpPct={stored.dpPct}
+            dpPctEffective={resolved.dpPct}
+            belowMinimum={resolved.belowMinimum}
             amortYears={stored.amortYears}
             jurisdiction={jurisdiction}
             onChange={update}

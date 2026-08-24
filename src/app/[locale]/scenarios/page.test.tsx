@@ -118,8 +118,13 @@ describe("Scenarios — how to read it", () => {
 });
 
 describe("Scenarios — French", () => {
-  it("renders in French without leaking a message key", () => {
+  it("renders in French without leaking a message key, in every section", async () => {
+    // Expanded first, deliberately. A missing ICU parameter makes next-intl
+    // render the raw key, and a collapsed page hides every section where that
+    // can happen -- which is exactly where Amortization.altText was hiding.
+    const user = userEvent.setup();
     renderPage("fr");
+    await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(document.body.textContent).not.toMatch(/Scenarios\./);
   });
 });

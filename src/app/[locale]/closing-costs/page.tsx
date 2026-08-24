@@ -263,6 +263,8 @@ export default function ClosingCostsPage() {
             price={stored.price}
             pricePlaceholder={resolved.price}
             dpPct={stored.dpPct}
+            dpPctEffective={resolved.dpPct}
+            belowMinimum={resolved.belowMinimum}
             amortYears={stored.amortYears}
             ptype={stored.ptype}
             ftb={stored.ftb}

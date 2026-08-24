@@ -163,9 +163,9 @@ export default function RrspHbpPage() {
           <>
             {step(t("step1"), t("step1Body"))}
             {step(t("step2"), t("step2Body"))}
-            {step(t("step3", { d: play.ruleDays }), t("step3Body"), t("step3Warn"))}
+            {step(t("step3", { d: play.ruleDays }), t("step3Body", { d: play.ruleDays }), t("step3Warn"))}
             {step(t("step4"), t("step4Body", { cap: fmt(play.max) }))}
-            {step(t("step5"), t("step5Body"))}
+            {step(t("step5"), t("step5Body", { n: play.repayYears, y: play.repayYears }))}
             <p className="pt-3 text-[12.5px] text-ink3">
               {t("ruleDaysNote", { d: play.ruleDays })}
             </p>
@@ -175,7 +175,7 @@ export default function RrspHbpPage() {
         {section(
           "repayment",
           play.withdraw > 0 ? "caution" : "none",
-          `${fmt(play.repayAnnual)} ${t("repayPerYear")}`,
+          `${fmt(play.repayAnnual)} ${t("repayPerYear", { y: play.repayYears })}`,
           fmt(play.withdraw),
           t("repaymentWhy"),
           <>
