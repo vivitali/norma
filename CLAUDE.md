@@ -70,6 +70,9 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 
 ## Workflow
 
+SEO and growth work uses the `seo-website-growth` skill (`~/.claude/skills/`), which
+carries the domain-sweep tooling and the rule that promotion waits on verified claims.
+
 Implement → invoke `reviewer` subagent on the diff → fix → repeat until approved → `scripts/test` → PR via `gh pr create` (no Linear tracker configured for this project yet).
 
 ## Deployment
