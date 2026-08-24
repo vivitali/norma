@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { buildLines, closingTotal, credits, monthsToSave } from "@/domain/engine";
+import { buildLines, closingTotal, credits, monthsToSave, type LineItem } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
@@ -43,25 +43,24 @@ export default function ClosingCostsPage() {
     [jurisdiction, resolved],
   );
 
-  /** The heaviest of the three fee groups — the one worth opening first. */
-  const largestGroup = (
-    [
-      ["government", lines.gov],
-      ["professional", lines.pro],
-      ["adjustments", lines.adj],
-    ] as const
-  ).reduce((heaviest, [id, items]) => {
-    const sum = items.reduce((t, l) => t + l.amount, 0);
-    return sum > heaviest.sum ? { id, sum } : heaviest;
-  }, { id: "government", sum: -1 }).id;
-
   const cash = cashState({ net: total.net, funds: resolved.funds });
 
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     CLOSING_SECTIONS,
-    // The largest of the three fee groups. Almost always taxes and government
-    // fees, which is also the provincial-rules claim made concrete.
-    largestGroup,
+    // Taxes and government fees, always.
+    //
+    // Every other page opens the section that answers its own question, and this
+    // page's question is what THIS jurisdiction charges. That group is the only
+    // one whose contents change with location — Toronto stacks a municipal tax on
+    // the provincial one, Alberta has no transfer tax and shows land titles
+    // registration instead — so it is both the subject and the positioning claim
+    // made concrete.
+    //
+    // "The largest group" was the obvious rule and is a bad proxy for it: in
+    // Winnipeg, the default jurisdiction, adjustments and moving in is the
+    // heaviest at $5,459, so the rule opened the one group that is the same
+    // everywhere.
+    "government",
   );
   const creditsAtClosing = total.creditsAtClosing;
   const later = credit.later.reduce((sum, c) => sum + c.amount, 0);
@@ -97,7 +96,18 @@ export default function ClosingCostsPage() {
   );
 
   const def = (id: string) => CLOSING_SECTIONS.find((s) => s.id === id)!.labelKey;
-  const items = (n: number) => t("items", { n });
+  /**
+   * A group's line: its heaviest item, with the figure, and how many there are.
+   *
+   * It used to be "{n} items" — a count, which tells the reader the COST of
+   * opening rather than any reason to. The line is the one thing a closed
+   * section always shows, and on the three biggest groups on the page it was
+   * spent on inventory.
+   */
+  const groupLine = (group: readonly LineItem[]) => {
+    const largest = group.reduce((a, b) => (b.amount > a.amount ? b : a));
+    return t("groupLine", { name: t(largest.key), a: fmt(largest.amount), n: group.length });
+  };
 
   return (
     <ToolMain>
@@ -130,7 +140,7 @@ export default function ClosingCostsPage() {
           "government",
           def("government"),
           "none",
-          items(lines.gov.length),
+          groupLine(lines.gov),
           fmt(lines.gov.reduce((s, l) => s + l.amount, 0)),
           t("govWhy"),
           <>
@@ -147,7 +157,7 @@ export default function ClosingCostsPage() {
           "professional",
           def("professional"),
           "none",
-          items(lines.pro.length),
+          groupLine(lines.pro),
           fmt(lines.pro.reduce((s, l) => s + l.amount, 0)),
           t("proWhy"),
           <LineRows items={lines.pro} namespace="ClosingCosts" />,
@@ -157,7 +167,7 @@ export default function ClosingCostsPage() {
           "adjustments",
           def("adjustments"),
           "none",
-          items(lines.adj.length),
+          groupLine(lines.adj),
           fmt(lines.adj.reduce((s, l) => s + l.amount, 0)),
           t("adjWhy"),
           <LineRows items={lines.adj} namespace="ClosingCosts" />,

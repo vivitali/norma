@@ -372,7 +372,6 @@
     "breakdown": "La facture",
     "expandAll": "Tout ouvrir",
     "collapseAll": "Tout fermer",
-    "items": "{n} éléments",
     "noCreditLater": "Rien ne réduit la facture le jour de la clôture ici. Ce que vous recevez arrive des mois plus tard.",
     "noCreditAtAll": "Cette juridiction n’offre aucun crédit à la clôture. La facture ci-dessus est la facture.",
     "govWhy": "Taxes et frais d’enregistrement fixés par la province, et dans certaines villes par la municipalité en plus. Ce sont des règles, pas des devis — exactes selon la table des règles.",
@@ -384,7 +383,8 @@
     "monthlySavings": "Épargne mensuelle pour la clôture",
     "noSaveRate": "Ajoutez un montant d’épargne mensuel pour voir en combien de temps l’écart se comble.",
     "tagYours": "Vos chiffres",
-    "tagTypical": "Chiffres typiques"
+    "tagTypical": "Chiffres typiques",
+    "groupLine": "{name} {a} — le plus élevé de {n, plural, one {# ligne} other {# lignes}}"
   },
   "DownPayment": {
     "title": "Sources de la mise de fonds",

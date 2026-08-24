@@ -81,7 +81,9 @@ export function SectionRow({
           ) : null}
           <span
             aria-hidden="true"
-            className={cn("w-3.5 flex-none text-right text-[11px] text-ink3", !figure && "ml-auto")}
+            // --ink2, not --ink3: at 11px this glyph is the only affordance saying a row
+            // opens, and on paper the micro tier is too quiet to carry that job alone.
+            className={cn("w-3.5 flex-none text-right text-[11px] text-ink2", !figure && "ml-auto")}
           >
             {open ? "–" : "+"}
           </span>

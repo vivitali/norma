@@ -372,7 +372,6 @@
     "breakdown": "The bill",
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
-    "items": "{n} items",
     "noCreditLater": "Nothing comes off the bill on closing day here. What you do get arrives months later.",
     "noCreditAtAll": "This jurisdiction offers no closing-day credit. The bill above is the bill.",
     "govWhy": "Taxes and registration fees set by the province, and in some cities by the municipality on top. These are rules, not quotes — exact given the rules table.",
@@ -384,7 +383,8 @@
     "monthlySavings": "Saved toward closing each month",
     "noSaveRate": "Add a monthly saving rate to see how long the gap takes to close.",
     "tagYours": "Your figures",
-    "tagTypical": "Typical figures"
+    "tagTypical": "Typical figures",
+    "groupLine": "{name} {a} — largest of {n, plural, one {# line} other {# lines}}"
   },
   "DownPayment": {
     "title": "Down payment sources",
