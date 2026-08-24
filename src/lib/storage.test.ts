@@ -45,9 +45,10 @@ describe("coerceStored", () => {
     expect(coerceStored({ dpPct: 140 })).toEqual({ dpPct: 100 });
     expect(coerceStored({ income1: -5 })).toEqual({ income1: 0 });
   });
-  it("accepts a valid depth and rejects an invalid one", () => {
-    expect(coerceStored({ depth: 2 })).toEqual({ depth: 2 });
-    expect(coerceStored({ depth: 7 })).toEqual({});
+  it("drops a key the registry no longer has", () => {
+    // `depth` was retired with the depth control it served; a returning user's
+    // blob still carries it and must not resurrect dead state.
+    expect(coerceStored({ depth: 2 })).toEqual({});
   });
   it("returns {} for a non-object", () => {
     for (const raw of [null, 42, "x", []]) expect(coerceStored(raw)).toEqual({});

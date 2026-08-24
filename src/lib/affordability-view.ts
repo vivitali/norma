@@ -53,7 +53,7 @@ const CHECK_TONE: Record<CheckState, Tone> = {
   pass: "pass",
   caution: "caution",
   blocked: "blocked",
-  unanswered: "neutral",
+  unanswered: "none",
 };
 
 export const checkTone = (state: CheckState): Tone => CHECK_TONE[state];

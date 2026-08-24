@@ -8,7 +8,6 @@ import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
 import type { AffordabilityFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
-import { DisclosureSection } from "@/components/disclosure-section";
 import { NumberField } from "@/components/number-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -39,8 +38,6 @@ export interface InputGroupsProps {
   result: AffordabilityResult;
   jurisdiction: Jurisdiction;
   update: (patch: Partial<AffordabilityFormState>) => void;
-  isOpen: (id: string) => boolean;
-  onToggle: (id: string, currentlyOpen: boolean) => void;
 }
 
 export function InputGroups({
@@ -49,23 +46,22 @@ export function InputGroups({
   result,
   jurisdiction,
   update,
-  isOpen,
-  onToggle,
 }: InputGroupsProps) {
   const t = useTranslations("Affordability");
   const tProv = useTranslations("Provinces");
   const fmt = useMoney();
   const pct = usePercent();
 
+  /**
+   * v2 has one disclosure gesture and it belongs to the sections above, so the
+   * inputs no longer hide half their fields behind a second one. The advanced
+   * fields sit under a quiet label in the same column.
+   */
   const advanced = (id: string, children: ReactNode) => (
-    <DisclosureSection
-      id={id}
-      label={isOpen(id) ? t("cHide") : t("cAdvanced")}
-      open={isOpen(id)}
-      onToggle={() => onToggle(id, isOpen(id))}
-    >
-      <div className="flex flex-col gap-3">{children}</div>
-    </DisclosureSection>
+    <div key={id} className="flex flex-col gap-3 border-t border-hairline pt-3">
+      <span className="eyebrow text-ink3">{t("cAdvanced")}</span>
+      {children}
+    </div>
   );
 
   return (
