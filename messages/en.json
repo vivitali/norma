@@ -196,14 +196,19 @@
     "elsewhereIn": "Somewhere else in",
     "secVerdict": "Verdict",
     "impactNoneBinding": "Your debts cost you nothing at this price. Housing cost is your binding constraint, not your other debts.",
-    "impactNoneBindingFoot": "That changes the moment total debt service becomes the limit."
-  },
-  "Depth": {
-    "label": "Detail",
-    "answer": "The answer",
-    "why": "Why",
-    "math": "The math",
-    "jumpTo": "Jump to"
+    "impactNoneBindingFoot": "That changes the moment total debt service becomes the limit.",
+    "breakdown": "The breakdown",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "gapLine": "The distance between what you can carry and what a bank will sign.",
+    "mLine": "Both ceilings, derived line by line.",
+    "gapWhy": "Two ceilings, side by side, on the same scale. Your target price sits somewhere between them — or past them both.",
+    "mWhy": "Nothing here is hidden from you. Every figure traces back to an input or a dated rule.",
+    "gdsShort": "housing over income",
+    "tdsShort": "all debt over income",
+    "limitWord": "limit",
+    "perYear": "gross, per year",
+    "impactNoneFree": "No monthly debts entered — and at this price the first $100 would cost you nothing, because housing cost is the binding constraint."
   },
   "Provenance": {
     "rule": "rule",

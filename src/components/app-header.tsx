@@ -10,8 +10,8 @@ export function AppHeader() {
   const t = useTranslations("AppHeader");
 
   return (
-    <header className="flex items-center gap-3 border-b border-border bg-muted px-4 py-3">
-      <Link href="/" className="text-[13px] font-semibold tracking-tight">
+    <header className="flex h-[62px] items-center gap-3.5 border-b border-border px-5 sm:px-10">
+      <Link href="/" className="flex-1 text-[15px] font-bold tracking-[-0.02em]">
         {t("brand")}
       </Link>
       <div className="ml-auto flex items-center gap-2">

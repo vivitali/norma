@@ -5,7 +5,6 @@ import {
   SHARED_INPUT_SCHEMA,
   AFFORDABILITY_KEYS,
   AFFORDABILITY_DEFAULTS,
-  DEPTH_KEYS,
   JURISDICTION_KEYS,
   JURISDICTION_DEFAULTS,
 } from "./shared-inputs";
@@ -14,7 +13,7 @@ describe("shared input registry", () => {
   it("gives every registry key a default value", () => {
     // Assert against the union of every page's key tuple, not Object.keys(SHARED_INPUT_DEFAULTS)
     // — iterating the registry's own keys back against itself passes vacuously even against {}.
-    const pageKeys = new Set<string>([...AFFORDABILITY_KEYS, ...JURISDICTION_KEYS, ...DEPTH_KEYS]);
+    const pageKeys = new Set<string>([...AFFORDABILITY_KEYS, ...JURISDICTION_KEYS]);
     expect(pageKeys.size).toBeGreaterThan(0);
     for (const key of pageKeys) {
       expect(SHARED_INPUT_DEFAULTS, key).toHaveProperty(key);
@@ -53,14 +52,13 @@ describe("shared input registry", () => {
     expect(SHARED_INPUT_DEFAULTS.ptype).toBe("house");
     expect(SHARED_INPUT_DEFAULTS.elsewhere).toBe(false);
     expect(SHARED_INPUT_DEFAULTS.haircut).toBe(0);
-    expect(SHARED_INPUT_DEFAULTS.depth).toBe(0);
   });
 
-  it("covers every registry key across the three key tuples", () => {
+  it("covers every registry key across the key tuples", () => {
     // A key added to SharedInputs and to no tuple is never persisted and never
     // read — silently dead state, which is how `haircut` and `elsewhere` ended
     // up with no control at all.
-    const covered = new Set<string>([...JURISDICTION_KEYS, ...DEPTH_KEYS, ...AFFORDABILITY_KEYS]);
+    const covered = new Set<string>([...JURISDICTION_KEYS, ...AFFORDABILITY_KEYS]);
     expect(Object.keys(SHARED_INPUT_DEFAULTS).filter((k) => !covered.has(k))).toEqual([]);
   });
 

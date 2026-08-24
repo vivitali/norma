@@ -196,14 +196,19 @@
     "elsewhereIn": "Ailleurs en",
     "secVerdict": "Verdict",
     "impactNoneBinding": "Vos dettes ne vous coûtent rien à ce prix. C’est le coût du logement qui limite, pas vos autres dettes.",
-    "impactNoneBindingFoot": "Cela change dès que le service total de la dette devient la limite."
-  },
-  "Depth": {
-    "label": "Détail",
-    "answer": "La réponse",
-    "why": "Pourquoi",
-    "math": "Le calcul",
-    "jumpTo": "Aller à"
+    "impactNoneBindingFoot": "Cela change dès que le service total de la dette devient la limite.",
+    "breakdown": "Le détail",
+    "expandAll": "Tout ouvrir",
+    "collapseAll": "Tout fermer",
+    "gapLine": "La distance entre ce que vous pouvez porter et ce qu’une banque signera.",
+    "mLine": "Les deux plafonds, dérivés ligne par ligne.",
+    "gapWhy": "Deux plafonds, côte à côte, à la même échelle. Votre prix cible se situe entre les deux — ou au-delà des deux.",
+    "mWhy": "Rien ne vous est caché ici. Chaque chiffre remonte à une donnée saisie ou à une règle datée.",
+    "gdsShort": "logement sur revenu",
+    "tdsShort": "toute dette sur revenu",
+    "limitWord": "limite",
+    "perYear": "brut, par an",
+    "impactNoneFree": "Aucune dette mensuelle — et à ce prix, les 100 premiers dollars ne vous coûteraient rien : c’est le coût du logement qui limite."
   },
   "Provenance": {
     "rule": "règle",

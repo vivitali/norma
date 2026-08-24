@@ -6,71 +6,80 @@ import { gapBand, markerAlign } from "@/lib/scale";
 import { useMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const ALIGN = { start: "justify-start", center: "justify-center", end: "justify-end" } as const;
+const ALIGN = { start: "items-start", center: "items-center", end: "items-end" } as const;
+const SHIFT = {
+  start: "translate-x-0",
+  center: "-translate-x-1/2",
+  end: "-translate-x-full",
+} as const;
 
 /**
- * The distance between what fits and what a lender would sign.
+ * Two ceilings on one scale, with the target between them or past them both.
  *
- * The two numbers can land either way round. Below the ceiling, the band is the
- * danger zone lenders approve into. Above it, the lender is the binding limit —
- * a different fact, so it gets its own copy and its own colour rather than being
- * clamped to zero.
+ * The three markers sit at three different heights and the lender ceiling is
+ * pinned to the right edge rather than positioned by value. That is what stops
+ * them colliding: comfort, ceiling and target routinely land within a few
+ * percent of each other, and v1 stacked all three labels in the same band of
+ * pixels, which rendered them unreadable.
  */
 export function GapBand({ result, price }: { result: AffordabilityResult; price: number }) {
   const t = useTranslations("Affordability");
   const fmt = useMoney();
   const band = gapBand(result.comfort, result.ceiling, price);
-
-  const tone = band.inverted
-    ? { fill: "bg-band-bg", edge: "border-band-border", text: "text-band" }
-    : { fill: "bg-caution-bg", edge: "border-caution-border", text: "text-caution" };
-
-  const marker = (pct: number, label: string, value: string, emphasis?: boolean) => (
-    <div
-      className={cn("absolute top-0 flex w-28 -translate-x-1/2 flex-col", ALIGN[markerAlign(pct)])}
-      style={{ left: `${pct}%` }}
-    >
-      <span className="micro text-text-faint">{label}</span>
-      <span className={cn("figure text-[11px]", emphasis && "font-semibold")}>{value}</span>
-    </div>
-  );
+  const comfortAlign = markerAlign(band.comfortPct);
+  const targetAlign = markerAlign(band.targetPct);
 
   return (
-    <section aria-labelledby="gap" className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
-      <h2 id="gap" tabIndex={-1} className="text-[13px] font-semibold">
-        {t("gapTitle")}
-      </h2>
-
-      <div className="relative mt-1 h-2 w-full rounded-sm bg-surface-sunken">
+    <div className="mb-[22px] max-w-[820px]">
+      <div className="relative h-[104px]">
+        <div aria-hidden="true" className="absolute inset-x-0 top-[30px] h-2 rounded-full bg-sunk" />
+        <div
+          aria-hidden="true"
+          className="absolute top-[30px] h-2 rounded-full bg-ac"
+          style={{ width: `${band.bandLeft}%` }}
+        />
         {band.hasBand ? (
-          <span
-            className={cn("absolute inset-y-0 rounded-sm border", tone.fill, tone.edge)}
+          <div
+            aria-hidden="true"
+            className="absolute top-[30px] h-2 bg-caution"
             style={{ left: `${band.bandLeft}%`, width: `${band.bandWidth}%` }}
           />
         ) : null}
-        <span
-          className="absolute inset-y-0 w-0.5 bg-primary"
+
+        <div
+          className={cn("absolute top-0 flex flex-col gap-[5px]", ALIGN[comfortAlign], SHIFT[comfortAlign])}
           style={{ left: `${band.comfortPct}%` }}
-        />
-        <span
-          className="absolute -inset-y-1 w-0.5 bg-foreground"
+        >
+          <span className="text-[13px] font-semibold whitespace-nowrap text-ac">
+            {fmt(result.comfort)}
+          </span>
+          <span aria-hidden="true" className="h-[9px] w-0.5 bg-ac" />
+        </div>
+
+        <div
+          className={cn("absolute top-[42px] flex flex-col gap-[5px]", ALIGN[targetAlign], SHIFT[targetAlign])}
           style={{ left: `${band.targetPct}%` }}
-        />
-      </div>
+        >
+          <span aria-hidden="true" className="h-[9px] w-0.5 bg-ink" />
+          <span className="text-[12.5px] font-medium whitespace-nowrap">
+            {t("gapTarget")} {fmt(price)}
+          </span>
+        </div>
 
-      <div className="relative h-9">
-        {marker(band.comfortPct, t("stComfort"), fmt(result.comfort), true)}
-        {marker(band.targetPct, t("gapTarget"), fmt(price))}
-        {marker(band.ceilingPct, t("stCeiling"), fmt(result.ceiling))}
+        {/* Pinned right, not positioned by value, AND on its own row: the ceiling
+            is the top of the scale, and the target routinely lands within a few
+            percent of it, so sharing a row would put the two labels on top of
+            each other exactly when the target is highest. */}
+        <div className="absolute top-[76px] right-0 flex items-baseline gap-2">
+          <span aria-hidden="true" className="h-[9px] w-0.5 bg-ink3" />
+          <span className="text-[12.5px] whitespace-nowrap text-ink3">
+            {t("stCeiling")} {fmt(result.ceiling)}
+          </span>
+        </div>
       </div>
-
-      <p className={cn("max-w-prose text-[11.5px]", tone.text)}>
+      <p className="mt-1.5 max-w-[700px] text-[13px] leading-[1.6] text-caution text-pretty">
         {band.inverted ? t("gapZoneInv") : t("gapZone")}
       </p>
-      <p className="text-[11px] text-muted-foreground">
-        <span className="figure">{fmt(Math.abs(result.gap))}</span>{" "}
-        {band.inverted ? t("gapOfInv") : t("gapOf")}
-      </p>
-    </section>
+    </div>
   );
 }

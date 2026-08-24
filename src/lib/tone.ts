@@ -1,19 +1,24 @@
 /**
- * The four semantic state triples from the token layer, plus a neutral, mapped
- * to their utility classes in one place.
- *
- * Lives in src/lib/ and not beside a component because the pure lib layer
- * (affordability-view) needs the type, and nothing in src/lib/ may import from
- * src/components/.
+ * Semantic state in v2 is a 7px dot and a figure colour on the page ground —
+ * never a filled panel with its own border. That is why there are three colours
+ * here and no background/border triples: v2 deleted the surfaces on purpose, so
+ * one accent (electric indigo) carries every non-state emphasis.
  */
-export type Tone = "pass" | "caution" | "blocked" | "band" | "neutral";
+export type Tone = "pass" | "caution" | "blocked" | "none";
 
-const TONE_CLASS: Record<Tone, string> = {
-  pass: "bg-pass-bg border-pass-border text-pass",
-  caution: "bg-caution-bg border-caution-border text-caution",
-  blocked: "bg-blocked-bg border-blocked-border text-blocked",
-  band: "bg-band-bg border-band-border text-band",
-  neutral: "bg-card border-border text-foreground",
+const DOT: Record<Tone, string> = {
+  pass: "bg-pass",
+  caution: "bg-caution",
+  blocked: "bg-blocked",
+  none: "bg-ink3",
 };
 
-export const toneClass = (tone: Tone): string => TONE_CLASS[tone];
+const FIGURE: Record<Tone, string> = {
+  pass: "text-pass",
+  caution: "text-caution",
+  blocked: "text-blocked",
+  none: "text-ink",
+};
+
+export const dotClass = (tone: Tone): string => DOT[tone];
+export const figureClass = (tone: Tone): string => FIGURE[tone];

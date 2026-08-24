@@ -19,9 +19,23 @@ function render(over: Partial<AffordabilityFormState>) {
 }
 
 describe("ImpactRow", () => {
-  it("prices $100 of obligation when there really are no debts", () => {
-    render({});
-    expect(screen.getByText(/No monthly debts entered/)).toBeInTheDocument();
+  it("prices $100 of obligation only where that $100 would actually cost something", () => {
+    // Reachable only on a very low income. GDS binds until debts exceed the
+    // TDS/GDS spread (income x 5% / 12), so for most debt-free households the
+    // first $100 of obligation genuinely costs nothing and this branch is not
+    // the one that renders.
+    const result = render({ income1: 20000 });
+    expect(result.capacityPer100).toBeGreaterThan(0);
+    expect(screen.getByText(/^No monthly debts entered/)).toBeInTheDocument();
+  });
+
+  it("does not quote a $0 price per $100 when housing cost binds", () => {
+    // capacityPer100 bottoms out at zero whenever GDS binds. "Every $100 would
+    // cost you roughly $0" is true and reads as broken; say why it is zero.
+    const result = render({});
+    expect(result.capacityPer100).toBe(0);
+    expect(screen.queryByText(/roughly/)).not.toBeInTheDocument();
+    expect(screen.getByText(/the first \$100 would cost you nothing/)).toBeInTheDocument();
   });
 
   it("prices the debt when total debt service is the binding constraint", () => {

@@ -456,4 +456,3 @@
   window.CIBTH_DATA = { L: L, t: t, P: P, C: C, jur: jur, federal: federal, verified: VER };
   window.dispatchEvent(new Event('cibth-data'));
 })();
-

@@ -5,7 +5,6 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import AffordabilityPage from "./page";
 
-// The page now contains provenance links, which pull in next-intl's navigation.
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
@@ -17,27 +16,25 @@ const renderPage = (locale: "en" | "fr" = "en") =>
     { locale },
   );
 
+const SECTIONS = ["Approval", "Comfort", "Cash", "The gap", "The math, line by line"];
+
 beforeEach(() => window.localStorage.clear());
 afterEach(() => {
   window.location.hash = "";
 });
 
 describe("Affordability — the answer comes first", () => {
-  it("shows a real figure before any input is touched", async () => {
-    // No screen in this product opens on an empty form.
+  it("leads with a real figure before any input is touched", () => {
+    // The comfortable price is the hero: it is the answer, at the scale of an
+    // answer, and it is on screen before anyone types.
     renderPage();
-    const verdict = await screen.findByRole("region", { name: /lender would decline|comfortably afford|above what you would be comfortable|not yet enough cash/i });
-    expect(verdict).toBeInTheDocument();
+    expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
   });
 
-  it("tags the untouched answer as typical, not as the user's", () => {
-    renderPage();
-    expect(screen.getByText("Typical for your city")).toBeInTheDocument();
-  });
-
-  it("flips to 'your numbers' once income is given", async () => {
+  it("tags the untouched answer as typical, then as the user's", async () => {
     const user = userEvent.setup();
     renderPage();
+    expect(screen.getByText("Typical for your city")).toBeInTheDocument();
     const income = screen.getByLabelText("Applicant 1, gross annual");
     await user.clear(income);
     await user.type(income, "95000");
@@ -45,120 +42,92 @@ describe("Affordability — the answer comes first", () => {
     expect(screen.getByText("Your numbers")).toBeInTheDocument();
   });
 
-  it("renders all four stat-strip figures", () => {
+  it("shows the three secondary figures beside the answer", () => {
     renderPage();
-    // "True all-in monthly" is deliberately the label of both the stat and the
-    // comfort check's total row — the same figure, named the same way.
-    for (const label of [
-      "Comfortable price",
-      "Lender ceiling",
-      "True all-in monthly",
-      "Cash needed at closing",
-    ]) {
+    for (const label of ["Lender ceiling", "True all-in monthly", "Cash needed at closing"]) {
       expect(screen.getAllByText(label).length, label).toBeGreaterThan(0);
     }
   });
 });
 
-describe("Affordability — the parity checklist", () => {
-  // Each registry section, asserted present, so dropping one fails the suite
-  // rather than quietly shipping a thinner screen.
-  it("renders every section present at the default depth", () => {
+describe("Affordability — one disclosure gesture", () => {
+  it("renders all five sections, checks and derivation alike, in one list", () => {
+    // The whole thesis of v2: the gap and the math are reached by the same
+    // gesture as a check, so there is nothing else to learn.
     renderPage();
-    expect(screen.getByRole("heading", { name: "The three checks" })).toBeInTheDocument();
-    for (const name of ["Verdict", "The three checks", "The gap", "Adjust your numbers"]) {
-      expect(screen.getByRole("link", { name })).toBeInTheDocument();
+    for (const name of SECTIONS) {
+      expect(screen.getByRole("button", { name: new RegExp(name) }), name).toBeInTheDocument();
     }
   });
 
-  it("does not render the math section at the default depth", () => {
+  it("starts with every section closed", () => {
     renderPage();
-    expect(
-      screen.queryByRole("link", { name: "The math, line by line" }),
-    ).not.toBeInTheDocument();
-  });
-});
-
-describe("Affordability — depth", () => {
-  it("leaves the three checks collapsed at 'the answer'", () => {
-    renderPage();
-    for (const name of [/Approval/, /Comfort/, /Cash/]) {
-      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-expanded", "false");
+    for (const name of SECTIONS) {
+      expect(screen.getByRole("button", { name: new RegExp(name) })).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
     }
   });
 
-  it("opens the three checks at 'why'", async () => {
+  it("opens one section in place, leaving the others closed", async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(screen.getByRole("radio", { name: /Why/ }));
-    for (const name of [/Approval/, /Comfort/, /Cash/]) {
-      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-expanded", "true");
+    await user.click(screen.getByRole("button", { name: /Comfort/ }));
+    expect(screen.getByRole("button", { name: /Comfort/ })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("reaches the derivation with the same gesture as a check", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /The math, line by line/ }));
+    expect(screen.getByText("What a lender would approve")).toBeVisible();
+    expect(screen.getByText("What you could comfortably carry")).toBeVisible();
+  });
+
+  it("opens and collapses everything from one control", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: "Expand all" }));
+    for (const name of SECTIONS) {
+      expect(screen.getByRole("button", { name: new RegExp(name) })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
     }
+    await user.click(screen.getByRole("button", { name: "Collapse all" }));
+    expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("adds the math jump link at 'the math'", async () => {
-    const user = userEvent.setup();
+  it("has no depth control and no jump rail", () => {
+    // Both were deleted, not hidden. Four mechanisms became one.
     renderPage();
-    await user.click(screen.getByRole("radio", { name: /The math/ }));
-    expect(screen.getByRole("link", { name: "The math, line by line" })).toBeInTheDocument();
-  });
-
-  it("survives a remount", async () => {
-    const user = userEvent.setup();
-    const { unmount } = renderPage();
-    await user.click(screen.getByRole("radio", { name: /The math/ }));
-    unmount();
-    renderPage();
-    expect(await screen.findByRole("radio", { name: /The math/ })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    );
-  });
-
-  it("lets a check be opened at 'the answer' and closed at 'the math'", async () => {
-    // The reference's own defect, asserted against: it pins every check open at
-    // depth >= 1 and leaves the toggle inoperative.
-    const user = userEvent.setup();
-    renderPage();
-    const comfort = () => screen.getByRole("button", { name: /Comfort/ });
-    await user.click(comfort());
-    expect(comfort()).toHaveAttribute("aria-expanded", "true");
-
-    await user.click(screen.getByRole("radio", { name: /The math/ }));
-    await user.click(comfort());
-    expect(comfort()).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("radiogroup", { name: /Detail/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: /Jump to/ })).not.toBeInTheDocument();
   });
 });
 
 describe("Affordability — deep links", () => {
-  it("opens the check the hash names and moves focus to its heading", async () => {
-    window.location.hash = "#check-comfort";
+  it("opens the section the hash names", async () => {
+    window.location.hash = "#comfort";
     renderPage();
     expect(await screen.findByRole("button", { name: /Comfort/ })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
-    // Scrolling without moving focus leaves a keyboard user where they started.
-    expect(document.getElementById("check-comfort")).toHaveFocus();
-    expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("is inert for an unknown hash", () => {
     window.location.hash = "#not-a-section";
     renderPage();
-    expect(screen.getByRole("button", { name: /Comfort/ })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(screen.getByRole("button", { name: /Comfort/ })).toHaveAttribute("aria-expanded", "false");
   });
 });
 
 describe("Affordability — the unanswered cash check", () => {
   it("still shows the cash required, and asks for the one field it wants", async () => {
-    // Nothing is gated: cc.net is fully computable from defaults.
     const user = userEvent.setup();
     renderPage();
     await user.click(screen.getByRole("button", { name: /Cash/ }));
@@ -166,48 +135,25 @@ describe("Affordability — the unanswered cash check", () => {
     expect(screen.getByLabelText("Funds available for this purchase")).toBeVisible();
   });
 
-  it("never reports shortCash while funds are unknown", () => {
-    renderPage();
-    expect(
-      screen.queryByText("You have enough income, but not yet enough cash to close."),
-    ).not.toBeInTheDocument();
-  });
-
-  it("reports a shortfall once funds are given and fall short", async () => {
+  it("calls a cash shortfall short, not over", async () => {
+    // "over" is the comfort word — money you are spending past a ceiling. A cash
+    // gap is money you do not have yet, and the two are not the same fact.
     const user = userEvent.setup();
     renderPage();
     await user.click(screen.getByRole("button", { name: /Cash/ }));
     const funds = screen.getByLabelText("Funds available for this purchase");
     await user.type(funds, "1000");
     await user.tab();
-    expect(screen.getByRole("button", { name: /Cash.*Blocked/ })).toBeInTheDocument();
+    const cash = screen.getByRole("button", { name: /Cash/ });
+    expect(cash.textContent).toMatch(/short/);
+    expect(cash.textContent).not.toMatch(/over/);
   });
-});
 
-describe("Affordability — the disclosure stays", () => {
-  it("keeps the unverified-figures wording visible", () => {
+  it("never reports shortCash while funds are unknown", () => {
     renderPage();
-    expect(screen.getByText("Placeholder figures — verify before relying on them")).toBeVisible();
-    expect(screen.getByText(/Rules last verified/)).toBeVisible();
-  });
-});
-
-describe("Affordability — number formatting end to end", () => {
-  it("never renders a sign inside the currency symbol in French", () => {
-    // money() emits "− 340 $" in fr and "− $340" in en. Never "$-340".
-    renderPage("fr");
-    expect(document.body.textContent).not.toMatch(/\$\s?-\d/);
-  });
-});
-
-describe("Affordability — the gap band", () => {
-  it("names exactly one of the two zones, and never clamps the inverted case", () => {
-    renderPage();
-    // Whichever way round the two numbers land, exactly one of the two
-    // sentences must be on screen — never a clamped zero and no explanation.
-    const zone = screen.queryByText(/Lenders will approve into this zone/);
-    const inverted = screen.queryByText(/comfortable carrying more than a lender will approve/);
-    expect([zone, inverted].filter(Boolean)).toHaveLength(1);
+    expect(
+      screen.queryByText("You have enough income, but not yet enough cash to close."),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -231,100 +177,43 @@ describe("Affordability — inputs", () => {
     }
   });
 
-  it("assumes no second applicant, and offers to add one", async () => {
-    const user = userEvent.setup();
+  it("gives the haircut a real control, with no second disclosure to open first", () => {
+    // v2 has one gesture and it belongs to the sections; the inputs no longer
+    // hide half their fields behind a panel of their own.
     renderPage();
-    expect(screen.queryByLabelText("Applicant 2, gross annual")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Add a second applicant" }));
-    expect(screen.getByLabelText("Applicant 2, gross annual")).toBeInTheDocument();
-  });
-
-  it("gives the haircut a real control, ending its life as dead state", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    await user.click(
-      within(screen.getByRole("group", { name: "Income" })).getByRole("button", {
-        name: "Advanced",
+    expect(
+      within(screen.getByRole("group", { name: "Income" })).getByRole("slider", {
+        name: "Lender income recognition haircut",
       }),
-    );
-    const slider = screen.getByRole("slider", {
-      name: "Lender income recognition haircut",
-    });
-    expect(slider).toHaveAttribute("aria-valuetext", "0%");
-  });
-
-  it("says every field is pre-filled and overwritable", () => {
-    renderPage();
-    expect(screen.getByText(/Pre-filled from your city/)).toBeInTheDocument();
+    ).toHaveAttribute("aria-valuetext", "0%");
   });
 
   it("returns a blanked field to its derived default rather than to zero", async () => {
     const user = userEvent.setup();
     renderPage();
     const price = screen.getByLabelText("Purchase price you're considering");
-    const derived = (price as HTMLInputElement).value;
-    await user.clear(price);
+    const derived = (price as HTMLInputElement).placeholder;
     await user.type(price, "600000");
     await user.tab();
     expect(price).toHaveValue("600,000");
     await user.clear(price);
     await user.tab();
-    expect(price).toHaveValue(derived);
+    expect(price).toHaveValue("");
+    expect(price).toHaveAttribute("placeholder", derived);
   });
 });
 
-describe("Affordability — consequence", () => {
-  it("prices $100 of monthly debt when no debt is entered", () => {
+describe("Affordability — the disclosure stays", () => {
+  it("keeps the unverified-figures wording visible", () => {
     renderPage();
-    expect(screen.getByText(/No monthly debts entered/)).toBeInTheDocument();
-  });
-
-  it("prices the entered debt in purchase-price terms", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    const car = screen.getByLabelText("Car loan or lease");
-    await user.type(car, "550");
-    await user.tab();
-    expect(screen.getByText(/reduces what a lender will approve/)).toBeInTheDocument();
+    expect(screen.getByText("Placeholder figures — verify before relying on them")).toBeVisible();
+    expect(screen.getByText(/Rules last verified/)).toBeVisible();
   });
 });
 
-describe("Affordability — the math", () => {
-  it("shows both derivation columns and both ratio gauges at 'the math'", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    await user.click(screen.getByRole("radio", { name: /The math/ }));
-    expect(screen.getByText("What a lender would approve")).toBeInTheDocument();
-    expect(screen.getByText("What you could comfortably carry")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: /^GDS/ })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: /^TDS/ })).toBeInTheDocument();
-  });
-
-  it("explains the heat allowance only where the ratios are shown", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    expect(screen.queryByText(/standard heating allowance/)).not.toBeInTheDocument();
-    await user.click(screen.getByRole("radio", { name: /The math/ }));
-    expect(screen.getByText(/standard heating allowance/)).toBeInTheDocument();
-  });
-});
-
-describe("Affordability — the change announcement", () => {
-  it("says nothing on load, when nothing has been asked for", () => {
-    // usePreviousResult sees hydration as a change like any other, so an
-    // ungated live region greets a returning user with an announcement.
-    renderPage();
-    const live = document.querySelector('[aria-live="polite"]');
-    expect(live).toBeInTheDocument();
-    expect(live).toHaveTextContent("");
-  });
-
-  it("announces the comfortable price once the user changes something", async () => {
-    const user = userEvent.setup();
-    renderPage();
-    const ceiling = screen.getByLabelText("Monthly all-in you would be relaxed about");
-    await user.type(ceiling, "4200");
-    await user.tab();
-    expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent(/Comfortable price/);
+describe("Affordability — number formatting end to end", () => {
+  it("never renders a sign inside the currency symbol in French", () => {
+    renderPage("fr");
+    expect(document.body.textContent).not.toMatch(/\$\s?-\d/);
   });
 });
