@@ -50,7 +50,24 @@ export function CompareGrid({
   const pct = usePercent();
 
   return (
-    <div className="overflow-x-auto">
+    <div
+      // Two classes, both load-bearing, both for the same symptom.
+      //
+      // `min-w-0`: this is a flex item and `min-width: auto` is the flex default,
+      // so without it the container refuses to shrink below the 560px table and
+      // overflow-x-auto never engages — the PAGE scrolls sideways instead of the
+      // table.
+      //
+      // `relative`: the sr-only "best of the four" markers inside the cells are
+      // position: absolute, and with no positioned ancestor they resolve against
+      // the document. At 320px that put them at x=568 — past the viewport, and
+      // scrolling the page 248px. Making this their containing block puts them
+      // inside the scroller, where overflow clips them.
+      //
+      // Both only appear with a section open, which is how they survived a sweep
+      // that measured closed pages.
+      className="relative min-w-0 overflow-x-auto"
+    >
       <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
         <caption className="sr-only">{caption}</caption>
         <thead>

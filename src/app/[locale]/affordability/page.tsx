@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { affordability } from "@/domain/engine";
+import { affordability, scenario } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -18,9 +18,11 @@ import {
   verdictKey,
   type CheckState,
 } from "@/lib/affordability-view";
+import { SCENARIO_PERCENTS } from "@/lib/scenarios-view";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
+import { CrossLink } from "@/components/cross-link";
 import { GapBand } from "@/components/affordability/gap-band";
 import { Gauges } from "@/components/affordability/gauges";
 import { MathColumns } from "@/components/affordability/math-columns";
@@ -60,6 +62,29 @@ export default function AffordabilityPage() {
     AFFORDABILITY_SECTIONS,
     decidingSectionId(result),
   );
+
+  /**
+   * The smallest of the four compared deposits a lender would actually approve,
+   * or null when none does.
+   *
+   * Computed here rather than promised: the Scenarios line has to say something
+   * true, and "would more down fix it?" has exactly two honest answers.
+   */
+  const approvingPct = useMemo(() => {
+    if (approvalState(result) !== "blocked") return null;
+    const qualIncome =
+      (resolved.income1 + resolved.income2 + resolved.otherIncome) * (1 - resolved.haircut / 100);
+    for (const dpPct of SCENARIO_PERCENTS) {
+      const column = scenario(jurisdiction, federal, {
+        ...resolved,
+        dpPct,
+        qualIncome,
+        debts: resolved.debts,
+      });
+      if (column.qualifies) return dpPct;
+    }
+    return null;
+  }, [jurisdiction, resolved, result]);
 
   const verdict = verdictKey(result);
   const approval = approvalState(result);
@@ -173,6 +198,28 @@ export default function AffordabilityPage() {
             <p className="mt-[18px] max-w-[700px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
               {t("heatNote", { h: fmt(federal.heatAllowance) })}
             </p>
+            {/*
+              VERDICT. Declined only, and suppressed when the cash panel is
+              already carrying its second line -- the cap is two per page, and a
+              reader who cannot fund the purchase has a nearer question than
+              which deposit a lender would accept.
+
+              The clause is computed, not promised: scenario() runs the four
+              columns, so this says either which deposit passes or that none
+              does. Either answer saves the reader a trip.
+            */}
+            {approval === "blocked" && cash !== "blocked" ? (
+              approvingPct === null ? (
+                <CrossLink namespace="Affordability" id="xScenariosNone" href="/scenarios" />
+              ) : (
+                <CrossLink
+                  namespace="Affordability"
+                  id="xScenariosSome"
+                  href="/scenarios"
+                  values={{ p: pct(approvingPct) }}
+                />
+              )
+            ) : null}
           </>,
         )}
 
@@ -219,6 +266,15 @@ export default function AffordabilityPage() {
           <>
             <PanelRow label={t("downPaymentRow")} value={fmt(result.cc.fin.down)} />
             <PanelRow label={t("closingCosts")} value={fmt(result.cc.total)} provenance={<Provenance kind="estimate" />} />
+            {/*
+              TRACE, and it sits directly under the row it traces rather than at
+              the panel foot. That figure IS the closing-costs page's whole
+              answer, from the same closingTotal() call, and its provenance mark
+              explains what "estimate" means rather than where the number came
+              from. Stacking this with the verdict line at the foot read as a
+              related-links block -- the one shape this feature must not take.
+            */}
+            <CrossLink namespace="Affordability" id="xClosing" href="/closing-costs" placement="row" />
             {result.cc.creditsAtClosing > 0 ? (
               <PanelRow label={t("grpAtClosing")} value={`− ${fmt(result.cc.creditsAtClosing)}`} provenance={<Provenance kind="rule" />} />
             ) : null}
@@ -229,6 +285,20 @@ export default function AffordabilityPage() {
               value={result.monthsToClose === null ? "—" : String(result.monthsToClose)}
               strong
             />
+            {/*
+              VERDICT. Only when there is a shortfall: with no gap there is no
+              question, and an invitation without a question is an advertisement.
+              The figure travels because cashGap derives from funds the reader
+              actually gave -- `cash === "blocked"` cannot be true otherwise.
+            */}
+            {cash === "blocked" && result.cashGap !== null ? (
+              <CrossLink
+                namespace="Affordability"
+                id="xDownPayment"
+                href="/down-payment"
+                values={{ a: fmt(Math.abs(result.cashGap)) }}
+              />
+            ) : null}
             {cash === "unanswered" ? (
               <InlineAsk prompt={t("cashUnanswered")}>
                 <NumberField

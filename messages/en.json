@@ -288,7 +288,11 @@
     "impactNoneFree": "No monthly debts entered — and at this price the first $100 would cost you nothing, because housing cost is the binding constraint.",
     "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}",
     "ckApGds": "GDS caps housing cost at {a} a month — the limit a lender applies before your other debts count.",
-    "ckApTds": "TDS caps housing and debts together at {a} a month, and {d} a month of debts count against it."
+    "ckApTds": "TDS caps housing and debts together at {a} a month, and {d} a month of debts count against it.",
+    "xClosing": "Every line behind that closing-costs figure — transfer tax, legal fees, which credits arrive on the day — is on <link>the closing-costs page</link>, computed from these numbers.",
+    "xDownPayment": "Where the {a} could come from — FHSA, cash, the Home Buyers' Plan, in the order that costs least — is <link>the down-payment page</link>'s question.",
+    "xScenariosSome": "At {p} down a lender would approve. <link>The scenarios page</link> compares all four.",
+    "xScenariosNone": "No down payment fixes this: all four are declined at this price. <link>The scenarios page</link> shows how far off each one is."
   },
   "ClosingCosts": {
     "title": "Closing costs",
@@ -384,7 +388,9 @@
     "noSaveRate": "Add a monthly saving rate to see how long the gap takes to close.",
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
-    "groupLine": "{name} {a} — largest of {n, plural, one {# line} other {# lines}}"
+    "groupLine": "{name} {a} — largest of {n, plural, one {# line} other {# lines}}",
+    "xDownPayment": "<link>The down-payment page</link> orders your accounts against this bill, cheapest money first.",
+    "xDownPaymentAsk": "<link>The down-payment page</link> can order your accounts against this bill, cheapest money first, once you say what is in each."
   },
   "DownPayment": {
     "title": "Down payment sources",
@@ -455,7 +461,8 @@
     "tagTypical": "Typical figures",
     "month": "month {m}",
     "obligationsLabel": "Repayment obligations created",
-    "fullyFundedBeforeTax": "Your accounts cover it, with {a} left over — before the {tax} of tax that selling triggers."
+    "fullyFundedBeforeTax": "Your accounts cover it, with {a} left over — before the {tax} of tax that selling triggers.",
+    "xRrspHbp": "The Home Buyers' Plan is <link>a page of its own</link>: what the refund is worth, and what fifteen years of repayment costs."
   },
   "RrspHbp": {
     "title": "The RRSP → Home Buyers’ Plan play",
@@ -653,7 +660,8 @@
     "fUtilities": "Utilities and heat, monthly",
     "fCondo": "Condo fee, monthly",
     "crossNever": "Not within {n} years",
-    "assumptionsLine": "Both sides — {buy, plural, one {# favours} other {# favour}} buying, {rent, plural, one {# favours} other {# favour}} renting."
+    "assumptionsLine": "Both sides — {buy, plural, one {# favours} other {# favour}} buying, {rent, plural, one {# favours} other {# favour}} renting.",
+    "xClosing": "Capital deployed up front is the down payment plus closing day's bill, itemised on <link>the closing-costs page</link>."
   },
   "Scenarios": {
     "title": "Down payment scenarios",

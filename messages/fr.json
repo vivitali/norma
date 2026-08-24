@@ -288,7 +288,11 @@
     "impactNoneFree": "Aucune dette mensuelle — et à ce prix, les 100 premiers dollars ne vous coûteraient rien : c’est le coût du logement qui limite.",
     "belowMinimum": "Relevé au minimum légal pour ce prix : {p} · {a}",
     "ckApGds": "L’ABD plafonne les frais de logement à {a} par mois — la limite qu’un prêteur applique avant même de compter vos autres dettes.",
-    "ckApTds": "L’ATD plafonne logement et dettes ensemble à {a} par mois, et {d} par mois de dettes s’y imputent."
+    "ckApTds": "L’ATD plafonne logement et dettes ensemble à {a} par mois, et {d} par mois de dettes s’y imputent.",
+    "xClosing": "Chaque ligne derrière ce montant de frais de clôture — droits de mutation, frais juridiques, crédits reçus le jour même — se trouve sur <link>la page des frais de clôture</link>, calculée à partir de ces mêmes chiffres.",
+    "xDownPayment": "D’où pourraient venir ces {a} — CELIAPP, comptant, RAP, dans l’ordre qui coûte le moins — c’est la question de <link>la page de la mise de fonds</link>.",
+    "xScenariosSome": "À {p} de mise de fonds, un prêteur approuverait. <link>La page des scénarios</link> compare les quatre.",
+    "xScenariosNone": "Aucune mise de fonds ne règle cela : les quatre sont refusées à ce prix. <link>La page des scénarios</link> montre l’écart pour chacune."
   },
   "ClosingCosts": {
     "title": "Frais de clôture",
@@ -384,7 +388,9 @@
     "noSaveRate": "Ajoutez un montant d’épargne mensuel pour voir en combien de temps l’écart se comble.",
     "tagYours": "Vos chiffres",
     "tagTypical": "Chiffres typiques",
-    "groupLine": "{name} {a} — le plus élevé de {n, plural, one {# ligne} other {# lignes}}"
+    "groupLine": "{name} {a} — le plus élevé de {n, plural, one {# ligne} other {# lignes}}",
+    "xDownPayment": "<link>La page de la mise de fonds</link> classe vos comptes face à cette facture, l’argent le moins cher d’abord.",
+    "xDownPaymentAsk": "<link>La page de la mise de fonds</link> peut classer vos comptes face à cette facture, l’argent le moins cher d’abord, dès que vous indiquez ce que contient chacun."
   },
   "DownPayment": {
     "title": "Sources de la mise de fonds",
@@ -455,7 +461,8 @@
     "tagTypical": "Chiffres typiques",
     "month": "mois {m}",
     "obligationsLabel": "Obligations de remboursement créées",
-    "fullyFundedBeforeTax": "Vos comptes suffisent, et il reste {a} — avant les {tax} d’impôt que la vente déclenche."
+    "fullyFundedBeforeTax": "Vos comptes suffisent, et il reste {a} — avant les {tax} d’impôt que la vente déclenche.",
+    "xRrspHbp": "Le Régime d’accession à la propriété a <link>sa propre page</link> : ce que vaut le remboursement d’impôt, et ce que coûtent quinze ans de remboursement."
   },
   "RrspHbp": {
     "title": "Le jeu REER → Régime d’accession à la propriété",
@@ -653,7 +660,8 @@
     "fUtilities": "Services publics et chauffage, mensuel",
     "fCondo": "Frais de copropriété, mensuels",
     "crossNever": "Jamais en {n} ans",
-    "assumptionsLine": "Des deux côtés : {buy, plural, one {# favorise} other {# favorisent}} l’achat, {rent, plural, one {# favorise} other {# favorisent}} la location."
+    "assumptionsLine": "Des deux côtés : {buy, plural, one {# favorise} other {# favorisent}} l’achat, {rent, plural, one {# favorise} other {# favorisent}} la location.",
+    "xClosing": "Le capital engagé au départ, c’est la mise de fonds plus la facture du jour de la clôture, détaillée sur <link>la page des frais de clôture</link>."
   },
   "Scenarios": {
     "title": "Scénarios de mise de fonds",

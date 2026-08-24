@@ -13,6 +13,7 @@ import { DOWN_PAYMENT_SECTIONS } from "@/lib/sections";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
+import { CrossLink } from "@/components/cross-link";
 import { GlideChart } from "@/components/down-payment/glide-chart";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
@@ -258,6 +259,13 @@ export default function DownPaymentPage() {
                 </div>
               </div>
             ))}
+            {/*
+              TRACE. The waterfall draws on the Home Buyers' Plan and states the
+              15-year obligation in one clause; the mechanism — the refund, the
+              90-day rule, what a missed year costs — is that page's whole
+              subject.
+            */}
+            <CrossLink namespace="DownPayment" id="xRrspHbp" href="/rrsp-hbp" />
             <PanelRow label={t("totalDrawn")} value={fmt(flow.drawnTotal)} strong />
             {flow.shortfall > 0.5 ? (
               <PanelRow label={t("shortfallLabel")} value={fmt(flow.shortfall)} strong />

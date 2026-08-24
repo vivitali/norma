@@ -266,7 +266,14 @@ export default function AmortizationPage() {
         {section("schedule", "none", t("payoffYear", { n: result.payoffYear }), "", t("scheduleWhy"), (
           <>
             <ScheduleChart result={result} />
-            <div className="overflow-x-auto">
+            <div
+              // min-w-0 is load-bearing: this is a flex item, and `min-width: auto` is
+              // the flex default, so without it the container refuses to shrink below
+              // the 560px table and overflow-x-auto never engages — the PAGE scrolls
+              // sideways instead of the table. Only visible with the section open, which
+              // is why it survived a sweep that measured closed pages.
+              className="relative min-w-0 overflow-x-auto"
+            >
               <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
                 <caption className="sr-only">{t("tableTitle")}</caption>
                 <thead>

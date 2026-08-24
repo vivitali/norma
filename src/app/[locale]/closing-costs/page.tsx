@@ -8,12 +8,13 @@ import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
-import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
+import { anySourceGiven, isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { CLOSING_SECTIONS } from "@/lib/sections";
 import { cashState } from "@/lib/closing-view";
 import type { Tone } from "@/lib/tone";
 import { useMoney } from "@/lib/format";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
+import { CrossLink } from "@/components/cross-link";
 import { LineRows } from "@/components/closing-costs/line-rows";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
@@ -263,6 +264,20 @@ export default function ClosingCostsPage() {
             {months === 0 ? <p className="pt-1 text-[12.5px] text-pass">{t("passNote")}</p> : null}
             {gap !== null && gap < 0 && months === null ? (
               <p className="mt-2 text-[12.5px] text-ink3">{t("noSaveRate")}</p>
+            ) : null}
+            {/*
+              VERDICT. Only when the bill is not comfortably covered — a reader
+              with a reserve has no funding question. Two forms: with balances
+              given it states what the other page does; without them it names
+              what it will ask for, rather than travelling a "$0 available"
+              figure that would assert an empty bank account.
+            */}
+            {cash === "blocked" || cash === "caution" ? (
+              <CrossLink
+                namespace="ClosingCosts"
+                id={anySourceGiven(stored) ? "xDownPayment" : "xDownPaymentAsk"}
+                href="/down-payment"
+              />
             ) : null}
             <div className="mt-4 flex max-w-[420px] flex-col gap-3 rounded-lg border border-acbr bg-acbg p-3">
               {cash === "unanswered" ? (
