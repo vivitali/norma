@@ -167,8 +167,15 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
       const on = it.on === "loan" ? fin.loan : o.price;
       amt = it.base + it.per * Math.ceil(Math.max(0, on - (it.exempt ?? 0)) / it.unit);
       if (it.min) amt = Math.max(it.min, amt);
+      if (it.max != null) amt = Math.min(it.max, amt);
     } else if (it.kind === "rateMin") {
       amt = o.price > it.floor ? o.price * it.rate : it.min;
+    } else if (it.kind === "stepped") {
+      // A STEP table, not a marginal one: the band the value lands in sets the whole amount.
+      const on = it.on === "loan" ? fin.loan : o.price;
+      const step =
+        it.steps.find(([cap]) => cap == null || on <= cap) ?? it.steps[it.steps.length - 1];
+      amt = step[1];
     }
     gov.push({ key: it.key, ex: it.ex, amount: amt, parts, tier: it.tier, exact: true });
   }
@@ -197,7 +204,7 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
   if (o.ptype === "condo" && f.statusCert) pro.push({ key: "li_statusCert", amount: f.statusCert });
 
   const adj: LineItem[] = [
-    { key: "li_taxAdj", ex: "ex_taxAdj", amount: (o.price * j.propTax) / 4 },
+    { key: "li_taxAdj", ex: "ex_taxAdj", amount: (o.price * j.propTax.effective) / 4 },
     { key: "li_moving", amount: f.moving },
     { key: "li_setup", amount: f.setup },
   ];
@@ -206,7 +213,7 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
 
 export interface CreditLine {
   key: string;
-  kind: "cap" | "exemptBand" | "fullExempt" | "tieredPhaseOut" | "none";
+  kind: "cap" | "exemptBand" | "fullExempt" | "tieredCap" | "none";
   amount: number;
   st: "applied" | "capped" | "phasedOut" | "overCeiling" | "superseded" | "none" | "ftbOnly";
   target: string;
@@ -247,8 +254,20 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
       amount = Math.min(rb.cap, raw);
       st = raw > rb.cap ? "capped" : "applied";
     } else if (rb.kind === "fullExempt") {
-      amount = raw;
-      st = "applied";
+      // A cliff, not a taper: at the ceiling the whole tax is forgiven, one dollar over and the
+      // whole tax is payable. `null` is an explicit "genuinely uncapped", not a missing value.
+      if (rb.ceiling == null || o.price <= rb.ceiling) {
+        amount = raw;
+        st = "applied";
+      } else {
+        st = "overCeiling";
+      }
+    } else if (rb.kind === "tieredCap") {
+      // The tier table runs over the DUTY, not the price, and nothing takes it back above the
+      // price at which the cap binds — see TieredCapRebate for why there is no phase-out.
+      const tiered = bracketTax(raw, rb.tiers).total;
+      amount = Math.min(rb.cap, tiered);
+      st = tiered > rb.cap ? "capped" : "applied";
     } else if (rb.kind === "exemptBand") {
       const transferLine = j.transfer.find((l) => l.key === rb.on);
       const full =
@@ -271,7 +290,7 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
       amount,
       st,
       target: target.key,
-      cap: rb.kind === "cap" ? rb.cap : undefined,
+      cap: rb.kind === "cap" || rb.kind === "tieredCap" ? rb.cap : undefined,
       group: rb.group,
       noTax: rb.noTax,
     };
@@ -399,7 +418,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const tdsBinds = tdsAllow < gdsAllow;
 
   // Solved so property tax scales with price. Assumes 20% down, as the source model does.
-  const denomLender = 0.8 * fq + j.propTax / 12;
+  const denomLender = 0.8 * fq + j.propTax.effective / 12;
   /**
    * The ceiling this household would reach carrying `debts` of monthly obligation.
    * Parameterised because the debt-impact figures below are the DIFFERENCE between
@@ -414,7 +433,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const ceiling = ceilingCarrying(o.debts);
 
   const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee;
-  const denomComfort = 0.8 * fc + j.propTax / 12 + F.maintenanceReserve / 12;
+  const denomComfort = 0.8 * fc + j.propTax.effective / 12 + F.maintenanceReserve / 12;
   const comfort = Math.max(0, budget) / denomComfort;
 
   // The target price, actually financed at the actual down payment.
@@ -433,7 +452,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const pi = cc.fin.loan * payFactor(o.contractRate / 100, o.amortYears);
   const monthly = {
     pi,
-    propTax: (o.price * j.propTax) / 12,
+    propTax: (o.price * j.propTax.effective) / 12,
     insurance: o.insuranceAnnual / 12,
     utilities: o.utilities,
     condoFee: o.condoFee,
@@ -955,7 +974,7 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
       payoffYear ??= t;
     }
     const infl = Math.pow(1 + NON_SHELTER_INFLATION, t - 1);
-    const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax;
+    const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax.effective;
     const insurance = o.insuranceAnnual * infl;
     const utilities = (o.utilities + o.condoFee) * 12 * infl;
     const maintenance = o.price * F.maintenanceReserve * Math.pow(1 + g, t - 1);
@@ -1059,7 +1078,7 @@ export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
   const contractRate = insured ? F.rates.insured : F.rates.uninsured;
   const f = payFactor(contractRate, o.amortYears);
   const pi = totalMortgage * f;
-  const propTax = (o.price * j.propTax) / 12;
+  const propTax = (o.price * j.propTax.effective) / 12;
   const maintenance = (o.price * F.maintenanceReserve) / 12;
   const monthly = {
     pi,

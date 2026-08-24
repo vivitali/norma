@@ -3,6 +3,15 @@ import type { FederalRules } from "./types";
 /** Best-knowledge as of 2026-08-12 per the source model. Verify before shipping real figures. */
 const VERIFIED_AT = "2026-08-16";
 
+const CMHC_PREMIUMS =
+  "CMHC, Mortgage Loan Insurance: Premium Information for Homeowner and Small Rental Loans";
+
+const INVEST_RETURN_NOTE =
+  "A forward-looking return assumption. No authority publishes one, and past returns are not a source for a future rate; the three tiers exist so the reader can see how much the answer depends on it.";
+
+const APPRECIATION_NOTE =
+  "A forward-looking house price growth assumption. No authority forecasts one for a household to plan against; the alternatives are offered so the reader can test the answer against their own.";
+
 export const federal: FederalRules = {
   cmhc: {
     bands: [
@@ -53,4 +62,45 @@ export const federal: FederalRules = {
    * on #3.
    */
   contractRate: 4.29,
+  provenance: {
+    // Checked band by band against the published premium schedule, including the 0.20%
+    // surcharge for amortizations over 25 years and the $1.5M insurable ceiling.
+    "cmhc.bands": { conf: "high", asOf: "2026-08-24", src: CMHC_PREMIUMS },
+    "cmhc.longAmortSurcharge": { conf: "high", asOf: "2026-08-24", src: CMHC_PREMIUMS },
+    "cmhc.insuredCap": { conf: "high", asOf: "2026-08-24", src: CMHC_PREMIUMS },
+    maxAmortFtbInsured: { conf: "high", asOf: "2026-08-24", src: CMHC_PREMIUMS },
+    "stressTest.floor": { conf: "high", asOf: "2026", src: "OSFI minimum qualifying rate" },
+
+    // Everything below is a modelling default, not a stale figure: there is no publisher to
+    // be out of date with. Each one is disclosed rather than quietly baked in.
+    heatAllowance: {
+      conf: "assumption",
+      note: "No federal fixed heating allowance exists — CMHC directs underwriters to use actual heating costs. $150/month is a lender convention.",
+    },
+    sellingCost: {
+      conf: "assumption",
+      note: "No regulator publishes a standard selling cost; real estate commissions are negotiable by law.",
+    },
+    maintenanceReserve: {
+      conf: "assumption",
+      note: "The 1%-of-value-per-year rule of thumb is widely repeated but is not a published federal standard.",
+    },
+    contractRate: {
+      conf: "assumption",
+      note: "A posted-rate stand-in, no longer read by any screen: the contract rate derives from dpPct against rates.insured / rates.uninsured. Kept so the field is not silently authoritative.",
+    },
+    savingsReturn: {
+      conf: "assumption",
+      note: "A modelling return on savings held before closing. No authority publishes one; the reader's own rate is the honest input.",
+    },
+    "investReturn.cash": { conf: "assumption", note: INVEST_RETURN_NOTE },
+    "investReturn.balanced": { conf: "assumption", note: INVEST_RETURN_NOTE },
+    "investReturn.growth": { conf: "assumption", note: INVEST_RETURN_NOTE },
+    "appreciation.inflation": { conf: "assumption", note: APPRECIATION_NOTE },
+    "appreciation.shelter": { conf: "assumption", note: APPRECIATION_NOTE },
+    "appreciation.flat": {
+      conf: "assumption",
+      note: "Zero appreciation, offered deliberately as the assumption-free case rather than as a forecast.",
+    },
+  },
 };

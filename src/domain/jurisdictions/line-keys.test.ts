@@ -22,13 +22,17 @@ const CLOSING = {
  * jurisdiction exists to serve.
  */
 describe("every jurisdiction's line-item keys have copy", () => {
-  // Property types and buyer status change WHICH lines are built, so the sweep
-  // has to cover the combinations, not just the default one.
+  // Property type, buyer status and RESIDENCY change WHICH lines are built, so the sweep
+  // has to cover the combinations, not just the default one. Nova Scotia's non-resident deed
+  // transfer tax is invisible to a resident-only sweep, and it is the largest closing cost in
+  // the province for the buyer it applies to.
   const CASES = [
     { ptype: "house" as const, ftb: true, elsewhere: false, residency: "resident" as const },
     { ptype: "condo" as const, ftb: false, elsewhere: false, residency: "resident" as const },
     { ptype: "newbuild" as const, ftb: true, elsewhere: false, residency: "resident" as const },
     { ptype: "house" as const, ftb: true, elsewhere: true, residency: "resident" as const },
+    { ptype: "house" as const, ftb: true, elsewhere: false, residency: "nonResident" as const },
+    { ptype: "condo" as const, ftb: false, elsewhere: false, residency: "nonResident" as const },
   ];
 
   for (const jurisdiction of jurisdictions) {

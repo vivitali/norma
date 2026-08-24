@@ -1,4 +1,7 @@
-import type { Jurisdiction } from "../types";
+import type { Jurisdiction, JurisdictionFees } from "../types";
+import { feesProvenance, UNVERIFIED_BENCHMARK, UNVERIFIED_PROP_TAX } from "../provenance";
+
+const fees: JurisdictionFees = { notary: 1800, locCert: 400, inspect: 600, appraisal: 400, statusCert: 0, moving: 1300, setup: 600 };
 
 export const montreal: Jurisdiction = {
   id: "montreal",
@@ -8,8 +11,8 @@ export const montreal: Jurisdiction = {
   pro: "notary",
   rent: 1950,
   yoy: 0.041,
-  bench: { house: 640000, condo: 442000, newbuild: 690000 },
-  propTax: 0.00792,
+  bench: { house: 640000, condo: 442000 },
+  propTax: { effective: 0.00792, publishedRate: 0.00792, assessmentRatio: 1, basis: "market" },
   transfer: [
     {
       key: "li_dutiesMuni",
@@ -28,11 +31,17 @@ export const montreal: Jurisdiction = {
     { key: "cr_hba", ex: "ex_hba", amount: 1500 },
     { key: "cr_provCredit", ex: "ex_hba", amount: 1400 },
   ],
-  fees: { notary: 1800, locCert: 400, inspect: 600, appraisal: 400, statusCert: 0, moving: 1300, setup: 600 },
+  fees,
   orgs: {
     transfer: "Ville de Montréal, droits de mutation immobilière",
     premTax: "Revenu Québec",
     rebate: "Revenu Québec",
     market: "APCIQ · Centris",
+  },
+  provenance: {
+    ...feesProvenance(fees),
+    "propTax.effective": UNVERIFIED_PROP_TAX,
+    "bench.house": UNVERIFIED_BENCHMARK,
+    "bench.condo": UNVERIFIED_BENCHMARK,
   },
 };

@@ -1,4 +1,9 @@
-import type { Jurisdiction } from "../types";
+import type { Jurisdiction, JurisdictionFees } from "../types";
+import { feesProvenance, UNVERIFIED_BENCHMARK, UNVERIFIED_PROP_TAX } from "../provenance";
+
+const ONTARIO_LTT = "ontario.ca, Calculating Land Transfer Tax";
+
+const fees: JurisdictionFees = { lawyer: 2200, titleIns: 400, inspect: 650, appraisal: 400, statusCert: 110, moving: 1500, setup: 650 };
 
 export const toronto: Jurisdiction = {
   id: "toronto",
@@ -8,8 +13,8 @@ export const toronto: Jurisdiction = {
   pro: "lawyer",
   rent: 2850,
   yoy: 0.008,
-  bench: { house: 1180000, condo: 688000, newbuild: 1090000 },
-  propTax: 0.00752,
+  bench: { house: 1180000, condo: 688000 },
+  propTax: { effective: 0.00752, publishedRate: 0.00752, assessmentRatio: 1, basis: "market" },
   transfer: [
     {
       key: "li_lttProv",
@@ -39,12 +44,22 @@ export const toronto: Jurisdiction = {
     { key: "cr_lttRebateMuni", kind: "cap", cap: 4475, on: "li_lttMuni", timing: "closing", when: { ftb: true } },
   ],
   taxTime: [{ key: "cr_hba", ex: "ex_hba", amount: 1500 }],
-  fees: { lawyer: 2200, titleIns: 400, inspect: 650, appraisal: 400, statusCert: 110, moving: 1500, setup: 650 },
+  fees,
   orgs: {
     transfer: "Ontario Ministry of Finance",
     muni: "City of Toronto, MLTT by-law",
     premTax: "Ontario Ministry of Finance",
     rebate: "Ontario Ministry of Finance · City of Toronto",
     market: "CREA MLS® HPI",
+  },
+  provenance: {
+    ...feesProvenance(fees),
+    "propTax.effective": UNVERIFIED_PROP_TAX,
+    "bench.house": UNVERIFIED_BENCHMARK,
+    "bench.condo": UNVERIFIED_BENCHMARK,
+    // The provincial LTT bracket table, checked line for line against the ministry's own
+    // worked schedule. The MUNICIPAL table above it is not covered by this entry — Toronto's
+    // 2026 luxury tiers land with the Ontario data task.
+    "transfer.0.brackets": { conf: "high", asOf: "2026-04-22", src: ONTARIO_LTT },
   },
 };

@@ -525,7 +525,7 @@ describe("affordability", () => {
 
   it("produces a different ceiling in a jurisdiction with materially different transfer-tax rules", () => {
     // The ceiling differs between Toronto and Winnipeg because their property tax rates differ
-    // sharply: Toronto's j.propTax is 0.00752 vs Winnipeg's 0.0132 — nearly double. Since
+    // sharply: Toronto's j.propTax.effective is 0.00752 vs Winnipeg's 0.0132 — nearly double. Since
     // ceiling's denominator includes propTax (0.8*fq + propTax/12), the lower Toronto rate
     // produces a higher ceiling for the same income. The cc.total (closing costs) also differs
     // because Toronto stacks provincial + municipal LTT (with a rebate cap) on top of an 8%
@@ -644,5 +644,237 @@ describe("affordability cash and debt-cost outputs", () => {
     const r = affordability(winnipeg, federal, heavy);
     expect(r.tdsBinds).toBe(true);
     expect(r.capacityPer100).toBeCloseTo(100 * r.capacityPerDollar, 4);
+  });
+});
+
+describe("credits — fullExempt ceilings", () => {
+  const pe = () => getJurisdiction("pe")!;
+
+  const withCeiling = (ceiling: number | null): Jurisdiction => ({
+    ...pe(),
+    rebates: [{
+      key: "cr_pttExempt", kind: "fullExempt", ceiling,
+      on: "li_lttProv", timing: "closing", when: { ftb: true },
+    }],
+  });
+
+  const rebateAt = (j: Jurisdiction, price: number) => {
+    const o = { ...base, price };
+    return credits(j, federal, o, buildLines(j, federal, o).gov)
+      .atClosing.find((c) => c.key === "cr_pttExempt");
+  };
+
+  it("applies in full at the ceiling", () => {
+    const r = rebateAt(withCeiling(200000), 200000);
+    expect(r?.st).toBe("applied");
+    expect(r?.amount).toBeCloseTo(2000, 2); // 1% of 200,000
+  });
+
+  it("grants nothing one dollar above the ceiling — a cliff, not a taper", () => {
+    const r = rebateAt(withCeiling(200000), 200001);
+    expect(r?.st).toBe("overCeiling");
+    expect(r?.amount).toBe(0);
+  });
+
+  it("applies at any price when the ceiling is null", () => {
+    const r = rebateAt(withCeiling(null), 3000000);
+    expect(r?.st).toBe("applied");
+    expect(r?.amount).toBeCloseTo(30000, 2);
+  });
+
+  // Real Property Transfer Tax Act R.S.P.E.I. 1988 Cap. R-5.1, current to 2026-05-29, s.5(2):
+  // the exemption turns on being a first-time buyer who files a declaration and intends to
+  // occupy the property as a principal residence. No dollar threshold appears in the Act. The
+  // prescribed-maximum regulation (General Regulations s.3) was REVOKED by EC428/16 in 2016.
+  // Third-party calculators still recite the repealed $200,000 cap; the statute wins.
+  it("records PEI's exemption as genuinely uncapped, explicitly", () => {
+    const ceilings = pe().rebates.map((r) => (r.kind === "fullExempt" ? r.ceiling : "not-fullExempt"));
+    expect(ceilings).toEqual([null]);
+  });
+
+  it("still exempts a PEI first-time buyer at PEI's own benchmark house price", () => {
+    const o = { ...base, price: 388400 };
+    const L = buildLines(pe(), federal, o);
+    expect(L.gov.find((l) => l.key === "li_lttProv")?.amount).toBeCloseTo(3884, 2);
+    expect(closingTotal(pe(), federal, o).creditsAtClosing).toBeCloseTo(3884, 2);
+  });
+});
+
+describe("credits — tieredCap", () => {
+  // Quebec's crédit d'impôt remboursable pour l'accès à la propriété, per the Ministère des
+  // Finances technical bulletin: 100% of the first $5,000 of transfer duties, 25% of the next
+  // $3,500 (an extra $875), maximum $5,875. The published Admissibilité section names no price
+  // ceiling and no reduction — the curve is FLAT above the price where the cap is reached.
+  const qcRebate = {
+    key: "cr_qcAccess", kind: "tieredCap" as const,
+    tiers: [[5000, 1], [null, 0.25]] as const,
+    cap: 5875,
+    on: "li_dutiesMuni", timing: "taxTime" as const, when: { ftb: true },
+  };
+  const qc = (): Jurisdiction => ({ ...getJurisdiction("montreal")!, rebates: [qcRebate] });
+
+  const dutyAt = (j: Jurisdiction, price: number) =>
+    buildLines(j, federal, { ...base, price }).gov.find((l) => l.key === "li_dutiesMuni")!.amount;
+
+  const creditAt = (j: Jurisdiction, price: number) => {
+    const o = { ...base, price };
+    return credits(j, federal, o, buildLines(j, federal, o).gov)
+      .later.find((c) => c.key === "cr_qcAccess")?.amount;
+  };
+
+  it("refunds all of a duty below the first tier ceiling", () => {
+    const j = qc();
+    const duty = dutyAt(j, 300000);
+    expect(duty).toBeLessThan(5000);
+    expect(creditAt(j, 300000)).toBeCloseTo(duty, 2);
+  });
+
+  it("refunds 100% of the first 5,000 plus 25% of the excess", () => {
+    const j = qc();
+    const duty = dutyAt(j, 500000);
+    expect(duty).toBeGreaterThan(5000);
+    const expected = 5000 + (duty - 5000) * 0.25;
+    expect(expected).toBeLessThan(5875);
+    expect(creditAt(j, 500000)).toBeCloseTo(expected, 2);
+  });
+
+  it("never exceeds the cap", () => {
+    const j = qc();
+    expect(dutyAt(j, 700000)).toBeGreaterThan(8500);
+    expect(creditAt(j, 700000)).toBeCloseTo(5875, 2);
+  });
+
+  // The correction to the design: there is no linear phase-out. A million-dollar purchase and a
+  // five-million-dollar one both receive the full $5,875, because the schedule runs on the DUTY
+  // and stops at a cap, never taking anything back as the price climbs.
+  it("keeps the full credit above the price where the cap is reached — no phase-out", () => {
+    const j = qc();
+    expect(creditAt(j, 750000)).toBeCloseTo(5875, 2);
+    expect(creditAt(j, 1000000)).toBeCloseTo(5875, 2);
+    expect(creditAt(j, 5000000)).toBeCloseTo(5875, 2);
+  });
+
+  // The bulletin's own worked example: a Laval buyer at $616,000 pays $9,091 of duties and
+  // receives the full $5,875 (100% of 5,000 + 25% of 4,091 = 6,022.75, capped at 5,875).
+  // Modelled with a fixed duty line so the example turns on the credit, not on which Quebec
+  // municipality's threshold table is loaded.
+  const laval = (): Jurisdiction => ({
+    ...getJurisdiction("montreal")!,
+    transfer: [{ key: "li_dutiesMuni", ex: "ex_lttMuni", tier: "municipal", kind: "fixed", amount: 9091 }],
+    rebates: [qcRebate],
+  });
+
+  it("reproduces the bulletin's Laval example", () => {
+    const j = laval();
+    expect(dutyAt(j, 616000)).toBe(9091);
+    expect(creditAt(j, 616000)).toBeCloseTo(5875, 2);
+  });
+
+  it("arrives at tax time, not at the closing table", () => {
+    const j = laval();
+    const o = { ...base, price: 616000 };
+    const C = credits(j, federal, o, buildLines(j, federal, o).gov);
+    expect(C.atClosing.find((c) => c.key === "cr_qcAccess")).toBeUndefined();
+    expect(closingTotal(j, federal, o).creditsAtClosing).toBe(0);
+  });
+
+  it("marks the row capped when the cap binds and applied when it does not", () => {
+    const closingTimed = (price: number) => {
+      const j: Jurisdiction = {
+        ...getJurisdiction("montreal")!,
+        rebates: [{ ...qcRebate, timing: "closing" as const }],
+      };
+      const o = { ...base, price };
+      return credits(j, federal, o, buildLines(j, federal, o).gov)
+        .atClosing.find((c) => c.key === "cr_qcAccess");
+    };
+    expect(closingTimed(500000)?.st).toBe("applied");
+    expect(closingTimed(700000)?.st).toBe("capped");
+    expect(closingTimed(700000)?.cap).toBe(5875);
+  });
+});
+
+describe("buildLines — perValue max", () => {
+  const capped = (max?: number): Jurisdiction => ({
+    ...getJurisdiction("nl")!,
+    transfer: [{
+      key: "li_titleReg", ex: "ex_titleReg", tier: "provincial", kind: "perValue",
+      base: 100, per: 0.4, unit: 100, on: "price", exempt: 500, max,
+    }],
+  });
+
+  it("caps the fee at max once the computed amount exceeds it", () => {
+    const o = { ...base, price: 3000000 };
+    expect(buildLines(capped(5000), federal, o).gov[0].amount).toBe(5000);
+  });
+
+  it("leaves the fee untouched below the cap", () => {
+    const o = { ...base, price: 400000 };
+    const uncapped = buildLines(capped(undefined), federal, o).gov[0].amount;
+    expect(buildLines(capped(5000), federal, o).gov[0].amount).toBe(uncapped);
+    expect(uncapped).toBeLessThan(5000);
+  });
+
+  it("still rounds each part-unit up, as the statute requires", () => {
+    // "forty cents for each additional one hundred dollars OR PART OF ONE" — a $650 price is
+    // $150 above the $500 exemption, which is two part-units, not 1.5.
+    const o = { ...base, price: 650 };
+    expect(buildLines(capped(5000), federal, o).gov[0].amount).toBeCloseTo(100 + 0.4 * 2, 6);
+  });
+});
+
+describe("buildLines — stepped", () => {
+  const sk = () => getJurisdiction("saskatoon")!;
+  const mortReg = (o: ClosingInput) =>
+    buildLines(sk(), federal, o).gov.find((l) => l.key === "li_mortReg")!.amount;
+
+  it("charges a flat amount within a band, not a marginal rate", () => {
+    // ISC Registration of Mortgage: $250,000–$500,000 is a flat $275.
+    const a = mortReg({ ...base, price: 300000, dpPct: 20 }); // loan 240,000 -> $200 band
+    const b = mortReg({ ...base, price: 400000, dpPct: 20 }); // loan 320,000 -> $275 band
+    expect(a).toBe(200);
+    expect(b).toBe(275);
+  });
+
+  it("uses the top open-ended step above the last ceiling", () => {
+    expect(mortReg({ ...base, price: 2000000, dpPct: 20 })).toBe(1000);
+  });
+
+  it("steps on the loan, not the price", () => {
+    // Same price, different down payment -> different loan -> different band.
+    const heavyDown = mortReg({ ...base, price: 400000, dpPct: 50 }); // loan 200,000 -> $200
+    const lightDown = mortReg({ ...base, price: 400000, dpPct: 20 }); // loan 320,000 -> $275
+    expect(heavyDown).toBe(200);
+    expect(lightDown).toBe(275);
+  });
+
+  it("is a step table, not a marginal one — the whole value pays one band's amount", () => {
+    expect(sk().transfer.find((l) => l.key === "li_mortReg")!.kind).toBe("stepped");
+    // A band edge is a jump, not an accumulation: at a loan of exactly $500,000 the whole fee
+    // is $275; four dollars more and the whole fee is $525 — never $275 plus a marginal slice.
+    expect(mortReg({ ...base, price: 625000, dpPct: 20 })).toBe(275); // loan 500,000
+    expect(mortReg({ ...base, price: 625005, dpPct: 20 })).toBe(525); // loan 500,004
+  });
+});
+
+describe("buildLines — NS non-resident deed transfer tax", () => {
+  const halifax = () => getJurisdiction("halifax")!;
+  const pdtt = (o: ClosingInput) =>
+    buildLines(halifax(), federal, o).gov.find((l) => l.key === "li_deedProvNonRes");
+
+  it("charges nothing to a resident buyer", () => {
+    expect(pdtt({ ...base, residency: "resident" })).toBeUndefined();
+  });
+
+  it("charges 10% to a non-resident buyer", () => {
+    const o = { ...base, price: 585000, residency: "nonResident" as const };
+    expect(pdtt(o)?.amount).toBeCloseTo(58500, 2);
+  });
+
+  it("stacks on top of the municipal deed transfer tax", () => {
+    const o = { ...base, price: 585000, residency: "nonResident" as const };
+    const gov = buildLines(halifax(), federal, o).gov;
+    expect(gov.find((l) => l.key === "li_deedMuni")?.amount).toBeCloseTo(8775, 2);
+    expect(gov.find((l) => l.key === "li_deedProvNonRes")?.amount).toBeCloseTo(58500, 2);
   });
 });

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { defaultContractRate, minDown } from "@/domain/engine";
 import { federal } from "@/domain/federal";
-import { getJurisdiction } from "@/domain/jurisdictions";
+import { getJurisdiction, jurisdictions } from "@/domain/jurisdictions";
 import { TOOL_DEFAULTS } from "./shared-inputs";
 import {
   anySourceGiven,
+  benchmarkPrice,
   DEFAULT_COMFORT_CEILING,
   DEFAULT_RENT,
   isPersonalised,
@@ -253,5 +254,42 @@ describe("the blended tier — where the floor is not a round number", () => {
     const hair = ((minDown(price) - 0.25) / price) * 100;
     expect(resolveInputs({ ...untouched, price, dpPct: exact }, winnipeg, federal).belowMinimum).toBe(false);
     expect(resolveInputs({ ...untouched, price, dpPct: hair }, winnipeg, federal).belowMinimum).toBe(false);
+  });
+});
+
+describe("benchmarkPrice", () => {
+  it("returns the published series for house and condo", () => {
+    expect(benchmarkPrice(winnipeg, "house")).toBe(winnipeg.bench.house);
+    expect(benchmarkPrice(winnipeg, "condo")).toBe(winnipeg.bench.condo);
+  });
+
+  it("reads a new build off the resale house benchmark", () => {
+    // `bench.newbuild` is gone: no publisher produces a new-build price level in Canada,
+    // so all fourteen of its values were invented. The resale house benchmark for the same
+    // city is at least a figure someone published, and the reader supplies the developer's
+    // price. `ptype: "newbuild"` stays a tax and warranty treatment.
+    expect(benchmarkPrice(winnipeg, "newbuild")).toBe(winnipeg.bench.house);
+    expect(resolveInputs({ ...untouched, ptype: "newbuild" }, winnipeg, federal).price).toBe(
+      winnipeg.bench.house,
+    );
+  });
+
+  it("exposes the benchmark separately from the price it seeded", () => {
+    // A screen showing the benchmark as a hint must branch on this, not on `price`:
+    // an edited price is still a price when no benchmark exists behind it.
+    const r = resolveInputs({ ...untouched, price: 512345 }, winnipeg, federal);
+    expect(r.price).toBe(512345);
+    expect(r.benchmark).toBe(winnipeg.bench.house);
+  });
+
+  it("still has a published benchmark for every jurisdiction and property type", () => {
+    // The guard behind resolveInputs' `?? 0` last rung: while this holds, that rung is
+    // unreachable. When the per-region verification tasks null out the territories, this
+    // test is the one that has to be narrowed, deliberately, with the UI that asks.
+    for (const j of jurisdictions) {
+      for (const ptype of ["house", "condo", "newbuild"] as const) {
+        expect(benchmarkPrice(j, ptype), `${j.id}.${ptype}`).not.toBeNull();
+      }
+    }
   });
 });

@@ -21,8 +21,35 @@ export const DEFAULT_UTILITIES = 300;
 /** Only used where the jurisdiction record carries no benchmark rent of its own. */
 export const DEFAULT_RENT = 1500;
 
+/**
+ * The benchmark price standing behind an untouched price field, or `null` where the
+ * jurisdiction has none published.
+ *
+ * `newbuild` reads the resale HOUSE benchmark. It has no series of its own and never
+ * will: no publisher produces a new-build price level in Canada — StatCan's NHPI is an
+ * index by design and CREA's HPI is resale-only — which is why `bench.newbuild` was
+ * deleted rather than corrected. Every one of its fourteen values was invented. The
+ * resale house benchmark for the same city is at least a figure someone published;
+ * `ptype: "newbuild"` keeps its real job, a tax and warranty treatment. The developer's
+ * price is the reader's to enter, and the Closing Costs milestone is where the app asks.
+ *
+ * `house` and `condo` are nullable: no MLS HPI covers a territory, and PEI publishes no
+ * apartment series. Those nulls land with the per-region verification tasks.
+ */
+export function benchmarkPrice(j: Jurisdiction, ptype: PropertyType): number | null {
+  return j.bench[ptype === "newbuild" ? "house" : ptype];
+}
+
 export interface ResolvedInputs {
   price: number;
+  /**
+   * The published benchmark price for this jurisdiction and property type, or `null`
+   * where no publisher produces one. Separate from `price` because they answer
+   * different questions: `price` is the figure being modelled, `benchmark` is whether
+   * there is a real market figure standing behind it. A screen that shows the
+   * benchmark as a hint must branch on this rather than on `price`.
+   */
+  benchmark: number | null;
   /**
    * The down payment percentage the app MODELS, with the legal minimum applied.
    *
@@ -115,7 +142,15 @@ export function resolveInputs(
   const income1 = stored.income1 ?? DEFAULT_INCOME_1;
   const income2 = stored.income2 ?? 0;
   const otherIncome = stored.otherIncome ?? 0;
-  const price = stored.price ?? j.bench[stored.ptype];
+  const benchmark = benchmarkPrice(j, stored.ptype);
+  // `?? 0` is the last rung and is unreachable today — an invariant in
+  // resolve-inputs.test.ts asserts every jurisdiction still publishes a benchmark for
+  // every property type. It is here so the nulls the verification milestone is about to
+  // introduce (no MLS HPI covers a territory) land somewhere defined rather than
+  // crashing, and 0 is the one number no screen can mistake for a market price. When
+  // those nulls arrive, `benchmark === null` is the fact to branch on, and the screen
+  // that ASKS the reader for a price belongs to the Closing Costs milestone.
+  const price = stored.price ?? benchmark ?? 0;
   // Half a dollar of slack, matching scenario()'s own test in engine.ts: a
   // percentage that lands a rounding error under the floor is not a reader
   // asking for something illegal. Expressed in dollars, not percentage points,
@@ -130,6 +165,7 @@ export function resolveInputs(
 
   return {
     price,
+    benchmark,
     dpPct,
     dpPctRequested: stored.dpPct,
     belowMinimum,

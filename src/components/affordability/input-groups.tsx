@@ -192,9 +192,16 @@ export function InputGroups({
             min={0}
             onCommit={(price) => update({ price })}
           />
-          <span className="-mt-1 text-[10.5px] text-ink3">
-            {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(jurisdiction.bench[resolved.ptype])}
-          </span>
+          {/*
+            `resolved.benchmark`, not `jurisdiction.bench[ptype]`: a benchmark can be
+            null now (nothing published for that market), and a hint with no figure in
+            it is worse than no hint. See benchmarkPrice() in resolve-inputs.ts.
+          */}
+          {resolved.benchmark === null ? null : (
+            <span className="-mt-1 text-[10.5px] text-ink3">
+              {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(resolved.benchmark)}
+            </span>
+          )}
           {/*
             Bound to what the reader PICKED, never to the floored value. In the
             blended tier the legal floor is 10 − 2 500 000/price, which is never

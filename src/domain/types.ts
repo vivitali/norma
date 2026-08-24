@@ -53,6 +53,8 @@ export interface PerValueTransferLine extends TransferLineBase {
   on: "price" | "loan";
   exempt?: number;
   min?: number;
+  /** Statutory maximum for the whole line. NL's Registry of Deeds fee caps at $5,000. */
+  max?: number;
 }
 
 export interface RateMinTransferLine extends TransferLineBase {
@@ -62,12 +64,25 @@ export interface RateMinTransferLine extends TransferLineBase {
   floor: number;
 }
 
+/**
+ * A STEP table: one flat amount for the whole value, chosen by which band the value falls in.
+ * Distinct from `brackets`, which is marginal — do not model one with the other. Saskatchewan's
+ * mortgage registration fee is $200/$275/$525/$775/$1,000 on the amount secured.
+ */
+export interface SteppedTransferLine extends TransferLineBase {
+  kind: "stepped";
+  /** `[ceiling, amount]`, ascending; the final entry's ceiling is `null`. */
+  steps: BracketTable;
+  on: "price" | "loan";
+}
+
 export type TransferLine =
   | BracketTransferLine
   | FlatTransferLine
   | FixedTransferLine
   | PerValueTransferLine
-  | RateMinTransferLine;
+  | RateMinTransferLine
+  | SteppedTransferLine;
 
 interface RebateBase {
   key: string;
@@ -104,13 +119,43 @@ export interface ExemptBandRebate extends RebateBase {
 
 export interface FullExemptRebate extends RebateBase {
   kind: "fullExempt";
+  /**
+   * Purchase price at or below which the exemption applies. A CLIFF, not a taper — one dollar
+   * over and the full tax is payable. `null` means genuinely uncapped; state it explicitly
+   * rather than omitting the field, so the next author of a `fullExempt` rebate has to look the
+   * ceiling up instead of inheriting someone else's silence about it.
+   */
+  ceiling: number | null;
+}
+
+/**
+ * A rebate computed as a marginal schedule over the TAX AMOUNT (not the price), then capped.
+ * Quebec's 2026 *crédit d'impôt remboursable pour l'accès à la propriété*: 100% of the first
+ * $5,000 of transfer duties plus 25% of the next $3,500, maximum $5,875.
+ *
+ * There is deliberately no phase-out. The Ministère des Finances technical bulletin's
+ * "Admissibilité" section names no price ceiling and no reduction, and its own worked example —
+ * a Laval buyer at $616,000 paying $9,091 of duties — receives the full $5,875. The $750,000
+ * that appears on the ministry's chart is the price at which the CAP is reached; the curve is
+ * flat above it, not declining.
+ */
+export interface TieredCapRebate extends RebateBase {
+  kind: "tieredCap";
+  /** Applied to the DUTY AMOUNT, not the price: `[[5000, 1.0], [null, 0.25]]`. */
+  tiers: BracketTable;
+  cap: number;
 }
 
 export interface NoneRebate extends RebateBase {
   kind: "none";
 }
 
-export type Rebate = CapRebate | ExemptBandRebate | FullExemptRebate | NoneRebate;
+export type Rebate =
+  | CapRebate
+  | ExemptBandRebate
+  | FullExemptRebate
+  | TieredCapRebate
+  | NoneRebate;
 
 export interface TaxTimeCredit {
   key: string;
@@ -145,18 +190,84 @@ export interface PremiumTax {
   label: string;
 }
 
+/**
+ * What the published mill rate is levied against. `market` means the assessment IS market
+ * value; every other value means it is not, and the ratio matters.
+ */
+export type AssessmentBasis =
+  | "market"
+  | "portioned"        // MB: taxable base is assessed value x a statutory class portion
+  | "percentOfValue"   // SK: taxable base is a provincially-set Percentage of Value
+  | "frozenBaseYear";  // ON (MPAC frozen at 2016), NT (base-year general assessment)
+
+/**
+ * Published mill rates apply to an ASSESSMENT, but the engine multiplies market price. Storing
+ * only the product hides which of the two is uncertain. Keeping the derivation makes it
+ * reviewable: an invariant test re-multiplies it, and provenance records the confidence in the
+ * ratio separately from the confidence in the published rate.
+ */
+export interface PropertyTax {
+  /** Rate against MARKET PRICE. The only field the engine reads. */
+  effective: number;
+  /** The rate as the taxing authority publishes it, against its own assessment base. */
+  publishedRate: number;
+  /** assessment / market price. Exactly 1 where the base IS market value. */
+  assessmentRatio: number;
+  basis: AssessmentBasis;
+}
+
+/**
+ * How well a single figure is sourced.
+ *
+ * `none` and `assumption` are a deliberate pair and the distinction is load-bearing. `none`
+ * means we looked, nobody publishes this, and we will not invent it — a benchmark price for
+ * Nunavut. `assumption` means this is a modelling default chosen on purpose and disclosed — a
+ * $500 home inspection. The first MUST NOT be displayed; the second must be, or the calculator
+ * cannot run. Collapsing them is what let twelve invented territorial prices sit beside a
+ * legitimately estimated inspection fee, indistinguishable.
+ */
+export type Confidence = "high" | "medium" | "low" | "assumption" | "none";
+
+export interface Provenance {
+  conf: Confidence;
+  /** Publisher and document, e.g. "TRREB Market Watch mw2607.pdf". */
+  src?: string;
+  url?: string;
+  /**
+   * Per figure, not per file — `bench` is July 2026 while CMHC `rent` can only ever be
+   * October 2025, and one date on the record cannot say both.
+   */
+  asOf?: string;
+  /** Why no source exists, or what the assumption rests on. Required for `assumption`. */
+  note?: string;
+}
+
+/** Keyed by dotted field path on the record it annotates: "bench.house", "fees.lawyer". */
+export type ProvenanceMap = Partial<Record<string, Provenance>>;
+
 export interface Jurisdiction {
   id: string;
   prov: ProvinceCode;
   city: string | null;
   cityData: boolean;
   pro: ProfessionalType;
-  /** Monthly benchmark rent — only present where the prototype had city-level rent data. */
-  rent?: number;
+  /**
+   * Monthly benchmark rent. `null` where the survey suppresses or does not cover the market
+   * (CMHC suppresses every Yukon cell and does not survey Nunavut); absent where the record
+   * is not city-level at all.
+   */
+  rent?: number | null;
   /** Year-over-year price growth — only present alongside `rent`. */
   yoy?: number;
-  bench: { house: number; condo: number; newbuild: number };
-  propTax: number;
+  /**
+   * Resale benchmarks. `null` where no publisher produces the series — PEI has no apartment
+   * benchmark, and no MLS HPI covers any territory. There is deliberately NO `newbuild`:
+   * StatCan's NHPI is index-only and CREA's HPI is resale-only, so a new-build price level is
+   * not a published quantity in Canada. `ptype: "newbuild"` remains a tax and warranty
+   * treatment, and the buyer supplies the developer's price.
+   */
+  bench: { house: number | null; condo: number | null };
+  propTax: PropertyTax;
   transfer: readonly TransferLine[];
   /**
    * Per-jurisdiction override of the combined marginal tax table. Only Winnipeg carries this
@@ -169,6 +280,8 @@ export interface Jurisdiction {
   taxTime: readonly TaxTimeCredit[];
   fees: JurisdictionFees;
   orgs: JurisdictionOrgs;
+  /** Per-figure sourcing, keyed by field path on this record. Required, never empty. */
+  provenance: ProvenanceMap;
 }
 
 export interface FederalRules {
@@ -198,4 +311,6 @@ export interface FederalRules {
   hba: number;
   verified: string;
   contractRate: number;
+  /** Per-figure sourcing, keyed by field path on this record. Required, never empty. */
+  provenance: ProvenanceMap;
 }
