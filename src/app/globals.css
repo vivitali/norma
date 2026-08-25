@@ -5,134 +5,104 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* surfaces, text, borders, accent — shadcn's own token names, reference values */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--foreground);
-  --color-popover: var(--card);
-  --color-popover-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--muted);
-  --color-secondary-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--muted);
-  --color-accent-foreground: var(--foreground);
-  --color-destructive: var(--blocked);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+  /* Surfaces, ink and accent — shadcn's own token names carrying v2 values. */
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--panel);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--panel);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--ac);
+  --color-primary-foreground: var(--panel);
+  --color-secondary: var(--sunk);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--sunk);
+  --color-muted-foreground: var(--ink2);
+  --color-accent: var(--acbg);
+  --color-accent-foreground: var(--ac);
+  --color-destructive: var(--blk);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--ac);
 
-  /* tokens with no shadcn equivalent */
-  --color-surface-sunken: var(--surface-sunken);
-  --color-border-hairline: var(--border-hairline);
-  --color-text-faint: var(--text-faint);
-  --color-accent-surface: var(--accent-surface);
-  --color-accent-border: var(--accent-border);
+  /* v2 tokens with no shadcn equivalent. */
+  --color-paper: var(--paper);
+  --color-panel: var(--panel);
+  --color-sunk: var(--sunk);
+  --color-hairline: var(--line2);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
+  --color-ink3: var(--ink3);
+  --color-ac: var(--ac);
+  --color-ac2: var(--ac2);
+  --color-acbg: var(--acbg);
+  --color-acbr: var(--acbr);
 
-  /* Four semantic state triples. "caution" is the state of the two most common
-     verdicts (over, shortCash) and was inexpressible in the stock theme. */
+  /* Semantic state is a 7px dot and a figure colour — never a filled panel.
+     Hence three values, not four triples: v2 deletes the surfaces. */
   --color-pass: var(--pass);
-  --color-pass-bg: var(--pass-bg);
-  --color-pass-border: var(--pass-border);
-  --color-caution: var(--caution);
-  --color-caution-bg: var(--caution-bg);
-  --color-caution-border: var(--caution-border);
-  --color-blocked: var(--blocked);
-  --color-blocked-bg: var(--blocked-bg);
-  --color-blocked-border: var(--blocked-border);
-  --color-band: var(--band);
-  --color-band-bg: var(--band-bg);
-  --color-band-border: var(--band-border);
+  --color-caution: var(--caut);
+  --color-blocked: var(--blk);
 
-  --font-sans: var(--font-plex-sans), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
-  --font-heading: var(--font-plex-sans), system-ui, sans-serif;
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-martian-mono), ui-monospace, monospace;
+  --font-heading: var(--font-archivo), system-ui, sans-serif;
 
-  /* Written out, not derived from --radius by multiplication: the reference uses
-     1px on bars and tracks, 2px on inputs and chips, 3px on cards and panels.
-     A cascade from 3px gives 1.8 / 2.4 / 4.2, which is none of those. */
-  --radius-sm: 1px;
-  --radius-md: 2px;
-  --radius-lg: 3px;
-  --radius-xl: 3px;
-  --radius-2xl: 4px;
-  --radius-3xl: 4px;
-  --radius-4xl: 4px;
+  /* Pills and soft rectangles, not the hairline 1/2/3px of v1. */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 10px;
+  --radius-3xl: 100px;
+  --radius-4xl: 100px;
 }
 
 :root {
-  --radius: 3px;
+  --radius: 6px;
 
-  --background: oklch(0.9706 0.0057 84.57);        /* #F7F5F1 warm cream, not white */
-  --card: oklch(1.0000 0.0000 89.88);              /* #FFFFFF */
-  --muted: oklch(0.9435 0.0099 87.47);             /* #EFECE5 */
-  --surface-sunken: oklch(0.9101 0.0141 88.69);    /* #E5E1D7 */
-  --border: oklch(0.8801 0.0159 86.43);            /* #DCD7CC */
-  --border-hairline: oklch(0.9256 0.0128 86.83);   /* #EAE6DD */
-  --input: oklch(0.8065 0.0208 84.59);             /* #C6BFB1 */
-  --foreground: oklch(0.2126 0.0067 258.37);       /* #17191C */
-  --muted-foreground: oklch(0.4658 0.0095 253.92); /* #565A5F */
-  /* CORRECTED, do not revert: the reference's #888C92 is 2.86:1 on --muted and
-     is used at 9.5-11.5px, where AA-large does not apply. See globals.test.ts. */
-  --text-faint: oklch(0.5234 0.0087 260.73);       /* #676A6F (ref #888C92) */
-  --primary: oklch(0.3389 0.0708 261.03);          /* #22375C */
-  --primary-foreground: oklch(1.0000 0.0000 89.88);
-  --ring: oklch(0.4756 0.0960 259.81);             /* #3B5C92 */
-  --accent-surface: oklch(0.9416 0.0121 259.82);   /* #E7ECF4 */
-  --accent-border: oklch(0.8512 0.0295 259.59);    /* #C3CFE2 */
+  --paper: oklch(0.9820 0.0041 91.45);   /* #FAF9F6 */
+  --panel: oklch(1.0000 0.0000 89.88);   /* #FFFFFF */
+  --sunk: oklch(0.9523 0.0070 88.64);    /* #F1EFEA */
+  --line: oklch(0.9101 0.0100 87.47);    /* #E4E1DA */
+  --line2: oklch(0.9463 0.0070 88.64);   /* #EFEDE8 */
+  --ink: oklch(0.1969 0.0101 276.49);    /* #14151A */
+  --ink2: oklch(0.4844 0.0123 261.76);   /* #5B5F66 */
+  /* CORRECTED, do not revert: the reference's #8B9097 is 3.05:1 on --paper and
+     v2 uses --ink3 for 11.5-12.5px text (stat labels, limit notes, the heat
+     note), where AA-large does not apply. See globals.test.ts. */
+  --ink3: oklch(0.5342 0.0100 264.48);   /* #6A6D73 (ref #8B9097) */
+  --ac: oklch(0.4690 0.2274 273.80);     /* #3D3BD6 electric indigo */
+  --ac2: oklch(0.5709 0.1945 278.95);    /* #6462E6 */
+  --acbg: oklch(0.9535 0.0201 286.01);   /* #EEEEFD */
+  --acbr: oklch(0.8774 0.0549 286.36);   /* #D3D2FA */
 
-  --pass: oklch(0.4699 0.0983 158.04);             /* #1A6B45 */
-  --pass-bg: oklch(0.9412 0.0158 160.61);          /* #E3EFE8 */
-  --pass-border: oklch(0.8656 0.0378 161.41);      /* #BEDBCB */
-  --caution: oklch(0.5023 0.1033 73.04);           /* #87590A */
-  --caution-bg: oklch(0.9506 0.0253 86.87);        /* #F6EEDC */
-  --caution-border: oklch(0.8705 0.0521 87.40);    /* #E3D3AE */
-  --blocked: oklch(0.4376 0.1340 24.57);           /* #8D2A2A */
-  --blocked-bg: oklch(0.9393 0.0166 26.65);        /* #F6E7E5 */
-  --blocked-border: oklch(0.8474 0.0381 26.09);    /* #E5C4C0 */
-  --band: oklch(0.4575 0.0391 244.66);             /* #455A6C */
-  --band-bg: oklch(0.9435 0.0076 241.67);          /* #E8EDF1 */
-  --band-border: oklch(0.8611 0.0173 242.46);      /* #C8D3DC */
+  --pass: oklch(0.4707 0.0937 162.46);   /* #176B4B */
+  --caut: oklch(0.5085 0.1025 70.83);    /* #8A5A12 */
+  --blk: oklch(0.4781 0.1566 25.37);     /* #A32B2B */
 
-  /* The one deviation from "port the scale as measured": iOS Safari zooms the
-     viewport when a control under 16px takes focus. Labels, units and helper
-     text keep their measured sizes. */
+  /* iOS Safari zooms any control under 16px on focus, and this page has twelve. */
   --control-font-size: 1rem;
 }
 
 .dark {
-  --background: oklch(0.1904 0.0069 258.37);       /* #121417 */
-  --card: oklch(0.2250 0.0090 255.61);             /* #191C20 */
-  --muted: oklch(0.2625 0.0110 254.03);            /* #21252A */
-  --surface-sunken: oklch(0.3028 0.0129 253.01);   /* #2A2F35 */
-  --border: oklch(0.3230 0.0142 256.78);           /* #2F343B */
-  --border-hairline: oklch(0.2835 0.0124 258.37);  /* #262A30 */
-  --input: oklch(0.3804 0.0158 255.61);            /* #3D434B */
-  --foreground: oklch(0.9342 0.0070 88.64);        /* #EBE9E4 */
-  --muted-foreground: oklch(0.7294 0.0104 252.84); /* #A3A8AE */
-  /* CORRECTED, do not revert: reference #767B82 is 3.61:1 on --muted. */
-  --text-faint: oklch(0.6420 0.0101 258.35);       /* #898D93 (ref #767B82) */
-  --primary: oklch(0.7592 0.0740 256.94);          /* #93B3E0 */
-  --primary-foreground: oklch(0.1904 0.0069 258.37);
-  --ring: oklch(0.8235 0.0590 258.07);             /* #AEC7EC */
-  --accent-surface: oklch(0.2648 0.0267 253.32);   /* #1C2632 */
-  --accent-border: oklch(0.3471 0.0373 253.36);    /* #2C3B4D */
+  --paper: oklch(0.1682 0.0045 264.45);  /* #0E0F11 */
+  --panel: oklch(0.2086 0.0085 264.37);  /* #16181C */
+  --sunk: oklch(0.2383 0.0106 260.69);   /* #1C1F24 */
+  --line: oklch(0.2957 0.0123 258.37);   /* #292D33 */
+  --line2: oklch(0.2635 0.0103 260.70);  /* #22252A */
+  --ink: oklch(0.9375 0.0058 84.57);     /* #ECEAE6 */
+  --ink2: oklch(0.7265 0.0116 256.71);   /* #A2A7AE */
+  /* CORRECTED, do not revert: the reference's #6F757C is 3.82:1 on --panel. */
+  --ink3: oklch(0.6212 0.0108 252.86);   /* #82878D (ref #6F757C) */
+  --ac: oklch(0.6780 0.1745 281.43);     /* #8886FF */
+  --ac2: oklch(0.7537 0.1309 283.79);    /* #A5A3FF */
+  --acbg: oklch(0.2353 0.0456 282.32);   /* #1B1B33 */
+  --acbr: oklch(0.3197 0.0634 282.21);   /* #2E2E52 */
 
-  --pass: oklch(0.7518 0.1096 160.38);             /* #6AC497 */
-  --pass-bg: oklch(0.2513 0.0256 169.94);          /* #152620 */
-  --pass-border: oklch(0.3672 0.0482 161.69);      /* #264737 */
-  --caution: oklch(0.7717 0.1267 79.90);           /* #DFAB4C */
-  --caution-bg: oklch(0.2555 0.0278 85.50);        /* #292213 */
-  --caution-border: oklch(0.3540 0.0461 86.85);    /* #463A1E */
-  --blocked: oklch(0.7408 0.1135 20.13);           /* #EA8D8D */
-  --blocked-bg: oklch(0.2358 0.0274 19.32);        /* #2A1919 */
-  --blocked-border: oklch(0.3305 0.0447 19.73);    /* #4A2C2C */
-  --band: oklch(0.7601 0.0330 243.83);             /* #A0B4C5 */
-  --band-bg: oklch(0.2440 0.0169 248.52);          /* #1A2128 */
-  --band-border: oklch(0.3314 0.0245 248.57);      /* #2C3742 */
+  --pass: oklch(0.7376 0.1226 162.54);   /* #55C293 */
+  --caut: oklch(0.7617 0.1218 81.07);    /* #D9A94E */
+  --blk: oklch(0.7327 0.1151 20.22);     /* #E88A8A */
 }
 
 @layer base {
@@ -141,24 +111,30 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-size: 12px;
+    font-size: 13.5px;
     line-height: 1.5;
+    /* Archivo's tabular numerals, everywhere, hero to table row. A wide mono
+       splits $398,398 into two numbers at display size, which is the last thing
+       the headline figure can afford to do. */
+    font-variant-numeric: tabular-nums lining-nums;
+    /* Last resort at 320px, where a single unbreakable token — a long figure, a
+       compound French label — is otherwise wider than the whole viewport.
+       break-word (not anywhere) breaks only when the word would overflow, so it
+       never changes a line that already fits, and it never affects min-content
+       sizing: the flex children that must give way still carry min-w-0. */
+    overflow-wrap: break-word;
   }
   html {
     @apply font-sans;
   }
-  /* The reference separates surfaces with borders and background steps, never
-     elevation: one shadow token, on one of eight screens. Stock shadcn card
-     shadows and rings come off rather than sitting alongside. */
+  /* v2 separates with hairlines and air, never with card borders or elevation. */
   [data-slot="card"] {
-    @apply border border-border ring-0;
+    @apply border-0 bg-transparent ring-0 shadow-none;
   }
-  /* Ports directly from the reference and is better than shadcn's default ring
-     for this system. */
   :focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-    border-radius: 2px;
+    outline: 2px solid var(--ac);
+    outline-offset: 3px;
+    border-radius: 3px;
   }
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -167,84 +143,112 @@
       animation-duration: 0s !important;
       transition-duration: 0s !important;
     }
+    /* The blanket rule above removed the ONE animation this app has: v2-pulse,
+     * keyed to a jurisdiction change so the answer visibly re-computes. Deleting
+     * it put nothing in its place -- switch province under reduced motion and
+     * every figure changed silently.
+     *
+     * v2-pulse is `opacity: 0.35 -> 1`. Opacity only: no transform, no position,
+     * no scale, nothing that moves. A half-second opacity fade is the canonical
+     * SAFE substitute under prefers-reduced-motion, not something the query
+     * exists to suppress -- so the honest fix is to exempt it and keep the fade.
+     *
+     * An earlier pass replaced it with a step-end cut, reasoning that this
+     * removed "position and scale". There was never any position or scale, and a
+     * hard luminance step is a worse stimulus for a photosensitive reader than
+     * the fade it replaced. Reverted.
+     *
+     * This override must live inside @layer base, after the blanket rule.
+     * Important declarations invert layer order, so an unlayered !important
+     * would LOSE to the layered one above; inside the same layer .v2-pulse
+     * (0,1,0) beats * (0,0,0) and wins. */
+    .v2-pulse {
+      animation: v2-pulse 0.5s ease-out !important;
+    }
   }
 }
 
 @layer components {
-  /* Applied once, rather than ad-hoc `tabular-nums` on individual spans. */
-  .figure {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums lining-nums;
-  }
-  /* The system's signature: 89 uses across the eight reference screens. */
-  .micro {
-    font-family: var(--font-mono);
-    font-size: 9.5px;
+  /* The recurring uppercase eyebrow. Sans, not mono — v2 has no mono labels. */
+  .eyebrow {
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
-  /* The 16px floor, in one place so the guard in globals.test.ts covers every
-     control that opts into it. */
+  /*
+   * The micro tier: fieldset legends, stat labels, limit notes, the provenance
+   * mark. DESIGN.md §3 sizes it 11.5-12.5px.
+   *
+   * This class was used at seven call sites and had never been defined — a v1
+   * leftover the redesign missed. Undefined means Tailwind emits nothing, so
+   * every one of those elements rendered at the inherited 13.5px body size, two
+   * points above the tier they were marked as. Colour is a separate decision and
+   * stays at the call site (--ink3 for all seven).
+   *
+   * In @layer components so a call site that sets an explicit text-[Npx] utility
+   * still wins — utilities are a later layer.
+   */
+  .micro {
+    font-size: 11.5px;
+  }
   .control {
     font-size: var(--control-font-size);
   }
 }
 
-@keyframes ab-pulse {
+@keyframes v2-pulse {
   from {
-    background: var(--accent-surface);
+    opacity: 0.35;
   }
   to {
-    background: transparent;
+    opacity: 1;
   }
 }
-.ab-pulse {
-  animation: ab-pulse 0.7s ease-out;
+/* The reduced-motion substitute. Same duration, same two stops, no tween — the
+   figure is held muted and then cuts to full. See the @media block above. */
+.v2-pulse {
+  animation: v2-pulse 0.5s ease-out;
 }
 
-/*
- * The haircut slider. Radix's Slider is not used here — the reference designs a
- * native range input, and a native input is the smaller, more accessible control
- * for one value on one axis. Cross-browser track and thumb rules are explicit
- * because there is no shared pseudo-element for them.
- */
+/* The haircut slider: 4px pill track, 16px round thumb — v2's control language. */
 .norma-range {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
   height: 44px;
   background: transparent;
+  display: block;
 }
 .norma-range::-webkit-slider-runnable-track {
-  height: 3px;
-  background: var(--input);
-  border-radius: 1px;
+  height: 4px;
+  border-radius: 100px;
+  background: var(--ink3);
 }
 .norma-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 8px;
-  margin-top: -3px;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: var(--ac);
   border: 0;
-  border-radius: 1px;
-  background: var(--primary);
+  margin-top: -6px;
 }
 .norma-range::-moz-range-track {
-  height: 3px;
-  background: var(--input);
-  border-radius: 1px;
+  height: 4px;
+  border-radius: 100px;
+  background: var(--ink3);
 }
 .norma-range::-moz-range-thumb {
-  width: 18px;
-  height: 8px;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: var(--ac);
   border: 0;
-  border-radius: 1px;
-  background: var(--primary);
 }
 @media (min-width: 640px) {
   .norma-range {
-    height: 22px;
+    height: 26px;
   }
 }

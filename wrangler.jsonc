@@ -1,15 +1,23 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+
+  // Must stay "affordmath": afordmath.com is attached to the Worker of this name.
+  // Renaming this deploys to a different Worker and silently leaves production
+  // serving the old code.
   "name": "affordmath",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-04-15",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 
-  // Production is afordmath.com (attached as a custom domain), not workers.dev.
-  // preview_urls stays on: `wrangler versions upload` publishes each PR preview to a
-  // versioned workers.dev URL, and that is independent of the production route.
+  // Production serves only from the custom domain (afordmath.com). Leaving
+  // workers.dev enabled gives the site a second reachable hostname; Cloudflare
+  // marks it noindex, but one canonical host is the point.
   "workers_dev": false,
+
+  // Preview deploys from `scripts/ship --preview` publish to their own versioned
+  // workers.dev hostnames, which are independent of the production route above.
   "preview_urls": true,
+
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

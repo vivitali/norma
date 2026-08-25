@@ -68,7 +68,7 @@ export function SegmentedGroup<T extends string | number>({
               }
             }}
             className={cn(
-              "figure flex min-h-11 flex-1 items-center justify-center rounded-md px-2.5 text-[12px] sm:min-h-9",
+              "flex min-h-11 flex-1 items-center justify-center rounded-md px-2.5 text-[12px] sm:min-h-9",
               value === option.value ? "bg-card font-semibold text-primary" : "text-muted-foreground",
             )}
           >

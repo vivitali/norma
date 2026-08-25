@@ -12,7 +12,8 @@
 
 ## Global Constraints
 
-- **Gate:** `scripts/check` (= `eslint . && tsc --noEmit && vitest run`) must exit zero before any commit. Never invoke `eslint`/`tsc`/`vitest` directly — use the contract script.
+- **Gate, batched.** Use `scripts/test` (full vitest, ~2s) for the red/green cycle inside a task — it is a contract script and gives the only signal a TDD step needs. Run the full `scripts/check` (lint + typecheck + test) **once, at the end of your task**, and it must exit zero before you commit. Never invoke `eslint`/`tsc`/`vitest` directly. Where a step below says "Run: `./scripts/check`" mid-task, run `./scripts/test` instead; the final step of each task keeps the full gate.
+- **Tests go in the file the task names.** Part B tasks each own a per-region test file so the wave can run in parallel; do not append Part B tests to `index.test.ts`, which holds only cross-cutting invariants.
 - **Branch:** `claude/data-verification`, already created off `main`. Never commit to `main`, never push to `main`, never merge a PR.
 - **Commits:** conventional commits. One commit per task, at the end of the task.
 - **Tests accompany every behaviour change.** A task with no test is a task that is not done.
@@ -1663,6 +1664,76 @@ Tasks are independent of each other and can be reviewed in any order.
 disagree, do not average them and do not pick silently. The disagreements that are already known are
 called out in the task that hits them. A new one is a reason to stop and ask.
 
+### Task B0: Land every new locale key
+
+Part B's per-region tasks run in parallel and must not touch `messages/*.json`. This task lands all
+of their copy in one commit first. The two locale files must stay key-identical.
+
+**Files:**
+- Modify: `messages/en.json`, `messages/fr.json`
+
+- [ ] **Step 1: Add the keys**
+
+`ex_pttFurther`, `ex_qcAccess` and `ex_nsNewBuildHst` go beside the other `ex_` explainer keys.
+`propTaxSource`, `propTaxEstimated` and the replacement `unverifiedFlag` go in the `Affordability`
+object.
+
+`messages/en.json`:
+
+```json
+"ex_pttFurther": "British Columbia levies a further 2% on the residential value of a property above $3 million, on top of the general property transfer tax.",
+"ex_qcAccess": "Quebec refunds first-time buyers 100% of the first $5,000 of transfer duties plus 25% of the rest, up to $5,875. Claimed on your tax return, not at closing.",
+"ex_nsNewBuildHst": "Nova Scotia rebates part of the provincial HST on a newly built home for first-time buyers, up to $3,000. It does not apply to a resale purchase."
+```
+
+```json
+"propTaxSource": "Property tax rate from",
+"propTaxEstimated": "Published mill rates apply to an assessment, not to a sale price. This figure estimates the rate against market value and may be off in either direction."
+```
+
+`messages/fr.json`:
+
+```json
+"ex_pttFurther": "La Colombie-Britannique perçoit 2 % supplémentaires sur la valeur résidentielle d'une propriété au-delà de 3 millions de dollars, en sus de la taxe générale sur les mutations immobilières.",
+"ex_qcAccess": "Le Québec rembourse aux premiers acheteurs 100 % des premiers 5 000 $ de droits de mutation, plus 25 % du reste, jusqu'à 5 875 $. Réclamé dans votre déclaration de revenus, non à la clôture.",
+"ex_nsNewBuildHst": "La Nouvelle-Écosse rembourse une partie de la TVH provinciale sur une habitation neuve pour les premiers acheteurs, jusqu'à 3 000 $. Ne s'applique pas à une revente."
+```
+
+```json
+"propTaxSource": "Taux d'impôt foncier selon",
+"propTaxEstimated": "Les taux de taxation publiés s'appliquent à une évaluation, non à un prix de vente. Ce chiffre estime le taux par rapport à la valeur marchande et peut s'écarter dans un sens comme dans l'autre."
+```
+
+Do **not** change `unverifiedFlag` here — Task B8 changes it together with the test that asserts it.
+
+- [ ] **Step 2: Verify the locale files stay key-identical**
+
+```bash
+node -e '
+const en=require("./messages/en.json"), fr=require("./messages/fr.json");
+const flat=(o,p="")=>Object.entries(o).flatMap(([k,v])=>typeof v==="object"&&v?flat(v,p+k+"."):[p+k]);
+const a=flat(en).sort(), b=flat(fr).sort();
+const miss=(x,y)=>x.filter(k=>!y.includes(k));
+if(miss(a,b).length||miss(b,a).length){console.error("en-only:",miss(a,b),"fr-only:",miss(b,a));process.exit(1)}
+console.log("key-identical:",a.length,"keys");'
+```
+
+Expected: `key-identical: <n> keys`, exit 0.
+
+- [ ] **Step 3: Run the gate and commit**
+
+Run: `./scripts/check`
+
+```bash
+git add messages/en.json messages/fr.json
+git commit -m "i18n: add locale keys for part B jurisdiction copy
+
+Landed ahead of the per-region data tasks so those can run in parallel without
+contending on the locale files."
+```
+
+---
+
 ### Task B1: Federal rules
 
 **Files:**
@@ -1775,7 +1846,7 @@ lowest federal rate of 14%, flagged medium pending confirmation."
 
 **Files:**
 - Modify: `src/domain/jurisdictions/toronto.ts`, `src/domain/jurisdictions/ottawa.ts`
-- Test: `src/domain/jurisdictions/index.test.ts` (add an Ontario describe block)
+- Create: `src/domain/jurisdictions/ontario.test.ts` (new file — do NOT touch `index.test.ts`)
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1930,7 +2001,7 @@ Expected: PASS.
 
 ```bash
 git add src/domain/jurisdictions/toronto.ts src/domain/jurisdictions/ottawa.ts \
-        src/domain/jurisdictions/index.test.ts
+        src/domain/jurisdictions/ontario.test.ts
 git commit -m "fix(domain): apply verified 2026 Ontario figures
 
 Toronto's MLTT luxury tiers were a full rate schedule out of date — council
@@ -1945,7 +2016,7 @@ statusCert 110 -> 100 in both files: Ontario's cap is \$100 INCLUDING taxes, so
 
 **Files:**
 - Modify: `src/domain/jurisdictions/vancouver.ts`
-- Test: `src/domain/jurisdictions/index.test.ts`, `src/domain/engine.test.ts`
+- Create: `src/domain/jurisdictions/bc.test.ts` (new file — do NOT touch `index.test.ts` or `engine.test.ts`)
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2030,11 +2101,7 @@ In `src/domain/jurisdictions/vancouver.ts`:
   ],
 ```
 
-Add `ex_pttFurther` to both locale files, keeping them key-identical:
-
-`messages/en.json`: `"ex_pttFurther": "British Columbia levies a further 2% on the residential value of a property above $3 million, on top of the general property transfer tax."`
-
-`messages/fr.json`: `"ex_pttFurther": "La Colombie-Britannique perçoit 2 % supplémentaires sur la valeur résidentielle d'une propriété au-delà de 3 millions de dollars, en sus de la taxe générale sur les mutations immobilières."`
+The `ex_pttFurther` explainer key already exists in both locale files — Task B0 landed it. Do not edit `messages/en.json` or `messages/fr.json` in this task.
 
 - [ ] **Step 4: Apply the remaining values**
 
@@ -2084,8 +2151,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/domain/jurisdictions/vancouver.ts src/domain/jurisdictions/index.test.ts \
-        src/domain/engine.test.ts messages/en.json messages/fr.json
+git add src/domain/jurisdictions/vancouver.ts src/domain/jurisdictions/bc.test.ts
 git commit -m "fix(domain): add BC newly-built exemption and split the further 2% PTT
 
 The newly-built-home exemption is not first-time-buyer restricted and was
@@ -2100,7 +2166,7 @@ split out because in law it is a separate tax, not a bracket."
 
 **Files:**
 - Modify: `src/domain/jurisdictions/montreal.ts`
-- Test: `src/domain/jurisdictions/index.test.ts`
+- Create: `src/domain/jurisdictions/quebec.test.ts` (new file — do NOT touch `index.test.ts`)
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2172,11 +2238,7 @@ In `src/domain/jurisdictions/montreal.ts`:
 - `taxTime` `cr_hba` amount: `1500` → `1400` (leave `cr_provCredit` at 1400 — independently confirmed)
 - `propTax`: leave `effective` at `0.00792`; see the provenance note below
 
-Add `ex_qcAccess` to both locale files:
-
-`messages/en.json`: `"ex_qcAccess": "Quebec refunds first-time buyers 100% of the first $5,000 of transfer duties plus 25% of the rest, up to $5,875. Claimed on your tax return, not at closing."`
-
-`messages/fr.json`: `"ex_qcAccess": "Le Québec rembourse aux premiers acheteurs 100 % des premiers 5 000 $ de droits de mutation, plus 25 % du reste, jusqu'à 5 875 $. Réclamé dans votre déclaration de revenus, non à la clôture."`
+The `ex_qcAccess` explainer key already exists in both locale files — Task B0 landed it. Do not edit `messages/en.json` or `messages/fr.json` in this task.
 
 - [ ] **Step 4: Record provenance**
 
@@ -2221,8 +2283,7 @@ Expected: PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/domain/jurisdictions/montreal.ts src/domain/jurisdictions/index.test.ts \
-        messages/en.json messages/fr.json
+git add src/domain/jurisdictions/montreal.ts src/domain/jurisdictions/quebec.test.ts
 git commit -m "fix(domain): apply 2026 Quebec transfer duties and the new refundable credit
 
 Every threshold in the duty table was wrong (all seven rates were right). Adds
@@ -2238,7 +2299,7 @@ fetch, so no agent read the statute."
 
 **Files:**
 - Modify: `src/domain/jurisdictions/winnipeg.ts`, `saskatoon.ts`, `calgary.ts`
-- Test: `src/domain/jurisdictions/index.test.ts`
+- Create: `src/domain/jurisdictions/prairies.test.ts` (new file — do NOT touch `index.test.ts`)
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2378,7 +2439,7 @@ Expected: PASS.
 
 ```bash
 git add src/domain/jurisdictions/winnipeg.ts src/domain/jurisdictions/saskatoon.ts \
-        src/domain/jurisdictions/calgary.ts src/domain/jurisdictions/index.test.ts
+        src/domain/jurisdictions/calgary.ts src/domain/jurisdictions/prairies.test.ts
 git commit -m "fix(domain): apply verified 2026 prairie figures
 
 Saskatoon was wrong in both directions: closing costs ~\$517 understated (title
@@ -2394,7 +2455,7 @@ benchmarks were already correct to the dollar and are unchanged."
 
 **Files:**
 - Modify: `src/domain/jurisdictions/halifax.ts`, `nb.ts`, `nl.ts`, `pe.ts`
-- Test: `src/domain/jurisdictions/index.test.ts`
+- Create: `src/domain/jurisdictions/atlantic.test.ts` (new file — do NOT touch `index.test.ts`)
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2445,11 +2506,7 @@ Expected: FAIL — NL has one registration line with no cap, and PEI's `bench.co
   ],
 ```
 
-This uses `TaxTimeCredit.when`, added in Task A2. Add `ex_nsNewBuildHst` to both locale files.
-
-`messages/en.json`: `"ex_nsNewBuildHst": "Nova Scotia rebates part of the provincial HST on a newly built home for first-time buyers, up to $3,000. It does not apply to a resale purchase."`
-
-`messages/fr.json`: `"ex_nsNewBuildHst": "La Nouvelle-Écosse rembourse une partie de la TVH provinciale sur une habitation neuve pour les premiers acheteurs, jusqu'à 3 000 $. Ne s'applique pas à une revente."`
+This uses `TaxTimeCredit.when`, added in Task A2. The `ex_nsNewBuildHst` explainer key already exists in both locale files — Task B0 landed it. Do not edit `messages/en.json` or `messages/fr.json` in this task.
 
 - [ ] **Step 4: Apply New Brunswick**
 
@@ -2539,7 +2596,7 @@ Expected: PASS.
 ```bash
 git add src/domain/jurisdictions/halifax.ts src/domain/jurisdictions/nb.ts \
         src/domain/jurisdictions/nl.ts src/domain/jurisdictions/pe.ts \
-        src/domain/jurisdictions/index.test.ts messages/en.json messages/fr.json
+        src/domain/jurisdictions/atlantic.test.ts
 git commit -m "fix(domain): apply verified 2026 Atlantic figures
 
 NL charges its registration tariff twice — deed and mortgage — and the model had
@@ -2555,7 +2612,7 @@ have. PEI and Halifax condo benchmarks go null: nobody publishes them."
 
 **Files:**
 - Modify: `src/domain/jurisdictions/yt.ts`, `nt.ts`, `nu.ts`
-- Test: `src/domain/jurisdictions/index.test.ts`
+- Create: `src/domain/jurisdictions/territories.test.ts` (new file — do NOT touch `index.test.ts`)
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2691,7 +2748,7 @@ Expected: PASS.
 
 ```bash
 git add src/domain/jurisdictions/yt.ts src/domain/jurisdictions/nt.ts \
-        src/domain/jurisdictions/nu.ts src/domain/jurisdictions/index.test.ts
+        src/domain/jurisdictions/nu.ts src/domain/jurisdictions/territories.test.ts
 git commit -m "fix(domain): correct territorial tariffs and null the invented price data
 
 All twelve territorial price figures were inventions — no MLS HPI covers any
@@ -2717,22 +2774,29 @@ page that renders the transfer lines and fees.
 
 - [ ] **Step 1: Write the failing tests**
 
-```ts
+`AffordabilityPage` takes no props and is not async, and it must be wrapped in
+`JurisdictionProvider` — use the `renderPage()` helper already defined at the top of
+`page.test.tsx`. The disclosure tests at `page.test.tsx:174` show the established pattern.
+
+```tsx
 describe("Affordability page — property tax provenance", () => {
-  it("names the source behind the property tax figure", async () => {
-    render(await AffordabilityPage({ params: Promise.resolve({ locale: "en" }) }));
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("names the source behind the property tax figure", () => {
+    // The default jurisdiction is Winnipeg, whose propTax.publishedRate is sourced.
+    renderPage();
     expect(screen.getByText(/City of Winnipeg 2026 combined mill rate/)).toBeInTheDocument();
   });
 
-  it("says the figure is an estimate where the assessment ratio is assumed", async () => {
-    render(await AffordabilityPage({ params: Promise.resolve({ locale: "en" }) }));
-    expect(screen.getByText(/estimated/i)).toBeInTheDocument();
+  it("says the figure is an estimate where the assessment base is not market value", () => {
+    // Winnipeg is `portioned`, so the estimate caveat renders.
+    renderPage();
+    expect(screen.getByText(/estimates the rate against market value/i)).toBeInTheDocument();
   });
 });
 ```
-
-Follow the existing test file's rendering helper rather than the sketch above if it differs — the
-disclosure tests at `page.test.tsx:174` show the established pattern for this page.
 
 - [ ] **Step 2: Run to verify failure**
 

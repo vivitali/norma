@@ -1,5 +1,20 @@
-import { setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SourcesContent } from "@/components/sources-content";
+import { buildMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/sources">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Metadata.sources" });
+  return buildMetadata({
+    locale,
+    href: "/sources",
+    title: t("title"),
+    description: t("description"),
+  });
+}
 
 export default async function SourcesPage({ params }: PageProps<"/[locale]/sources">) {
   const { locale } = await params;

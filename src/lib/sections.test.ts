@@ -1,115 +1,128 @@
 import { describe, expect, it } from "vitest";
 import {
   AFFORDABILITY_SECTIONS,
-  isDisclosureOpen,
-  visibleSections,
-  type DisclosureDef,
+  allSectionsOpen,
+  isSectionOpen,
+  setAllSections,
+  SECTION_IDS,
+  SECTION_REGISTRIES,
 } from "./sections";
 
-describe("visibleSections", () => {
-  it("hides the math section below depth 2", () => {
-    // Depth sets PRESENCE for math: below 'the math' the section is not rendered
-    // and does not appear in the jump rail.
-    for (const depth of [0, 1] as const) {
-      expect(visibleSections(AFFORDABILITY_SECTIONS, depth).map((s) => s.id)).toEqual([
-        "verdict",
-        "checks",
-        "gap",
-        "inputs",
-      ]);
-    }
-  });
-  it("shows the math section at depth 2", () => {
-    expect(visibleSections(AFFORDABILITY_SECTIONS, 2).map((s) => s.id)).toEqual([
-      "verdict",
-      "checks",
-      "gap",
-      "inputs",
-      "math",
-    ]);
-  });
-});
-
-describe("isDisclosureOpen", () => {
-  const def: DisclosureDef = { id: "check-comfort", labelKey: "ckComfort", openAtDepth: 1 };
-  const never: DisclosureDef = { id: "adv-income", labelKey: "cAdvanced", openAtDepth: null };
-
-  it("is closed at 'the answer' by default", () => {
-    expect(isDisclosureOpen({ def, depth: 0, hashTarget: null, override: undefined })).toBe(false);
-  });
-  it("opens at or above its floor depth", () => {
-    expect(isDisclosureOpen({ def, depth: 1, hashTarget: null, override: undefined })).toBe(true);
-    expect(isDisclosureOpen({ def, depth: 2, hashTarget: null, override: undefined })).toBe(true);
-  });
-  it("never auto-opens when openAtDepth is null", () => {
-    expect(isDisclosureOpen({ def: never, depth: 2, hashTarget: null, override: undefined })).toBe(
-      false,
-    );
-  });
-  it("opens when the hash names it, at any depth", () => {
-    expect(isDisclosureOpen({ def, depth: 0, hashTarget: "check-comfort", override: undefined })).toBe(
-      true,
-    );
-    expect(
-      isDisclosureOpen({ def: never, depth: 0, hashTarget: "adv-income", override: undefined }),
-    ).toBe(true);
-  });
-  it("ignores a hash naming something else", () => {
-    expect(isDisclosureOpen({ def, depth: 0, hashTarget: "check-cash", override: undefined })).toBe(
-      false,
-    );
-  });
-  it("lets an explicit open win at the lowest depth", () => {
-    expect(isDisclosureOpen({ def, depth: 0, hashTarget: null, override: true })).toBe(true);
-  });
-  it("lets an explicit CLOSE win at the highest depth", () => {
-    // The reference's own defect: `open = openCheck === key || depth >= 1` pins
-    // every check open at depth >= 1 and makes its toggle inoperative. The
-    // override is two-way here, deliberately.
-    expect(isDisclosureOpen({ def, depth: 2, hashTarget: null, override: false })).toBe(false);
-  });
-  it("lets an explicit close win over the hash", () => {
-    expect(isDisclosureOpen({ def, depth: 0, hashTarget: "check-comfort", override: false })).toBe(
-      false,
-    );
-  });
-});
-
 describe("AFFORDABILITY_SECTIONS", () => {
-  it("labels every section and disclosure with a key from the page's own namespace", async () => {
-    // labelKey is resolved with useTranslations("Affordability"); a key that
-    // only exists in another namespace renders as the raw key path.
+  it("puts the three checks, the gap and the math in ONE list", () => {
+    // The whole point of v2: four disclosure mechanisms become one, so the
+    // derivation is reachable by the same gesture as a check.
+    expect(SECTION_IDS).toEqual(["approval", "comfort", "cash", "gap", "math"]);
+  });
+
+  it("labels every section with a key from the page's own namespace", async () => {
     const messages = (await import("../../messages/en.json")).default.Affordability as Record<
       string,
       string
     >;
     for (const section of AFFORDABILITY_SECTIONS) {
       expect(messages[section.labelKey], section.id).toBeDefined();
-      for (const d of section.disclosures ?? []) {
-        expect(messages[d.labelKey], d.id).toBeDefined();
-      }
     }
   });
 
-  it("has globally unique ids across sections and disclosures", () => {
-    // The ids are URL hash targets and test handles; a collision silently makes
-    // one of them unreachable.
-    const ids = AFFORDABILITY_SECTIONS.flatMap((s) => [
-      s.id,
-      ...(s.disclosures ?? []).map((d) => d.id),
-    ]);
-    expect(new Set(ids).size).toBe(ids.length);
+  it("has unique ids, which are also the hash targets", () => {
+    expect(new Set(SECTION_IDS).size).toBe(SECTION_IDS.length);
   });
-  it("opens the three checks at 'why'", () => {
-    const checks = AFFORDABILITY_SECTIONS.find((s) => s.id === "checks");
-    expect(checks?.disclosures?.map((d) => [d.id, d.openAtDepth])).toEqual([
-      ["check-approval", 1],
-      ["check-comfort", 1],
-      ["check-cash", 1],
-    ]);
+});
+
+describe("isSectionOpen", () => {
+  it("starts closed", () => {
+    expect(isSectionOpen({ id: "comfort", open: {}, hashTarget: null })).toBe(false);
   });
-  it("never auto-opens the advanced disclosures", () => {
-    const inputs = AFFORDABILITY_SECTIONS.find((s) => s.id === "inputs");
-    expect(inputs?.disclosures?.every((d) => d.openAtDepth === null)).toBe(true);
+  it("opens when the reader opens it", () => {
+    expect(isSectionOpen({ id: "comfort", open: { comfort: true }, hashTarget: null })).toBe(true);
+  });
+  it("opens when the hash names it", () => {
+    expect(isSectionOpen({ id: "comfort", open: {}, hashTarget: "comfort" })).toBe(true);
+  });
+  it("ignores a hash naming something else", () => {
+    expect(isSectionOpen({ id: "comfort", open: {}, hashTarget: "gap" })).toBe(false);
+  });
+  it("lets an explicit close win over the hash", () => {
+    expect(isSectionOpen({ id: "comfort", open: { comfort: false }, hashTarget: "comfort" })).toBe(
+      false,
+    );
+  });
+});
+
+describe("expand all", () => {
+  it("does not report everything open on a fresh page", () => {
+    expect(allSectionsOpen(SECTION_IDS, {}, null)).toBe(false);
+  });
+  it("does not report everything open when the hash opened one", () => {
+    expect(allSectionsOpen(SECTION_IDS, {}, "math")).toBe(false);
+  });
+  it("reports everything open only when nothing is left to expand", () => {
+    // Keyed off ALL, not ANY. With one section open on arrival by design, an
+    // any-test made the control read "Collapse all" on first paint — offering to
+    // undo something the reader had not done.
+    expect(allSectionsOpen(SECTION_IDS, setAllSections(SECTION_IDS, true), null)).toBe(true);
+    expect(allSectionsOpen(SECTION_IDS, { approval: true }, null)).toBe(false);
+  });
+  it("opens and closes every section at once", () => {
+    expect(Object.values(setAllSections(SECTION_IDS, true))).toEqual([true, true, true, true, true]);
+    expect(allSectionsOpen(SECTION_IDS, setAllSections(SECTION_IDS, false), null)).toBe(false);
+  });
+  it("collapse all beats a hash that would otherwise open one", () => {
+    expect(allSectionsOpen(SECTION_IDS, setAllSections(SECTION_IDS, false), "math")).toBe(false);
+  });
+  it("ignores sections belonging to another page", () => {
+    // The map is keyed by bare id and ids are only unique WITHIN a page, so a
+    // page must never ask about a list it does not own. Two pages both have a
+    // "cash" section; expanding one must not report the other as open.
+    expect(allSectionsOpen(["cash"], setAllSections(SECTION_IDS, false), null)).toBe(false);
+  });
+});
+
+describe("the deciding section opens on arrival", () => {
+  it("opens the named section and nothing else", () => {
+    const open = (id: string) => isSectionOpen({ id, open: {}, hashTarget: null, defaultId: "approval" });
+    expect(open("approval")).toBe(true);
+    expect(SECTION_IDS.filter(open)).toEqual(["approval"]);
+  });
+
+  it("lets a hash win, so a link still lands where it points", () => {
+    const at = (id: string) =>
+      isSectionOpen({ id, open: {}, hashTarget: "math", defaultId: "approval" });
+    expect(at("math")).toBe(true);
+    expect(at("approval")).toBe(false);
+  });
+
+  it("lets the reader close it, and it stays closed", () => {
+    expect(
+      isSectionOpen({ id: "approval", open: { approval: false }, hashTarget: null, defaultId: "approval" }),
+    ).toBe(false);
+  });
+
+  it("opens nothing when no section decided anything", () => {
+    const open = (id: string) => isSectionOpen({ id, open: {}, hashTarget: null, defaultId: null });
+    expect(SECTION_IDS.filter(open)).toEqual([]);
+  });
+});
+
+describe("every section registry", () => {
+  it("has unique ids within its own page", () => {
+    for (const { namespace, sections } of SECTION_REGISTRIES) {
+      const ids = sections.map((s) => s.id);
+      expect(new Set(ids).size, namespace).toBe(ids.length);
+    }
+  });
+
+  it("resolves every label key in BOTH locales", async () => {
+    // A section whose label is missing in French renders the raw key to a French
+    // reader. Checking en alone would have let that ship on six new pages at once.
+    const en = (await import("../../messages/en.json")).default as unknown as Record<string, Record<string, string>>;
+    const fr = (await import("../../messages/fr.json")).default as unknown as Record<string, Record<string, string>>;
+    for (const { namespace, sections } of SECTION_REGISTRIES) {
+      for (const section of sections) {
+        expect(en[namespace]?.[section.labelKey], `en ${namespace}.${section.labelKey}`).toBeDefined();
+        expect(fr[namespace]?.[section.labelKey], `fr ${namespace}.${section.labelKey}`).toBeDefined();
+      }
+    }
   });
 });

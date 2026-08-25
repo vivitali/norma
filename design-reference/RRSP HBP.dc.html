@@ -10,44 +10,45 @@
 <helmet data-dc-atomics>
 <meta name="design_doc_mode" content="canvas">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <script src="hbt-data.js"></script>
 <script src="hbt-engine.js"></script>
 <style>
 :root{
---s0:#F7F5F1;--s1:#FFFFFF;--s2:#EFECE5;--s3:#E5E1D7;
---br:#DCD7CC;--brh:#EAE6DD;--brs:#C6BFB1;
---tx:#17191C;--tx2:#565A5F;--tx3:#888C92;
---ac:#22375C;--ac2:#3B5C92;--acbg:#E7ECF4;--acbr:#C3CFE2;
---pass:#1A6B45;--passbg:#E3EFE8;--passbr:#BEDBCB;
---caut:#87590A;--cautbg:#F6EEDC;--cautbr:#E3D3AE;
---blk:#8D2A2A;--blkbg:#F6E7E5;--blkbr:#E5C4C0;
---def:#455A6C;--defbg:#E8EDF1;--defbr:#C8D3DC;
---bgS:var(--s2);--fgS:var(--tx3);--fwS:400;
---kBg:var(--s0);--kBr:var(--br);--kFg:var(--tx2);
+--paper:#FAF9F6;--panel:#FFFFFF;--sunk:#F1EFEA;--line:#E4E1DA;--line2:#EFEDE8;
+--ink:#14151A;--ink2:#5B5F66;--ink3:#8B9097;
+--ac:#3D3BD6;--ac2:#6462E6;--acbg:#ECECFD;--acbr:#D3D2FA;
+--pass:#176B4B;--passbg:#EDF5F1;--passbr:#D3E6DD;
+--caut:#8A5A12;--cautbg:#FBF3E4;--cautbr:#EFE0C2;
+--blk:#A32B2B;--blkbg:#FBEDEC;--blkbr:#F0D3D0;
+--def:#4A4F63;--defbg:#EFEFF6;--defbr:#DCDCE9;
+--bgS:transparent;--fgS:var(--ink3);--fwS:400;
+--bgD:transparent;--fgD:var(--ink2);--fwD:400;
+--kBg:var(--paper);--kBr:var(--line);--kFg:var(--ink2);
+--gW:0%;--gL:0%;--gT:0%;--barW:0%;--barBg:var(--ac2);
+--rowFw:400;--rowFg:var(--ink);--dot:var(--ink3);--fg:var(--ink);
 }
 [data-theme="dark"]{
---s0:#121417;--s1:#191C20;--s2:#21252A;--s3:#2A2F35;
---br:#2F343B;--brh:#262A30;--brs:#3D434B;
---tx:#EBE9E4;--tx2:#A3A8AE;--tx3:#767B82;
---ac:#93B3E0;--ac2:#AEC7EC;--acbg:#1C2632;--acbr:#2C3B4D;
---pass:#6AC497;--passbg:#152620;--passbr:#264737;
---caut:#DFAB4C;--cautbg:#292213;--cautbr:#463A1E;
---blk:#EA8D8D;--blkbg:#2A1919;--blkbr:#4A2C2C;
---def:#A0B4C5;--defbg:#1A2128;--defbr:#2C3742;
+--paper:#0E0F11;--panel:#16181C;--sunk:#1C1F24;--line:#292D33;--line2:#22252A;
+--ink:#ECEAE6;--ink2:#A2A7AE;--ink3:#6F757C;
+--ac:#8886FF;--ac2:#A5A3FF;--acbg:#1B1B33;--acbr:#2E2E52;
+--pass:#55C293;--passbg:#13251E;--passbr:#224535;
+--caut:#D9A94E;--cautbg:#272014;--cautbr:#443921;
+--blk:#E88A8A;--blkbg:#291818;--blkbr:#472B2B;
+--def:#A8AEC4;--defbg:#1A1B24;--defbr:#2C2E3D;
 }
 *{box-sizing:border-box}
-body{margin:0;background:#E8E5DF;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#E9E7E1;font-family:Archivo,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 a{color:var(--ac);text-decoration:none}
 a:hover{color:var(--ac2)}
 input{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:2px}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:7px}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;display:block}
-input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--brs)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:18px;width:8px;border-radius:1px;background:var(--ac);border:0;margin-top:-8px}
-input[type=range]::-moz-range-track{height:3px;background:var(--brs)}
-input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;background:var(--ac);border:0}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:100px;background:var(--ink3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:16px;width:16px;border-radius:50%;background:var(--ac);border:0;margin-top:-6px}
+input[type=range]::-moz-range-track{height:4px;border-radius:100px;background:var(--ink3)}
+input[type=range]::-moz-range-thumb{height:16px;width:16px;border-radius:50%;background:var(--ac);border:0}
 @keyframes hbPulse{0%{background:var(--acbg)}100%{background:transparent}}
 [data-screen-label$="phone"] button{min-height:44px}
 [data-screen-label$="phone"] a{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
@@ -56,16 +57,16 @@ input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;back
 @media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
 .dvT{padding:36px 40px 30px}
 .dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
-.dvId{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#17191C;color:#fff;border-radius:3px;text-decoration:none}
-.dvOid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#17191C;border-radius:3px;text-decoration:none}
-.dvName{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#17191C}
+.dvId{font:600 10px Archivo,sans-serif;padding:3px 7px;background:#14151A;color:#fff;border-radius:9px;text-decoration:none}
+.dvOid{font:600 10.5px Archivo,sans-serif;padding:3px 7px;background:rgba(0,0,0,.07);color:#14151A;border-radius:9px;text-decoration:none}
+.dvName{font:600 13px/1.2 Archivo,sans-serif;color:#14151A}
 .dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
 .dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
-.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
-.dvOpt:target .dvOid{background:#22375C;color:#fff}
-.dvNote{max-width:840px;font:400 12.5px/1.65 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#3D3BD6;color:#fff}
+.dvNote{max-width:840px;font:400 12.5px/1.65 Archivo,sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
 .dvNote b{color:rgba(0,0,0,.85);font-weight:600}
-.dvNext{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+.dvNext{margin:22px 0 0;font:12px/1.5 Archivo,sans-serif;color:rgba(0,0,0,.5)}
 </style>
 </helmet>
 
@@ -76,32 +77,32 @@ input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;back
 
 <div class="dvOpt" id="9a">
 <div class="dvLab"><a class="dvOid" href="#9a">9a</a>Desktop ≥1024 px — gate clear, 105 days</div>
-<div data-theme="{{ themeA }}" data-screen-label="RRSP HBP · desktop" style="width:1180px;background:var(--s0);color:var(--tx);border:1px solid var(--br);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
+<div data-theme="{{ themeA }}" data-screen-label="RRSP HBP · desktop" style="width:1180px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
 
-  <header style="display:flex;align-items:center;gap:14px;padding:0 22px;height:56px;background:var(--s1);border-bottom:1px solid var(--br)">
-    <a href="Home.dc.html" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);white-space:nowrap;padding:6px 10px;border:1px solid var(--br);border-radius:3px;background:var(--s2)"><span aria-hidden="true">←</span>{{ s.homeLink }}</a>
+  <header style="display:flex;align-items:center;gap:14px;padding:0 22px;height:56px;background:var(--panel);border-bottom:1px solid var(--line)">
+    <a href="Home.dc.html" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);white-space:nowrap;padding:6px 10px;border:1px solid var(--line);border-radius:9px;background:var(--sunk)"><span aria-hidden="true">←</span>{{ s.homeLink }}</a>
     <span style="font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;flex:1;min-width:0">{{ s.brand }}</span>
-    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sunk);border:1px solid var(--line);border-radius:9px">
       <span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--ac);flex:none"></span>
       <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ chip.city }}</span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">{{ chip.code }}</span>
-      <span aria-hidden="true" style="font-size:9px;color:var(--tx3)">▾</span>
+      <span style="font-family:Archivo,sans-serif;font-size:11px;color:var(--ink2)">{{ chip.code }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--ink3)">▾</span>
     </button>
-    <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+    <div role="group" style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden">
       <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
         <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:5px 9px;font-size:11.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.name }}</button>
       </sc-for>
     </div>
-    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--tx2)">{{ themeIconA }}</button>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--line);border-radius:9px;background:var(--sunk);font-family:Archivo,sans-serif;font-size:10.5px;color:var(--ink2)">{{ themeIconA }}</button>
   </header>
 
   <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
-    <div style="background:var(--s1);border-bottom:1px solid var(--br);padding:16px 22px 18px">
+    <div style="background:var(--panel);border-bottom:1px solid var(--line);padding:16px 22px 18px">
       <div role="listbox" style="display:flex;flex-wrap:wrap;gap:5px">
         <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="8">
-          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg);color:var(--kFg)">
+          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:1px solid var(--kBr);border-radius:7px;background:var(--kBg);color:var(--kFg)">
             <span style="font-size:12.5px;font-weight:500">{{ c.name }}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ c.code }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:10px;color:var(--ink3)">{{ c.code }}</span>
           </button>
         </sc-for>
       </div>
@@ -110,55 +111,51 @@ input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;back
 
   <div style="display:flex;align-items:flex-end;gap:20px;padding:20px 22px 0">
     <div style="flex:1;min-width:0">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:6px">{{ eyebrow }}</div>
+      <div style="font-family:Archivo,sans-serif;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:6px">{{ eyebrow }}</div>
       <h1 style="margin:0 0 6px;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.02em">{{ s.hbpTitle }}</h1>
-      <p style="margin:0;font-size:14px;line-height:1.5;color:var(--tx2);max-width:620px;text-wrap:pretty">{{ s.hbpSub }}</p>
+      <p style="margin:0;font-size:14px;line-height:1.5;color:var(--ink2);max-width:620px;text-wrap:pretty">{{ s.hbpSub }}</p>
     </div>
     <div style="flex:none;display:flex;flex-direction:column;gap:7px;align-items:flex-end">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3)">{{ depthLabel }}</div>
-      <div role="group" aria-label="{{ depthLabel }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
-        <sc-for list="{{ depthOpts }}" as="d" hint-placeholder-count="3">
-          <button onClick="{{ d.pick }}" aria-pressed="{{ d.on }}" style="--bgS:{{ d.bg }};--fgS:{{ d.fg }};--fwS:{{ d.fw }};padding:7px 12px;font-size:11.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ d.label }}</button>
-        </sc-for>
-      </div>
+      <button onClick="{{ toggleAll }}" aria-expanded="{{ anyOpen }}" style="padding:7px 15px;font-size:12.5px;font-weight:500;color:var(--ac);border:1px solid var(--acbr);border-radius:100px;white-space:nowrap" style-hover="background:var(--acbg)">{{ allLabel }}</button>
+      
     </div>
   </div>
 
   <div id="gate" style="margin:18px 22px 0">
-    <div style="--kBg:{{ gateBg }};--kBr:{{ gateBr }};--kFg:{{ gateFg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:16px 20px;animation:hbPulse .7s ease-out" key="{{ pulseKey }}">
+    <div style="--kBg:{{ gateBg }};--kBr:{{ gateBr }};--kFg:{{ gateFg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:9px;padding:16px 20px;animation:hbPulse .7s ease-out" key="{{ pulseKey }}">
       <div style="display:flex;align-items:flex-start;gap:26px;flex-wrap:wrap">
         <div style="flex:none">
           <div style="font-size:11.5px;font-weight:600;color:var(--kFg);margin-bottom:7px">{{ gateHeading }}</div>
           <div style="display:flex;align-items:baseline;gap:8px">
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:34px;font-weight:600;letter-spacing:-.02em;color:var(--kFg);line-height:1">{{ daysCount }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:34px;font-weight:600;letter-spacing:-.02em;color:var(--kFg);line-height:1">{{ daysCount }}</span>
             <span style="font-size:13px;color:var(--kFg)">{{ daysWord }}</span>
           </div>
           <div style="font-size:11.5px;color:var(--kFg);margin-top:6px;opacity:.9">{{ gateRequirement }}</div>
         </div>
         <div style="flex:1;min-width:300px;max-width:520px">
           <div aria-hidden="true" style="position:relative;height:30px;margin-bottom:8px">
-            <div style="position:absolute;left:0;right:0;top:13px;height:3px;background:var(--brs);border-radius:1px"></div>
-            <div style="position:absolute;left:0;top:13px;height:3px;width:{{ barW }};background:var(--kFg);border-radius:1px"></div>
-            <div style="position:absolute;left:{{ needleL }};top:5px;width:1px;height:19px;background:var(--tx2)"></div>
-            <div style="position:absolute;left:{{ needleL }};top:0;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--tx2);white-space:nowrap">90d</div>
+            <div style="position:absolute;left:0;right:0;top:13px;height:3px;background:var(--ink3);border-radius:100px"></div>
+            <div style="position:absolute;left:0;top:13px;height:3px;width:{{ barW }};background:var(--kFg);border-radius:100px"></div>
+            <div style="position:absolute;left:{{ needleL }};top:5px;width:1px;height:19px;background:var(--ink2)"></div>
+            <div style="position:absolute;left:{{ needleL }};top:0;transform:translateX(-50%);font-family:Archivo,sans-serif;font-size:9px;color:var(--ink2);white-space:nowrap">90d</div>
           </div>
           <div style="display:flex;gap:12px">
             <label style="flex:1;min-width:0">
-              <span style="display:block;font-size:11px;color:var(--tx2);margin-bottom:4px">{{ contribDateLabel }}</span>
-              <input type="date" value="{{ contribDate }}" onChange="{{ onContribDate }}" style="width:100%;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--s1);border:1px solid var(--br);border-radius:2px">
+              <span style="display:block;font-size:11px;color:var(--ink2);margin-bottom:4px">{{ contribDateLabel }}</span>
+              <input type="date" value="{{ contribDate }}" onChange="{{ onContribDate }}" style="width:100%;padding:7px 9px;font-family:Archivo,sans-serif;font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:7px">
             </label>
             <label style="flex:1;min-width:0">
-              <span style="display:block;font-size:11px;color:var(--tx2);margin-bottom:4px">{{ closeDateLabel }}</span>
-              <input type="date" value="{{ closeDate }}" onChange="{{ onCloseDate }}" style="width:100%;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--s1);border:1px solid var(--br);border-radius:2px">
+              <span style="display:block;font-size:11px;color:var(--ink2);margin-bottom:4px">{{ closeDateLabel }}</span>
+              <input type="date" value="{{ closeDate }}" onChange="{{ onCloseDate }}" style="width:100%;padding:7px 9px;font-family:Archivo,sans-serif;font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:7px">
             </label>
           </div>
         </div>
         <div style="flex:none;max-width:270px">
           <p style="margin:0;font-size:12px;line-height:1.55;color:var(--kFg);text-wrap:pretty">{{ gateVerdictBody }}</p>
           <sc-if value="{{ gateBlocked }}" hint-placeholder-val="{{ false }}">
-            <div style="margin-top:10px;padding:9px 11px;background:var(--s1);border:1px solid var(--kBr);border-radius:2px">
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px">{{ earliestLabel }}</div>
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:var(--kFg)">{{ earliestDate }}</div>
+            <div style="margin-top:10px;padding:9px 11px;background:var(--panel);border:1px solid var(--kBr);border-radius:7px">
+              <div style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">{{ earliestLabel }}</div>
+              <div style="font-family:Archivo,sans-serif;font-size:14px;font-weight:600;color:var(--kFg)">{{ earliestDate }}</div>
               <div style="font-size:11px;color:var(--blk);margin-top:6px;line-height:1.45">{{ costOfMissing }}</div>
             </div>
           </sc-if>
@@ -167,134 +164,134 @@ input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;back
     </div>
   </div>
 
-  <div style="margin:14px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:14px 18px">
+  <div style="margin:14px 22px 0;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 18px">
     <div style="display:grid;grid-template-columns:1.3fr 1.3fr 1fr;gap:24px;align-items:start">
       <div>
         <label style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
-          <span style="font-size:11.5px;font-weight:600;color:var(--tx2)">{{ s.hbpContribution }}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx3);margin-left:auto">{{ capNote }}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--ink2)">{{ s.hbpContribution }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:11px;color:var(--ink3);margin-left:auto">{{ capNote }}</span>
         </label>
-        <input type="number" value="{{ contribution }}" onChange="{{ onContribution }}" aria-label="{{ s.hbpContribution }}" style="width:100%;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px;margin-bottom:2px">
+        <input type="number" value="{{ contribution }}" onChange="{{ onContribution }}" aria-label="{{ s.hbpContribution }}" style="width:100%;padding:7px 9px;font-family:Archivo,sans-serif;font-size:16px;font-weight:500;background:var(--paper);border:1px solid var(--ink3);border-radius:7px;margin-bottom:2px">
         <input type="range" min="0" max="{{ hbpMax }}" step="500" value="{{ contribution }}" onChange="{{ onContribution }}" aria-label="{{ s.hbpContribution }}" aria-valuetext="{{ contributionFmt }}">
       </div>
       <div>
         <label style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
-          <span style="font-size:11.5px;font-weight:600;color:var(--tx2)">{{ s.hbpWithdraw }}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx3);margin-left:auto">{{ withdrawNote }}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--ink2)">{{ s.hbpWithdraw }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:11px;color:var(--ink3);margin-left:auto">{{ withdrawNote }}</span>
         </label>
-        <input type="number" value="{{ withdrawAmount }}" onChange="{{ onWithdraw }}" aria-label="{{ s.hbpWithdraw }}" style="width:100%;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px;margin-bottom:2px">
+        <input type="number" value="{{ withdrawAmount }}" onChange="{{ onWithdraw }}" aria-label="{{ s.hbpWithdraw }}" style="width:100%;padding:7px 9px;font-family:Archivo,sans-serif;font-size:16px;font-weight:500;background:var(--paper);border:1px solid var(--ink3);border-radius:7px;margin-bottom:2px">
         <input type="range" min="0" max="{{ withdrawMax }}" step="500" value="{{ withdrawAmount }}" onChange="{{ onWithdraw }}" aria-label="{{ s.hbpWithdraw }}" aria-valuetext="{{ withdrawFmt }}">
       </div>
       <div>
         <label style="display:block;margin-bottom:8px">
-          <span style="font-size:11.5px;font-weight:600;color:var(--tx2)">{{ s.dpIncome }}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--ink2)">{{ s.dpIncome }}</span>
         </label>
-        <input type="number" value="{{ taxIncome }}" onChange="{{ onIncome }}" aria-label="{{ s.dpIncome }}" style="width:100%;padding:7px 9px;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+        <input type="number" value="{{ taxIncome }}" onChange="{{ onIncome }}" aria-label="{{ s.dpIncome }}" style="width:100%;padding:7px 9px;font-family:Archivo,sans-serif;font-size:16px;font-weight:500;background:var(--paper);border:1px solid var(--ink3);border-radius:7px">
         <div style="display:flex;align-items:baseline;gap:8px;margin-top:7px">
-          <span style="font-size:11px;color:var(--tx3)">{{ s.dpMarginal }}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ac);margin-left:auto">{{ marginalFmt }}</span>
+          <span style="font-size:11px;color:var(--ink3)">{{ s.dpMarginal }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:13px;font-weight:600;color:var(--ac);margin-left:auto">{{ marginalFmt }}</span>
         </div>
       </div>
     </div>
   </div>
 
   <div style="margin:14px 22px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-    <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:14px 15px">
-      <div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:8px">{{ s.hbpRefund }}</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;letter-spacing:-.02em;color:var(--pass)">{{ refundAmt }}</div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:5px">{{ refundNote }}</div>
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 15px">
+      <div style="font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:8px">{{ s.hbpRefund }}</div>
+      <div style="font-family:Archivo,sans-serif;font-size:23px;font-weight:500;letter-spacing:-.02em;color:var(--pass)">{{ refundAmt }}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:5px">{{ refundNote }}</div>
     </div>
-    <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:14px 15px">
-      <div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:8px">{{ s.hbpWithdraw }}</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;letter-spacing:-.02em">{{ withdrawAmt }}</div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:5px">{{ withdrawSubNote }}</div>
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 15px">
+      <div style="font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:8px">{{ s.hbpWithdraw }}</div>
+      <div style="font-family:Archivo,sans-serif;font-size:23px;font-weight:500;letter-spacing:-.02em">{{ withdrawAmt }}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:5px">{{ withdrawSubNote }}</div>
     </div>
-    <div style="--kBg:{{ verdictBg }};--kBr:{{ verdictBr }};--kFg:{{ verdictFg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:14px 15px">
+    <div style="--kBg:{{ verdictBg }};--kBr:{{ verdictBr }};--kFg:{{ verdictFg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:9px;padding:14px 15px">
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
         <span style="font-size:11.5px;font-weight:600;color:var(--kFg)">{{ verdictLabel }}</span>
       </div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:600;letter-spacing:-.02em;color:var(--kFg)">{{ netBenefitAmt }}</div>
+      <div style="font-family:Archivo,sans-serif;font-size:23px;font-weight:600;letter-spacing:-.02em;color:var(--kFg)">{{ netBenefitAmt }}</div>
       <div style="font-size:11px;color:var(--kFg);margin-top:5px;line-height:1.4">{{ verdictNote }}</div>
     </div>
   </div>
 
-  <div id="steps" style="margin:20px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden">
-    <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+  <div id="steps" style="margin:20px 22px 0;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--sunk)">
       <span style="font-size:13px;font-weight:600">{{ stepsTitle }}</span>
-      <span style="font-size:11.5px;color:var(--tx3);margin-left:auto">{{ stepsSub }}</span>
+      <span style="font-size:11.5px;color:var(--ink3);margin-left:auto">{{ stepsSub }}</span>
     </div>
     <sc-for list="{{ steps }}" as="st" hint-placeholder-count="5">
-      <div style="--kBg:{{ st.bg }};--kBr:{{ st.br }};--kFg:{{ st.fg }};display:grid;grid-template-columns:34px 1fr 170px;gap:14px;padding:13px 16px;border-bottom:1px solid var(--brh);background:var(--kBg)">
+      <div style="--kBg:{{ st.bg }};--kBr:{{ st.br }};--kFg:{{ st.fg }};display:grid;grid-template-columns:34px 1fr 170px;gap:14px;padding:13px 16px;border-bottom:1px solid var(--line2);background:var(--kBg)">
         <div aria-hidden="true" style="display:flex;flex-direction:column;align-items:center;gap:5px">
-          <span style="width:24px;height:24px;border-radius:50%;background:var(--kFg);color:var(--s1);font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ st.n }}</span>
+          <span style="width:24px;height:24px;border-radius:50%;background:var(--kFg);color:var(--panel);font-family:Archivo,sans-serif;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ st.n }}</span>
           <sc-if value="{{ st.showLine }}" hint-placeholder-val="{{ true }}">
-            <span style="width:1px;flex:1;background:var(--br)"></span>
+            <span style="width:1px;flex:1;background:var(--line)"></span>
           </sc-if>
         </div>
         <div style="min-width:0">
           <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap">
             <span style="font-size:13.5px;font-weight:600;color:var(--kFg)">{{ st.title }}</span>
             <sc-if value="{{ st.critical }}" hint-placeholder-val="{{ false }}">
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--blkbg);color:var(--blk);border:1px solid var(--blkbr);white-space:nowrap">{{ criticalTag }}</span>
+              <span style="font-family:Archivo,sans-serif;font-size:9.5px;padding:2px 6px;border-radius:7px;background:var(--blkbg);color:var(--blk);border:1px solid var(--blkbr);white-space:nowrap">{{ criticalTag }}</span>
             </sc-if>
           </div>
           <sc-if value="{{ showWhy }}" hint-placeholder-val="{{ true }}">
-            <p style="margin:6px 0 0;font-size:12.5px;line-height:1.6;color:var(--tx2);max-width:660px;text-wrap:pretty">{{ st.body }}</p>
+            <p style="margin:6px 0 0;font-size:12.5px;line-height:1.6;color:var(--ink2);max-width:660px;text-wrap:pretty">{{ st.body }}</p>
           </sc-if>
           <sc-if value="{{ st.warn }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex;gap:8px;margin-top:8px;padding:9px 11px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:2px;max-width:660px">
-              <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--blk);flex:none">!</span>
+            <div style="display:flex;gap:8px;margin-top:8px;padding:9px 11px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:7px;max-width:660px">
+              <span aria-hidden="true" style="font-family:Archivo,sans-serif;font-size:11px;font-weight:600;color:var(--blk);flex:none">!</span>
               <span style="font-size:11.5px;line-height:1.5;color:var(--blk);text-wrap:pretty">{{ st.warn }}</span>
             </div>
           </sc-if>
           <sc-if value="{{ st.formula }}" hint-placeholder-val="{{ false }}">
-            <div style="margin-top:8px;padding:8px 10px;background:var(--s0);border:1px solid var(--br);border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.6;color:var(--tx2);max-width:660px">{{ st.formula }}</div>
+            <div style="margin-top:8px;padding:8px 10px;background:var(--paper);border:1px solid var(--line);border-radius:7px;font-family:Archivo,sans-serif;font-size:11px;line-height:1.6;color:var(--ink2);max-width:660px">{{ st.formula }}</div>
           </sc-if>
         </div>
         <div style="text-align:right">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--kFg)">{{ st.value }}</div>
-          <div style="font-size:10.5px;color:var(--tx3);margin-top:4px;line-height:1.4">{{ st.valueNote }}</div>
+          <div style="font-family:Archivo,sans-serif;font-size:16px;font-weight:600;color:var(--kFg)">{{ st.value }}</div>
+          <div style="font-size:10.5px;color:var(--ink3);margin-top:4px;line-height:1.4">{{ st.valueNote }}</div>
         </div>
       </div>
     </sc-for>
   </div>
 
   <sc-if value="{{ showWhy }}" hint-placeholder-val="{{ true }}">
-    <div id="repay" style="margin:20px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:15px 18px">
+    <div id="repay" style="margin:20px 22px 0;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:15px 18px">
       <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
         <span style="font-size:13px;font-weight:600">{{ s.hbpRepaySchedule }}</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--tx2);margin-left:auto">{{ repayAnnualAmt }} {{ s.hbpRepayPerYear }}</span>
+        <span style="font-family:Archivo,sans-serif;font-size:12px;color:var(--ink2);margin-left:auto">{{ repayAnnualAmt }} {{ s.hbpRepayPerYear }}</span>
       </div>
       <div aria-hidden="true" style="display:flex;align-items:flex-end;gap:4px;height:74px;margin-bottom:8px">
         <sc-for list="{{ repayBars }}" as="b" hint-placeholder-count="15">
           <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%">
-            <div style="height:{{ b.h }};background:var(--def);border-radius:1px 1px 0 0;opacity:{{ b.op }}"></div>
+            <div style="height:{{ b.h }};background:var(--def);border-radius:100px 1px 0 0;opacity:{{ b.op }}"></div>
           </div>
         </sc-for>
       </div>
       <div style="display:flex;gap:4px">
         <sc-for list="{{ repayBars }}" as="b" hint-placeholder-count="15">
-          <div style="flex:1;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--tx3)">{{ b.tick }}</div>
+          <div style="flex:1;text-align:center;font-family:Archivo,sans-serif;font-size:9px;color:var(--ink3)">{{ b.tick }}</div>
         </sc-for>
       </div>
-      <div style="display:flex;align-items:baseline;gap:20px;margin-top:13px;padding-top:12px;border-top:1px solid var(--brh);flex-wrap:wrap">
+      <div style="display:flex;align-items:baseline;gap:20px;margin-top:13px;padding-top:12px;border-top:1px solid var(--line2);flex-wrap:wrap">
         <div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);margin-bottom:3px">{{ firstDueLabel }}</div>
+          <div style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px">{{ firstDueLabel }}</div>
           <div style="font-size:13px;font-weight:600">{{ firstDueYear }}</div>
         </div>
         <div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);margin-bottom:3px">{{ missLabel }}</div>
+          <div style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px">{{ missLabel }}</div>
           <div style="font-size:12.5px;color:var(--blk);line-height:1.45;max-width:520px;text-wrap:pretty">{{ missBody }}</div>
         </div>
       </div>
       <sc-if value="{{ showMath }}" hint-placeholder-val="{{ false }}">
-        <div style="margin-top:13px;padding:11px 13px;background:var(--s0);border:1px solid var(--br);border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:var(--tx2)">{{ repayFormula }}</div>
+        <div style="margin-top:13px;padding:11px 13px;background:var(--paper);border:1px solid var(--line);border-radius:7px;font-family:Archivo,sans-serif;font-size:11px;line-height:1.7;color:var(--ink2)">{{ repayFormula }}</div>
       </sc-if>
     </div>
   </sc-if>
 
-  <div style="margin:20px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:14px 16px">
-    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--tx3);max-width:900px;text-wrap:pretty">{{ s.disclaimer }}</p>
+  <div style="margin:20px 22px 0;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 16px">
+    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--ink3);max-width:900px;text-wrap:pretty">{{ s.disclaimer }}</p>
   </div>
 
   <div style="height:22px"></div>
@@ -304,95 +301,95 @@ input[type=range]::-moz-range-thumb{height:18px;width:8px;border-radius:1px;back
 <div class="dvOpt" id="9b">
 <div class="dvLab"><a class="dvOid" href="#9b">9b</a>Phone 390 px — dark, gate blocked at 42 days</div>
 <div data-theme="{{ themeB }}" data-screen-label="RRSP HBP · phone" style="width:430px;padding:20px;background:#0B0C0E;border-radius:44px;border:1px solid rgba(255,255,255,.09);box-shadow:0 2px 14px rgba(0,0,0,.28)">
-  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--s0);color:var(--tx);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
-    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:Archivo,sans-serif;font-size:11px;color:var(--ink2)">
       <span>9:41</span><span style="margin-left:auto;letter-spacing:.12em">•••</span>
     </div>
-    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--br)">
-      <a href="Home.dc.html" style="font-size:16px;color:var(--tx3);display:flex;align-items:center">←</a>
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--line)">
+      <a href="Home.dc.html" style="font-size:16px;color:var(--ink3);display:flex;align-items:center">←</a>
       <span style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0">{{ chip.short }}</span>
-      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx2);flex:none">{{ themeIconB }}</button>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;border:1px solid var(--line);border-radius:9px;background:var(--sunk);font-family:Archivo,sans-serif;font-size:10px;color:var(--ink2);flex:none">{{ themeIconB }}</button>
     </header>
     <div style="flex:1;overflow:auto;padding:14px">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:5px">{{ eyebrow }}</div>
+      <div style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:5px">{{ eyebrow }}</div>
       <h2 style="margin:0 0 5px;font-size:21px;line-height:1.14;font-weight:600;letter-spacing:-.02em">{{ s.hbpTitle }}</h2>
-      <p style="margin:0 0 13px;font-size:13px;line-height:1.45;color:var(--tx2);text-wrap:pretty">{{ s.hbpSub }}</p>
+      <p style="margin:0 0 13px;font-size:13px;line-height:1.45;color:var(--ink2);text-wrap:pretty">{{ s.hbpSub }}</p>
 
-      <div style="--kBg:{{ gateBgB }};--kBr:{{ gateBrB }};--kFg:{{ gateFgB }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:13px 14px;margin-bottom:12px">
+      <div style="--kBg:{{ gateBgB }};--kBr:{{ gateBrB }};--kFg:{{ gateFgB }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:9px;padding:13px 14px;margin-bottom:12px">
         <div style="font-size:11.5px;font-weight:600;color:var(--kFg);margin-bottom:7px">{{ gateHeadingB }}</div>
         <div style="display:flex;align-items:baseline;gap:7px">
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:31px;font-weight:600;letter-spacing:-.02em;color:var(--kFg);line-height:1">{{ daysCountB }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:31px;font-weight:600;letter-spacing:-.02em;color:var(--kFg);line-height:1">{{ daysCountB }}</span>
           <span style="font-size:12.5px;color:var(--kFg)">{{ daysWordB }}</span>
         </div>
         <div aria-hidden="true" style="position:relative;height:22px;margin:10px 0 4px">
-          <div style="position:absolute;left:0;right:0;top:9px;height:3px;background:var(--brs);border-radius:1px"></div>
-          <div style="position:absolute;left:0;top:9px;height:3px;width:{{ barWB }};background:var(--kFg);border-radius:1px"></div>
-          <div style="position:absolute;left:{{ needleLB }};top:2px;width:1px;height:17px;background:var(--tx2)"></div>
+          <div style="position:absolute;left:0;right:0;top:9px;height:3px;background:var(--ink3);border-radius:100px"></div>
+          <div style="position:absolute;left:0;top:9px;height:3px;width:{{ barWB }};background:var(--kFg);border-radius:100px"></div>
+          <div style="position:absolute;left:{{ needleLB }};top:2px;width:1px;height:17px;background:var(--ink2)"></div>
         </div>
         <p style="margin:6px 0 0;font-size:11.5px;line-height:1.5;color:var(--kFg);text-wrap:pretty">{{ gateVerdictBodyB }}</p>
-        <div style="margin-top:10px;padding:9px 10px;background:var(--s1);border:1px solid var(--kBr);border-radius:2px">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px">{{ earliestLabel }}</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600;color:var(--kFg)">{{ earliestDateB }}</div>
+        <div style="margin-top:10px;padding:9px 10px;background:var(--panel);border:1px solid var(--kBr);border-radius:7px">
+          <div style="font-family:Archivo,sans-serif;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px">{{ earliestLabel }}</div>
+          <div style="font-family:Archivo,sans-serif;font-size:13.5px;font-weight:600;color:var(--kFg)">{{ earliestDateB }}</div>
           <div style="font-size:11px;color:var(--blk);margin-top:6px;line-height:1.45;text-wrap:pretty">{{ costOfMissingB }}</div>
         </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:13px">
         <label>
-          <span style="display:block;font-size:11px;color:var(--tx2);margin-bottom:4px">{{ contribDateLabel }}</span>
-          <input type="date" value="{{ contribDate }}" onChange="{{ onContribDate }}" style="width:100%;padding:8px 9px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--s1);border:1px solid var(--br);border-radius:2px">
+          <span style="display:block;font-size:11px;color:var(--ink2);margin-bottom:4px">{{ contribDateLabel }}</span>
+          <input type="date" value="{{ contribDate }}" onChange="{{ onContribDate }}" style="width:100%;padding:8px 9px;font-family:Archivo,sans-serif;font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:7px">
         </label>
         <label>
-          <span style="display:block;font-size:11px;color:var(--tx2);margin-bottom:4px">{{ closeDateLabel }}</span>
-          <input type="date" value="{{ closeDate }}" onChange="{{ onCloseDate }}" style="width:100%;padding:8px 9px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--s1);border:1px solid var(--br);border-radius:2px">
+          <span style="display:block;font-size:11px;color:var(--ink2);margin-bottom:4px">{{ closeDateLabel }}</span>
+          <input type="date" value="{{ closeDate }}" onChange="{{ onCloseDate }}" style="width:100%;padding:8px 9px;font-family:Archivo,sans-serif;font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:7px">
         </label>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:13px">
-        <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:11px 12px">
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:11px 12px">
           <div style="display:flex;align-items:baseline;gap:8px">
-            <span style="font-size:11.5px;color:var(--tx2);flex:1">{{ s.hbpRefund }}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--pass)">{{ refundAmt }}</span>
+            <span style="font-size:11.5px;color:var(--ink2);flex:1">{{ s.hbpRefund }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:16px;font-weight:600;color:var(--pass)">{{ refundAmt }}</span>
           </div>
         </div>
-        <div style="--kBg:{{ verdictBg }};--kBr:{{ verdictBr }};--kFg:{{ verdictFg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:11px 12px">
+        <div style="--kBg:{{ verdictBg }};--kBr:{{ verdictBr }};--kFg:{{ verdictFg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:9px;padding:11px 12px">
           <div style="display:flex;align-items:baseline;gap:8px">
             <span style="font-size:11.5px;font-weight:600;color:var(--kFg);flex:1">{{ verdictLabel }}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--kFg)">{{ netBenefitAmt }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:16px;font-weight:600;color:var(--kFg)">{{ netBenefitAmt }}</span>
           </div>
           <div style="font-size:11px;color:var(--kFg);margin-top:5px;line-height:1.45;text-wrap:pretty">{{ verdictNote }}</div>
         </div>
       </div>
 
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);font-weight:600;margin:0 0 8px">{{ stepsTitle }}</div>
+      <div style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);font-weight:600;margin:0 0 8px">{{ stepsTitle }}</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:13px">
         <sc-for list="{{ steps }}" as="st" hint-placeholder-count="5">
-          <div style="--kBg:{{ st.bg }};--kBr:{{ st.br }};--kFg:{{ st.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:3px;padding:11px 12px">
+          <div style="--kBg:{{ st.bg }};--kBr:{{ st.br }};--kFg:{{ st.fg }};background:var(--kBg);border:1px solid var(--kBr);border-radius:9px;padding:11px 12px">
             <div style="display:flex;align-items:baseline;gap:9px">
-              <span aria-hidden="true" style="width:20px;height:20px;border-radius:50%;background:var(--kFg);color:var(--s1);font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ st.n }}</span>
+              <span aria-hidden="true" style="width:20px;height:20px;border-radius:50%;background:var(--kFg);color:var(--panel);font-family:Archivo,sans-serif;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ st.n }}</span>
               <span style="font-size:12.5px;font-weight:600;color:var(--kFg);flex:1;min-width:0;line-height:1.35">{{ st.titleShort }}</span>
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--kFg);white-space:nowrap">{{ st.value }}</span>
+              <span style="font-family:Archivo,sans-serif;font-size:13px;font-weight:600;color:var(--kFg);white-space:nowrap">{{ st.value }}</span>
             </div>
             <sc-if value="{{ st.warn }}" hint-placeholder-val="{{ false }}">
-              <div style="margin-top:8px;padding:8px 9px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:2px;font-size:11px;line-height:1.5;color:var(--blk);text-wrap:pretty">{{ st.warn }}</div>
+              <div style="margin-top:8px;padding:8px 9px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:7px;font-size:11px;line-height:1.5;color:var(--blk);text-wrap:pretty">{{ st.warn }}</div>
             </sc-if>
           </div>
         </sc-for>
       </div>
 
-      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:11px 12px;margin-bottom:10px">
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:11px 12px;margin-bottom:10px">
         <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px">
-          <span style="font-size:11.5px;font-weight:600;color:var(--tx2)">{{ s.hbpRepaySchedule }}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-left:auto">{{ repayAnnualAmt }}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--ink2)">{{ s.hbpRepaySchedule }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:11.5px;margin-left:auto">{{ repayAnnualAmt }}</span>
         </div>
         <div aria-hidden="true" style="display:flex;align-items:flex-end;gap:3px;height:46px">
           <sc-for list="{{ repayBars }}" as="b" hint-placeholder-count="15">
             <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%">
-              <div style="height:{{ b.h }};background:var(--def);border-radius:1px 1px 0 0;opacity:{{ b.op }}"></div>
+              <div style="height:{{ b.h }};background:var(--def);border-radius:100px 1px 0 0;opacity:{{ b.op }}"></div>
             </div>
           </sc-for>
         </div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.45">{{ repayPhoneNote }}</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:8px;line-height:1.45">{{ repayPhoneNote }}</div>
       </div>
       <div style="height:8px"></div>
     </div>
@@ -530,9 +527,9 @@ class Component extends DCLogic {
       critical: !!d.critical,
       value: d.value, valueNote: d.valueNote,
       formula: showMath ? d.formula : false,
-      bg: d.critical ? (clear ? 'var(--s1)' : 'var(--blkbg)') : 'var(--s1)',
-      br: d.critical ? (clear ? 'var(--br)' : 'var(--blkbr)') : 'var(--br)',
-      fg: d.critical ? (clear ? 'var(--caut)' : 'var(--blk)') : 'var(--tx)'
+      bg: d.critical ? (clear ? 'var(--panel)' : 'var(--blkbg)') : 'var(--panel)',
+      br: d.critical ? (clear ? 'var(--line)' : 'var(--blkbr)') : 'var(--line)',
+      fg: d.critical ? (clear ? 'var(--caut)' : 'var(--blk)') : 'var(--ink)'
     }));
 
     /* ---- repayment bars: 15 years of declining balance ---- */
@@ -550,17 +547,22 @@ class Component extends DCLogic {
       ['\u0412\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u044c', '\u0427\u043e\u043c\u0443', '\u041e\u0431\u0447\u0438\u0441\u043b\u0435\u043d\u043d\u044f'],
       ['La respuesta', 'Por qu\u00e9', 'El c\u00e1lculo']
     ][lang];
+    const allOpen = st.depth === 'math';
+    const toggleAll = () => this.setState({ depth: allOpen ? 'answer' : 'math' });
+    const allLabel = allOpen
+      ? ['Collapse all', 'Tout fermer', '\u0417\u0433\u043e\u0440\u043d\u0443\u0442\u0438 \u0432\u0441\u0435', 'Cerrar todo'][lang]
+      : ['Expand all', 'Tout ouvrir', '\u0420\u043e\u0437\u0433\u043e\u0440\u043d\u0443\u0442\u0438 \u0432\u0441\u0435', 'Abrir todo'][lang];
     const depthOpts = ['answer', 'why', 'math'].map((v, i) => ({
       label: depthLabels[i], on: st.depth === v ? 'true' : 'false',
-      bg: st.depth === v ? 'var(--s1)' : 'var(--s2)', fg: st.depth === v ? 'var(--tx)' : 'var(--tx3)', fw: st.depth === v ? '600' : '400',
+      bg: st.depth === v ? 'var(--panel)' : 'var(--sunk)', fg: st.depth === v ? 'var(--ink)' : 'var(--ink3)', fw: st.depth === v ? '600' : '400',
       pick: () => this.setState({ depth: v })
     }));
 
     const langNames = ['English', 'Fran\u00e7ais', '\u0423\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u0430', 'Espa\u00f1ol'];
-    const langs = langNames.map((n, i) => ({ name: n, on: i === lang ? 'true' : 'false', pick: () => this.setState({ lang: i }), bg: i === lang ? 'var(--s1)' : 'var(--s2)', fg: i === lang ? 'var(--tx)' : 'var(--tx3)', fw: i === lang ? '600' : '400' }));
+    const langs = langNames.map((n, i) => ({ name: n, on: i === lang ? 'true' : 'false', pick: () => this.setState({ lang: i }), bg: i === lang ? 'var(--panel)' : 'var(--sunk)', fg: i === lang ? 'var(--ink)' : 'var(--ink3)', fw: i === lang ? '600' : '400' }));
     const cityOpts = D.jur.filter(x => x.city).map(x => ({
       name: D.C[x.city][lang], code: x.prov, on: x.id === st.jurId ? 'true' : 'false',
-      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--s1)', brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--br)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--tx)',
+      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--panel)', brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--line)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--ink)',
       pick: () => this.setState({ jurId: x.id, prov: x.prov, pickerOpen: false, pulse: st.pulse + 1 })
     }));
     const cityLabel = j.city ? D.C[j.city][lang] : D.P[j.prov][lang];
@@ -568,7 +570,7 @@ class Component extends DCLogic {
     const worth = play.worthIt && clear;
 
     return {
-      s, langs, cityOpts, steps, repayBars, depthOpts,
+      s, langs, cityOpts, steps, repayBars, depthOpts, toggleAll, allLabel, anyOpen: allOpen ? 'true' : 'false',
       themeA: st.themeA, themeB: st.themeB,
       themeIconA: st.themeA === 'dark' ? '\u25d1' : '\u25cb', themeIconB: st.themeB === 'dark' ? '\u25d1' : '\u25cb',
       toggleThemeA: () => this.setState(x => ({ themeA: x.themeA === 'dark' ? 'light' : 'dark' })),
@@ -578,7 +580,7 @@ class Component extends DCLogic {
       pulseKey: 'p' + st.pulse + st.jurId + days,
       eyebrow: ['Deep dive 5/5', 'Analyse d\u00e9taill\u00e9e 5/5', '\u0414\u0435\u0442\u0430\u043b\u044c\u043d\u0438\u0439 \u0440\u043e\u0437\u0431\u0456\u0440 5/5', 'An\u00e1lisis detallado 5/5'][lang],
       depthLabel: ['Detail', 'Niveau de d\u00e9tail', '\u0414\u0435\u0442\u0430\u043b\u0456\u0437\u0430\u0446\u0456\u044f', 'Nivel de detalle'][lang],
-      showWhy: st.depth !== 'answer', showMath: showMath,
+      showWhy: allOpen, showMath: allOpen,
 
       /* gate — desktop */
       gateHeading: gateHeadingT, daysCount: String(days), daysWord: daysWordT, gateRequirement: requirementT,
@@ -633,9 +635,9 @@ class Component extends DCLogic {
       withdrawAmt: this.money(play.withdraw),
       withdrawSubNote: play.withdraw > 0 ? ['no tax on withdrawal', 'aucun imp\u00f4t au retrait', '\u0431\u0435\u0437 \u043f\u043e\u0434\u0430\u0442\u043a\u0443 \u043d\u0430 \u0432\u0438\u043b\u0443\u0447\u0435\u043d\u043d\u044f', 'sin impuesto al retirar'][lang] : s.hbpNoWithdraw,
       verdictLabel: play.withdraw <= 0 ? s.hbpNoWithdraw : (worth ? s.hbpVerdictWorth : s.hbpVerdictNot),
-      verdictBg: play.withdraw <= 0 ? 'var(--s1)' : worth ? 'var(--passbg)' : 'var(--blkbg)',
-      verdictBr: play.withdraw <= 0 ? 'var(--br)' : worth ? 'var(--passbr)' : 'var(--blkbr)',
-      verdictFg: play.withdraw <= 0 ? 'var(--tx2)' : worth ? 'var(--pass)' : 'var(--blk)',
+      verdictBg: play.withdraw <= 0 ? 'var(--panel)' : worth ? 'var(--passbg)' : 'var(--blkbg)',
+      verdictBr: play.withdraw <= 0 ? 'var(--line)' : worth ? 'var(--passbr)' : 'var(--blkbr)',
+      verdictFg: play.withdraw <= 0 ? 'var(--ink2)' : worth ? 'var(--pass)' : 'var(--blk)',
       netBenefitAmt: play.withdraw <= 0 ? '\u2014' : this.money(play.netBenefit),
       verdictNote: play.withdraw <= 0 ? s.hbpNoWithdraw : (clear ? s.hbpVerdictBody : blockedBody),
 
@@ -662,4 +664,3 @@ class Component extends DCLogic {
 </script>
 </body>
 </html>
-

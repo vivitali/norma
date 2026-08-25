@@ -49,3 +49,12 @@ next-env.d.ts
 
 # Terminal colour artifact, not project state
 .termcolor
+
+# Installed tooling, not this project's source. Vendored by `npx impeccable
+# install`; 145,000 lines that would otherwise sit in every diff, and already
+# excluded from eslint for the same reason. Untracked so the repo stays about
+# the app.
+.claude/skills/
+.github/skills/
+.github/agents/
+.github/hooks/

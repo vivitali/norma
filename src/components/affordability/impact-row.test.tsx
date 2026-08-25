@@ -5,23 +5,37 @@ import { affordability } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { getJurisdiction } from "@/domain/jurisdictions";
 import { resolveInputs } from "@/lib/resolve-inputs";
-import { AFFORDABILITY_DEFAULTS } from "@/lib/shared-inputs";
+import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
 import { ImpactRow } from "./impact-row";
-import type { AffordabilityFormState } from "@/lib/shared-inputs";
+import type { ToolFormState } from "@/lib/shared-inputs";
 
 const winnipeg = getJurisdiction("winnipeg")!;
 
-function render(over: Partial<AffordabilityFormState>) {
-  const resolved = resolveInputs({ ...AFFORDABILITY_DEFAULTS, ...over }, winnipeg, federal);
+function render(over: Partial<ToolFormState>) {
+  const resolved = resolveInputs({ ...TOOL_DEFAULTS, ...over }, winnipeg, federal);
   const result = affordability(winnipeg, federal, resolved);
   renderWithIntl(<ImpactRow result={result} debts={resolved.debts} />);
   return result;
 }
 
 describe("ImpactRow", () => {
-  it("prices $100 of obligation when there really are no debts", () => {
-    render({});
-    expect(screen.getByText(/No monthly debts entered/)).toBeInTheDocument();
+  it("prices $100 of obligation only where that $100 would actually cost something", () => {
+    // Reachable only on a very low income. GDS binds until debts exceed the
+    // TDS/GDS spread (income x 5% / 12), so for most debt-free households the
+    // first $100 of obligation genuinely costs nothing and this branch is not
+    // the one that renders.
+    const result = render({ income1: 20000 });
+    expect(result.capacityPer100).toBeGreaterThan(0);
+    expect(screen.getByText(/^No monthly debts entered/)).toBeInTheDocument();
+  });
+
+  it("does not quote a $0 price per $100 when housing cost binds", () => {
+    // capacityPer100 bottoms out at zero whenever GDS binds. "Every $100 would
+    // cost you roughly $0" is true and reads as broken; say why it is zero.
+    const result = render({});
+    expect(result.capacityPer100).toBe(0);
+    expect(screen.queryByText(/roughly/)).not.toBeInTheDocument();
+    expect(screen.getByText(/the first \$100 would cost you nothing/)).toBeInTheDocument();
   });
 
   it("prices the debt when total debt service is the binding constraint", () => {

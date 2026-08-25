@@ -25,14 +25,19 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
   // allowance. Claiming "your debts cost you nothing" there, in pass tokens,
   // beside a declined verdict and a $0 ceiling, is the opposite of the truth:
   // nothing binds because nothing is approvable. That case asserts nothing.
-  const state =
-    debts <= 0
-      ? "none"
-      : result.debtCapacity > 0
+  // Nothing is approvable, so no statement about debt cost is true.
+  const noCeiling = result.ceiling <= 0;
+  const state = noCeiling
+    ? "noClaim"
+    : debts > 0
+      ? result.debtCapacity > 0
         ? "costly"
-        : !result.tdsBinds && result.ceiling > 0
-          ? "notBinding"
-          : "noClaim";
+        : "notBinding"
+      : // No debts entered. Quoting a per-$100 price of $0 is technically true
+        // and reads as broken; say why it is zero instead.
+        result.capacityPer100 > 0
+        ? "none"
+        : "noneFree";
 
   const body =
     state === "costly"
@@ -41,20 +46,22 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
         ? { label: t("impactNoneBinding"), figure: null, foot: t("impactNoneBindingFoot") }
         : state === "noClaim"
           ? { label: t("impactFoot"), figure: null, foot: null }
-          : { label: t("impactNone"), figure: fmt(result.capacityPer100), foot: t("perHundred") };
+          : state === "noneFree"
+            ? { label: t("impactNoneFree"), figure: null, foot: t("impactNoneBindingFoot") }
+            : { label: t("impactNone"), figure: fmt(result.capacityPer100), foot: t("perHundred") };
 
   return (
     <div
       className={cn(
         "flex flex-col gap-1.5 rounded-md border border-l-[3px] p-2.5",
         state === "costly"
-          ? "border-caution-border border-l-caution bg-caution-bg"
-          : state === "notBinding"
-            ? "border-pass-border border-l-pass bg-pass-bg"
-            : "border-border border-l-border bg-background",
+          ? "border-l-caution"
+          : state === "notBinding" || state === "noneFree"
+            ? "border-l-pass"
+            : "border-l-border",
       )}
     >
-      <span className="micro text-text-faint">{t("keyLever")}</span>
+      <span className="micro text-ink3">{t("keyLever")}</span>
       <p className="text-[11.5px] text-muted-foreground">
         {body.label}
         {body.figure ? (
@@ -62,7 +69,7 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
             {" "}
             <span
               className={cn(
-                "figure font-semibold",
+                "font-semibold",
                 state === "costly" ? "text-caution" : "text-foreground",
               )}
             >
@@ -72,14 +79,14 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
         ) : null}
       </p>
       {state === "costly" ? (
-        <span className="flex h-1 w-full overflow-hidden rounded-sm bg-surface-sunken">
+        <span className="flex h-1 w-full overflow-hidden rounded-sm bg-sunk">
           <span
             className="h-full bg-caution"
             style={{ width: `${impactWidth(result.debtCapacity, result.ceiling)}%` }}
           />
         </span>
       ) : null}
-      {body.foot ? <span className="text-[10.5px] text-text-faint">{body.foot}</span> : null}
+      {body.foot ? <span className="text-[10.5px] text-ink3">{body.foot}</span> : null}
     </div>
   );
 }

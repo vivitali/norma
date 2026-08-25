@@ -6,9 +6,8 @@ import type { AffordabilityResult } from "@/domain/engine";
 import type { Jurisdiction } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
-import type { AffordabilityFormState } from "@/lib/shared-inputs";
+import type { ToolFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
-import { DisclosureSection } from "@/components/disclosure-section";
 import { NumberField } from "@/components/number-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,20 +26,18 @@ import { SegmentedGroup } from "./segmented-group";
 function Group({ legend, children }: { legend: string; children: ReactNode }) {
   return (
     <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
-      <legend className="micro px-1 text-text-faint">{legend}</legend>
+      <legend className="micro px-1 text-ink3">{legend}</legend>
       {children}
     </fieldset>
   );
 }
 
 export interface InputGroupsProps {
-  stored: AffordabilityFormState;
+  stored: ToolFormState;
   resolved: ResolvedInputs;
   result: AffordabilityResult;
   jurisdiction: Jurisdiction;
-  update: (patch: Partial<AffordabilityFormState>) => void;
-  isOpen: (id: string) => boolean;
-  onToggle: (id: string, currentlyOpen: boolean) => void;
+  update: (patch: Partial<ToolFormState>) => void;
 }
 
 export function InputGroups({
@@ -49,23 +46,26 @@ export function InputGroups({
   result,
   jurisdiction,
   update,
-  isOpen,
-  onToggle,
 }: InputGroupsProps) {
   const t = useTranslations("Affordability");
   const tProv = useTranslations("Provinces");
+  const tInputs = useTranslations("Inputs");
+  // The reader-facing name. `jurisdiction.city` is the lowercase record key and
+  // rendered "winnipeg"; the Jurisdictions namespace is where the real name lives.
+  const tJur = useTranslations("Jurisdictions");
   const fmt = useMoney();
   const pct = usePercent();
 
+  /**
+   * v2 has one disclosure gesture and it belongs to the sections above, so the
+   * inputs no longer hide half their fields behind a second one. The advanced
+   * fields sit under a quiet label in the same column.
+   */
   const advanced = (id: string, children: ReactNode) => (
-    <DisclosureSection
-      id={id}
-      label={isOpen(id) ? t("cHide") : t("cAdvanced")}
-      open={isOpen(id)}
-      onToggle={() => onToggle(id, isOpen(id))}
-    >
-      <div className="flex flex-col gap-3">{children}</div>
-    </DisclosureSection>
+    <div key={id} className="flex flex-col gap-3 border-t border-hairline pt-3">
+      <span className="eyebrow text-ink3">{t("cAdvanced")}</span>
+      {children}
+    </div>
   );
 
   return (
@@ -97,7 +97,7 @@ export function InputGroups({
               >
                 {t("cAddApp")}
               </Button>
-              <span className="text-[10.5px] text-text-faint">{t("addSecondApplicantHint")}</span>
+              <span className="text-[10.5px] text-ink3">{t("addSecondApplicantHint")}</span>
             </div>
           ) : (
             <div className="flex flex-col gap-1">
@@ -144,8 +144,8 @@ export function InputGroups({
                   onChange={(e) => update({ haircut: Number(e.target.value) })}
                   className="norma-range"
                 />
-                <span className="figure text-[10.5px] text-text-faint">{pct(resolved.haircut)}</span>
-                <span className="text-[10.5px] text-text-faint">{t("cHaircutWhy")}</span>
+                <span className="text-[10.5px] text-ink3">{pct(resolved.haircut)}</span>
+                <span className="text-[10.5px] text-ink3">{t("cHaircutWhy")}</span>
               </div>
             </>,
           )}
@@ -192,19 +192,56 @@ export function InputGroups({
             id="price"
             label={t("price")}
             value={stored.price}
-            placeholder={resolved.price}
+            // Nothing to suggest where nothing is published: a placeholder of "0"
+            // is still a suggestion, and the one it makes is a free house.
+            placeholder={resolved.priceKnown ? resolved.price : undefined}
             min={0}
             onCommit={(price) => update({ price })}
           />
-          <span className="figure -mt-1 text-[10.5px] text-text-faint">
-            {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(jurisdiction.bench[resolved.ptype])}
-          </span>
+          {/*
+            `resolved.benchmark`, not `jurisdiction.bench[ptype]`: a benchmark can be
+            null (nothing published for that market), and a hint with no figure in it
+            is worse than no hint. See benchmarkPrice() in resolve-inputs.ts.
+
+            Where it IS null the field does not go quiet — that left the reader a $0
+            price with LESS explanation than a priced city gets. It asks, in place, on
+            the field that answers it.
+
+            But it asks only while the question is open. The ask is a THIRD state, not
+            the other half of the hint: once the reader has given a price there is a
+            price to model, and "Enter the one you are considering" sat under their own
+            640,000 at `yt` — the same state that correctly says nothing on Amortization,
+            because PurchaseInputs branches on whether a price resolves rather than on
+            whether a publisher produces one. One fact, `priceKnown`, in both places.
+          */}
+          {resolved.benchmark !== null ? (
+            <span className="-mt-1 text-[10.5px] text-ink3">
+              {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(resolved.benchmark)}
+            </span>
+          ) : resolved.priceKnown ? null : (
+            <span className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
+              {tInputs("noPrice", { place: tJur(`at.${jurisdiction.id}`) })}
+            </span>
+          )}
+          {/*
+            Bound to what the reader PICKED, never to the floored value. In the
+            blended tier the legal floor is 10 − 2 500 000/price, which is never
+            one of these four options -- so binding it to resolved.dpPct left no
+            button with aria-checked, stripped every button's tabIndex, and took
+            the whole radiogroup out of the tab order. The raise is announced
+            below instead of being smuggled into the control.
+          */}
           <SegmentedGroup
             label={t("dpPct")}
-            value={resolved.dpPct}
+            value={stored.dpPct}
             onChange={(dpPct) => update({ dpPct })}
             options={[5, 10, 20, 25].map((v) => ({ value: v, label: pct(v) }))}
           />
+          {resolved.belowMinimum ? (
+            <span className="text-[11px] leading-[1.45] text-caution">
+              {t("belowMinimum", { p: pct(resolved.dpPct, 1), a: fmt((resolved.price * resolved.dpPct) / 100) })}
+            </span>
+          ) : null}
           <SegmentedGroup
             label={t("amortYears")}
             value={resolved.amortYears}

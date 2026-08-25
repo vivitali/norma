@@ -10,44 +10,45 @@
 <helmet data-dc-atomics>
 <meta name="design_doc_mode" content="canvas">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <script src="hbt-data.js"></script>
 <script src="hbt-engine.js"></script>
 <style>
 :root{
---s0:#F7F5F1;--s1:#FFFFFF;--s2:#EFECE5;--s3:#E5E1D7;
---br:#DCD7CC;--brh:#EAE6DD;--brs:#C6BFB1;
---tx:#17191C;--tx2:#565A5F;--tx3:#888C92;
---ac:#22375C;--ac2:#3B5C92;--acbg:#E7ECF4;--acbr:#C3CFE2;
---pass:#1A6B45;--passbg:#E3EFE8;--passbr:#BEDBCB;
---caut:#87590A;--cautbg:#F6EEDC;--cautbr:#E3D3AE;
---blk:#8D2A2A;--blkbg:#F6E7E5;--blkbr:#E5C4C0;
---def:#455A6C;--defbg:#E8EDF1;--defbr:#C8D3DC;
---bgS:var(--s2);--fgS:var(--tx3);--fwS:400;
---kBg:var(--s0);--kBr:var(--br);--kFg:var(--tx2);
+--paper:#FAF9F6;--panel:#FFFFFF;--sunk:#F1EFEA;--line:#E4E1DA;--line2:#EFEDE8;
+--ink:#14151A;--ink2:#5B5F66;--ink3:#8B9097;
+--ac:#3D3BD6;--ac2:#6462E6;--acbg:#ECECFD;--acbr:#D3D2FA;
+--pass:#176B4B;--passbg:#EDF5F1;--passbr:#D3E6DD;
+--caut:#8A5A12;--cautbg:#FBF3E4;--cautbr:#EFE0C2;
+--blk:#A32B2B;--blkbg:#FBEDEC;--blkbr:#F0D3D0;
+--def:#4A4F63;--defbg:#EFEFF6;--defbr:#DCDCE9;
+--bgS:transparent;--fgS:var(--ink3);--fwS:400;
+--bgD:transparent;--fgD:var(--ink2);--fwD:400;
+--kBg:var(--paper);--kBr:var(--line);--kFg:var(--ink2);
+--gW:0%;--gL:0%;--gT:0%;--barW:0%;--barBg:var(--ac2);
+--rowFw:400;--rowFg:var(--ink);--dot:var(--ink3);--fg:var(--ink);
 }
 [data-theme="dark"]{
---s0:#121417;--s1:#191C20;--s2:#21252A;--s3:#2A2F35;
---br:#2F343B;--brh:#262A30;--brs:#3D434B;
---tx:#EBE9E4;--tx2:#A3A8AE;--tx3:#767B82;
---ac:#93B3E0;--ac2:#AEC7EC;--acbg:#1C2632;--acbr:#2C3B4D;
---pass:#6AC497;--passbg:#152620;--passbr:#264737;
---caut:#DFAB4C;--cautbg:#292213;--cautbr:#463A1E;
---blk:#EA8D8D;--blkbg:#2A1919;--blkbr:#4A2C2C;
---def:#A0B4C5;--defbg:#1A2128;--defbr:#2C3742;
+--paper:#0E0F11;--panel:#16181C;--sunk:#1C1F24;--line:#292D33;--line2:#22252A;
+--ink:#ECEAE6;--ink2:#A2A7AE;--ink3:#6F757C;
+--ac:#8886FF;--ac2:#A5A3FF;--acbg:#1B1B33;--acbr:#2E2E52;
+--pass:#55C293;--passbg:#13251E;--passbr:#224535;
+--caut:#D9A94E;--cautbg:#272014;--cautbr:#443921;
+--blk:#E88A8A;--blkbg:#291818;--blkbr:#472B2B;
+--def:#A8AEC4;--defbg:#1A1B24;--defbr:#2C2E3D;
 }
 *{box-sizing:border-box}
-body{margin:0;background:#E8E5DF;font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#E9E7E1;font-family:Archivo,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 a{color:var(--ac);text-decoration:none}
 a:hover{color:var(--ac2)}
 input{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:2px}
+:focus-visible{outline:2px solid var(--ac2);outline-offset:2px;border-radius:7px}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;display:block}
-input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--brs)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:20px;width:9px;border-radius:1px;background:var(--caut);border:0;margin-top:-9px}
-input[type=range]::-moz-range-track{height:3px;background:var(--brs)}
-input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;background:var(--caut);border:0}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:100px;background:var(--ink3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:20px;width:9px;border-radius:100px;background:var(--caut);border:0;margin-top:-9px}
+input[type=range]::-moz-range-track{height:4px;border-radius:100px;background:var(--ink3)}
+input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:100px;background:var(--caut);border:0}
 @keyframes amPulse{0%{background:var(--acbg)}100%{background:transparent}}
 [data-screen-label$="phone"] button{min-height:44px}
 [data-screen-label$="phone"] a{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
@@ -56,16 +57,16 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
 @media (prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
 .dvT{padding:36px 40px 30px}
 .dvH{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
-.dvId{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#17191C;color:#fff;border-radius:3px;text-decoration:none}
-.dvOid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.07);color:#17191C;border-radius:3px;text-decoration:none}
-.dvName{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#17191C}
+.dvId{font:600 10px Archivo,sans-serif;padding:3px 7px;background:#14151A;color:#fff;border-radius:9px;text-decoration:none}
+.dvOid{font:600 10.5px Archivo,sans-serif;padding:3px 7px;background:rgba(0,0,0,.07);color:#14151A;border-radius:9px;text-decoration:none}
+.dvName{font:600 13px/1.2 Archivo,sans-serif;color:#14151A}
 .dvOpts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
 .dvOpt{flex:none;display:flex;flex-direction:column;gap:9px}
-.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
-.dvOpt:target .dvOid{background:#22375C;color:#fff}
-.dvNote{max-width:840px;font:400 12.5px/1.65 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
+.dvLab{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Archivo,sans-serif;color:rgba(0,0,0,.55)}
+.dvOpt:target .dvOid{background:#3D3BD6;color:#fff}
+.dvNote{max-width:840px;font:400 12.5px/1.65 Archivo,sans-serif;color:rgba(0,0,0,.62);margin:0 0 22px}
 .dvNote b{color:rgba(0,0,0,.85);font-weight:600}
-.dvNext{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+.dvNext{margin:22px 0 0;font:12px/1.5 Archivo,sans-serif;color:rgba(0,0,0,.5)}
 </style>
 </helmet>
 
@@ -76,32 +77,32 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
 
 <div class="dvOpt" id="7a">
 <div class="dvLab"><a class="dvOid" href="#7a">7a</a>Desktop ≥1024 px — renewal stressed two points up</div>
-<div data-theme="{{ themeA }}" data-screen-label="Amortization · desktop" style="width:1180px;background:var(--s0);color:var(--tx);border:1px solid var(--br);border-radius:4px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
+<div data-theme="{{ themeA }}" data-screen-label="Amortization · desktop" style="width:1180px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-variant-numeric:tabular-nums lining-nums;box-shadow:0 2px 14px rgba(0,0,0,.09)">
 
-  <header style="display:flex;align-items:center;gap:14px;padding:0 22px;height:56px;background:var(--s1);border-bottom:1px solid var(--br)">
-    <a href="Home.dc.html" style="font-size:12px;color:var(--tx3);white-space:nowrap">← {{ s.homeLink }}</a>
+  <header style="display:flex;align-items:center;gap:14px;padding:0 22px;height:56px;background:var(--panel);border-bottom:1px solid var(--line)">
+    <a href="Home.dc.html" style="font-size:12px;color:var(--ink3);white-space:nowrap">← {{ s.homeLink }}</a>
     <span style="font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;flex:1;min-width:0">{{ s.brand }}</span>
-    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+    <button onClick="{{ togglePicker }}" aria-expanded="{{ pickerOpen }}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--sunk);border:1px solid var(--line);border-radius:9px">
       <span aria-hidden="true" style="width:5px;height:5px;border-radius:50%;background:var(--ac);flex:none"></span>
       <span style="font-size:12.5px;font-weight:500;white-space:nowrap">{{ chip.city }}</span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">{{ chip.code }}</span>
-      <span aria-hidden="true" style="font-size:9px;color:var(--tx3)">▾</span>
+      <span style="font-family:Archivo,sans-serif;font-size:11px;color:var(--ink2)">{{ chip.code }}</span>
+      <span aria-hidden="true" style="font-size:9px;color:var(--ink3)">▾</span>
     </button>
-    <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
+    <div role="group" style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden">
       <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
         <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:5px 9px;font-size:11.5px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.name }}</button>
       </sc-for>
     </div>
-    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--tx2)">{{ themeIconA }}</button>
+    <button onClick="{{ toggleThemeA }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--line);border-radius:9px;background:var(--sunk);font-family:Archivo,sans-serif;font-size:10.5px;color:var(--ink2)">{{ themeIconA }}</button>
   </header>
 
   <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
-    <div style="background:var(--s1);border-bottom:1px solid var(--br);padding:16px 22px 18px">
+    <div style="background:var(--panel);border-bottom:1px solid var(--line);padding:16px 22px 18px">
       <div role="listbox" style="display:flex;flex-wrap:wrap;gap:5px">
         <sc-for list="{{ cityOpts }}" as="c" hint-placeholder-count="8">
-          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:1px solid var(--kBr);border-radius:2px;background:var(--kBg);color:var(--kFg)">
+          <button role="option" aria-selected="{{ c.on }}" onClick="{{ c.pick }}" style="--kBg:{{ c.bg }};--kFg:{{ c.fg }};--kBr:{{ c.brd }};display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:1px solid var(--kBr);border-radius:7px;background:var(--kBg);color:var(--kFg)">
             <span style="font-size:12.5px;font-weight:500">{{ c.name }}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3)">{{ c.code }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:10px;color:var(--ink3)">{{ c.code }}</span>
           </button>
         </sc-for>
       </div>
@@ -110,72 +111,55 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
 
   <div style="padding:20px 22px 0;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap">
     <div style="flex:1;min-width:330px">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:6px">{{ s.eyebrow }}</div>
+      <div style="font-family:Archivo,sans-serif;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:6px">{{ s.eyebrow }}</div>
       <h1 style="margin:0 0 6px;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.02em">{{ s.title }}</h1>
-      <p style="margin:0;font-size:14px;line-height:1.5;color:var(--tx2);max-width:560px;text-wrap:pretty">{{ s.sub }}</p>
+      <p style="margin:0;font-size:14px;line-height:1.5;color:var(--ink2);max-width:560px;text-wrap:pretty">{{ s.sub }}</p>
     </div>
-    <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
-      <div style="display:flex;align-items:center;gap:9px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)">{{ s.depth }}</span>
-        <div role="group" aria-label="{{ s.depth }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden">
-          <sc-for list="{{ depthOpts }}" as="dp" hint-placeholder-count="3">
-            <button onClick="{{ dp.pick }}" aria-pressed="{{ dp.on }}" style="--bgS:{{ dp.bg }};--fgS:{{ dp.fg }};--fwS:{{ dp.fw }};display:flex;align-items:center;gap:7px;padding:6px 12px;font-size:12px;white-space:nowrap;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
-              <span aria-hidden="true" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;opacity:.7">{{ dp.n }}</span>{{ dp.label }}
-            </button>
-          </sc-for>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:7px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)">{{ s.jump }}</span>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-          <sc-for list="{{ jumpLinks }}" as="jl" hint-placeholder-count="4">
-            <a href="{{ jl.href }}" style="font-size:11px;padding:4px 8px;border:1px solid var(--br);border-radius:2px;background:var(--s1);white-space:nowrap">{{ jl.label }}</a>
-          </sc-for>
-        </div>
-      </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end">
+      <button onClick="{{ toggleAll }}" aria-expanded="{{ anyOpen }}" style="font-size:13px;font-weight:500;color:var(--ac);padding:7px 15px;border:1px solid var(--acbr);border-radius:100px;white-space:nowrap" style-hover="background:var(--acbg)">{{ allLabel }}</button>
     </div>
   </div>
 
   <div id="shock" style="margin:18px 22px 0;scroll-margin-top:12px">
-    <div style="--kBg:{{ shock.bg }};--kBr:{{ shock.br }};--kFg:{{ shock.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:18px 20px;animation:amPulse .7s ease-out" key="{{ pulseKey }}">
+    <div style="--kBg:{{ shock.bg }};--kBr:{{ shock.br }};--kFg:{{ shock.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:9px;padding:18px 20px;animation:amPulse .7s ease-out" key="{{ pulseKey }}">
       <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:9px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600">{{ shock.tag }}</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ locTag }}</span>
+        <span style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600">{{ shock.tag }}</span>
+        <span style="font-family:Archivo,sans-serif;font-size:9.5px;color:var(--ink3)">{{ locTag }}</span>
       </div>
       <p style="margin:0 0 8px;font-size:25px;line-height:1.24;font-weight:600;letter-spacing:-.018em;color:var(--kFg);max-width:900px;text-wrap:pretty">{{ shock.head }}</p>
-      <p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--tx2);max-width:840px;text-wrap:pretty">{{ shock.sub }}</p>
+      <p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--ink2);max-width:840px;text-wrap:pretty">{{ shock.sub }}</p>
     </div>
   </div>
 
-  <div id="stress" style="margin:14px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
-    <div style="display:grid;grid-template-columns:1.45fr 1fr;gap:0;border-bottom:1px solid var(--br)">
-      <div style="padding:15px 18px;border-right:1px solid var(--brh)">
+  <div id="stress" style="margin:14px 22px 0;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;scroll-margin-top:12px">
+    <div style="display:grid;grid-template-columns:1.45fr 1fr;gap:0;border-bottom:1px solid var(--line)">
+      <div style="padding:15px 18px;border-right:1px solid var(--line2)">
         <label style="display:flex;align-items:baseline;gap:10px;margin-bottom:2px">
           <span style="font-size:12.5px;font-weight:600;color:var(--caut)">{{ s.renewalControl }}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--caut);white-space:nowrap">{{ s.keyLever }}</span>
-          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600;color:var(--caut)">{{ renewalFmt }}</span>
+          <span style="font-family:Archivo,sans-serif;font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--caut);white-space:nowrap">{{ s.keyLever }}</span>
+          <span style="margin-left:auto;font-family:Archivo,sans-serif;font-size:21px;font-weight:600;color:var(--caut)">{{ renewalFmt }}</span>
         </label>
         <input type="range" min="2" max="12" step="0.05" value="{{ renewalRate }}" onChange="{{ onRenewal }}" aria-label="{{ s.renewalControl }}" aria-valuetext="{{ renewalFmt }}">
         <div style="position:relative;height:15px">
-          <span style="position:absolute;left:0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ rateMin }}</span>
-          <span style="position:absolute;left:{{ contractPos }};transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ac);white-space:nowrap">{{ contractLabel }}</span>
-          <span style="position:absolute;right:0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ rateMax }}</span>
+          <span style="position:absolute;left:0;font-family:Archivo,sans-serif;font-size:9.5px;color:var(--ink3)">{{ rateMin }}</span>
+          <span style="position:absolute;left:{{ contractPos }};transform:translateX(-50%);font-family:Archivo,sans-serif;font-size:9.5px;color:var(--ac);white-space:nowrap">{{ contractLabel }}</span>
+          <span style="position:absolute;right:0;font-family:Archivo,sans-serif;font-size:9.5px;color:var(--ink3)">{{ rateMax }}</span>
         </div>
         <div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap">
           <sc-for list="{{ presets }}" as="pr" hint-placeholder-count="4">
-            <button onClick="{{ pr.pick }}" aria-pressed="{{ pr.on }}" style="--bgS:{{ pr.bg }};--fgS:{{ pr.fg }};--fwS:{{ pr.fw }};display:flex;align-items:baseline;gap:7px;padding:5px 9px;border:1px solid {{ pr.brd }};border-radius:2px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+            <button onClick="{{ pr.pick }}" aria-pressed="{{ pr.on }}" style="--bgS:{{ pr.bg }};--fgS:{{ pr.fg }};--fwS:{{ pr.fw }};display:flex;align-items:baseline;gap:7px;padding:5px 9px;border:1px solid {{ pr.brd }};border-radius:7px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
               <span style="font-size:11.5px">{{ pr.label }}</span>
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ pr.value }}</span>
+              <span style="font-family:Archivo,sans-serif;font-size:11px">{{ pr.value }}</span>
             </button>
           </sc-for>
         </div>
-        <p style="margin:11px 0 0;font-size:11.5px;line-height:1.55;color:var(--tx2);max-width:600px;text-wrap:pretty">{{ s.renewalWhy }}</p>
+        <p style="margin:11px 0 0;font-size:11.5px;line-height:1.55;color:var(--ink2);max-width:600px;text-wrap:pretty">{{ s.renewalWhy }}</p>
       </div>
       <div style="padding:15px 18px">
         <sc-for list="{{ shockRows }}" as="sr" hint-placeholder-count="6">
-          <div style="--kFg:{{ sr.fg }};display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--brh)">
-            <span style="font-size:12px;color:var(--tx2);flex:1;min-width:0;line-height:1.35;font-weight:{{ sr.fw }}">{{ sr.label }}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:{{ sr.fw }};color:var(--kFg);white-space:nowrap">{{ sr.value }}</span>
+          <div style="--kFg:{{ sr.fg }};display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--line2)">
+            <span style="font-size:12px;color:var(--ink2);flex:1;min-width:0;line-height:1.35;font-weight:{{ sr.fw }}">{{ sr.label }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:13.5px;font-weight:{{ sr.fw }};color:var(--kFg);white-space:nowrap">{{ sr.value }}</span>
           </div>
         </sc-for>
       </div>
@@ -197,61 +181,61 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
             <line x1="{{ tl.x }}" y1="16" x2="{{ tl.x }}" y2="242" stroke="{{ tl.stroke }}" stroke-width="1" stroke-dasharray="3 3"></line>
           </sc-for>
           <sc-if value="{{ hasBaseline }}" hint-placeholder-val="{{ false }}">
-            <polyline points="{{ baselinePts }}" fill="none" stroke="var(--tx3)" stroke-width="1.4" stroke-dasharray="4 3"></polyline>
+            <polyline points="{{ baselinePts }}" fill="none" stroke="var(--ink3)" stroke-width="1.4" stroke-dasharray="4 3"></polyline>
           </sc-if>
-          <polyline points="{{ balancePts }}" fill="none" stroke="var(--tx)" stroke-width="1.8"></polyline>
+          <polyline points="{{ balancePts }}" fill="none" stroke="var(--ink)" stroke-width="1.8"></polyline>
           <sc-if value="{{ flip }}" hint-placeholder-val="{{ true }}">
-            <circle cx="{{ flip.x }}" cy="{{ flip.y }}" r="4.5" fill="var(--s1)" stroke="var(--pass)" stroke-width="2.5"></circle>
+            <circle cx="{{ flip.x }}" cy="{{ flip.y }}" r="4.5" fill="var(--panel)" stroke="var(--pass)" stroke-width="2.5"></circle>
           </sc-if>
         </svg>
         <sc-for list="{{ grid }}" as="gl" hint-placeholder-count="5">
-          <div style="position:absolute;left:0;top:{{ gl.top }};width:54px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);line-height:1">{{ gl.label }}</div>
+          <div style="position:absolute;left:0;top:{{ gl.top }};width:54px;text-align:right;font-family:Archivo,sans-serif;font-size:10px;color:var(--ink3);line-height:1">{{ gl.label }}</div>
         </sc-for>
         <sc-for list="{{ xTicks }}" as="xt" hint-placeholder-count="7">
-          <div style="position:absolute;left:{{ xt.left }};top:250px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx3);line-height:1">{{ xt.label }}</div>
+          <div style="position:absolute;left:{{ xt.left }};top:250px;transform:translateX(-50%);font-family:Archivo,sans-serif;font-size:10px;color:var(--ink3);line-height:1">{{ xt.label }}</div>
         </sc-for>
         <sc-for list="{{ termLines }}" as="tl" hint-placeholder-count="6">
-          <div style="position:absolute;left:{{ tl.left }};top:2px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:{{ tl.fg }};white-space:nowrap;line-height:1">{{ tl.label }}</div>
+          <div style="position:absolute;left:{{ tl.left }};top:2px;transform:translateX(-50%);font-family:Archivo,sans-serif;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:{{ tl.fg }};white-space:nowrap;line-height:1">{{ tl.label }}</div>
         </sc-for>
         <sc-if value="{{ flip }}" hint-placeholder-val="{{ true }}">
-          <div style="position:absolute;left:{{ flip.left }};top:{{ flip.top }};transform:{{ flip.tf }};background:var(--passbg);border:1px solid var(--passbr);border-radius:2px;padding:5px 8px;white-space:nowrap">
+          <div style="position:absolute;left:{{ flip.left }};top:{{ flip.top }};transform:{{ flip.tf }};background:var(--passbg);border:1px solid var(--passbr);border-radius:7px;padding:5px 8px;white-space:nowrap">
             <div style="font-size:11px;font-weight:700;color:var(--pass);line-height:1.25">{{ flip.line1 }}</div>
-            <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--pass);line-height:1.3">{{ flip.line2 }}</div>
+            <div style="font-family:Archivo,sans-serif;font-size:9.5px;color:var(--pass);line-height:1.3">{{ flip.line2 }}</div>
           </div>
         </sc-if>
-        <div style="position:absolute;left:1030px;top:270px;transform:translateX(-100%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);line-height:1;white-space:nowrap">{{ s.yearsAxis }}</div>
+        <div style="position:absolute;left:1030px;top:270px;transform:translateX(-100%);font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);line-height:1;white-space:nowrap">{{ s.yearsAxis }}</div>
       </div>
       <div style="display:flex;align-items:center;gap:16px;padding:6px 0 2px;flex-wrap:wrap">
         <sc-for list="{{ legend }}" as="lg" hint-placeholder-count="4">
           <div style="display:flex;align-items:center;gap:7px">
-            <span aria-hidden="true" style="width:11px;height:11px;border-radius:1px;background:{{ lg.swatch }};border:1px solid {{ lg.stroke }};flex:none"></span>
-            <span style="font-size:11.5px;color:var(--tx2)">{{ lg.label }}</span>
+            <span aria-hidden="true" style="width:11px;height:11px;border-radius:100px;background:{{ lg.swatch }};border:1px solid {{ lg.stroke }};flex:none"></span>
+            <span style="font-size:11.5px;color:var(--ink2)">{{ lg.label }}</span>
           </div>
         </sc-for>
       </div>
-      <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx3);max-width:980px;text-wrap:pretty">{{ chartAlt }}</p>
+      <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--ink3);max-width:980px;text-wrap:pretty">{{ chartAlt }}</p>
     </div>
   </div>
 
   <sc-if value="{{ showWhy }}" hint-placeholder-val="{{ false }}">
     <div id="risk" style="margin:16px 22px 0;scroll-margin-top:12px">
-      <div style="display:flex;gap:13px;padding:16px 18px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:3px">
-        <span aria-hidden="true" style="width:22px;height:22px;border-radius:2px;border:2px solid var(--blk);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--blk);flex:none">!</span>
+      <div style="display:flex;gap:13px;padding:16px 18px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:9px">
+        <span aria-hidden="true" style="width:22px;height:22px;border-radius:7px;border:2px solid var(--blk);display:flex;align-items:center;justify-content:center;font-family:Archivo,sans-serif;font-size:13px;font-weight:700;color:var(--blk);flex:none">!</span>
         <div style="min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--blk);margin-bottom:6px;line-height:1.35">{{ s.riskTitle }}</div>
-          <p style="margin:0;font-size:12.5px;line-height:1.6;color:var(--tx2);max-width:900px;text-wrap:pretty">{{ s.riskBody }}</p>
+          <p style="margin:0;font-size:12.5px;line-height:1.6;color:var(--ink2);max-width:900px;text-wrap:pretty">{{ s.riskBody }}</p>
         </div>
       </div>
     </div>
   </sc-if>
 
   <sc-if value="{{ showMath }}" hint-placeholder-val="{{ false }}">
-    <div id="table" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
-      <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+    <div id="table" style="margin:16px 22px 0;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;scroll-margin-top:12px">
+      <div style="display:flex;align-items:baseline;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--sunk)">
         <span style="font-size:13px;font-weight:600">{{ s.tableTitle }}</span>
-        <span style="font-size:11.5px;color:var(--tx3)">{{ setupLine }}</span>
+        <span style="font-size:11.5px;color:var(--ink3)">{{ setupLine }}</span>
       </div>
-      <div style="display:grid;grid-template-columns:44px repeat(6,1fr);padding:8px 16px;border-bottom:1px solid var(--br);font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx3)">
+      <div style="display:grid;grid-template-columns:44px repeat(6,1fr);padding:8px 16px;border-bottom:1px solid var(--line);font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink3)">
         <span>{{ s.yr }}</span>
         <sc-for list="{{ tableCols }}" as="tc" hint-placeholder-count="6">
           <span style="text-align:right;line-height:1.3">{{ tc }}</span>
@@ -259,10 +243,10 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
       </div>
       <div style="max-height:330px;overflow:auto">
         <sc-for list="{{ tableRows }}" as="r" hint-placeholder-count="30">
-          <div style="--kBg:{{ r.bg }};display:grid;grid-template-columns:44px repeat(6,1fr);padding:5px 16px;border-bottom:1px solid var(--brh);background:var(--kBg)">
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--tx3)">{{ r.t }}</span>
+          <div style="--kBg:{{ r.bg }};display:grid;grid-template-columns:44px repeat(6,1fr);padding:5px 16px;border-bottom:1px solid var(--line2);background:var(--kBg)">
+            <span style="font-family:Archivo,sans-serif;font-size:11.5px;color:var(--ink3)">{{ r.t }}</span>
             <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="6">
-              <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:{{ c.fg }}">{{ c.text }}</span>
+              <span style="text-align:right;font-family:Archivo,sans-serif;font-size:11.5px;color:{{ c.fg }}">{{ c.text }}</span>
             </sc-for>
           </div>
         </sc-for>
@@ -270,25 +254,25 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
     </div>
   </sc-if>
 
-  <div id="inputs" style="margin:16px 22px 0;background:var(--s1);border:1px solid var(--br);border-radius:3px;overflow:hidden;scroll-margin-top:12px">
-    <div style="display:flex;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid var(--br);background:var(--s2)">
+  <div id="inputs" style="margin:16px 22px 0;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;scroll-margin-top:12px">
+    <div style="display:flex;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--sunk)">
       <span style="font-size:12.5px;font-weight:600">{{ s.adjust }}</span>
-      <span style="font-size:11.5px;color:var(--tx3)">{{ s.sharedNote }}</span>
+      <span style="font-size:11.5px;color:var(--ink3)">{{ s.sharedNote }}</span>
     </div>
     <div style="padding:14px 16px;display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap">
       <div style="flex:1;min-width:240px">
-        <label style="display:flex;align-items:baseline;font-size:11.5px;color:var(--tx2);margin-bottom:5px">{{ s.price }}
-          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3)">{{ priceTag }}</span>
+        <label style="display:flex;align-items:baseline;font-size:11.5px;color:var(--ink2);margin-bottom:5px">{{ s.price }}
+          <span style="margin-left:auto;font-family:Archivo,sans-serif;font-size:9.5px;color:var(--ink3)">{{ priceTag }}</span>
         </label>
-        <input type="number" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" style="width:100%;padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;background:var(--s0);border:1px solid var(--brs);border-radius:2px">
+        <input type="number" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" style="width:100%;padding:6px 8px;font-family:Archivo,sans-serif;font-size:15px;font-weight:500;background:var(--paper);border:1px solid var(--ink3);border-radius:7px">
         <input type="range" min="150000" max="2200000" step="5000" value="{{ price }}" onChange="{{ onPrice }}" aria-label="{{ s.price }}" aria-valuetext="{{ priceFmt }}">
       </div>
       <sc-for list="{{ groupsOfControls }}" as="gc" hint-placeholder-count="3">
         <div style="display:flex;align-items:center;gap:9px">
-          <span style="font-size:11.5px;color:var(--tx2);white-space:nowrap">{{ gc.label }}</span>
-          <div role="group" aria-label="{{ gc.label }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:2px;overflow:hidden">
+          <span style="font-size:11.5px;color:var(--ink2);white-space:nowrap">{{ gc.label }}</span>
+          <div role="group" aria-label="{{ gc.label }}" style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:7px;overflow:hidden">
             <sc-for list="{{ gc.options }}" as="op" hint-placeholder-count="4">
-              <button onClick="{{ op.pick }}" aria-pressed="{{ op.on }}" style="--bgS:{{ op.bg }};--fgS:{{ op.fg }};--fwS:{{ op.fw }};padding:5px 12px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ op.label }}</button>
+              <button onClick="{{ op.pick }}" aria-pressed="{{ op.on }}" style="--bgS:{{ op.bg }};--fgS:{{ op.fg }};--fwS:{{ op.fw }};padding:5px 12px;font-family:Archivo,sans-serif;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ op.label }}</button>
             </sc-for>
           </div>
         </div>
@@ -296,12 +280,12 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
     </div>
   </div>
 
-  <div style="margin:16px 22px 22px;padding:13px 16px;background:var(--s2);border:1px solid var(--br);border-radius:3px">
+  <div style="margin:16px 22px 22px;padding:13px 16px;background:var(--sunk);border:1px solid var(--line);border-radius:9px">
     <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px">
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.5;letter-spacing:.05em;text-transform:uppercase;color:var(--tx3);flex:1;min-width:0">{{ sourcesLine }}</span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:2px 6px;border-radius:2px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr)">{{ s.unverifiedFlag }}</span>
+      <span style="font-family:Archivo,sans-serif;font-size:9.5px;line-height:1.5;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);flex:1;min-width:0">{{ sourcesLine }}</span>
+      <span style="font-family:Archivo,sans-serif;font-size:9.5px;padding:2px 6px;border-radius:7px;background:var(--cautbg);color:var(--caut);border:1px solid var(--cautbr)">{{ s.unverifiedFlag }}</span>
     </div>
-    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--tx3);max-width:940px;text-wrap:pretty">{{ s.disclaimer }}</p>
+    <p style="margin:0;font-size:11.5px;line-height:1.6;color:var(--ink3);max-width:940px;text-wrap:pretty">{{ s.disclaimer }}</p>
   </div>
 </div>
 </div>
@@ -309,51 +293,51 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
 <div class="dvOpt" id="7b">
 <div class="dvLab"><a class="dvOid" href="#7b">7b</a>Phone 390 px — dark</div>
 <div data-theme="{{ themeB }}" data-screen-label="Amortization · phone" style="width:430px;padding:20px;background:#0B0C0E;border-radius:44px;border:1px solid rgba(255,255,255,.09);box-shadow:0 2px 14px rgba(0,0,0,.28)">
-  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--s0);color:var(--tx);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
-    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2)">
+  <div style="width:390px;height:812px;overflow:hidden;border-radius:26px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums lining-nums;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:9px 18px 3px;font-family:Archivo,sans-serif;font-size:11px;color:var(--ink2)">
       <span>9:41</span><span style="margin-left:auto;letter-spacing:.12em">•••</span>
     </div>
-    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--br)">
-      <a href="Home.dc.html" style="font-size:12px;color:var(--tx3);flex:none">←</a>
-      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--s2);border:1px solid var(--br);border-radius:3px;min-width:0">
+    <header style="display:flex;align-items:center;gap:8px;padding:6px 14px 10px;border-bottom:1px solid var(--line)">
+      <a href="Home.dc.html" style="font-size:12px;color:var(--ink3);flex:none">←</a>
+      <button onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--sunk);border:1px solid var(--line);border-radius:9px;min-width:0">
         <span aria-hidden="true" style="width:4px;height:4px;border-radius:50%;background:var(--ac);flex:none"></span>
         <span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chip.short }}</span>
       </button>
-      <div role="group" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;margin-left:auto">
+      <div role="group" style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-left:auto">
         <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="4">
-          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 6px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
+          <button onClick="{{ lg.pick }}" aria-current="{{ lg.on }}" style="--bgS:{{ lg.bg }};--fgS:{{ lg.fg }};--fwS:{{ lg.fw }};padding:4px 6px;font-family:Archivo,sans-serif;font-size:10px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">{{ lg.abbr }}</button>
         </sc-for>
       </div>
-      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--br);border-radius:3px;background:var(--s2);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--tx2);flex:none">{{ themeIconB }}</button>
+      <button onClick="{{ toggleThemeB }}" aria-label="{{ s.theme }}" style="width:40px;height:44px;border:1px solid var(--line);border-radius:9px;background:var(--sunk);font-family:Archivo,sans-serif;font-size:10px;color:var(--ink2);flex:none">{{ themeIconB }}</button>
     </header>
 
     <div style="flex:1;overflow:auto;padding:14px">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:5px">{{ s.eyebrow }}</div>
+      <div style="font-family:Archivo,sans-serif;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ac);margin-bottom:5px">{{ s.eyebrow }}</div>
       <h2 style="margin:0 0 12px;font-size:22px;line-height:1.12;font-weight:600;letter-spacing:-.02em">{{ s.title }}</h2>
 
-      <div style="--kBg:{{ shock.bg }};--kBr:{{ shock.br }};--kFg:{{ shock.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:3px;padding:13px 14px;margin-bottom:12px;animation:amPulse .7s ease-out" key="{{ pulseKey }}">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:7px">{{ shock.tag }}</div>
+      <div style="--kBg:{{ shock.bg }};--kBr:{{ shock.br }};--kFg:{{ shock.fg }};background:var(--kBg);border:1px solid var(--kBr);border-left:3px solid var(--kFg);border-radius:9px;padding:13px 14px;margin-bottom:12px;animation:amPulse .7s ease-out" key="{{ pulseKey }}">
+        <div style="font-family:Archivo,sans-serif;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--kFg);font-weight:600;margin-bottom:7px">{{ shock.tag }}</div>
         <p style="margin:0 0 7px;font-size:17px;line-height:1.3;font-weight:600;color:var(--kFg);text-wrap:pretty">{{ shock.head }}</p>
-        <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ shock.sub }}</p>
+        <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--ink2);text-wrap:pretty">{{ shock.sub }}</p>
       </div>
 
-      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px;margin-bottom:12px">
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:12px">
         <label style="display:flex;align-items:baseline;gap:9px;margin-bottom:4px">
           <span style="font-size:12px;font-weight:600;color:var(--caut);line-height:1.3">{{ s.renewalControl }}</span>
-          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--caut)">{{ renewalFmt }}</span>
+          <span style="margin-left:auto;font-family:Archivo,sans-serif;font-size:18px;font-weight:600;color:var(--caut)">{{ renewalFmt }}</span>
         </label>
         <input type="range" min="2" max="12" step="0.05" value="{{ renewalRate }}" onChange="{{ onRenewal }}" aria-label="{{ s.renewalControl }}" aria-valuetext="{{ renewalFmt }}">
         <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
           <sc-for list="{{ presets }}" as="pr" hint-placeholder-count="4">
-            <button onClick="{{ pr.pick }}" aria-pressed="{{ pr.on }}" style="--bgS:{{ pr.bg }};--fgS:{{ pr.fg }};--fwS:{{ pr.fw }};display:flex;align-items:baseline;gap:6px;padding:5px 9px;border:1px solid {{ pr.brd }};border-radius:2px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
+            <button onClick="{{ pr.pick }}" aria-pressed="{{ pr.on }}" style="--bgS:{{ pr.bg }};--fgS:{{ pr.fg }};--fwS:{{ pr.fw }};display:flex;align-items:baseline;gap:6px;padding:5px 9px;border:1px solid {{ pr.brd }};border-radius:7px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS)">
               <span style="font-size:11px">{{ pr.label }}</span>
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">{{ pr.value }}</span>
+              <span style="font-family:Archivo,sans-serif;font-size:11px">{{ pr.value }}</span>
             </button>
           </sc-for>
         </div>
       </div>
 
-      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px;margin-bottom:12px">
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:12px">
         <div role="img" aria-label="{{ chartAlt }}" style="position:relative;width:330px;height:186px">
           <svg width="330" height="186" viewBox="0 0 330 186" aria-hidden="true" focusable="false" style="position:absolute;left:0;top:0;display:block">
             <sc-for list="{{ mGrid }}" as="gl" hint-placeholder-count="3">
@@ -368,52 +352,45 @@ input[type=range]::-moz-range-thumb{height:20px;width:9px;border-radius:1px;back
             <sc-for list="{{ mTermLines }}" as="tl" hint-placeholder-count="6">
               <line x1="{{ tl.x }}" y1="6" x2="{{ tl.x }}" y2="156" stroke="{{ tl.stroke }}" stroke-width="1" stroke-dasharray="3 3"></line>
             </sc-for>
-            <polyline points="{{ mBalancePts }}" fill="none" stroke="var(--tx)" stroke-width="1.6"></polyline>
+            <polyline points="{{ mBalancePts }}" fill="none" stroke="var(--ink)" stroke-width="1.6"></polyline>
           </svg>
           <sc-for list="{{ mXTicks }}" as="xt" hint-placeholder-count="4">
-            <div style="position:absolute;left:{{ xt.left }};top:164px;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);line-height:1">{{ xt.label }}</div>
+            <div style="position:absolute;left:{{ xt.left }};top:164px;transform:translateX(-50%);font-family:Archivo,sans-serif;font-size:9.5px;color:var(--ink3);line-height:1">{{ xt.label }}</div>
           </sc-for>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px">
           <sc-for list="{{ legend }}" as="lg" hint-placeholder-count="4">
             <div style="display:flex;align-items:center;gap:6px">
-              <span aria-hidden="true" style="width:10px;height:10px;border-radius:1px;background:{{ lg.swatch }};border:1px solid {{ lg.stroke }};flex:none"></span>
-              <span style="font-size:10.5px;color:var(--tx2)">{{ lg.label }}</span>
+              <span aria-hidden="true" style="width:10px;height:10px;border-radius:100px;background:{{ lg.swatch }};border:1px solid {{ lg.stroke }};flex:none"></span>
+              <span style="font-size:10.5px;color:var(--ink2)">{{ lg.label }}</span>
             </div>
           </sc-for>
         </div>
       </div>
 
-      <div style="background:var(--s1);border:1px solid var(--br);border-radius:3px;padding:12px;margin-bottom:12px">
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px;margin-bottom:12px">
         <sc-for list="{{ shockRows }}" as="sr" hint-placeholder-count="6">
-          <div style="--kFg:{{ sr.fg }};display:flex;align-items:baseline;gap:9px;padding:6px 0;border-bottom:1px solid var(--brh)">
-            <span style="font-size:11.5px;color:var(--tx2);flex:1;min-width:0;line-height:1.35;font-weight:{{ sr.fw }}">{{ sr.label }}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:{{ sr.fw }};color:var(--kFg);white-space:nowrap">{{ sr.value }}</span>
+          <div style="--kFg:{{ sr.fg }};display:flex;align-items:baseline;gap:9px;padding:6px 0;border-bottom:1px solid var(--line2)">
+            <span style="font-size:11.5px;color:var(--ink2);flex:1;min-width:0;line-height:1.35;font-weight:{{ sr.fw }}">{{ sr.label }}</span>
+            <span style="font-family:Archivo,sans-serif;font-size:13px;font-weight:{{ sr.fw }};color:var(--kFg);white-space:nowrap">{{ sr.value }}</span>
           </div>
         </sc-for>
       </div>
 
       <sc-if value="{{ showWhy }}" hint-placeholder-val="{{ false }}">
-        <div style="display:flex;gap:11px;padding:12px 13px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:3px;margin-bottom:12px">
-          <span aria-hidden="true" style="width:20px;height:20px;border-radius:2px;border:2px solid var(--blk);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--blk);flex:none">!</span>
+        <div style="display:flex;gap:11px;padding:12px 13px;background:var(--blkbg);border:1px solid var(--blkbr);border-left:3px solid var(--blk);border-radius:9px;margin-bottom:12px">
+          <span aria-hidden="true" style="width:20px;height:20px;border-radius:7px;border:2px solid var(--blk);display:flex;align-items:center;justify-content:center;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;color:var(--blk);flex:none">!</span>
           <div style="min-width:0">
             <div style="font-size:12px;font-weight:600;color:var(--blk);margin-bottom:5px;line-height:1.35">{{ s.riskTitle }}</div>
-            <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--tx2);text-wrap:pretty">{{ s.riskBody }}</p>
+            <p style="margin:0;font-size:11.5px;line-height:1.55;color:var(--ink2);text-wrap:pretty">{{ s.riskBody }}</p>
           </div>
         </div>
       </sc-if>
       <div style="height:6px"></div>
     </div>
 
-    <div style="border-top:1px solid var(--br);background:var(--s1);padding:9px 12px 13px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);flex:none">{{ s.depth }}</span>
-        <div role="group" aria-label="{{ s.depth }}" style="display:flex;gap:1px;background:var(--br);border:1px solid var(--br);border-radius:3px;overflow:hidden;flex:1">
-          <sc-for list="{{ depthOpts }}" as="dp" hint-placeholder-count="3">
-            <button onClick="{{ dp.pick }}" aria-pressed="{{ dp.on }}" style="--bgS:{{ dp.bg }};--fgS:{{ dp.fg }};--fwS:{{ dp.fw }};flex:1;font-size:11.5px;background:var(--bgS);color:var(--fgS);font-weight:var(--fwS);white-space:nowrap;padding:0 4px">{{ dp.label }}</button>
-          </sc-for>
-        </div>
-      </div>
+    <div style="border-top:1px solid var(--line);background:var(--panel);padding:9px 12px 13px">
+      <button onClick="{{ toggleAll }}" aria-expanded="{{ anyOpen }}" style="width:100%;min-height:44px;font-size:13.5px;font-weight:500;color:var(--ac);border:1px solid var(--acbr);border-radius:100px">{{ allLabel }}</button>
     </div>
   </div>
 </div>
@@ -566,12 +543,12 @@ class Component extends DCLogic {
             fg: 'var(--pass)', bg: 'var(--passbg)', br: 'var(--passbr)' };
 
     const shockRows = [
-      { label: s.rPayNow, value: this.money(M.firstPayment), fg: 'var(--tx)', fw: '400' },
-      { label: s.rPayAfter, value: this.money(M.paymentAfterRenewal), fg: shockAmt > 0 ? 'var(--blk)' : 'var(--tx)', fw: '600' },
-      { label: s.rChange, value: (shockAmt > 0 ? '+\u2009' : shockAmt < 0 ? '\u2212\u2009' : '') + this.money(Math.abs(shockAmt)), fg: shockAmt > 0 ? 'var(--blk)' : shockAmt < 0 ? 'var(--pass)' : 'var(--tx3)', fw: '600' },
-      { label: s.rAnnual, value: this.money(M.paymentAfterRenewal * 12), fg: 'var(--tx2)', fw: '400' },
-      { label: s.rInterest, value: this.money(M.totalInterest), fg: 'var(--tx)', fw: '600' },
-      { label: s.rExtra, value: Math.abs(extraInterest) < 1 ? '\u2014' : (extraInterest > 0 ? '+\u2009' : '\u2212\u2009') + this.money(Math.abs(extraInterest)), fg: extraInterest > 0 ? 'var(--blk)' : 'var(--tx3)', fw: '400' }
+      { label: s.rPayNow, value: this.money(M.firstPayment), fg: 'var(--ink)', fw: '400' },
+      { label: s.rPayAfter, value: this.money(M.paymentAfterRenewal), fg: shockAmt > 0 ? 'var(--blk)' : 'var(--ink)', fw: '600' },
+      { label: s.rChange, value: (shockAmt > 0 ? '+\u2009' : shockAmt < 0 ? '\u2212\u2009' : '') + this.money(Math.abs(shockAmt)), fg: shockAmt > 0 ? 'var(--blk)' : shockAmt < 0 ? 'var(--pass)' : 'var(--ink3)', fw: '600' },
+      { label: s.rAnnual, value: this.money(M.paymentAfterRenewal * 12), fg: 'var(--ink2)', fw: '400' },
+      { label: s.rInterest, value: this.money(M.totalInterest), fg: 'var(--ink)', fw: '600' },
+      { label: s.rExtra, value: Math.abs(extraInterest) < 1 ? '\u2014' : (extraInterest > 0 ? '+\u2009' : '\u2212\u2009') + this.money(Math.abs(extraInterest)), fg: extraInterest > 0 ? 'var(--blk)' : 'var(--ink3)', fw: '400' }
     ];
 
     /* ---------- chart ---------- */
@@ -599,7 +576,7 @@ class Component extends DCLogic {
       const basePts = B.rows.map(r => xMid(r.t).toFixed(1) + ',' + yBal(r.closing).toFixed(1)).join(' ');
       const grid = [0, 0.25, 0.5, 0.75, 1].map(f => ({
         y: yFlow(maxFlow * f).toFixed(1), top: (yFlow(maxFlow * f) - 5).toFixed(1) + 'px',
-        label: this.short(maxFlow * f), stroke: f === 0 ? 'var(--brs)' : 'var(--brh)'
+        label: this.short(maxFlow * f), stroke: f === 0 ? 'var(--ink3)' : 'var(--line2)'
       }));
       return { bars, balPts, basePts, grid, xMid, yFlow, padT, innerH, maxFlow, n };
     };
@@ -616,10 +593,10 @@ class Component extends DCLogic {
       const x = g.xMid(t) - (1096 - 62 - 66) / g.n / 2;
       const first = t === st.termYears + 1;
       termLines.push({ x: x.toFixed(1), left: x.toFixed(1) + 'px',
-        stroke: first ? 'var(--caut)' : 'var(--brs)', fg: first ? 'var(--caut)' : 'var(--tx3)',
+        stroke: first ? 'var(--caut)' : 'var(--ink3)', fg: first ? 'var(--caut)' : 'var(--ink3)',
         label: first ? s.termMark + ' \u00b7 ' + fill(s.yearWord, { n: String(t) }) : '' });
       const mx = mg.xMid(t) - (330 - 4) / mg.n / 2;
-      mTermLines.push({ x: mx.toFixed(1), stroke: first ? 'var(--caut)' : 'var(--brs)' });
+      mTermLines.push({ x: mx.toFixed(1), stroke: first ? 'var(--caut)' : 'var(--ink3)' });
     }
 
     let flipYear = null;
@@ -640,8 +617,8 @@ class Component extends DCLogic {
     const legend = [
       { label: s.legendInterest, swatch: 'var(--caut)', stroke: 'var(--caut)' },
       { label: s.legendPrincipal, swatch: 'var(--ac)', stroke: 'var(--ac)' },
-      { label: s.legendBalance, swatch: 'var(--tx)', stroke: 'var(--tx)' },
-      { label: s.legendBaseline, swatch: 'transparent', stroke: 'var(--tx3)' },
+      { label: s.legendBalance, swatch: 'var(--ink)', stroke: 'var(--ink)' },
+      { label: s.legendBaseline, swatch: 'transparent', stroke: 'var(--ink3)' },
       { label: fill(s.legendRenewal, { n: String(st.termYears) }), swatch: 'transparent', stroke: 'var(--caut)' }
     ];
 
@@ -652,8 +629,8 @@ class Component extends DCLogic {
     const mk = (label, v) => {
       const on = Math.abs(renewal - v) < 0.03;
       return { label, value: this.pct(v, 2), on: on ? 'true' : 'false',
-        bg: on ? 'var(--cautbg)' : 'var(--s1)', fg: on ? 'var(--caut)' : 'var(--tx2)', fw: on ? '600' : '400',
-        brd: on ? 'var(--cautbr)' : 'var(--br)',
+        bg: on ? 'var(--cautbg)' : 'var(--panel)', fg: on ? 'var(--caut)' : 'var(--ink2)', fw: on ? '600' : '400',
+        brd: on ? 'var(--cautbr)' : 'var(--line)',
         pick: () => this.setState({ renewalRate: v }) };
     };
     const presets = [mk(s.presetToday, contract), mk(s.presetFloor, F.stressTest.floor), mk(s.presetPlus2, contract + 2), mk(s.presetPlus4, contract + 4)];
@@ -664,12 +641,12 @@ class Component extends DCLogic {
       t: String(r.t),
       bg: r.renewed ? 'var(--cautbg)' : (r.t === flipYear ? 'var(--passbg)' : 'transparent'),
       cells: [
-        { text: this.pct(r.rate, 2), fg: r.renewed ? 'var(--caut)' : 'var(--tx3)' },
-        { text: this.money(r.payment), fg: 'var(--tx2)' },
+        { text: this.pct(r.rate, 2), fg: r.renewed ? 'var(--caut)' : 'var(--ink3)' },
+        { text: this.money(r.payment), fg: 'var(--ink2)' },
         { text: this.short(r.interest), fg: 'var(--caut)' },
         { text: this.short(r.principal), fg: 'var(--ac)' },
-        { text: r.closing === 0 ? '\u2014' : this.short(r.closing), fg: r.closing === 0 ? 'var(--pass)' : 'var(--tx)' },
-        { text: this.pct(r.principal / (r.interest + r.principal) * 100, 0), fg: 'var(--tx2)' }
+        { text: r.closing === 0 ? '\u2014' : this.short(r.closing), fg: r.closing === 0 ? 'var(--pass)' : 'var(--ink)' },
+        { text: this.pct(r.principal / (r.interest + r.principal) * 100, 0), fg: 'var(--ink2)' }
       ]
     }));
 
@@ -677,7 +654,7 @@ class Component extends DCLogic {
     const seg = (label, values, cur, set, fmt) => ({
       label, options: values.map(v => ({
         label: fmt(v), on: cur === v ? 'true' : 'false',
-        bg: cur === v ? 'var(--s1)' : 'var(--s2)', fg: cur === v ? 'var(--ac)' : 'var(--tx2)', fw: cur === v ? '600' : '400',
+        bg: cur === v ? 'var(--panel)' : 'var(--sunk)', fg: cur === v ? 'var(--ac)' : 'var(--ink2)', fw: cur === v ? '600' : '400',
         pick: () => set(v)
       }))
     });
@@ -688,9 +665,15 @@ class Component extends DCLogic {
       seg(s.termLabel, [3, 5, 10], st.termYears, v => this.setState({ termYears: v }), v => v + '\u2009' + yrWord)
     ];
 
+    /* One disclosure control: collapsed, or everything open. */
+    const allOpen = st.depth >= 2;
+    const toggleAll = () => this.setState({ depth: allOpen ? 0 : 2 });
+    const allLabel = allOpen
+      ? ['Collapse all', 'Tout fermer', '\u0417\u0433\u043e\u0440\u043d\u0443\u0442\u0438 \u0432\u0441\u0435', 'Cerrar todo'][lang]
+      : ['Expand all', 'Tout ouvrir', '\u0420\u043e\u0437\u0433\u043e\u0440\u043d\u0443\u0442\u0438 \u0432\u0441\u0435', 'Abrir todo'][lang];
     const depthOpts = [s.d1, s.d2, s.d3].map((lb, i) => ({
       label: lb, n: String(i + 1), on: st.depth === i ? 'true' : 'false',
-      bg: st.depth === i ? 'var(--s1)' : 'var(--s2)', fg: st.depth === i ? 'var(--ac)' : 'var(--tx3)', fw: st.depth === i ? '600' : '400',
+      bg: st.depth === i ? 'var(--panel)' : 'var(--sunk)', fg: st.depth === i ? 'var(--ac)' : 'var(--ink3)', fw: st.depth === i ? '600' : '400',
       pick: () => this.setState({ depth: i })
     }));
     const jumpLinks = [{ href: '#shock', label: s.d1 }, { href: '#stress', label: s.renewalControl }];
@@ -701,17 +684,17 @@ class Component extends DCLogic {
     const langs = ['English', 'Français', 'Українська', 'Español'].map((n, i) => ({
       name: n, abbr: ['EN', 'FR', 'UK', 'ES'][i], on: i === lang ? 'true' : 'false',
       pick: () => this.setState({ lang: i }),
-      bg: i === lang ? 'var(--s1)' : 'var(--s2)', fg: i === lang ? 'var(--tx)' : 'var(--tx3)', fw: i === lang ? '600' : '400'
+      bg: i === lang ? 'var(--panel)' : 'var(--sunk)', fg: i === lang ? 'var(--ink)' : 'var(--ink3)', fw: i === lang ? '600' : '400'
     }));
     const cityOpts = D.jur.filter(x => x.city).map(x => ({
       name: D.C[x.city][lang], code: x.prov, on: x.id === st.jurId ? 'true' : 'false',
-      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--s1)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--tx)',
-      brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--br)',
+      bg: x.id === st.jurId ? 'var(--acbg)' : 'var(--panel)', fg: x.id === st.jurId ? 'var(--ac)' : 'var(--ink)',
+      brd: x.id === st.jurId ? 'var(--acbr)' : 'var(--line)',
       pick: () => this.setState({ jurId: x.id, pickerOpen: false, pulse: st.pulse + 1, price: st.priceTouched ? st.price : x.bench.house })
     }));
 
     return {
-      s, langs, cityOpts, depthOpts, jumpLinks, presets, shock, shockRows, legend, groupsOfControls,
+      s, langs, cityOpts, depthOpts, toggleAll, allLabel, anyOpen: allOpen ? 'true' : 'false', jumpLinks, presets, shock, shockRows, legend, groupsOfControls,
       bars: g.bars, grid: g.grid, xTicks, termLines, balancePts: g.balPts, baselinePts: g.basePts,
       hasBaseline: Math.abs(renewal - contract) > 0.03, flip, chartAlt,
       mBars: mg.bars, mGrid: mg.grid, mXTicks, mTermLines, mBalancePts: mg.balPts,
@@ -742,4 +725,3 @@ class Component extends DCLogic {
 </script>
 </body>
 </html>
-
