@@ -178,9 +178,25 @@ The plumbing was generalized rather than doubled: `src/lib/locales.ts` holds the
 `src/test/catalogues.ts` holds the catalogues, so every cross-locale test iterates a registry
 instead of a hardcoded `{ en, fr }` pair — which is what ten test files each carried before, meaning
 "in both locales" only ever meant "in the two this file happened to list".
-`src/app/locale-render.test.tsx` renders every page in every locale with every section expanded and
-fails on a raw message key or an unformatted value; it is the only thing that can catch ICU one
-locale has and another does not, which Ukrainian's four plural categories introduced.
+Two tests carry the locales, and they cover different failure modes:
+
+- **`src/lib/messages-icu.test.ts`** constructs and formats every leaf in every locale, at counts
+  that reach every plural category each locale declares (asserted, not assumed — Ukrainian `other`
+  needs a fraction and French/Spanish `many` starts at 1,000,000). This is what catches ICU one
+  locale has and another does not, which Ukrainian introduced by needing four plural categories
+  where English has two: placeholder parity sees the same argument NAME on both sides and passes,
+  because it cannot see inside the ICU. It also compares rich-text tags — drop `<sources>` from
+  `Home.rulesUnverified` in one catalogue and next-intl throws nothing and renders the provenance
+  disclosure without its link.
+- **`src/app/locale-render.test.tsx`** renders every page in every locale with every section
+  expanded. It catches what a catalogue check cannot: a call site that forgets an argument.
+
+**A trap worth remembering, because it cost this branch a green test that checked nothing.** That
+render test originally looked for a leaked key with `/\b(Nav|Inputs|…)\.\w+/`. `textContent`
+concatenates adjacent elements with NO separator, so a leaked key arrives glued to the text before
+it — `AffordMath` + `Nav.menu` — and `\b` finds no boundary between `h` and `N`. Deleting
+`Nav.menu` from a catalogue left the suite green. Match the real key list from `en.json`, never a
+pattern that resembles one. The same applies to any future assertion over rendered text.
 
 **Adding or changing a page — the seams, in order:**
 1. `src/i18n/routing.ts` — the route key and its localized slugs. **French and Spanish are

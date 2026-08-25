@@ -52,8 +52,24 @@ function argsFor(ast: Element[], into: Record<string, unknown> = {}): Record<str
   return into;
 }
 
-/** Every plural category any supported locale uses, plus the boundaries. */
-const COUNTS = [0, 1, 2, 3, 5, 11, 21, 40, 101];
+/**
+ * Counts chosen to reach every plural category of every supported locale — asserted
+ * below rather than asserted in a comment, because the first version of this list claimed
+ * exactly that and was wrong for three locales out of four. Ukrainian `other` needs a
+ * fraction, and French and Spanish `many` does not begin until 1,000,000 — which is the
+ * branch a translator would add to a product that prints seven-figure house prices, and
+ * so the branch this sweep most needs to reach.
+ */
+const COUNTS = [0, 1, 1.5, 2, 3, 5, 11, 21, 40, 101, 1_000_000];
+
+describe("the plural sweep", () => {
+  it.each(Object.keys(CATALOGUES))("reaches every plural category %s has", (locale) => {
+    const rules = new Intl.PluralRules(locale);
+    const reached = new Set(COUNTS.map((n) => rules.select(n)));
+    const declared = rules.resolvedOptions().pluralCategories;
+    expect(declared.filter((category) => !reached.has(category)), locale).toEqual([]);
+  });
+});
 
 describe("every message formats in its own locale", () => {
   it.each(Object.entries(CATALOGUES))("%s", (locale, tree) => {
@@ -69,8 +85,10 @@ describe("every message formats in its own locale", () => {
       const args = argsFor(ast);
       const counts = Object.entries(args).filter(([, v]) => typeof v === "number");
 
-      // A plural with no `other` branch parses and then throws for any count outside the
-      // branches it does have — which is why every category is exercised, not just one.
+      // Sweeping the counts is NOT what catches a missing `other` branch: that is
+      // MISSING_OTHER_CLAUSE and it throws at construction, in the `try` above. The sweep
+      // earns its place on what only formatting reaches — `#`, and any argument nested
+      // inside a branch that the locale never selects at a single count.
       const cases = counts.length === 0 ? [args] : COUNTS.map((n) =>
         Object.fromEntries(Object.entries(args).map(([k, v]) => [k, typeof v === "number" ? n : v])),
       );
