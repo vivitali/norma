@@ -41,6 +41,14 @@
     "scenarios": {
       "title": "Scénarios de mise de fonds — 5, 10, 20 ou 25 %",
       "description": "Quatre mises de fonds au même prix, comparées : coût mensuel, comptant à la clôture, approbation et intérêts totaux. Le plus bas mensuel gagne rarement."
+    },
+    "privacy": {
+      "title": "Confidentialité — AffordMath",
+      "description": "Ce qui est recueilli et ce qui ne l’est pas. Vos données de calcul restent dans votre navigateur et ne sont jamais transmises à un serveur."
+    },
+    "terms": {
+      "title": "Conditions d’utilisation — AffordMath",
+      "description": "AffordMath est un calculateur, non un conseil. Ce qu’est le service, ce qu’il n’est pas, et les limites de ses estimations."
     }
   },
   "Home": {
@@ -961,5 +969,62 @@
     "QC": "Québec",
     "SK": "Saskatchewan",
     "YT": "Yukon"
+  },
+  "Legal": {
+    "privacy": "Confidentialité",
+    "terms": "Conditions",
+    "updated": "Dernière mise à jour : {date}",
+    "officerTitle": "Responsable de la protection des renseignements personnels",
+    "footerDisclaimer": "AffordMath est un outil d’information. Il ne constitue ni un conseil financier, hypothécaire, fiscal ou juridique, ni une offre de crédit. Chaque résultat est une estimation calculée à partir des données que vous saisissez et de règles publiées, dont la date figure à la page Sources. Vos chiffres réels sont établis par votre prêteur, votre notaire ou votre comptable. Vérifiez toute information avant de vous y fier.",
+    "legal": "Mentions légales",
+    "operatorRole": "Exploitant",
+    "roleLabel": "Rôle",
+    "nameLabel": "Nom",
+    "emailLabel": "Courriel",
+    "updatedLong": "25 août 2026"
+  },
+  "Privacy": {
+    "eyebrow": "Confidentialité",
+    "head": "Presque rien à votre sujet ne nous parvient, et cette page dit précisément ce qui nous parvient.",
+    "sub": "AffordMath fonctionne dans votre navigateur. Ce que vous saisissez dans un calculateur reste sur votre appareil. Le reste de cette page est le détail que les lois québécoise et fédérale sur la vie privée nous obligent à publier.",
+    "secCollect": "Ce qui est recueilli",
+    "bodyCollect": "Deux choses, et rien d’autre. Des statistiques de fréquentation agrégées — quelles pages sont consultées, depuis quel pays, sur quel type d’appareil — au moyen de Cloudflare Web Analytics, qui ne dépose aucun témoin et ne vous suit pas d’un site à l’autre. Et les données de requête que reçoit tout serveur web, dont votre adresse IP, que Cloudflare utilise pour servir la page et bloquer les abus.",
+    "secNotCollect": "Ce qui n’est pas recueilli",
+    "bodyNotCollect": "Vos revenus, vos dettes, votre épargne, le prix de la propriété que vous envisagez, et tout autre chiffre que vous saisissez. Ces données sont conservées dans le stockage local de votre navigateur, lues uniquement par ce site s’exécutant sur votre propre appareil, et ne sont transmises nulle part. Il n’y a ni compte, ni connexion, ni adresse courriel, ni dossier vous concernant sur un serveur. Effacer les données de votre navigateur les supprime définitivement, et personne — nous y compris — n’en détient de copie.",
+    "secPurpose": "À quelles fins, et par quels moyens",
+    "bodyPurpose": "Les statistiques servent à savoir quels outils sont utilisés et lesquels sont ignorés, afin que le travail aille aux pages que les gens atteignent réellement. Elles sont recueillies automatiquement au chargement d’une page, par un script servi par Cloudflare. Rien n’est recueilli à des fins publicitaires. Rien n’est vendu ni communiqué à un courtier en données.",
+    "secThirdParty": "Qui les reçoit",
+    "bodyThirdParty": "Cloudflare, Inc., qui héberge ce site et en fournit les statistiques. Personne d’autre. Il n’y a aucun réseau publicitaire, aucun gestionnaire de balises, aucun pixel de réseau social et aucun script tiers autre que la balise d’analyse de Cloudflare.",
+    "secOutside": "Ces renseignements sont traités à l’extérieur du Québec",
+    "bodyOutside": "Cloudflare a son siège aux États-Unis et exploite un réseau mondial : les données de requête décrites ci-dessus sont donc traitées à l’extérieur du Québec et peuvent l’être à l’extérieur du Canada, où elles peuvent être assujetties aux lois d’un autre ressort. Cette communication est faite parce que la loi québécoise l’exige. Elle vise les statistiques ; elle ne vise pas ce que vous saisissez dans un calculateur, qui ne quitte jamais votre appareil.",
+    "secRights": "Vos droits",
+    "bodyRights": "Vous pouvez demander quels renseignements personnels nous détenons à votre sujet, en demander la rectification, en demander la suppression, et retirer votre consentement à leur collecte. Dans les faits, nous ne détenons rien qui permette de vous identifier : la réponse honnête à la plupart de ces demandes est donc qu’il n’y a rien à produire — mais demandez-le, et vous obtiendrez cette réponse par écrit dans les 30 jours. Pour désactiver entièrement les statistiques, tout bloqueur de contenu suffit, et le site fonctionne de façon identique sans elles.",
+    "secOfficer": "Qui en est responsable",
+    "bodyOfficer": "Les questions sur la présente politique, ainsi que toute demande d’exercice d’un droit ci-dessus, s’adressent au responsable de la protection des renseignements personnels :",
+    "secRetention": "Durée de conservation",
+    "bodyRetention": "Les statistiques de Cloudflare sont agrégées et conservées selon leur calendrier ; nous ne gardons aucun journal brut de votre visite. Vos données de calcul demeurent dans votre navigateur jusqu’à ce que vous les effaciez. Tout renseignement personnel que nous viendrions à détenir est détruit ou anonymisé une fois la fin pour laquelle il a été recueilli accomplie.",
+    "secBreach": "En cas d’incident",
+    "bodyBreach": "Nous tenons un registre des incidents de confidentialité. Lorsqu’un incident présente un risque de préjudice sérieux, nous en avisons la Commission d’accès à l’information du Québec ainsi que les personnes concernées et, lorsque le seuil fédéral d’un risque réel de préjudice grave est atteint, le Commissariat à la protection de la vie privée du Canada.",
+    "secChanges": "Modifications",
+    "bodyChanges": "La date ci-dessus indique la dernière modification de cette page. Toute modification importante y sera décrite plutôt qu’apportée en silence."
+  },
+  "Terms": {
+    "eyebrow": "Conditions d’utilisation",
+    "head": "Un calculateur gratuit, et un compte rendu honnête de ce qu’il peut et ne peut pas vous dire.",
+    "sub": "Si vous ne lisez que deux sections, lisez les deux premières. Ce sont celles qui comptent.",
+    "secWhat": "Ce que c’est",
+    "bodyWhat": "AffordMath est un ensemble de calculateurs. Vous saisissez des chiffres ; il applique les règles fédérales publiées et celles de la province, du territoire ou de la ville que vous choisissez ; il montre le calcul et nomme la source de chaque règle. C’est là tout le service.",
+    "secNot": "Ce que ce n’est pas",
+    "bodyNot": "Ce n’est pas un conseil financier, hypothécaire, fiscal, comptable ou juridique. Ce n’est ni une préapprobation, ni une offre de taux, ni une offre de crédit, ni la promesse qu’un prêteur vous consentira quoi que ce soit. Nous ne sommes ni courtier hypothécaire, ni prêteur, ni planificateur financier, ni conseiller financier ; nous ne détenons aucun permis à ces titres ; et nous n’agissons pas pour vous. Aucun résultat n’a été examiné par une personne qui connaît votre situation. Avant de vous fier à un chiffre, validez-le auprès de votre prêteur, de votre notaire ou avocat, et de votre comptable.",
+    "secAccuracy": "L’exactitude, et ses limites",
+    "bodyAccuracy": "Chaque règle est vérifiée auprès d’un document publié nommément, daté à la page Sources, et porte l’indication du degré de fiabilité qu’on peut lui accorder — mesurée, dérivée, hypothèse que nous divulguons, ou absente parce que personne ne la publie. Ce travail est la raison d’être du produit et nous le prenons au sérieux. Il ne rend pas pour autant un résultat exact pour vous : les règles et les taux changent, un chiffre vérifié à une date peut être périmé à une autre, les indices de marché sont des estimations, et aucun calculateur ne sait de vous que ce que vous avez saisi. Les résultats sont des estimations.",
+    "secLiability": "Responsabilité",
+    "bodyLiability": "Le site est fourni tel quel, sans garantie de disponibilité, d’absence d’erreur ou d’adéquation à un usage particulier. Dans la mesure permise par la loi, nous ne sommes pas responsables des pertes découlant de son utilisation ou d’une décision que vous prenez sur la foi d’un chiffre qu’il a produit. Rien ici n’exclut ni ne limite une responsabilité qui ne peut légalement l’être — notamment la responsabilité pour préjudice corporel ou moral et pour faute lourde ou intentionnelle. Lorsqu’une limitation ne peut légalement vous être opposée, elle ne vous est pas opposée, et le reste des présentes conditions demeure en vigueur.",
+    "secLaw": "Droit applicable, et for",
+    "bodyLaw": "Les présentes conditions sont régies par le droit de la province ou du territoire où vous résidez, ainsi que par les lois applicables du Canada. Si vous êtes un consommateur résidant au Québec, vous pouvez porter votre recours devant les tribunaux du Québec, et rien ici ne vous en prive. Il n’y a aucune clause d’arbitrage obligatoire, ni aucune renonciation à votre droit de participer à une action collective.",
+    "secIp": "À qui appartient quoi",
+    "bodyIp": "Le moteur de calcul, l’interface et les textes sont les nôtres. Les lois, les taux et les chiffres publiés que le moteur applique ne le sont pas — ils appartiennent aux gouvernements et aux organismes qui les publient, et chacun est crédité à la page Sources. Les chiffres que vous saisissez sont les vôtres, et ils ne nous parviennent jamais.",
+    "secContact": "Qui exploite ce site",
+    "bodyContact": "Ce site est exploité par :"
   }
 }
