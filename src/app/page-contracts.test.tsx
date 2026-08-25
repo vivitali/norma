@@ -329,4 +329,32 @@ describe("horizontal scroll stays inside the element that owns it", () => {
     );
     expect(found.length).toBeGreaterThanOrEqual(2);
   });
+
+  /**
+   * The third shape of the same 320px bug, and the one with no scroll container
+   * to hand the overflow to.
+   *
+   * `/sources` prints provenance `src` and `note` from `src/domain` VERBATIM —
+   * publisher titles and verification notes written for a document, not for a
+   * phone, carrying URL-shaped tokens up to 38 characters. They sit in a flex
+   * row, whose items refuse to shrink below their longest word, so without
+   * `break-words` the row sets the page's width and the BODY scrolls sideways.
+   * There is no table here and no `overflow-x-auto` to catch it; the text simply
+   * has to be allowed to break.
+   *
+   * Source-level for the same reason as the sweeps above: jsdom applies no
+   * layout, so no rendered test can see it.
+   */
+  it("lets the verbatim source text /sources prints break inside a word", () => {
+    const source = readFileSync("src/components/sources-content.tsx", "utf8");
+    // Anchored on the `>` that ends the opening tag, so `key={note}` — an
+    // attribute, not a rendered child — does not count as a third print.
+    const verbatim = [...source.matchAll(/>\s*\{(?:entry\.src|note)\}/g)];
+    // Two source-title branches (linked and plain) and the note paragraph.
+    expect(verbatim.length, "the inventory stopped printing verbatim text").toBe(3);
+    for (const match of verbatim) {
+      const tag = source.slice(source.lastIndexOf("<", match.index), match.index);
+      expect(tag, `verbatim text in ${tag.slice(0, 40)}…`).toContain("break-words");
+    }
+  });
 });

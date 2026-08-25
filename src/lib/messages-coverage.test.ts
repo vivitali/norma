@@ -132,6 +132,10 @@ const NAMESPACES = [
   "Home",
   "Affordability", "ClosingCosts", "DownPayment", "RrspHbp",
   "Amortization", "RentVsBuy", "Scenarios", "Inputs", "Disclosure", "Provenance", "Nav",
+  // Brought under the guard when /sources grew from four org lists into the
+  // provenance inventory: seven of its keys described the old page and had to
+  // go, and copy that describes a page nobody built is exactly what this catches.
+  "Sources",
 ] as const;
 
 describe("message coverage", () => {

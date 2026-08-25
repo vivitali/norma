@@ -86,6 +86,9 @@ export default function AffordabilityPage() {
     return null;
   }, [jurisdiction, resolved, result]);
 
+  const propTaxProv =
+    jurisdiction.provenance["propTax.publishedRate"] ?? jurisdiction.provenance["propTax.effective"];
+
   const verdict = verdictKey(result);
   const approval = approvalState(result);
   const comfort = comfortState(result);
@@ -365,7 +368,23 @@ export default function AffordabilityPage() {
         update={update}
       />
 
-      <FigureFooter jurisdiction={jurisdiction} />
+      {/*
+        The property tax rate is the ONLY jurisdiction figure this page displays,
+        so it is the only one whose provenance belongs here. Prefer the published
+        rate's source; fall back to the effective rate's, which is where a
+        jurisdiction with no published rate carries its explanation.
+      */}
+      <FigureFooter jurisdiction={jurisdiction}>
+        {propTaxProv?.src ? (
+          <p>
+            {t("propTaxSource")}: {propTaxProv.src}
+            {propTaxProv.asOf ? ` (${propTaxProv.asOf})` : null}
+          </p>
+        ) : null}
+        {propTaxProv?.conf === "assumption" || jurisdiction.propTax.basis !== "market" ? (
+          <p>{t("propTaxEstimated")}</p>
+        ) : null}
+      </FigureFooter>
     </ToolMain>
   );
 }

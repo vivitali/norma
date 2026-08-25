@@ -172,15 +172,29 @@ export function SectionsHeader({
 }
 
 /**
- * The unverified-figures disclosure, in its agreed wording.
+ * The figure disclosure, in its agreed wording.
  *
  * Every screen that renders a jurisdiction figure carries this, which is why it
  * lives in one component reading one namespace rather than being retyped per
- * page. Its wording is not a design decision to be tuned per screen: every
- * provincial figure in src/domain/ is a placeholder carried over from the
- * prototype, and this is the sentence that says so.
+ * page. Its wording is not a design decision to be tuned per screen — but it IS
+ * a claim about the dataset, and the dataset moved: most figures in src/domain/
+ * now cite a dated published document, some are disclosed modelling
+ * assumptions, and a handful are shown as unknown because nobody publishes
+ * them. A blanket "placeholder figures" line buried the verified ones and
+ * trained the reader to discount all three the same way.
+ *
+ * `children` is the page's own per-figure provenance, which only the page knows.
+ * Affordability displays exactly one jurisdiction figure — the property tax rate
+ * — and names its source here; a page that displays a dozen of them discloses
+ * per line instead.
  */
-export function FigureFooter({ jurisdiction }: { jurisdiction: Jurisdiction }) {
+export function FigureFooter({
+  jurisdiction,
+  children,
+}: {
+  jurisdiction: Jurisdiction;
+  children?: ReactNode;
+}) {
   const t = useTranslations("Disclosure");
   return (
     <div className="mt-10 border-t border-border pt-4 text-[11.5px] text-ink3">
@@ -188,6 +202,7 @@ export function FigureFooter({ jurisdiction }: { jurisdiction: Jurisdiction }) {
       <p>
         {t("lastVerified")} {federal.verified}
       </p>
+      {children}
       {!jurisdiction.cityData ? <p>{t("noCityData")}</p> : null}
     </div>
   );

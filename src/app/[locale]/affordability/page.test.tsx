@@ -235,10 +235,48 @@ describe("Affordability — inputs", () => {
 });
 
 describe("Affordability — the disclosure stays", () => {
-  it("keeps the unverified-figures wording visible", () => {
+  it("keeps the figure disclosure visible, in its mixed-state wording", () => {
+    // NOT "placeholder figures" any more. Most figures in src/domain/ now cite a
+    // dated published document; a blanket line saying otherwise buried them and
+    // taught the reader to discount the sourced and the invented alike.
     renderPage();
-    expect(screen.getByText("Placeholder figures — verify before relying on them")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Most figures now name a dated published source; the rest are estimates we disclose, or are left unknown where nothing is published.",
+      ),
+    ).toBeVisible();
     expect(screen.getByText(/Rules last verified/)).toBeVisible();
+  });
+});
+
+describe("Affordability — property tax provenance", () => {
+  it("names the source behind the property tax figure", () => {
+    // The default jurisdiction is Winnipeg, whose propTax.publishedRate is sourced.
+    renderPage();
+    expect(
+      screen.getByText(/City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates/),
+    ).toBeVisible();
+  });
+
+  it("carries the source's own date, so the figure is not undated", () => {
+    renderPage();
+    expect(screen.getByText(/Combined Mill Rates[\s\S]*\(2026\)/)).toBeVisible();
+  });
+
+  it("says the figure is an estimate where the assessment base is not market value", () => {
+    // Winnipeg taxes a PORTIONED assessment, so the effective rate is derived
+    // against market value and the caveat renders.
+    renderPage();
+    expect(screen.getByText(/estimates the rate against market value/i)).toBeVisible();
+  });
+
+  it("drops the caveat where the assessment base IS market value", () => {
+    // Calgary assesses at market value, so there is nothing to caveat — and a
+    // caveat that renders everywhere says nothing about anywhere.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "calgary" }));
+    renderPage();
+    expect(screen.queryByText(/estimates the rate against market value/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/City of Calgary, 2026 property tax rates/)).toBeVisible();
   });
 });
 
