@@ -53,9 +53,18 @@ Implement → invoke `reviewer` subagent on the diff → fix → repeat until ap
 
 ## Deployment
 
+**Production is https://afordmath.com** — a custom domain on the `affordmath` Worker.
+`workers.dev` is disabled for production (`workers_dev: false`); it serves PR previews only.
+
 Cloudflare Workers via `@opennextjs/cloudflare`. Deploys run from CI on push to `main`
 (i.e. after a PR merges) — never from this machine, unless you deliberately run
 `scripts/ship`. PRs get a preview URL from `scripts/ship --preview`.
+
+`scripts/smoke <base-url>` verifies a deployed origin actually serves the app; CI runs it
+against production after every deploy and against each PR preview. It exists because a deploy
+once passed lint, typecheck, 116 tests, the prerender guard, and a deploy dry-run while serving
+404 on every page — the adapter needs an incremental cache to serve prerendered HTML. Only a
+real HTTP request catches that class of failure.
 
 Repository secrets required: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`,
 `ANTHROPIC_API_KEY`.

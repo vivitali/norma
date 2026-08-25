@@ -4,6 +4,12 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-04-15",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  // Production is afordmath.com (attached as a custom domain), not workers.dev.
+  // preview_urls stays on: `wrangler versions upload` publishes each PR preview to a
+  // versioned workers.dev URL, and that is independent of the production route.
+  "workers_dev": false,
+  "preview_urls": true,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
