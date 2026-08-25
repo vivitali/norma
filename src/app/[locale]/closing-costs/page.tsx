@@ -2,7 +2,14 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { buildLines, closingTotal, credits, monthsToSave, type LineItem } from "@/domain/engine";
+import {
+  buildLines,
+  closingTotal,
+  credits,
+  monthsToSave,
+  type CreditLine,
+  type LineItem,
+} from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
@@ -23,6 +30,9 @@ import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components
 
 export default function ClosingCostsPage() {
   const t = useTranslations("ClosingCosts");
+  // The ask that replaces the answer where nobody publishes a price.
+  const tInputs = useTranslations("Inputs");
+  const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
@@ -98,6 +108,38 @@ export default function ClosingCostsPage() {
 
   const def = (id: string) => CLOSING_SECTIONS.find((s) => s.id === id)!.labelKey;
   /**
+   * Why this rebate row is worth what it is worth.
+   *
+   * An exhaustive switch, not a ternary chain. The chain's fall-through was
+   * `rebNone` — "No rebate exists here" — so every status added to `CreditLine`
+   * after it was written silently inherited the one sentence that is the exact
+   * opposite of the truth for a buyer who qualified. `superseded` and
+   * `overCeiling` both did. The `never` default makes the next one a typecheck
+   * failure here instead.
+   */
+  const rebateWhy = (c: CreditLine): string => {
+    switch (c.st) {
+      case "applied":
+        return t("rebApplied");
+      case "capped":
+        return `${t("rebCapped")} ${c.cap !== undefined ? fmt(c.cap) : t("rebPartial")}`;
+      case "phasedOut":
+        return t("rebPhaseWhy");
+      case "overCeiling":
+        return t("rebOverCeiling");
+      case "superseded":
+        return t("rebSuperseded");
+      case "ftbOnly":
+        return t("turnOnFtb");
+      case "none":
+        return t("rebNone");
+      default: {
+        const unhandled: never = c.st;
+        return unhandled;
+      }
+    }
+  };
+  /**
    * A group's line: its heaviest item, with the figure, and how many there are.
    *
    * It used to be "{n} items" — a count, which tells the reader the COST of
@@ -112,6 +154,15 @@ export default function ClosingCostsPage() {
 
   return (
     <ToolMain>
+      {/*
+        This page needs a price harder than most, and its failure was quieter. Where nobody
+        publishes a benchmark the fixed professional fees still add up — Yukon printed $7,420 of
+        lawyer, inspection and moving costs as "cash needed at closing" for a purchase that has no
+        price. The all-jurisdictions sweep did not catch it precisely because the figure is not
+        zero: a plausible wrong number survives a check for $0.
+      */}
+      {resolved.priceKnown ? (
+        <>
       <AnswerHead
         eyebrow={t("title")}
         figure={fmt(total.cash)}
@@ -196,17 +247,7 @@ export default function ClosingCostsPage() {
                   value={c.amount > 0 ? `− ${fmt(c.amount)}` : "—"}
                   provenance={<Provenance kind="rule" />}
                 />
-                <p className="pt-1 text-[11.5px] text-ink3">
-                  {c.st === "applied"
-                    ? t("rebApplied")
-                    : c.st === "capped"
-                      ? `${t("rebCapped")} ${c.cap !== undefined ? fmt(c.cap) : t("rebPartial")}`
-                      : c.st === "phasedOut"
-                        ? t("rebPhaseWhy")
-                        : c.st === "ftbOnly"
-                          ? t("turnOnFtb")
-                          : t("rebNone")}
-                </p>
+                <p className="pt-1 text-[11.5px] text-ink3">{rebateWhy(c)}</p>
               </div>
             ))}
             {credit.later.length > 0 ? (
@@ -301,6 +342,14 @@ export default function ClosingCostsPage() {
           </>,
         )}
       </div>
+        </>
+      ) : (
+        <AnswerHead
+          eyebrow={t("title")}
+          head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
+          sub={tInputs("noPriceSub")}
+        />
+      )}
 
       <section aria-labelledby="cc-inputs" className="mt-8 flex flex-col gap-3">
         <h2 id="cc-inputs" className="text-[13px] font-semibold">
@@ -309,7 +358,7 @@ export default function ClosingCostsPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <PurchaseInputs
             price={stored.price}
-            pricePlaceholder={resolved.price}
+            pricePlaceholder={resolved.priceKnown ? resolved.price : null}
             dpPct={stored.dpPct}
             dpPctEffective={resolved.dpPct}
             belowMinimum={resolved.belowMinimum}

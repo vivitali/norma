@@ -8,6 +8,37 @@ import ClosingCostsPage from "./page";
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
+/**
+ * Forces one credit status through the page. `credits` is wrapped, not replaced, and only
+ * when a test asks for it.
+ *
+ * Needed for `overCeiling` alone: no jurisdiction in the dataset can produce it today, because
+ * PEI's is the only `fullExempt` rebate and its ceiling is deliberately `null`. "Unreachable,
+ * so untested" is precisely how `superseded` and `overCeiling` both came to render as "No
+ * rebate exists here" — the page has to say the right thing the day a ceiling is filled in.
+ */
+const forced = vi.hoisted(() => ({ st: null as string | null }));
+vi.mock("@/domain/engine", async () => {
+  const actual = await vi.importActual<typeof import("@/domain/engine")>("@/domain/engine");
+  return {
+    ...actual,
+    credits: (...args: Parameters<typeof actual.credits>) => {
+      const out = actual.credits(...args);
+      if (forced.st === null) return out;
+      const st = forced.st as import("@/domain/engine").CreditLine["st"];
+      return { ...out, atClosing: out.atClosing.map((c) => ({ ...c, amount: 0, st })) };
+    },
+  };
+});
+
+/** A BC first-time buyer of an $800,000 new build — the purchase that has two rival exemptions. */
+function seedVancouverNewBuild() {
+  window.localStorage.setItem(
+    "norma.inputs.v2",
+    JSON.stringify({ jurId: "vancouver", price: 800000, ftb: true, ptype: "newbuild" }),
+  );
+}
+
 const renderPage = (locale: "en" | "fr" = "en") =>
   renderWithIntl(
     <JurisdictionProvider>
@@ -25,7 +56,10 @@ async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
   return button;
 }
 
-beforeEach(() => window.localStorage.clear());
+beforeEach(() => {
+  window.localStorage.clear();
+  forced.st = null;
+});
 
 describe("Closing costs — the answer comes first", () => {
   it("leads with cash needed on closing day, before anyone types", () => {
@@ -114,6 +148,51 @@ describe("Closing costs — credits, and when they arrive", () => {
     expect(
       screen.getByText(/do not budget it as closing-day money/),
     ).toBeInTheDocument();
+  });
+});
+
+describe("Closing costs — a rebate that pays nothing still says why", () => {
+  const NONE = "No rebate exists here";
+
+  it("tells a BC buyer the rival exemption paid more, not that no rebate exists", async () => {
+    // BC, first-time buyer, $800,000 new build: the newly-built exemption forgives the whole
+    // $14,000 and the first-time-buyer one is emitted at $0 with st "superseded". The page's
+    // fall-through used to print "No rebate exists here" against a programme the buyer
+    // qualified for — the exact opposite of the truth, and the opposite of the reason the
+    // losing row is kept visible at all.
+    seedVancouverNewBuild();
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Credits back/);
+
+    expect(screen.getByText("Newly built home exemption")).toBeInTheDocument();
+    expect(screen.getByText("First-time buyer transfer tax exemption")).toBeInTheDocument();
+    expect(
+      screen.getByText(/another rebate here is worth more/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(NONE)).not.toBeInTheDocument();
+  });
+
+  it("says an over-ceiling exemption stops above a price, not that none exists", async () => {
+    forced.st = "overCeiling";
+    seedVancouverNewBuild();
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Credits back/);
+
+    expect(
+      screen.getAllByText("This exemption stops above a set price, and your price is above it."),
+    ).not.toHaveLength(0);
+    expect(screen.queryByText(NONE)).not.toBeInTheDocument();
+  });
+
+  it("says the same thing in French", async () => {
+    seedVancouverNewBuild();
+    const user = userEvent.setup();
+    renderPage("fr");
+    await open(user, /Crédits/);
+    expect(screen.getByText(/un autre remboursement offert ici vaut davantage/)).toBeInTheDocument();
+    expect(screen.queryByText("Aucun remboursement ici")).not.toBeInTheDocument();
   });
 });
 

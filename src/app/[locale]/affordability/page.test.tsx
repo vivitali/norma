@@ -3,6 +3,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
+import { getJurisdiction } from "@/domain/jurisdictions";
 import AffordabilityPage from "./page";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
@@ -235,10 +236,73 @@ describe("Affordability — inputs", () => {
 });
 
 describe("Affordability — the disclosure stays", () => {
-  it("keeps the unverified-figures wording visible", () => {
+  it("keeps the figure disclosure visible, in its mixed-state wording", () => {
+    // NOT "placeholder figures" any more: most figures in src/domain/ now cite a
+    // dated published document, and a blanket line saying otherwise buried them and
+    // taught the reader to discount the sourced and the invented alike.
+    //
+    // It also makes no PROPORTION claim. An earlier wording said "most figures", which
+    // was true at 162 of 288 but thin, and counted conf "low" — which this app's own
+    // legend defines as derived rather than read. A footer on every page should not rest
+    // on a ratio that a few records could tip.
+    //
+    // Nor does it universally quantify over FIGURES, which the wording before this one
+    // did ("Every figure names where it came from") and which was false: 26 of the 373
+    // numeric leaves in src/domain/jurisdictions carry no provenance entry of their own —
+    // transfer-line parameters covered in prose by a sibling entry, and nt/nu's property
+    // tax inputs. It quantifies over the SOURCING RECORD instead, which is exactly what
+    // provenance-view.test.ts can and does check entry by entry.
     renderPage();
-    expect(screen.getByText("Placeholder figures — verify before relying on them")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Every figure that carries a sourcing record names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
+      ),
+    ).toBeVisible();
     expect(screen.getByText(/Rules last verified/)).toBeVisible();
+  });
+});
+
+describe("Affordability — property tax provenance", () => {
+  it("names the source behind the property tax figure", () => {
+    // The default jurisdiction is Winnipeg, whose propTax.publishedRate is sourced.
+    renderPage();
+    expect(
+      screen.getByText(/City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates/),
+    ).toBeVisible();
+  });
+
+  it("carries the source's own date, so the figure is not undated", () => {
+    renderPage();
+    expect(screen.getByText(/Combined Mill Rates[\s\S]*\(2026\)/)).toBeVisible();
+  });
+
+  it("says the figure is an estimate where the assessment base is not market value", () => {
+    // Winnipeg taxes a PORTIONED assessment, so the effective rate is derived
+    // against market value and the caveat renders.
+    renderPage();
+    expect(screen.getByText(/estimates the rate against market value/i)).toBeVisible();
+  });
+
+  it("drops the caveat where the assessment base IS market value", () => {
+    // Calgary assesses at market value, so there is nothing to caveat — and a
+    // caveat that renders everywhere says nothing about anywhere.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "calgary" }));
+    renderPage();
+    expect(screen.queryByText(/estimates the rate against market value/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/City of Calgary, 2026 property tax rates/)).toBeVisible();
+  });
+
+  it("keeps the caveat where we could not establish the assessment base at all", () => {
+    // NT's basis is `unknown` — not a fifth kind of base, an admission that the question is
+    // open. It used to say `market` with a ratio of 1, purely to satisfy a data invariant,
+    // and that mislabel silently switched this caveat OFF on the one record with nothing
+    // sourced behind its rate. `basis !== "market"` is the limb that must keep it on: NT's
+    // rate provenance is also `assumption` today, but the day someone sources a Yellowknife
+    // mill rate, the base will still be unknown and the caveat must survive that.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nt" }));
+    renderPage();
+    expect(getJurisdiction("nt")!.propTax.basis).toBe("unknown");
+    expect(screen.getByText(/estimates the rate against market value/i)).toBeVisible();
   });
 });
 
@@ -246,5 +310,69 @@ describe("Affordability — number formatting end to end", () => {
   it("never renders a sign inside the currency symbol in French", () => {
     renderPage("fr");
     expect(document.body.textContent).not.toMatch(/\$\s?-\d/);
+  });
+});
+
+describe("Affordability — with no published price, it keeps the ceiling and asks for the price", () => {
+  /**
+   * This page is the only one that still answers where nobody publishes a benchmark,
+   * and the split is the point: the hero is the price the reader's INCOME supports and
+   * no benchmark stands behind it, while every check on the page compares something to
+   * `resolved.price`, which is 0 in a territory.
+   *
+   * The defect was the second half wearing the first half's clothes: a $0 monthly cost,
+   * $0 cash to close, and an approval check reporting that $0 is within reach.
+   */
+  const inYukon = () =>
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "yt" }));
+
+  it("still leads with the ceiling the income supports", () => {
+    inYukon();
+    renderPage();
+    expect(getJurisdiction("yt")!.bench.house).toBeNull();
+    expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/You can comfortably afford about/).length).toBeGreaterThan(0);
+  });
+
+  it("says why nothing is being checked, and drops the checks rather than answering them", () => {
+    inYukon();
+    renderPage();
+    expect(
+      screen.getByText(/Nobody publishes a benchmark price for Yukon/),
+    ).toBeInTheDocument();
+    for (const name of SECTIONS) {
+      expect(screen.queryByRole("button", { name: new RegExp(name) })).not.toBeInTheDocument();
+    }
+    // The two price-derived stats — the monthly cost of the price, and the cash to
+    // close on it — go with them. The lender ceiling stays: it is a price too.
+    expect(screen.queryByText("True all-in monthly")).not.toBeInTheDocument();
+    expect(screen.queryByText("Cash needed at closing")).not.toBeInTheDocument();
+    expect(screen.getByText("Lender ceiling")).toBeInTheDocument();
+  });
+
+  it("checks the price the reader gives, in the same jurisdiction", async () => {
+    inYukon();
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByLabelText("Purchase price you're considering"), "640000");
+    await user.tab();
+    expect(screen.getByRole("button", { name: /Approval/ })).toBeInTheDocument();
+    expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
+  });
+
+  it("stops asking for a price on the field that now has one", async () => {
+    // The ask under the price field is the same gesture PurchaseInputs makes on the other
+    // four pages, and it branched on a different fact: whether a PUBLISHER produces a
+    // benchmark, rather than whether a price resolves. So the identical state — 640,000
+    // entered at `yt` — dropped the note on Amortization and kept it here, under the
+    // reader's own figure, telling them to enter the one they are considering.
+    inYukon();
+    const user = userEvent.setup();
+    renderPage();
+    // Present first, so the assertion below cannot pass by querying nothing.
+    expect(screen.getByText(/No published price for Yukon/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Purchase price you're considering"), "640000");
+    await user.tab();
+    expect(screen.queryByText(/No published price for Yukon/)).not.toBeInTheDocument();
   });
 });

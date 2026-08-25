@@ -28,6 +28,11 @@ const MIN_DOWN_TIER = 500000;
 
 export default function ScenariosPage() {
   const t = useTranslations("Scenarios");
+  // The ask that replaces the answer where nobody publishes a price, and the
+  // reader-facing name of the place that publishes none. `jurisdiction.city` is
+  // the lowercase record key and renders "winnipeg"; the name lives here.
+  const tInputs = useTranslations("Inputs");
+  const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
   const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
@@ -48,6 +53,7 @@ export default function ScenariosPage() {
           ftb: resolved.ftb,
           ptype: resolved.ptype,
           elsewhere: resolved.elsewhere,
+          residency: resolved.residency,
           insuranceAnnual: resolved.insuranceAnnual,
           utilities: resolved.utilities,
           condoFee: resolved.condoFee,
@@ -240,144 +246,161 @@ export default function ScenariosPage() {
 
   return (
     <ToolMain>
-      <AnswerHead
-        eyebrow={t("title")}
-        figure={fmt(headline.monthly.total)}
-        pulseKey={jurisdiction.id}
-        head={head}
-        sub={sub}
-        tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
-        stats={[
-          { label: t("allIn"), value: fmt(headline.monthly.total), mark: "estimate" },
-          { label: t("cashAtClosing"), value: fmt(headline.net), mark: "rule" },
-          { label: t("rBorrowCost"), value: fmt(headline.costOfBorrowing), mark: "rule" },
-        ]}
-      />
+      {/*
+        No published benchmark price here, and the reader has not given one: there is
+        no price to model, so there is no answer to print. Every figure below derives
+        from `resolved.price`, which is 0 in this state — arithmetic, not a price — and
+        a screenful of $0 answers claims to know something we do not. The ask replaces
+        the answer; the inputs stay exactly where they were, so it is answered here.
+      */}
+      {resolved.priceKnown ? (
+        <>
+          <AnswerHead
+            eyebrow={t("title")}
+            figure={fmt(headline.monthly.total)}
+            pulseKey={jurisdiction.id}
+            head={head}
+            sub={sub}
+            tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+            stats={[
+              { label: t("allIn"), value: fmt(headline.monthly.total), mark: "estimate" },
+              { label: t("cashAtClosing"), value: fmt(headline.net), mark: "rule" },
+              { label: t("rBorrowCost"), value: fmt(headline.costOfBorrowing), mark: "rule" },
+            ]}
+          />
 
-      <div className="pt-8 sm:pt-[34px]">
-        <SectionsHeader
-          label={t("breakdown")}
-          expanded={expanded}
-          onToggleAll={toggleAll}
-          expandLabel={t("expandAll")}
-          collapseLabel={t("collapseAll")}
+          <div className="pt-8 sm:pt-[34px]">
+            <SectionsHeader
+              label={t("breakdown")}
+              expanded={expanded}
+              onToggleAll={toggleAll}
+              expandLabel={t("expandAll")}
+              collapseLabel={t("collapseAll")}
+            />
+
+            {section("monthly", "none", monthlyLine, fmt(headline.monthly.total), t("monthlyWhy"), (
+              <>
+                <CompareGrid
+                  columns={columns}
+                  rows={monthlyRows}
+                  recommendedPct={recommendedPct}
+                  yoursPct={stored.dpPct}
+                  caption={`${t("gMortgage")} · ${t("gMonthly")}`}
+                />
+                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">
+                  {t("minDownNote", { a: fmt(MIN_DOWN_TIER), b: fmt(minDown(resolved.price)) })}
+                </p>
+                <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyPremium")}</p>
+                <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyContract")}</p>
+                <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyVsCeiling")}</p>
+              </>
+            ))}
+
+            {section(
+              "cash",
+              // Derived from the columns, NOT from rec.kind. recommend() tests approval
+              // before fundability on purpose, so a household that no lender would
+              // approve returned "noneQualify" whether or not funds were ever given --
+              // and this row painted itself green over a table of em-dashes.
+              cashUnanswered ? "none" : cashFundable ? "pass" : "blocked",
+              // Once funds are known this row states the answer, not the principle.
+              // `gCashNote` is also the first sentence of `cashWhy`, so on an open
+              // section it was the same sentence twice, one line apart.
+              cashUnanswered ? t("gCashNote") : cashFundable ? t("fFundable") : t("fShort"),
+              fmt(headline.net),
+              t("cashWhy"),
+              <>
+                <CompareGrid
+                  columns={columns}
+                  rows={cashRows}
+                  recommendedPct={recommendedPct}
+                  yoursPct={stored.dpPct}
+                  caption={t("gCash")}
+                />
+                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyPremTax")}</p>
+                <div className="mt-4 flex max-w-[420px] flex-col gap-3">
+                  <NumberField
+                    id="funds"
+                    label={t("fFunds")}
+                    value={stored.funds}
+                    min={0}
+                    onCommit={(funds) => update({ funds })}
+                  />
+                </div>
+              </>,
+            )}
+
+            {section(
+              "approval",
+              rec.kind === "noneQualify" ? "blocked" : "pass",
+              rec.kind === "noneQualify" ? t("fDeclines") : t("fQualifies"),
+              pct(headline.gds, 1),
+              t("approvalWhy"),
+              <>
+                <CompareGrid
+                  columns={columns}
+                  rows={qualRows}
+                  recommendedPct={recommendedPct}
+                  yoursPct={stored.dpPct}
+                  caption={t("gQual")}
+                />
+                <div className="mt-4 grid max-w-[520px] gap-3 sm:grid-cols-2">
+                  <NumberField
+                    id="income1"
+                    label={t("fIncome")}
+                    value={stored.income1}
+                    placeholder={resolved.income1}
+                    min={0}
+                    onCommit={(income1) => update({ income1 })}
+                  />
+                  <NumberField
+                    id="otherDebt"
+                    label={t("fDebts")}
+                    value={stored.otherDebt}
+                    min={0}
+                    onCommit={(otherDebt) => update({ otherDebt })}
+                  />
+                  <NumberField
+                    id="comfortCeiling"
+                    label={t("fCeiling")}
+                    value={stored.comfortCeiling}
+                    placeholder={resolved.comfortCeiling}
+                    min={0}
+                    onCommit={(comfortCeiling) => update({ comfortCeiling })}
+                  />
+                </div>
+              </>,
+            )}
+
+            {section("lifetime", "none", t("gLifeNote"), fmt(headline.costOfBorrowing), t("lifetimeWhy"), (
+              <>
+                <CompareGrid
+                  columns={columns}
+                  rows={lifeRows}
+                  recommendedPct={recommendedPct}
+                  yoursPct={stored.dpPct}
+                  caption={t("gLifetime")}
+                />
+
+                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyReturn")}</p>
+                <div className="mt-4">
+                  <p className="eyebrow pb-1 text-ink3">{t("howToRead")}</p>
+                  {note(t("nTwentyTitle"), t("nTwentyBody"))}
+                  {note(t("nAboveTitle"), t("nAboveBody"))}
+                  {note(t("nHurdleTitle"), t("nHurdleBody"))}
+                  {note(t("nOrderTitle"), t("nOrderBody"))}
+                </div>
+              </>
+            ))}
+          </div>
+        </>
+      ) : (
+        <AnswerHead
+          eyebrow={t("title")}
+          head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
+          sub={tInputs("noPriceSub")}
         />
-
-        {section("monthly", "none", monthlyLine, fmt(headline.monthly.total), t("monthlyWhy"), (
-          <>
-            <CompareGrid
-              columns={columns}
-              rows={monthlyRows}
-              recommendedPct={recommendedPct}
-              yoursPct={stored.dpPct}
-              caption={`${t("gMortgage")} · ${t("gMonthly")}`}
-            />
-            <p className="pt-3 text-[12px] leading-[1.6] text-ink3">
-              {t("minDownNote", { a: fmt(MIN_DOWN_TIER), b: fmt(minDown(resolved.price)) })}
-            </p>
-            <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyPremium")}</p>
-            <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyContract")}</p>
-            <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyVsCeiling")}</p>
-          </>
-        ))}
-
-        {section(
-          "cash",
-          // Derived from the columns, NOT from rec.kind. recommend() tests approval
-          // before fundability on purpose, so a household that no lender would
-          // approve returned "noneQualify" whether or not funds were ever given --
-          // and this row painted itself green over a table of em-dashes.
-          cashUnanswered ? "none" : cashFundable ? "pass" : "blocked",
-          // Once funds are known this row states the answer, not the principle.
-          // `gCashNote` is also the first sentence of `cashWhy`, so on an open
-          // section it was the same sentence twice, one line apart.
-          cashUnanswered ? t("gCashNote") : cashFundable ? t("fFundable") : t("fShort"),
-          fmt(headline.net),
-          t("cashWhy"),
-          <>
-            <CompareGrid
-              columns={columns}
-              rows={cashRows}
-              recommendedPct={recommendedPct}
-              yoursPct={stored.dpPct}
-              caption={t("gCash")}
-            />
-            <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyPremTax")}</p>
-            <div className="mt-4 flex max-w-[420px] flex-col gap-3">
-              <NumberField
-                id="funds"
-                label={t("fFunds")}
-                value={stored.funds}
-                min={0}
-                onCommit={(funds) => update({ funds })}
-              />
-            </div>
-          </>,
-        )}
-
-        {section(
-          "approval",
-          rec.kind === "noneQualify" ? "blocked" : "pass",
-          rec.kind === "noneQualify" ? t("fDeclines") : t("fQualifies"),
-          pct(headline.gds, 1),
-          t("approvalWhy"),
-          <>
-            <CompareGrid
-              columns={columns}
-              rows={qualRows}
-              recommendedPct={recommendedPct}
-              yoursPct={stored.dpPct}
-              caption={t("gQual")}
-            />
-            <div className="mt-4 grid max-w-[520px] gap-3 sm:grid-cols-2">
-              <NumberField
-                id="income1"
-                label={t("fIncome")}
-                value={stored.income1}
-                placeholder={resolved.income1}
-                min={0}
-                onCommit={(income1) => update({ income1 })}
-              />
-              <NumberField
-                id="otherDebt"
-                label={t("fDebts")}
-                value={stored.otherDebt}
-                min={0}
-                onCommit={(otherDebt) => update({ otherDebt })}
-              />
-              <NumberField
-                id="comfortCeiling"
-                label={t("fCeiling")}
-                value={stored.comfortCeiling}
-                placeholder={resolved.comfortCeiling}
-                min={0}
-                onCommit={(comfortCeiling) => update({ comfortCeiling })}
-              />
-            </div>
-          </>,
-        )}
-
-        {section("lifetime", "none", t("gLifeNote"), fmt(headline.costOfBorrowing), t("lifetimeWhy"), (
-          <>
-            <CompareGrid
-              columns={columns}
-              rows={lifeRows}
-              recommendedPct={recommendedPct}
-              yoursPct={stored.dpPct}
-              caption={t("gLifetime")}
-            />
-
-            <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyReturn")}</p>
-            <div className="mt-4">
-              <p className="eyebrow pb-1 text-ink3">{t("howToRead")}</p>
-              {note(t("nTwentyTitle"), t("nTwentyBody"))}
-              {note(t("nAboveTitle"), t("nAboveBody"))}
-              {note(t("nHurdleTitle"), t("nHurdleBody"))}
-              {note(t("nOrderTitle"), t("nOrderBody"))}
-            </div>
-          </>
-        ))}
-      </div>
+      )}
 
       <section aria-labelledby="sc-inputs" className="mt-8 flex flex-col gap-3">
         <h2 id="sc-inputs" className="text-[13px] font-semibold">
@@ -386,7 +409,7 @@ export default function ScenariosPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           <PurchaseInputs
             price={stored.price}
-            pricePlaceholder={resolved.price}
+            pricePlaceholder={resolved.priceKnown ? resolved.price : null}
             dpPct={stored.dpPct}
             dpPctEffective={resolved.dpPct}
             belowMinimum={resolved.belowMinimum}

@@ -74,6 +74,22 @@ export const SCENARIOS_SECTIONS: readonly SectionDef[] = [
   { id: "lifetime", labelKey: "secLifetime" },
 ] as const;
 
+/**
+ * `/sources` is a reading surface rather than a tool, and it uses the same one
+ * gesture for the same reason: a sourcing inventory that printed all 300-odd
+ * records flat would be unreadable, and inventing a second way to fold it away
+ * is exactly what DESIGN.md §8 forbids. Federal first — it applies wherever you
+ * are — then the jurisdiction's own figures, by kind.
+ */
+export const SOURCES_SECTIONS: readonly SectionDef[] = [
+  { id: "federal", labelKey: "secFederal" },
+  { id: "charges", labelKey: "secCharges" },
+  { id: "credits", labelKey: "secCredits" },
+  { id: "propTax", labelKey: "secPropTax" },
+  { id: "market", labelKey: "secMarket" },
+  { id: "fees", labelKey: "secFees" },
+] as const;
+
 /** Every registry, with the message namespace its label keys resolve against. */
 export const SECTION_REGISTRIES: readonly { namespace: string; sections: readonly SectionDef[] }[] = [
   { namespace: "Affordability", sections: AFFORDABILITY_SECTIONS },
@@ -83,6 +99,7 @@ export const SECTION_REGISTRIES: readonly { namespace: string; sections: readonl
   { namespace: "Amortization", sections: AMORTIZATION_SECTIONS },
   { namespace: "RentVsBuy", sections: RENT_VS_BUY_SECTIONS },
   { namespace: "Scenarios", sections: SCENARIOS_SECTIONS },
+  { namespace: "Sources", sections: SOURCES_SECTIONS },
 ];
 
 export const SECTION_IDS: readonly string[] = AFFORDABILITY_SECTIONS.map((s) => s.id);

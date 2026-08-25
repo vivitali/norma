@@ -54,6 +54,23 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
   `src/lib/shared-inputs.ts`. The hook keys an effect on the array's identity; an inline literal is
   an infinite render loop, not a type error. This has bitten twice.
 - User-facing strings go in `messages/en.json` / `messages/fr.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy.
+- **Never interpolate a jurisdiction name into a sentence with `tJur(jurisdiction.id)`.** Use
+  `` tJur(`at.${jurisdiction.id}`) `` — the `Jurisdictions.at.<id>` form is the name as it appears
+  *after a preposition*. French needs the article and it is not derivable from spelling: *le*
+  Yukon, *les* Territoires du Nord-Ouest, *l'*Île-du-Prince-Édouard, and Terre-Neuve-et-Labrador
+  takes none at all, which is why this is a table and not a rule. English `at.<id>` is
+  byte-identical to the bare name (asserted), so call sites can use `at.` unconditionally without
+  reasoning about which records a string can reach. The bare form is correct in exactly one place:
+  `jurisdiction-picker.tsx`, where the name stands alone rather than in a sentence.
+- **A figure the reader has not given and nobody publishes must not be computed around.**
+  `resolveInputs()` returns `priceKnown` and `rentKnown` alongside the numbers; `price` still
+  resolves to `0` and `rent` to `DEFAULT_RENT` so the arithmetic stays defined, but a screen whose
+  headline derives from either must ASK rather than answer while the flag is false. Both flags read
+  off the RESOLVED figure (`priceKnown = price > 0`), never off `stored.x !== null` — a typed zero
+  is not a price, and a flag that can disagree with its own figure is how "$0 is within reach"
+  shipped. Affordability and RRSP-HBP legitimately keep answering: their headlines are computed
+  from income and from an RRSP balance, with no price term. `page-contracts.test.tsx` enforces this
+  as an allowlist of the price-derived pages.
 - shadcn/ui components: `npx shadcn@latest add <component>` (this project's shadcn CLI needs explicit `-b radix -p nova` if it re-prompts).
 - Branches: `claude/<ticket-or-slug>`; commits: conventional commits; never push to `main`.
 - Persisted user input lives in one localStorage blob under `norma.inputs.v2`, behind
@@ -137,6 +154,18 @@ Amortization · Rent vs Buy · Scenarios · Sources. Eleven routes, every one pr
 moving FOCUS on a hash arrival, not just scroll), and `src/components/purchase-inputs.tsx`. This
 markup IS the Affordability screen's markup — extracted from it, not designed ahead of it.
 
+`AnswerHead`'s `figure` is optional, and that is the **ask state**: a page with nothing honest to
+compute renders its eyebrow, the ask in the hero slot and the sub-line, with no figure and no
+em-dash placeholder (DESIGN.md §5.3, and a bare em-dash at figure size reads as a rendering fault).
+It is a state of the existing gesture, not a second one. `FigureFooter` takes a `children` slot for
+per-page provenance rather than each page growing its own footer.
+
+**Copy that names a source is domain data and is English.** `Provenance.src` and `.note` have no
+i18n mechanism, so they render untranslated on French pages. `/sources` discloses this in French,
+and the Affordability footer's French label says its citation is quoted in English. Machine-glossing
+a verification record would be worse than showing it; translating them properly is real separate
+work. If you surface a `src` or `note` anywhere new, the disclosure has to travel with it.
+
 **Copy is mined from `design-reference/`, en and fr, never newly written.** The reference tables
 are `hbt-data.js`'s global `t` (Closing Costs, Down Payment, RRSP-HBP) and a per-page `S = {...}`
 literal inside each `.dc.html` (Amortization, Rent vs Buy, Scenarios), each value a
@@ -161,14 +190,71 @@ renders the raw key when one is missing, which reaches a French reader as `RentV
    Scalability constraint that later pages must be additive, not rewrites
 5. Open issues below
 
-**What is left is data, not pages.** Every jurisdiction figure in `src/domain/` is still an
-unverified placeholder. Two visible consequences already: Rent vs Buy ships a default verdict of
-"renting wins" that is driven entirely by the placeholder benchmark price and rent (the model is
-sound — the verdict flips at a rent-to-price ratio around 0.5% a month, and the sensitivity is
-under test), and `capacityPer100` is zero at every income for debt-free households.
+**The data is now verified — [#5](https://github.com/vivitali/norma/issues/5) is done.** Every one
+of the 14 jurisdiction records and `federal.ts` carries a `provenance` map naming the document each
+figure was checked against, that document's date, and how far it can be trusted.
+`UNVERIFIED_BENCHMARK`, `UNVERIFIED_PROP_TAX` and `PROVISIONAL_DERIVATION` have **zero call sites**.
+`/sources` renders the whole inventory from that data, grouped per jurisdiction.
+
+Read `docs/superpowers/specs/2026-08-17-data-verification-design.md` before touching `src/domain`,
+and note that **the spec is wrong in four places** — each corrected in the branch, each with the
+statute quoted in provenance, so nobody re-opens them:
+1. **PEI has no $200,000 exemption ceiling.** Repealed by EC428/16 in 2016; the Act (current to
+   2026-05-29) sets no threshold. `ceiling: null` is correct, and applying the spec's cap would
+   *create* the ~$3,880 error it claims to fix.
+2. **Quebec's credit has no phase-out.** It is 100% of the first $5,000 of duties plus 25% of the
+   next $3,500, capped at $5,875, flat above that. Hence `tieredCap`, not `tieredPhaseOut`.
+3. **Yukon's tariff is stepped, not per-value.** The spec carries the pre-2015 schedule and says we
+   overstate by ~$420; under the Land Titles Act, 2015 we *understated* by $330.
+4. **NL's $5,000 cap is on the mortgage line only.** s.2(2) does not list a conveyance. The plan's
+   test asserted what a rate-comparison site publishes.
+5. **Whitehorse's property tax goes DOWN, not up.** The spec says 0.0078 → 0.01123, "a ~30%
+   understatement". Yukon values improvements at depreciated replacement cost on a two-year cycle,
+   so the base is not market value; the spec's figure would bill ~$7,200/yr on a $641,000 home
+   against two real bills of $1,625 and $3,744. The ratio is derived from those bills over the
+   Yukon Bureau of Statistics' **in-town** average and rounds UP, so "the top of the observed
+   range" is true by construction.
+6. **Yellowknife's replacement values are arithmetically impossible.** `effective: 0.0112` with
+   `publishedRate: 0.00986` and `assessmentRatio: 1` fails the derivation invariant, and
+   `frozenBaseYear` additionally requires a ratio below 1 — which cannot raise `effective` above
+   `publishedRate`. The record is unchanged and annotated instead.
+
+**A reviewer finding is a hypothesis, not an instruction.** Two of the review's findings were
+investigated and rejected on the evidence, and both rejections are recorded in provenance so they
+are not re-opened: Saskatchewan's step ceilings genuinely mix conventions because ISC's schedule
+does (only the first band is exclusive), and the rule is now *ceilings match their source document,
+never each other*; and `rent`/`yoy` provenance was already complete on all eight records that hold
+values. Go to the primary source before complying.
+
+Two consequences of the old placeholders are now resolved by real data rather than by argument:
+Rent vs Buy's default verdict is no longer driven by an invented benchmark, and every market figure
+says which metric it is. `capacityPer100` is still zero at every income for debt-free households.
 
 **Open issues:**
-- [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists in `design-reference/hbt-data.js`)
+- [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists
+  in `design-reference/hbt-data.js`). Note this now costs more than it did: a new locale needs a
+  `Jurisdictions.at.<id>` table of its own, and Ukrainian and Spanish decline place names
+  differently again.
+- ~~[#21](https://github.com/vivitali/norma/issues/21)~~ — **closed by this branch.** All 33
+  orphaned Affordability keys resolved and `KNOWN_ORPHANS` is now `{}`, so any new orphan in any
+  namespace fails outright. One limitation is documented rather than fixed: the scanner matches a
+  bare quoted string, so a section id and a message key spelling the same word cover for each other.
+
+**Raised by this branch, not yet filed:**
+- **`bench` holds three different metrics** — MLS® HPI benchmarks (Toronto, Vancouver, Calgary,
+  Ottawa), a median (Montreal, because QPAREB publishes medians), and board averages (Winnipeg).
+  They are not interchangeable, each record's provenance says which it is, and tests fail if that
+  disclosure is edited away. Picking one across the dataset is a **product** decision and was
+  deliberately not taken.
+- **`hbp.ruleDays` is 90 and CRA says 89.** Not changed, because the RRSP-HBP metadata hardcodes
+  "wait 90 days" in both locale files and a value/copy split is worse than a consistent rounding.
+  Needs one edit to each locale file and then the constant, together.
+- **`cmhc.bands` cannot express the 4.50% band** that applies at 90.01–95% LTV when the down
+  payment is borrowed — about $2,500 under-charged on a $500k loan. The shape change belongs with
+  the input that would tell us where the down payment came from.
+- **An exact-tie rebate is dropped rather than labelled.** No `CreditLine.st` is true of a tie, so
+  the group reports the relief once. If both rows should stay visible, it needs a new status plus a
+  reworded `rebSuperseded` (drop "is worth more").
 - ~~[#2](https://github.com/vivitali/norma/issues/2)~~ — **closed, before this branch, not by it.**
   `credits()` already looked its rebate target up by key in both `gov` and `j.transfer`
   (`engine.ts:182`, `engine.ts:200`), so the phantom-rebate defect was gone: `elsewhere` is safe to
@@ -182,10 +268,29 @@ under test), and `capacityPer100` is zero at every income for debt-free househol
   design, it *is* the rate model, and `defaultContractRate()` restores it. `federal.contractRate`
   is the field that is now unread, left in place rather than churned.
 
-**Known limitation, load-bearing:** every jurisdiction figure in `src/domain/` is an *unverified
-placeholder* carried over from the prototype — not sourced from 2026 government data. The UI
-discloses this. Verifying them per-jurisdiction is real, un-started work that must happen before
-this product is useful to anyone.
+**How to read a figure's standing.** `Provenance.conf` is five values and they are not a gradient —
+two of them are categorically different from the other three, and the distinction is load-bearing:
+
+- `high` / `medium` / `low` — a claim about a *published* quantity. `low` means derived or inferred
+  from something published (Ontario's assessment ratio, which MPAC does not publish), not
+  "we are unsure".
+- `assumption` — **nobody publishes this**, so we chose a default and disclose it. Required to carry
+  a `note`. Most `fees.*` are here: no authority publishes a conveyancing tariff or a moving cost.
+- `none` — **nobody publishes it and we will not invent one.** An invariant test requires the value
+  to be `null` or absent, which makes "an unsourced number norma nonetheless displays"
+  unrepresentable. The territorial and two Atlantic market figures are here.
+
+Collapsing `assumption` and `none` into one label is what let twelve invented territorial prices sit
+beside a legitimately-estimated inspection fee, indistinguishable. Don't.
+
+**What is genuinely still open, and it is not a placeholder problem:**
+- Halifax's *type-level* benchmark sits behind CREA's REALTOR® login, which is why its house figure
+  is `medium` and its condo figure is `null`.
+- `federal.rates.insured` / `.uninsured` are `medium` and cannot do better: no official publisher
+  exists for 5-year *fixed* contract rates. The Bank of Canada's only broker series is variable, and
+  its "conventional mortgage: 5-year" is a *posted* rate near 6%, not comparable.
+- The verification notes in `src/domain` render in English on the French `/sources`. They are domain
+  data with no i18n mechanism; the page says so in French. Translating them is a real separate job.
 
 ## Open product decisions
 
@@ -221,15 +326,24 @@ pending in `design-reference/` for later phases.
   disclosure sitting next to them. An FAQ answer may say *which rules exist and who levies them*
   (Toronto stacks a municipal land transfer tax; Alberta charges land titles registration instead;
   Manitoba levies the tax with no first-time-buyer rebate) because those are qualitative and
-  checkable. It may carry a **number** only where a verification date covers it — today that means
-  `federal.verified` and federal parameters only, and jurisdiction figures never travel. The rule
-  loosens by itself as [#5](https://github.com/vivitali/norma/issues/5) dates each jurisdiction, so
-  the next answer does not need re-arguing.
-- **Don't do SEO outreach, link-building or directory submissions until
-  [#5](https://github.com/vivitali/norma/issues/5) lands** — every jurisdiction figure is still an
-  unverified placeholder, and a wrong land transfer tax in a placed article becomes the story about
-  a product whose whole promise is showing what is actually true. The in-app disclosure is honest
-  for someone who finds us organically; it is not honest for someone we pitched. The technical
-  foundation, metadata, hreflang, content structure and `/sources` copy are all safe to build now
-  and depend on none of it. Gate and split recorded in
+  checkable. It may carry a **number** only where a verification date covers it. This rule said it
+  would loosen once [#5](https://github.com/vivitali/norma/issues/5) dated each jurisdiction, and
+  #5 has landed — so the test is now mechanical rather than blanket:
+
+  > A figure may travel **only if its own `provenance` entry is `conf: "high"` and carries an
+  > `asOf`.** Quote the `asOf` alongside it.
+
+  `medium`, `low`, `assumption` and `none` **never** travel, whatever the surrounding page says.
+  `medium` means we could not reach the publisher's primary document; `low` means we derived it;
+  `assumption` means we chose it. None of those survive being stripped of context by a machine,
+  which is precisely what structured data is for.
+- **SEO outreach, link-building and directory submissions were gated on
+  [#5](https://github.com/vivitali/norma/issues/5), which has now landed.** The reason for the gate
+  was that a wrong land transfer tax in a placed article becomes the story about a product whose
+  whole promise is showing what is actually true. That risk is materially reduced: the statutory
+  figures are now read off the issuing authority's own documents. It is **not** zero, and lifting
+  the gate is a judgement call for the owner, not an automatic consequence — Halifax's benchmark is
+  still `medium`, the fixed contract rates cannot be primary-sourced at all, and the `/sources`
+  notes are still English-only on the French page. Decide deliberately; do not treat "#5 landed" as
+  the answer. Gate and split recorded in
   [#12](https://github.com/vivitali/norma/issues/12).

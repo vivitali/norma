@@ -208,3 +208,66 @@ describe("Rent vs buy — French", () => {
     expect(document.body.textContent).not.toMatch(/RentVsBuy\./);
   });
 });
+
+describe("the rent placeholder names the jurisdiction the way a reader writes it", () => {
+  it("renders the translated jurisdiction name, not the lowercase record key", () => {
+    // `jurisdiction.city` is the record key ("winnipeg"), and it used to reach the reader raw.
+    // sources-content.tsx had already hit this and resolved it via the Jurisdictions namespace;
+    // this asserts the same page does. Regression guard, not a style preference: it became more
+    // visible when the territorial records gained a `city`, because the old
+    // `city ?? prov` fallback had been hiding it behind "YT".
+    renderPage();
+    expect(screen.getByText(/Typical for Winnipeg/)).toBeInTheDocument();
+    expect(screen.queryByText(/Typical for winnipeg/)).not.toBeInTheDocument();
+  });
+});
+
+describe("Rent vs buy — it will not compare against a rent nobody published", () => {
+  /**
+   * Six jurisdiction records carry no rent: CMHC suppresses every Yukon cell and does
+   * not survey Nunavut. The fallback behind them is a national placeholder — nobody's
+   * rent, and least of all this place's — and this page had been printing a verdict
+   * against it while the field UNDER the verdict called it "typical for New Brunswick".
+   *
+   * New Brunswick is the record that isolates the rent: it publishes both benchmark
+   * prices, so the price is real and the rent is the only thing missing.
+   */
+  const inNewBrunswick = () =>
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nb" }));
+
+  it("asks for the rent instead of naming a verdict", () => {
+    inNewBrunswick();
+    renderPage();
+    expect(screen.getByText(/Nobody publishes a rent for New Brunswick/)).toBeInTheDocument();
+    expect(screen.queryByText(/wins for your horizon/)).not.toBeInTheDocument();
+  });
+
+  it("never calls a rent typical for the place that did not publish it", () => {
+    inNewBrunswick();
+    renderPage();
+    expect(screen.queryByText(/Typical for New Brunswick/)).not.toBeInTheDocument();
+    expect(screen.getByText(/No published rent for New Brunswick/)).toBeInTheDocument();
+    // And it suggests nothing in the field either: a placeholder IS a suggestion.
+    expect(screen.getByLabelText("Rent you are comparing against, monthly")).toHaveValue("");
+    expect(
+      screen.getByLabelText("Rent you are comparing against, monthly"),
+    ).not.toHaveAttribute("placeholder", expect.stringContaining("1"));
+  });
+
+  it("compares in full once the reader gives their own rent", async () => {
+    inNewBrunswick();
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByLabelText("Rent you are comparing against, monthly"), "1650");
+    await user.tab();
+    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Nobody publishes a rent/)).not.toBeInTheDocument();
+  });
+
+  it("keeps the city's own rent where the survey does publish one", () => {
+    // The tag is not deleted, it is made true: Toronto's rent IS a published figure.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "toronto" }));
+    renderPage();
+    expect(screen.getByText(/Typical for Toronto/)).toBeInTheDocument();
+  });
+});

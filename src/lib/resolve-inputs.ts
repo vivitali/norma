@@ -1,4 +1,4 @@
-import type { FederalRules, Jurisdiction, PropertyType } from "@/domain/types";
+import type { FederalRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
 import { defaultContractRate, minDown } from "@/domain/engine";
 import type { ToolFormState } from "./shared-inputs";
 
@@ -18,11 +18,62 @@ export const DEFAULT_INCOME_2 = 45000;
 export const DEFAULT_COMFORT_CEILING = 2700;
 export const DEFAULT_INSURANCE_ANNUAL = 1500;
 export const DEFAULT_UTILITIES = 300;
-/** Only used where the jurisdiction record carries no benchmark rent of its own. */
+/**
+ * A national placeholder, and the property of NO jurisdiction.
+ *
+ * Six records — nb, nl, pe, yt, nt, nu — carry no rent at all, because CMHC
+ * suppresses every Yukon cell and does not survey Nunavut. A figure nobody
+ * publishes must never be attributed to the place that did not publish it, so
+ * this one never travels with a city's name attached: `rentKnown` is false
+ * wherever it is in play, the rent field asks instead of suggesting it, and Rent
+ * vs Buy asks for a rent rather than printing a verdict built on it. It stays a
+ * number only so the arithmetic below is defined rather than NaN.
+ */
 export const DEFAULT_RENT = 1500;
+
+/**
+ * The benchmark price standing behind an untouched price field, or `null` where the
+ * jurisdiction has none published.
+ *
+ * `newbuild` reads the resale HOUSE benchmark. It has no series of its own and never
+ * will: no publisher produces a new-build price level in Canada — StatCan's NHPI is an
+ * index by design and CREA's HPI is resale-only — which is why `bench.newbuild` was
+ * deleted rather than corrected. Every one of its fourteen values was invented. The
+ * resale house benchmark for the same city is at least a figure someone published;
+ * `ptype: "newbuild"` keeps its real job, a tax and warranty treatment. The developer's
+ * price is the reader's to enter, and the Closing Costs milestone is where the app asks.
+ *
+ * `house` and `condo` are nullable: no MLS HPI covers a territory, and PEI publishes no
+ * apartment series. Those nulls land with the per-region verification tasks.
+ */
+export function benchmarkPrice(j: Jurisdiction, ptype: PropertyType): number | null {
+  return j.bench[ptype === "newbuild" ? "house" : ptype];
+}
 
 export interface ResolvedInputs {
   price: number;
+  /**
+   * The published benchmark price for this jurisdiction and property type, or `null`
+   * where no publisher produces one. Separate from `price` because they answer
+   * different questions: `price` is the figure being modelled, `benchmark` is whether
+   * there is a real market figure standing behind it. A screen that shows the
+   * benchmark as a hint must branch on this rather than on `price`.
+   */
+  benchmark: number | null;
+  /**
+   * Whether there is a real price to model at all — the reader gave a positive
+   * one, or a publisher produces a benchmark for this jurisdiction and property
+   * type. A stored **0** is not a price: it is typable, and it used to pass.
+   *
+   * False for nine jurisdiction × property-type combinations: the three
+   * territories at either property type, and PEI, Halifax and Saskatoon condos.
+   * In that state `price` is 0, which is arithmetic and never an answer, so a
+   * screen whose figures derive from it must ASK for a price instead of printing
+   * one. "$0 is within reach" is a worse answer than no answer, and a $0
+   * headline is the shape it takes; `page-contracts.test.tsx` sweeps every
+   * jurisdiction × property type and fails on one.
+   */
+  priceKnown: boolean;
   /**
    * The down payment percentage the app MODELS, with the legal minimum applied.
    *
@@ -41,6 +92,7 @@ export interface ResolvedInputs {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  residency: Residency;
   contractRate: number;
   income1: number;
   income2: number;
@@ -87,6 +139,17 @@ export interface ResolvedInputs {
   renewalRate: number | null;
 
   rent: number;
+  /**
+   * Whether the rent being compared against is a real figure — the reader's own,
+   * or one this jurisdiction's record publishes. A stored **0** is not a rent,
+   * for the same reason a stored 0 is not a price.
+   *
+   * False for the six records that carry no rent. `rent` then falls back to
+   * DEFAULT_RENT so the arithmetic is defined, but that number is nobody's rent
+   * and least of all this place's: Rent vs Buy asks for one rather than printing
+   * a verdict, and the field beside the ask suggests nothing.
+   */
+  rentKnown: boolean;
   /** Fraction, not a percentage — the engine takes fractions. */
   rentInflation: number;
   holding: number;
@@ -114,7 +177,33 @@ export function resolveInputs(
   const income1 = stored.income1 ?? DEFAULT_INCOME_1;
   const income2 = stored.income2 ?? 0;
   const otherIncome = stored.otherIncome ?? 0;
-  const price = stored.price ?? j.bench[stored.ptype];
+  const benchmark = benchmarkPrice(j, stored.ptype);
+  // `?? 0` is the last rung and it IS reached: nine jurisdiction × property-type
+  // combinations have no published benchmark — no MLS HPI covers a territory, and PEI,
+  // Halifax and Saskatoon publish no apartment series. An invariant in
+  // resolve-inputs.test.ts allows a null benchmark ONLY where that record's own
+  // provenance records conf "none", so the rung is reachable by design rather than by
+  // omission.
+  //
+  // 0 is the one number no screen can mistake for a market price, and it is arithmetic,
+  // not an answer: `priceKnown` is the fact every consumer branches on, and a screen
+  // whose figures derive from the price asks the reader for one in place rather than
+  // computing against this zero.
+  //
+  // A stored ZERO is not a price and does not take the first rung. It is reachable —
+  // `SHARED_INPUT_SCHEMA.price` is nullable with `min: 0` and NumberField clamps to the
+  // minimum and commits — and `stored.price !== null` used to call it one, which put back
+  // every defect this zero is here to prevent: a $0 payment on Amortization, the fixed
+  // lawyer and moving fees printed as "cash needed at closing", "$0 is within reach" on
+  // Affordability. It falls through to the benchmark instead, exactly like the blank field
+  // it means, so a priced city keeps answering and keeps every sentence on it true: the
+  // ask reads "Nobody publishes a benchmark price for {place}", which is a claim about the
+  // publisher and would be FALSE in Winnipeg.
+  const givenPrice = stored.price !== null && stored.price > 0 ? stored.price : null;
+  const price = givenPrice ?? benchmark ?? 0;
+  // Read off `price` itself, so the two can never disagree: `priceKnown` true with a price
+  // of 0 is the $0 headline wearing a permission slip.
+  const priceKnown = price > 0;
   // Half a dollar of slack, matching scenario()'s own test in engine.ts: a
   // percentage that lands a rounding error under the floor is not a reader
   // asking for something illegal. Expressed in dollars, not percentage points,
@@ -126,9 +215,20 @@ export function resolveInputs(
   const student = stored.student ?? 0;
   const cc = stored.cc ?? 0;
   const otherDebt = stored.otherDebt ?? 0;
+  // The same hole `priceKnown` had, closed the same way. `SHARED_INPUT_SCHEMA.rent` is
+  // nullable with `min: 0`, so a reader can type 0, and `stored.rent !== null` called that a
+  // rent — Rent vs Buy would then print a verdict resting on the claim that living somewhere
+  // costs nothing, which is the one verdict on that page nobody should be able to buy with a
+  // keystroke. A non-positive rent is no rent, from either source, and it falls through the
+  // same rungs a blank field does: the figure published for here, then DEFAULT_RENT, which
+  // keeps the arithmetic defined while `rentKnown` stops the page printing anything from it.
+  const storedRent = stored.rent !== null && stored.rent > 0 ? stored.rent : null;
+  const publishedRent = j.rent != null && j.rent > 0 ? j.rent : null;
 
   return {
     price,
+    benchmark,
+    priceKnown,
     dpPct,
     dpPctRequested: stored.dpPct,
     belowMinimum,
@@ -136,6 +236,7 @@ export function resolveInputs(
     ftb: stored.ftb,
     ptype: stored.ptype,
     elsewhere: stored.elsewhere,
+    residency: stored.residency,
     contractRate: stored.contractRate ?? defaultContractRate(F, dpPct),
     income1,
     // null means "no second applicant", not "a second applicant earning nothing".
@@ -175,7 +276,11 @@ export function resolveInputs(
     termYears: stored.termYears,
     renewalRate: stored.renewalRate,
 
-    rent: stored.rent ?? j.rent ?? DEFAULT_RENT,
+    rent: storedRent ?? publishedRent ?? DEFAULT_RENT,
+    // `j.rent` is optional AND nullable — a record may omit the field or record it
+    // explicitly suppressed — and both mean the same thing to a reader: nobody
+    // published a rent for here.
+    rentKnown: storedRent !== null || publishedRent !== null,
     rentInflation: stored.rentInflation / 100,
     holding: stored.holding,
     appreciation: F.appreciation[stored.apprKey],

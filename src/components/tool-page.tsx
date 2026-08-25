@@ -42,6 +42,15 @@ export interface HeadStat {
  */
 export function AnswerHead({
   eyebrow,
+  /**
+   * Omitted when the page HAS no answer — a jurisdiction with no published
+   * benchmark price, where every figure the page would print derives from a zero
+   * that is arithmetic rather than a price. The sentence then takes the hero's
+   * place at its own larger size, because the ask IS the page's content in that
+   * state, and no placeholder figure stands in for it: a "$0" or a bare em-dash
+   * at 72px reads as a rendering fault, and the one thing a reader must not take
+   * from this screen is that we know something we do not.
+   */
   figure,
   /** Changing this replays the pulse — used to acknowledge a jurisdiction switch. */
   pulseKey,
@@ -51,7 +60,7 @@ export function AnswerHead({
   stats,
 }: {
   eyebrow: string;
-  figure: string;
+  figure?: string;
   pulseKey?: string;
   head: string;
   sub?: string;
@@ -80,13 +89,22 @@ export function AnswerHead({
       <h1 className="eyebrow mb-5 text-ac">{eyebrow}</h1>
       <div className="flex flex-wrap items-end gap-8 sm:gap-10">
         <div className="min-w-0 flex-1 sm:min-w-[420px]">
-          <div
-            key={pulseKey}
-            className="v2-pulse text-[52px] leading-none font-bold tracking-[-0.045em] text-ac sm:text-[72px]"
+          {figure === undefined ? null : (
+            <div
+              key={pulseKey}
+              data-slot="answer-figure"
+              className="v2-pulse text-[52px] leading-none font-bold tracking-[-0.045em] text-ac sm:text-[72px]"
+            >
+              {figure}
+            </div>
+          )}
+          <p
+            className={
+              figure === undefined
+                ? "max-w-[560px] text-[24px] leading-[1.3] font-semibold tracking-[-0.02em] text-pretty sm:text-[28px]"
+                : "mt-4 max-w-[560px] text-[17px] leading-[1.45] font-medium tracking-[-0.01em] text-pretty sm:text-[19px]"
+            }
           >
-            {figure}
-          </div>
-          <p className="mt-4 max-w-[560px] text-[17px] leading-[1.45] font-medium tracking-[-0.01em] text-pretty sm:text-[19px]">
             {head}
           </p>
           {sub ? (
@@ -172,15 +190,29 @@ export function SectionsHeader({
 }
 
 /**
- * The unverified-figures disclosure, in its agreed wording.
+ * The figure disclosure, in its agreed wording.
  *
  * Every screen that renders a jurisdiction figure carries this, which is why it
  * lives in one component reading one namespace rather than being retyped per
- * page. Its wording is not a design decision to be tuned per screen: every
- * provincial figure in src/domain/ is a placeholder carried over from the
- * prototype, and this is the sentence that says so.
+ * page. Its wording is not a design decision to be tuned per screen — but it IS
+ * a claim about the dataset, and the dataset moved: most figures in src/domain/
+ * now cite a dated published document, some are disclosed modelling
+ * assumptions, and a handful are shown as unknown because nobody publishes
+ * them. A blanket "placeholder figures" line buried the verified ones and
+ * trained the reader to discount all three the same way.
+ *
+ * `children` is the page's own per-figure provenance, which only the page knows.
+ * Affordability displays exactly one jurisdiction figure — the property tax rate
+ * — and names its source here; a page that displays a dozen of them discloses
+ * per line instead.
  */
-export function FigureFooter({ jurisdiction }: { jurisdiction: Jurisdiction }) {
+export function FigureFooter({
+  jurisdiction,
+  children,
+}: {
+  jurisdiction: Jurisdiction;
+  children?: ReactNode;
+}) {
   const t = useTranslations("Disclosure");
   return (
     <div className="mt-10 border-t border-border pt-4 text-[11.5px] text-ink3">
@@ -188,6 +220,7 @@ export function FigureFooter({ jurisdiction }: { jurisdiction: Jurisdiction }) {
       <p>
         {t("lastVerified")} {federal.verified}
       </p>
+      {children}
       {!jurisdiction.cityData ? <p>{t("noCityData")}</p> : null}
     </div>
   );

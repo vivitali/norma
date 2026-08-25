@@ -42,7 +42,22 @@ import type { RouteKey } from "@/lib/routes";
  * this is the established pattern rather than a new one. No surface, no
  * container, no accent tint: `--acbg` means "the reader's own position" and this
  * is not that.
+ *
+ * ## Two shapes, two counts
+ *
+ * This file exports the SENTENCE. `TraceLabel` below is the other shape — the
+ * row's own words made navigable — and the two are counted separately, for the
+ * reason given on it. `data-cross` is what makes that countable on the rendered
+ * page rather than by grepping source; `src/app/page-contracts.test.tsx` reads
+ * it, and also fails on any tool-route link that carries neither value.
  */
+/**
+ * Plain route key, or the object form when the destination is one section rather
+ * than the whole page. Typed `pathnames` makes a key-with-hash string invalid,
+ * so the hash rides alongside — same as `Provenance`.
+ */
+export type CrossHref = RouteKey | { pathname: RouteKey; hash: string };
+
 export function CrossLink({
   namespace,
   id,
@@ -53,12 +68,7 @@ export function CrossLink({
   /** The page's own message namespace — the sentence belongs to the page that shows it. */
   namespace: string;
   id: string;
-  /**
-   * Plain route key, or the object form when the sentence is about one section
-   * rather than the whole page. Typed `pathnames` makes a key-with-hash string
-   * invalid, so the hash rides alongside — same as `Provenance`.
-   */
-  href: RouteKey | { pathname: RouteKey; hash: string };
+  href: CrossHref;
   values?: Record<string, string | number>;
   /**
    * `row` — a note attached to the row above it, in the treatment the `ex_`
@@ -73,7 +83,7 @@ export function CrossLink({
 }) {
   const t = useTranslations(namespace);
   const link = (chunks: ReactNode) => (
-    <Link href={href} className="text-ac underline underline-offset-2">
+    <Link href={href} data-cross="sentence" className="text-ac underline underline-offset-2">
       {chunks}
     </Link>
   );
@@ -88,5 +98,78 @@ export function CrossLink({
     >
       {t.rich(id, { ...values, link })}
     </p>
+  );
+}
+
+/**
+ * A `PanelRow`'s own label, made navigable — the words that NAME the figure
+ * carrying the reader to the page that derives it.
+ *
+ * ## Why this is not a smaller CrossLink
+ *
+ * The sentence and this are answers to different questions. A sentence is worth
+ * reading unclicked; it says something the reader would want to know even if
+ * they never leave. A row label says nothing new at all — it is the label that
+ * was already there — and its whole content is *this figure comes from over
+ * there*. On the two rows where that is literally true (Down Payment's
+ * `Closing costs` is `closingTotal().total`; Affordability's `Principal and
+ * interest` is `amortization().firstPayment`, same loan, same `payFactor`) the
+ * sentence was the wrong instrument: it adds a line of prose to say what the
+ * label already says, and DESIGN.md's cap then spends one of a page's two
+ * sentences on a restatement.
+ *
+ * ## The rules it obeys, and the one it changes
+ *
+ * TRACE only — never verdict. A verdict is a claim about the reader's situation
+ * and needs a sentence to make it; a label cannot make a claim, which is exactly
+ * why it cannot editorialise. Rules 4 (a figure travels only when its inputs
+ * were answered, out of a `src/domain` function) and 5 (name what the other page
+ * computes) hold unchanged — rule 5 for free, since the name is the label.
+ *
+ * The CAP is the deliberate change. Rule 1's two-per-page exists to stop
+ * sentences accumulating into a related-links block; a linked label cannot
+ * accumulate into anything, because it occupies no space that was not already
+ * spent and adds no prose. So the two are capped separately: **at most two
+ * SENTENCES per page, and at most one TRACE LABEL per panel** — both counted on
+ * the rendered page, in each state. See DESIGN.md §5.2.
+ *
+ * ## Copy
+ *
+ * There is none. `id` is the row's EXISTING label key in the page's own
+ * namespace, so nothing is written and nothing can drift: `messages.test.ts`
+ * already holds it in both locales, and the label the reader clicks is by
+ * construction the label the row shows.
+ *
+ * ## Carrying the reader's numbers
+ *
+ * Nothing rides in the URL, and nothing should: every tool page reads the one
+ * `TOOL_KEYS` allowlist out of the shared `norma.inputs.v2` blob, so the
+ * destination recomputes from the same inputs the row was computed from. A page
+ * that declared its own allowlist would break that silently — the reader would
+ * land on a screen of defaults that look like theirs — so
+ * `cross-link.test.tsx` asserts every destination reads the shared one.
+ *
+ * ## Reach
+ *
+ * WCAG 2.5.8 exempts inline targets from the 44px floor, and padding these into
+ * blocks would put a tap target the height of a finger inside a 13.5px
+ * derivation row. Left inline deliberately (DESIGN.md §7).
+ */
+export function TraceLabel({
+  namespace,
+  id,
+  href,
+}: {
+  /** The page's own namespace — this is that page's row label, not new copy. */
+  namespace: string;
+  /** The row's existing label key. */
+  id: string;
+  href: CrossHref;
+}) {
+  const t = useTranslations(namespace);
+  return (
+    <Link href={href} data-cross="trace" className="text-ac underline underline-offset-2">
+      {t(id)}
+    </Link>
   );
 }

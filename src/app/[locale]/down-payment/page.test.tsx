@@ -162,3 +162,30 @@ describe("Down payment — French", () => {
     expect(document.body.textContent).not.toMatch(/DownPayment\./);
   });
 });
+
+describe("Down payment — with no published price there is no target", () => {
+  // The target IS a percentage of a price, and the whole waterfall is measured
+  // against it. At `resolved.price` of 0 the page reported a $0 target funded in
+  // full, which reads as good news and is not news at all.
+  it("asks for a price instead of reporting a $0 target", () => {
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "nu", fhsa: 20000 }),
+    );
+    renderPage();
+    expect(
+      screen.getByText(/Nobody publishes a benchmark price for Nunavut/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("$0")).not.toBeInTheDocument();
+  });
+
+  it("computes the target once a price is given", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nu" }));
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByLabelText("Purchase price"), "525000");
+    await user.tab();
+    expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /The funding order/ })).toBeInTheDocument();
+  });
+});

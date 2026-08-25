@@ -1,4 +1,10 @@
-import type { Jurisdiction, FederalRules, PropertyType } from "./types";
+import type {
+  Applicability,
+  FederalRules,
+  Jurisdiction,
+  PropertyType,
+  Residency,
+} from "./types";
 
 export interface BracketPart {
   from: number;
@@ -107,6 +113,7 @@ export interface ClosingInput extends FinancingInput {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  residency: Residency;
 }
 
 export interface LineItem {
@@ -120,12 +127,33 @@ export interface LineItem {
   sub?: string;
 }
 
+/**
+ * Which keys of `when` the input fails. Empty means the item applies. Callers need the list,
+ * not just a boolean: `credits` renders a rebate that fails ONLY its `ftb` test as an
+ * "ftbOnly" row so the user learns why they get nothing, but drops one that fails a `ptype`
+ * or `residency` test entirely, matching buildLines' absent-not-zero convention.
+ */
+export function unmetBy(when: Applicability | undefined, o: ClosingInput): (keyof Applicability)[] {
+  const unmet: (keyof Applicability)[] = [];
+  if (!when) return unmet;
+  if (when.ftb !== undefined && when.ftb !== o.ftb) unmet.push("ftb");
+  if (when.ptype !== undefined && when.ptype !== o.ptype) unmet.push("ptype");
+  if (when.residency !== undefined && when.residency !== o.residency) unmet.push("residency");
+  if (when.elsewhere !== undefined && when.elsewhere !== o.elsewhere) unmet.push("elsewhere");
+  if (when.overPrice !== undefined && !(o.price > when.overPrice)) unmet.push("overPrice");
+  return unmet;
+}
+
+export function applies(when: Applicability | undefined, o: ClosingInput): boolean {
+  return unmetBy(when, o).length === 0;
+}
+
 /** A non-applicable line item is ABSENT from the result, never a zero row. */
 export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
   const fin = financing(F, o);
   const gov: LineItem[] = [];
   for (const it of j.transfer) {
-    if (o.elsewhere && it.tier === "municipal" && j.prov === "ON") continue;
+    if (!applies(it.when, o)) continue;
     let amt = 0;
     let parts: LineItem["parts"] = null;
     if (it.kind === "brackets") {
@@ -140,8 +168,15 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
       const on = it.on === "loan" ? fin.loan : o.price;
       amt = it.base + it.per * Math.ceil(Math.max(0, on - (it.exempt ?? 0)) / it.unit);
       if (it.min) amt = Math.max(it.min, amt);
+      if (it.max != null) amt = Math.min(it.max, amt);
     } else if (it.kind === "rateMin") {
       amt = o.price > it.floor ? o.price * it.rate : it.min;
+    } else if (it.kind === "stepped") {
+      // A STEP table, not a marginal one: the band the value lands in sets the whole amount.
+      const on = it.on === "loan" ? fin.loan : o.price;
+      const step =
+        it.steps.find(([cap]) => cap == null || on <= cap) ?? it.steps[it.steps.length - 1];
+      amt = step[1];
     }
     gov.push({ key: it.key, ex: it.ex, amount: amt, parts, tier: it.tier, exact: true });
   }
@@ -170,7 +205,7 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
   if (o.ptype === "condo" && f.statusCert) pro.push({ key: "li_statusCert", amount: f.statusCert });
 
   const adj: LineItem[] = [
-    { key: "li_taxAdj", ex: "ex_taxAdj", amount: (o.price * j.propTax) / 4 },
+    { key: "li_taxAdj", ex: "ex_taxAdj", amount: (o.price * j.propTax.effective) / 4 },
     { key: "li_moving", amount: f.moving },
     { key: "li_setup", amount: f.setup },
   ];
@@ -179,11 +214,12 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
 
 export interface CreditLine {
   key: string;
-  kind: "cap" | "exemptBand" | "fullExempt" | "none";
+  kind: "cap" | "exemptBand" | "fullExempt" | "tieredCap" | "none";
   amount: number;
-  st: "applied" | "capped" | "phasedOut" | "none" | "ftbOnly";
+  st: "applied" | "capped" | "phasedOut" | "overCeiling" | "superseded" | "none" | "ftbOnly";
   target: string;
   cap?: number;
+  group?: string;
   noTax?: boolean;
 }
 
@@ -204,16 +240,35 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     const raw = target.amount;
     let amount = 0;
     let st: CreditLine["st"] = "none";
+    const unmet = unmetBy(rb.when, o);
+    // Failing only the first-time-buyer test is worth SAYING — the user learns why they get
+    // nothing. Failing any other test means the programme is irrelevant to this purchase, so
+    // the row is absent, matching buildLines.
+    const ftbOnly = unmet.length === 1 && unmet[0] === "ftb";
+    if (unmet.length > 0 && !ftbOnly) continue;
+
     if (rb.kind === "none") {
       st = "none";
-    } else if (!o.ftb) {
+    } else if (ftbOnly) {
       st = "ftbOnly";
     } else if (rb.kind === "cap") {
       amount = Math.min(rb.cap, raw);
       st = raw > rb.cap ? "capped" : "applied";
     } else if (rb.kind === "fullExempt") {
-      amount = raw;
-      st = "applied";
+      // A cliff, not a taper: at the ceiling the whole tax is forgiven, one dollar over and the
+      // whole tax is payable. `null` is an explicit "genuinely uncapped", not a missing value.
+      if (rb.ceiling == null || o.price <= rb.ceiling) {
+        amount = raw;
+        st = "applied";
+      } else {
+        st = "overCeiling";
+      }
+    } else if (rb.kind === "tieredCap") {
+      // The tier table runs over the DUTY, not the price, and nothing takes it back above the
+      // price at which the cap binds — see TieredCapRebate for why there is no phase-out.
+      const tiered = bracketTax(raw, rb.tiers).total;
+      amount = Math.min(rb.cap, tiered);
+      st = tiered > rb.cap ? "capped" : "applied";
     } else if (rb.kind === "exemptBand") {
       const transferLine = j.transfer.find((l) => l.key === rb.on);
       const full =
@@ -230,17 +285,75 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
         st = "phasedOut";
       }
     }
-    atClosing.push({
+    const line: CreditLine = {
       key: rb.key,
       kind: rb.kind,
       amount,
       st,
       target: target.key,
-      cap: rb.kind === "cap" ? rb.cap : undefined,
+      cap: rb.kind === "cap" || rb.kind === "tieredCap" ? rb.cap : undefined,
+      group: rb.group,
       noTax: rb.noTax,
-    });
+    };
+    // A rebate claimed on a tax return is not money the buyer brings to the closing table.
+    // The asymmetry is deliberate: a zero-amount atClosing row is kept, because it carries
+    // `st` and that is the whole point of ftbOnly, while a zero-amount later row is dropped
+    // — LaterCredit has no status field, so it would render as a meaningless "$0" line.
+    if (rb.timing === "taxTime") {
+      if (amount > 0) later.push({ key: rb.key, ex: rb.ex, amount });
+    } else {
+      atClosing.push(line);
+    }
   }
-  if (o.ftb) for (const c of j.taxTime) later.push({ key: c.key, ex: c.ex, amount: c.amount });
+  // Two programmes in the same group are alternatives, not a stack: BC's first-time-buyer and
+  // newly-built exemptions are each claimable, but only one of them. Keeping the loser visible
+  // as a superseded row lets the UI explain the choice instead of silently hiding a programme
+  // the buyer qualified for.
+  const groups = new Map<string, CreditLine[]>();
+  for (const c of atClosing) {
+    if (!c.group) continue;
+    const bucket = groups.get(c.group);
+    if (bucket) bucket.push(c);
+    else groups.set(c.group, [c]);
+  }
+  // Rows removed because a sibling is worth EXACTLY the same — see the tie note below.
+  const duplicates = new Set<CreditLine>();
+  for (const bucket of groups.values()) {
+    if (bucket.length < 2) continue;
+    const best = bucket.reduce((a, b) => (b.amount > a.amount ? b : a));
+    // Nothing supersedes nothing. Above BC's phase-out ceiling every member of the group is
+    // worth zero, and `reduce` still names one of them the winner — which used to mark the
+    // rest "superseded" and claim a choice the buyer never got. When no member pays, each row
+    // keeps the status it earned (phasedOut, overCeiling, ftbOnly), which is the true reason.
+    if (best.amount <= 0) continue;
+    for (const c of bucket) {
+      if (c === best) continue;
+      // And nothing supersedes an equal. `superseded` renders as "another rebate here is
+      // worth more — only one can be claimed, so that one is applied instead", and on an
+      // exact tie the first half of that sentence is false. It is an ordinary band, not a
+      // corner: BOTH BC exemptions forgive the entire tax on a new build a first-time buyer
+      // pays $500,000 or less for, because the first-time-buyer one is computed on the first
+      // $500,000 and there is nothing above it to leave behind.
+      //
+      // The tied row is dropped rather than relabelled. The reason the loser is normally
+      // kept is to let the UI explain the CHOICE — and a tie is not a choice: whichever
+      // programme the buyer claims, the money is identical to the dollar. So the group
+      // reports the relief once, and says nothing untrue about the row it does not print.
+      if (c.amount === best.amount) {
+        duplicates.add(c);
+        continue;
+      }
+      c.amount = 0;
+      c.st = "superseded";
+    }
+  }
+
+  for (const c of j.taxTime) {
+    // Tax-time credits are first-time-buyer credits by default; `when` narrows further.
+    if (!o.ftb) continue;
+    if (!applies(c.when, o)) continue;
+    later.push({ key: c.key, ex: c.ex, amount: c.amount });
+  }
   if (o.ftb && o.ptype === "newbuild") {
     const g = F.gstFthb;
     const gst = o.price * g.rate;
@@ -252,7 +365,10 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
           : (Math.min(gst, g.cap) * (g.zeroAt - o.price)) / (g.zeroAt - g.fullTo);
     if (amt > 0) later.push({ key: "cr_gstFthb", ex: "ex_gstFthb", amount: amt });
   }
-  return { atClosing, later };
+  return {
+    atClosing: duplicates.size === 0 ? atClosing : atClosing.filter((c) => !duplicates.has(c)),
+    later,
+  };
 }
 
 /** Total cash at closing without the itemised table — for screens that only need the number. */
@@ -291,6 +407,7 @@ export interface AffordabilityInput {
   ftb: boolean;
   ptype: PropertyType;
   elsewhere: boolean;
+  residency: Residency;
   /** Funds available at closing. null = not told; there is nothing honest to assume. */
   funds?: number | null;
   /** Monthly saving toward the purchase. null = not told. */
@@ -327,7 +444,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const tdsBinds = tdsAllow < gdsAllow;
 
   // Solved so property tax scales with price. Assumes 20% down, as the source model does.
-  const denomLender = 0.8 * fq + j.propTax / 12;
+  const denomLender = 0.8 * fq + j.propTax.effective / 12;
   /**
    * The ceiling this household would reach carrying `debts` of monthly obligation.
    * Parameterised because the debt-impact figures below are the DIFFERENCE between
@@ -342,7 +459,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const ceiling = ceilingCarrying(o.debts);
 
   const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee;
-  const denomComfort = 0.8 * fc + j.propTax / 12 + F.maintenanceReserve / 12;
+  const denomComfort = 0.8 * fc + j.propTax.effective / 12 + F.maintenanceReserve / 12;
   const comfort = Math.max(0, budget) / denomComfort;
 
   // The target price, actually financed at the actual down payment.
@@ -353,6 +470,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
     ptype: o.ptype,
     amortYears: o.amortYears,
     elsewhere: o.elsewhere,
+    residency: o.residency,
   });
   // Priced off the entered contract rate — the same rate that drives the comfort ceiling above
   // — so the "what fits your budget" card and the monthly P&I row can never disagree, and the
@@ -360,7 +478,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const pi = cc.fin.loan * payFactor(o.contractRate / 100, o.amortYears);
   const monthly = {
     pi,
-    propTax: (o.price * j.propTax) / 12,
+    propTax: (o.price * j.propTax.effective) / 12,
     insurance: o.insuranceAnnual / 12,
     utilities: o.utilities,
     condoFee: o.condoFee,
@@ -882,7 +1000,7 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
       payoffYear ??= t;
     }
     const infl = Math.pow(1 + NON_SHELTER_INFLATION, t - 1);
-    const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax;
+    const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax.effective;
     const insurance = o.insuranceAnnual * infl;
     const utilities = (o.utilities + o.condoFee) * 12 * infl;
     const maintenance = o.price * F.maintenanceReserve * Math.pow(1 + g, t - 1);
@@ -986,7 +1104,7 @@ export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
   const contractRate = insured ? F.rates.insured : F.rates.uninsured;
   const f = payFactor(contractRate, o.amortYears);
   const pi = totalMortgage * f;
-  const propTax = (o.price * j.propTax) / 12;
+  const propTax = (o.price * j.propTax.effective) / 12;
   const maintenance = (o.price * F.maintenanceReserve) / 12;
   const monthly = {
     pi,

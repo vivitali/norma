@@ -143,10 +143,33 @@ describe("positioning", () => {
     expect(text).toContain("Fourteen jurisdictions");
   });
 
-  it("discloses that the jurisdiction figures are unverified, and links to the sources page", () => {
+  it("describes how the figures are sourced, and links to the sources page", () => {
     const { container } = renderWithIntl(<HomeContent />);
-    expect(document.body.textContent).toContain("placeholders");
+    const text = document.body.textContent ?? "";
+    // Used to assert the word "placeholders". That claim was true when it was written and became
+    // false when #5 landed — every jurisdiction figure now carries a provenance record — so the
+    // test was pinning a statement the product had outgrown. It matters more than most copy: the
+    // FAQ answers feed the FAQPage JSON-LD from the SAME keys they render (see HOME_FAQ_KEYS), so
+    // a wrong answer here is served to machines that strip the surrounding context.
+    expect(text).toContain("sourcing record");
     expect(container.querySelector('a[href="/sources"]')).not.toBeNull();
+  });
+
+  it("does not claim the figures are unverified placeholders any more", () => {
+    renderWithIntl(<HomeContent />);
+    const text = document.body.textContent ?? "";
+    for (const stale of ["placeholders", "Not yet", "not verified yet"]) {
+      expect(text, `home page still says "${stale}"`).not.toContain(stale);
+    }
+  });
+
+  it("still discloses the two honest limits rather than claiming everything is confirmed", () => {
+    // The opposite failure mode, and the one to watch now: over-claiming. Some figures are our
+    // own defaults and some are genuinely unpublished, and the home page has to keep saying so.
+    renderWithIntl(<HomeContent />);
+    const text = document.body.textContent ?? "";
+    expect(text).toMatch(/defaults we chose and disclose/);
+    expect(text).toMatch(/nobody publishes them/);
   });
 
   it("claims no adoption, no verification and no price, in either locale", () => {

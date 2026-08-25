@@ -6,7 +6,7 @@ import { recommend, SCENARIO_PERCENTS } from "./scenarios-view";
 
 const toronto = getJurisdiction("toronto")!;
 const base: Omit<Parameters<typeof scenario>[2], "dpPct"> = {
-  price: 600000, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false,
+  price: 600000, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident",
   insuranceAnnual: 1500, utilities: 300, condoFee: 0, comfortCeiling: 3200,
   qualIncome: 160000, debts: 400, funds: 250000, save: 1000,
 };
@@ -91,17 +91,24 @@ describe("returnOnExtra is reported, never relied on", () => {
   it("is below 1.00 at every price the product can model, on the shipped rates", () => {
     // This is why the recommendation's rationale had to be rewritten. The
     // premium saved does not outrun fifteen extra points of deposit over 25
-    // undiscounted years at a 10-basis-point insured/uninsured spread.
+    // undiscounted years.
     //
-    // If this fails, read it as an invitation, not a break: the rates moved and
-    // the claim about what the extra cash returns may be live again. But check
-    // the SPREAD before restoring any copy -- at 6.0/6.5 the ratio is back under
-    // 1.0 at every price, so a higher level alone does not do it.
+    // The lower bound moved 0.8 -> 0.7 when the 2026 verification pass replaced
+    // the 10-basis-point insured/uninsured spread with the ~30bp one lenders
+    // actually quote (3.94 / 4.24). A wider spread makes 20% down cost MORE
+    // interest per dollar, so the ratio fell from 0.88-0.95 to 0.72-0.74 and the
+    // "more than a dollar back" claim is further from true than before, not
+    // nearer.
+    //
+    // If the upper bound ever fails, read it as an invitation, not a break: the
+    // rates moved and the claim may be live again. But check the SPREAD before
+    // restoring any copy -- at 6.0/6.5 the ratio is back under 1.0 at every
+    // price, so a higher level alone does not do it.
     for (const price of [400000, 600000, 900000, 1200000, 1400000]) {
       const result = recommend(columns({ price, qualIncome: price / 2, funds: price }));
       if (result.kind !== "twenty") throw new Error(`expected twenty at ${price}`);
       expect(result.returnOnExtra, `at ${price}`).toBeLessThan(1);
-      expect(result.returnOnExtra, `at ${price}`).toBeGreaterThan(0.8);
+      expect(result.returnOnExtra, `at ${price}`).toBeGreaterThan(0.7);
     }
   });
 

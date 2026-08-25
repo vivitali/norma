@@ -70,6 +70,27 @@ describe("AnswerHead", () => {
     expect(container.textContent).toContain("$1,240 headroom");
   });
 
+  it("prints no figure at all when the page has no answer", () => {
+    // A page with no published price has nothing to put in the hero, and the two
+    // candidates for standing in are both worse than nothing: "$0" is a claim about
+    // a market, and a bare em-dash at 72px reads as a rendering fault. The sentence
+    // takes the slot instead, and the sweep in page-contracts.test.tsx keys off the
+    // figure's absence, so it must genuinely not be in the document.
+    const { container } = renderWithIntl(
+      <AnswerHead eyebrow="Amortization" head="Nobody publishes a benchmark price for Yukon." />,
+    );
+    expect(container.querySelector('[data-slot="answer-figure"]')).toBeNull();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Amortization");
+    expect(screen.getByText(/Nobody publishes a benchmark price/)).toBeInTheDocument();
+  });
+
+  it("marks the figure so a sweep can find it without matching on copy", () => {
+    const { container } = renderWithIntl(
+      <AnswerHead eyebrow="Amortization" figure="$2,446" head="Your payment never changes." />,
+    );
+    expect(container.querySelector('[data-slot="answer-figure"]')).toHaveTextContent("$2,446");
+  });
+
   it("omits the optional sub, tag and stats when they are not given", () => {
     renderWithIntl(<AnswerHead eyebrow="Affordability" figure="$1" head="Head." />);
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();

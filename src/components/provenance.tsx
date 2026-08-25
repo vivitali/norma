@@ -13,9 +13,10 @@ export type ProvenanceKind = "rule" | "estimate";
  * payment. "estimate" means a local or household figure.
  *
  * The marks describe DERIVATION, NOT VERIFICATION. A rule figure is exact given
- * the rules table, and the rules table is itself an unverified placeholder —
- * which the blanket disclosure keeps saying, in its current wording, on every
- * screen. No copy here may imply otherwise.
+ * the rules table; how well sourced that table is, is a different question and
+ * these two words answer none of it. Both link to /sources, where the per-figure
+ * provenance inventory answers it — figure by figure, with the document, its
+ * date and its confidence. No copy here may imply that a mark is a citation.
  */
 export function Provenance({ kind }: { kind: ProvenanceKind }) {
   const t = useTranslations("Provenance");

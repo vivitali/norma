@@ -131,7 +131,9 @@ keep the sizes above.
 | `Gauges` | GDS and TDS on a shared 60% axis with the limit ticked. `role="img"` with a full label. |
 | `MathColumns` | Both derivations. A row whose input is zero is **absent**, not a zero row. |
 | `Provenance` | The `rule` / `estimate` mark. Describes derivation, never verification. |
+| `ConfidenceMark` | The other half: how well a figure is *sourced*, on `/sources` only. The same 7px dot as `SectionRow`, plus a word — `Confirmed` · `Probable` · `Weak` · `Assumption` · `Not published`. Two states share `caution` and two share `pass`, because the dot ranks and the word names; a fifth colour would be a fourth state colour §8 does not have. `Not published` is `blocked` on purpose — a quantity nobody publishes is the one status a reader must not skim past, and it must never read like `Assumption`, which is a default *we* chose. |
 | `CrossLink` | One sentence pointing at the page that derives a figure this panel already shows. `placement="row"` is a note under its figure, in the `ex_` treatment; `placement="foot"` is the panel's last line. Not a widget and not a related-links block — see §5.2. |
+| `TraceLabel` | The other shape: a `PanelRow`'s own label made navigable, so the words that NAME the figure carry the reader to the page deriving it. No new copy — `id` is the row's existing label key. Inline, exempt from the 44px floor per WCAG 2.5.8. See §5.2. |
 | `AppNav` | One disclosure at **every** width — a `Tools` trigger and a panel of the four journey groups. Not a desktop row plus a mobile drawer, and **not** because §8 forbids it (a row of links discloses nothing): because arrival is search-first onto a single tool, and because a flat bar cannot render Rent vs Buy's two groups honestly. Groups are a nested `ul` with `aria-labelledby` and explicit `role="list"`, **not** headings — the nav precedes page content, so `h2` group labels would open every page's outline before its own `h1`, and preflight's `list-style: none` makes VoiceOver drop an unroled list. |
 | `ImpactRow` | What debt costs in purchase price. Four states, gated on the input. |
 
@@ -151,14 +153,14 @@ A link ships only if it passes one of two tests:
 
 And then:
 
-1. **At most two per page**, counted on the rendered page in each state, not in
-   the source: two verdict links can be mutually exclusive and a static count
-   reads them both.
+1. **At most two SENTENCES per page**, counted on the rendered page in each
+   state, not in the source: two verdict links can be mutually exclusive and a
+   static count reads them both. Trace labels are capped separately — see below.
 2. **Verdict links render only in their state.** A session with no problem sees
    no invitations, because it has no question.
-3. **Last line of a panel, or a note under the row it traces.** Never in the
-   answer head, never in a closed row's line, never a section of its own — those
-   belong to this page's own computation.
+3. **Last line of a panel, a note under the row it traces, or the row's own
+   label.** Never in the answer head, never in a closed row's line, never a
+   section of its own — those belong to this page's own computation.
 4. **A figure travels only when its inputs were answered**, and only out of a
    `src/domain` function. Down Payment's "$0 available" must never travel: it
    would assert an empty bank account.
@@ -169,6 +171,37 @@ And then:
 This is **not** a second disclosure mechanism: §8 forbids a second way to
 *reveal*, and a link reveals nothing. `Provenance` has been an inline `Link`
 inside a `PanelRow` since v2, so this is the established pattern.
+
+**The second shape: the row's own label (`TraceLabel`).** On a row whose figure
+literally IS another page's answer, the sentence is the wrong instrument — it
+adds a line of prose to say what the label already says, and rule 1 then spends
+one of a page's two sentences on a restatement. So on those rows the *words that
+name the figure* become the link: Down Payment's `Closing costs` is
+`closingTotal().total`; Affordability's `Principal and interest` is
+`amortization().firstPayment` — the same loan through the same `payFactor`, not
+"related to" but identical to the dollar, and it links to
+`/amortization#payment` so the reader lands on the section deriving it. The
+label is the *existing* message key, so this shape writes no copy at all, in
+either locale, and the accessible name is by construction the name the row
+shows.
+
+It is **trace only, never verdict**: a verdict is a claim about the reader's
+situation and needs a sentence to make it; a label cannot make a claim, which is
+exactly why it cannot editorialise. Rules 3–5 hold unchanged; rule 5 comes free.
+
+Rule 1 does not: trace labels are capped **at most one per panel**, counted
+separately from sentences. The two-per-page cap exists to stop sentences piling
+up into a related-links block, and a linked label cannot pile up into anything —
+it occupies no space that was not already spent and adds no prose. Counting them
+together would mean a page could buy a link on the words naming its figure only
+by giving up a sentence saying something the reader cannot otherwise learn. Both
+caps are enforced on the rendered page in `src/app/page-contracts.test.tsx`,
+which also fails on any tool-route link declaring neither shape, so the split
+cannot be used to smuggle one in.
+
+Inline targets are exempt from §7's 44px floor per WCAG 2.5.8, and padding these
+into blocks would put a finger-height tap target inside a 13.5px derivation row.
+They stay inline.
 
 **Deliberately absent: Affordability → Rent vs Buy.** A "have you considered
 renting" line under a declined verdict is the product editorialising about the
@@ -182,6 +215,32 @@ previous version positioned all three labels by value in one band of pixels and 
 overlapped into unreadable text. Here comfort sits above the bar, target below it, and
 the ceiling is pinned to the right edge — the top of the scale by definition, so it can
 never collide with the two markers that move.
+
+### 5.3 The ask, where there is no answer
+
+Nine jurisdiction × property-type combinations have no published benchmark price —
+the three territories at either property type, and PEI, Halifax and Saskatoon
+condos — and six records carry no rent, because CMHC suppresses every Yukon cell
+and does not survey Nunavut. A screen with no price is not a screen with a small
+answer; it is a screen with none.
+
+- **`AnswerHead` renders without a figure.** No "$0" and no em-dash placeholder:
+  the first is a claim about a market and the second reads as a rendering fault
+  (§5's own note on the Rent vs Buy stat). The sentence takes the hero's slot at
+  24/28px, and the sub-line asks for the number.
+- **The sections go with it.** Every one of them derives from the price, and a
+  derivation of nothing is not a shorter derivation. The INPUTS stay exactly where
+  they were, because that is where the ask is answered.
+- **The field asks in place, at the size of the benchmark hint it replaces.** Same
+  quiet note under the same control — not a banner, not a modal, not a second
+  disclosure gesture (§1, §8). And it suggests nothing: a placeholder is a
+  suggestion, and "0" suggests a free house.
+- **Affordability is the one page that keeps its answer**, because its hero is the
+  price the reader's INCOME supports and no benchmark stands behind it. It drops the
+  three checks, the two price-derived stats and the verdict sentence.
+- **A figure nobody publishes never takes the jurisdiction's name.** "Typical for
+  Nunavut" for a rent CMHC never surveyed is the invented figure this product exists
+  not to ship; where nothing is published the tag says so instead.
 
 ## 6. Motion
 

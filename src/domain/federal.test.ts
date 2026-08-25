@@ -34,3 +34,143 @@ describe("federal rules data", () => {
     expect(federal.marginal.CA).toBeDefined();
   });
 });
+
+/**
+ * The 2026 verification pass. Every assertion below names a figure that was read off the
+ * issuing authority on 2026-08-24 (or, where no authority publishes one, off a named
+ * aggregator on a stated date). A test here is the only thing that stops a future edit from
+ * quietly reverting a sourced figure to the prototype's placeholder.
+ */
+describe("federal rules — verified 2026 figures", () => {
+  it("uses the 2026 Home Buyers' Amount, computed at the 14% lowest federal rate", () => {
+    // $10,000 claim (CRA line 31270) x 14% (lowest federal bracket, 2026 and later) = $1,400.
+    // NOT $1,500 — that is the 2025 figure, when the lowest rate was 15%/14.5%.
+    expect(federal.hba).toBe(1400);
+  });
+
+  it("uses a real insured/uninsured spread, not the 10bp placeholder", () => {
+    expect(federal.rates.insured).toBeCloseTo(0.0394, 6);
+    expect(federal.rates.uninsured).toBeCloseTo(0.0424, 6);
+    expect(federal.rates.uninsured - federal.rates.insured).toBeGreaterThan(0.002);
+  });
+
+  it("uses the Bank of Canada's own rate series where one exists", () => {
+    expect(federal.rates.prime).toBeCloseTo(0.0445, 6);
+    expect(federal.rates.variable).toBeCloseTo(0.0361, 6);
+  });
+
+  it("uses OSFI's minimum qualifying rate: the greater of 5.25% or contract + 2%", () => {
+    expect(federal.stressTest).toEqual({ floor: 5.25, buffer: 2 });
+  });
+
+  it("uses CMHC's published homeowner premium schedule band for band", () => {
+    expect(federal.cmhc.bands).toEqual([
+      [0.65, 0.006],
+      [0.75, 0.017],
+      [0.8, 0.024],
+      [0.85, 0.028],
+      [0.9, 0.031],
+      [0.95, 0.04],
+    ]);
+    expect(federal.cmhc.longAmortSurcharge).toBeCloseTo(0.002, 6);
+    expect(federal.cmhc.insuredCap).toBe(1_500_000);
+  });
+
+  it("uses CMHC's debt service ceilings and amortization caps", () => {
+    expect(federal.gds).toBe(39);
+    expect(federal.tds).toBe(44);
+    expect(federal.maxAmortFtbInsured).toBe(30);
+    expect(federal.maxAmortOther).toBe(25);
+  });
+
+  it("uses CRA's 2026 registered-plan figures", () => {
+    expect(federal.rrspCap).toBe(33_810);
+    expect(federal.fhsa).toEqual({ annual: 8_000, lifetime: 40_000 });
+    expect(federal.hbp.max).toBe(60_000);
+    expect(federal.hbp.repayYears).toBe(15);
+    expect(federal.capGainsInclusion).toBe(0.5);
+  });
+
+  it("uses the First-Time Home Buyers' GST rebate as legislated", () => {
+    expect(federal.gstFthb).toEqual({
+      rate: 0.05,
+      fullTo: 1_000_000,
+      zeroAt: 1_500_000,
+      cap: 50_000,
+    });
+  });
+
+  it("matches FP Canada's 2026 projection assumptions where it borrows one", () => {
+    expect(federal.appreciation.inflation).toBeCloseTo(0.021, 6);
+    expect(federal.appreciation.shelter).toBeCloseTo(0.031, 6);
+    expect(federal.investReturn.cash).toBeCloseTo(0.024, 6);
+  });
+
+  it("carries the date of this verification pass", () => {
+    expect(federal.verified).toBe("2026-08-24");
+  });
+});
+
+describe("federal provenance — the 2026 pass", () => {
+  // Enumerated, not inferred: a literal cannot be asked what it used to be, so the only way
+  // to stop a figure shipping bare is to name it here.
+  const REQUIRED = [
+    "cmhc.bands",
+    "cmhc.longAmortSurcharge",
+    "cmhc.insuredCap",
+    "stressTest.floor",
+    "stressTest.buffer",
+    "gds",
+    "tds",
+    "heatAllowance",
+    "rates.insured",
+    "rates.uninsured",
+    "rates.variable",
+    "rates.prime",
+    "maxAmortFtbInsured",
+    "maxAmortOther",
+    "fhsa.annual",
+    "fhsa.lifetime",
+    "hbp.max",
+    "hbp.repayYears",
+    "hbp.graceYears",
+    "hbp.ruleDays",
+    "rrspCap",
+    "capGainsInclusion",
+    "marginal",
+    "sellingCost",
+    "maintenanceReserve",
+    "appreciation.inflation",
+    "appreciation.shelter",
+    "appreciation.flat",
+    "investReturn.cash",
+    "investReturn.balanced",
+    "investReturn.growth",
+    "savingsReturn",
+    "gstFthb.rate",
+    "gstFthb.fullTo",
+    "gstFthb.zeroAt",
+    "gstFthb.cap",
+    "hba",
+    "contractRate",
+  ];
+
+  it.each(REQUIRED)("annotates %s", (path) => {
+    expect(federal.provenance[path], `federal.${path} has no provenance`).toBeDefined();
+  });
+
+  it("names a source and a date for every figure it claims high or medium confidence in", () => {
+    for (const [path, p] of Object.entries(federal.provenance)) {
+      if (p?.conf !== "high" && p?.conf !== "medium") continue;
+      expect(p.src, `federal.${path} claims ${p.conf} with no source`).toBeTruthy();
+      expect(p.asOf, `federal.${path} claims ${p.conf} with no date`).toBeTruthy();
+    }
+  });
+
+  it("keeps the contract rates at medium — no authority publishes a 5-year fixed rate", () => {
+    for (const path of ["rates.insured", "rates.uninsured"]) {
+      expect(federal.provenance[path]?.conf, path).toBe("medium");
+      expect(federal.provenance[path]?.note, path).toBeTruthy();
+    }
+  });
+});
