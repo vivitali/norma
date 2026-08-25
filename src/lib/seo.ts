@@ -20,6 +20,8 @@ export const INDEXABLE_ROUTES = [
   "/rent-vs-buy",
   "/scenarios",
   "/sources",
+  "/privacy",
+  "/terms",
 ] as const;
 
 export type IndexableRoute = (typeof INDEXABLE_ROUTES)[number];

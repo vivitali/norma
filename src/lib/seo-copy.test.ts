@@ -14,6 +14,8 @@ const PAGES = [
   "rentVsBuy",
   "scenarios",
   "sources",
+  "privacy",
+  "terms",
   "notFound",
 ] as const;
 

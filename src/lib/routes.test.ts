@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { routing } from "@/i18n/routing";
 import enMessages from "../../messages/en.json";
 import frMessages from "../../messages/fr.json";
-import { NAV, builtEntries } from "./routes";
+import { NAV, FOOTER, builtEntries } from "./routes";
 
 describe("nav registry", () => {
   it("points every entry at a route that exists in the pathnames map", () => {
@@ -57,6 +57,7 @@ describe("nav registry", () => {
     // reverse: a route added to routing.ts and forgotten here would otherwise be silently
     // unreachable from the UI.
     const navRoutes = new Set(NAV.flatMap((g) => g.entries.map((e) => e.route)));
+    for (const entry of FOOTER) navRoutes.add(entry.route);
     navRoutes.add("/");
     expect([...navRoutes].sort()).toEqual(Object.keys(routing.pathnames).sort());
   });
@@ -70,6 +71,29 @@ describe("nav registry", () => {
     for (const key of keys) {
       expect(enMessages.Nav, `Nav.${key} missing in en.json`).toHaveProperty(key);
       expect(frMessages.Nav, `Nav.${key} missing in fr.json`).toHaveProperty(key);
+    }
+  });
+});
+
+describe("footer registry", () => {
+  it("points every entry at a route that exists in the pathnames map", () => {
+    const known = new Set(Object.keys(routing.pathnames));
+    for (const entry of FOOTER) expect(known, entry.route).toContain(entry.route);
+  });
+
+  it("keeps the legal pages OUT of the journey nav", () => {
+    // The split is the point of having two registries. A privacy policy ranked beside Closing
+    // Costs in the menu panel misstates what it is, and the panel's column grid is sized for the
+    // four journey groups. Guarded so a later "surface everything in one place" change has to
+    // argue with this test.
+    const navRoutes = new Set(NAV.flatMap((g) => g.entries.map((e) => e.route)));
+    for (const entry of FOOTER) expect(navRoutes).not.toContain(entry.route);
+  });
+
+  it("has a Legal message key for every label, in both locales", () => {
+    for (const entry of FOOTER) {
+      expect(enMessages.Legal, `Legal.${entry.label} missing in en.json`).toHaveProperty(entry.label);
+      expect(frMessages.Legal, `Legal.${entry.label} missing in fr.json`).toHaveProperty(entry.label);
     }
   });
 });
