@@ -151,7 +151,7 @@ describe("SourcesContent", () => {
     render();
     expect(
       screen.getByText(
-        "Most figures now name a dated published source; the rest are estimates we disclose, or are left unknown where nothing is published.",
+        "Every figure names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
       ),
     ).toBeVisible();
     expect(screen.getByText(/Rules last verified/)).toBeVisible();

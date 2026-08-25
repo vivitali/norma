@@ -26,7 +26,12 @@ describe("territorial market data", () => {
   it("publishes no benchmark price, because nobody does", () => {
     // No CREA member board publishes an MLS® HPI for any territory, the NWT Bureau of
     // Statistics publishes no price series at all, and gov.nu.ca blocks automated access.
-    // All six figures the prototype carried were inventions.
+    // All six figures the prototype carried were inventions. Yukon is the one where a
+    // government series does exist — the Yukon Bureau of Statistics publishes quarterly
+    // Whitehorse AVERAGE sale prices — and it still reads null here, because an average of a
+    // few dozen mixed sales is not the constant-quality benchmark this field holds. That is a
+    // judgement about metric, and bench.house's note has to carry the reasoning; see the
+    // separate test below, which is what stops it drifting back to "nobody publishes anything".
     for (const j of terr()) {
       expect(j.bench.house, `${j.id}.bench.house`).toBeNull();
       expect(j.bench.condo, `${j.id}.bench.condo`).toBeNull();
@@ -123,7 +128,8 @@ describe("Yukon land titles tariff (Land Titles Act, 2015)", () => {
   it("levies Whitehorse property tax on the assessment roll, not on the purchase price", () => {
     // The Government of Yukon values improvements at depreciated replacement cost and
     // reassesses every two years, so the 1.097% residential rate cannot be applied to a sale
-    // price. Two reported 2026 bills on ~$641,000 homes were $1,625 and $3,744.
+    // price. Two reported 2026 bills were $1,625 and $3,744, against a Yukon Bureau of
+    // Statistics Whitehorse single-detached average sale price of $753,300 (Q1 2026).
     const p = yt().propTax;
     expect(p.publishedRate).toBeCloseTo(0.01097, 8);
     expect(p.basis).toBe("frozenBaseYear");
@@ -133,6 +139,43 @@ describe("Yukon land titles tariff (Land Titles Act, 2015)", () => {
     // A $620,000 Whitehorse house lands inside the range of the two real reported bills.
     expect(p.effective * 620000).toBeGreaterThan(1625);
     expect(p.effective * 620000).toBeLessThan(3744);
+  });
+
+  it("sets the assessment ratio to the top of the range it actually computes", () => {
+    // The note used to claim 0.5 was "the top of that observed range" while computing a range
+    // of 0.23 to 0.53 — a number and a sentence disagreeing about the same figure. Both halves
+    // are pinned here because neither is checkable on its own: $1,625 and $3,744 at 1.097%
+    // imply assessments of ~$148,100 and ~$341,300, and over $753,300 that is 0.20 to 0.45.
+    const p = yt().propTax;
+    const lo = 1625 / p.publishedRate / 753300;
+    const hi = 3744 / p.publishedRate / 753300;
+    expect(lo).toBeCloseTo(0.2, 2);
+    expect(hi).toBeCloseTo(0.45, 2);
+    expect(p.assessmentRatio).toBeCloseTo(hi, 2);
+    expect(p.assessmentRatio).toBeLessThanOrEqual(0.45);
+  });
+
+  it("derives the ratio from a published document, not from a news article about one", () => {
+    // The old note took its denominator from "CBC cites $641,000" while bench.house refused
+    // that very figure as hearsay — one number, two evidentiary standards, and the weaker use
+    // was the one driving a recurring cost on every Yukon screen. The denominator now comes
+    // off the Bureau's own quarterly PDF, and the note has to say why a figure this record
+    // still declines to DISPLAY as a price is admissible as the denominator of a ratio.
+    const ratio = yt().provenance["propTax.assessmentRatio"]!;
+    expect(ratio.conf).toBe("assumption");
+    expect(ratio.url).toMatch(/yukon\.ca\/.*real-estate-report/);
+    expect(ratio.note).toMatch(/753,300/);
+    expect(ratio.note).toMatch(/declines to display as a price/i);
+    // And the refusal at the other end says the same thing from its side: not "unsourced",
+    // but "an average is not a benchmark".
+    const bench = yt().provenance["bench.house"]!;
+    expect(bench.conf).toBe("none");
+    expect(bench.note).toMatch(/average sale price/i);
+    expect(bench.note).toMatch(/different metric/i);
+    // The old reason may be mentioned, but only as retired — never as the standing one.
+    expect(bench.note).not.toMatch(/would be sourcing by hearsay/i);
+    // A `none` figure must not hang a source document beside its "Not published" row.
+    expect(bench.src).toBeUndefined();
   });
 });
 

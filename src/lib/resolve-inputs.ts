@@ -18,7 +18,17 @@ export const DEFAULT_INCOME_2 = 45000;
 export const DEFAULT_COMFORT_CEILING = 2700;
 export const DEFAULT_INSURANCE_ANNUAL = 1500;
 export const DEFAULT_UTILITIES = 300;
-/** Only used where the jurisdiction record carries no benchmark rent of its own. */
+/**
+ * A national placeholder, and the property of NO jurisdiction.
+ *
+ * Six records — nb, nl, pe, yt, nt, nu — carry no rent at all, because CMHC
+ * suppresses every Yukon cell and does not survey Nunavut. A figure nobody
+ * publishes must never be attributed to the place that did not publish it, so
+ * this one never travels with a city's name attached: `rentKnown` is false
+ * wherever it is in play, the rent field asks instead of suggesting it, and Rent
+ * vs Buy asks for a rent rather than printing a verdict built on it. It stays a
+ * number only so the arithmetic below is defined rather than NaN.
+ */
 export const DEFAULT_RENT = 1500;
 
 /**
@@ -50,6 +60,19 @@ export interface ResolvedInputs {
    * benchmark as a hint must branch on this rather than on `price`.
    */
   benchmark: number | null;
+  /**
+   * Whether there is a real price to model at all — the reader gave one, or a
+   * publisher produces a benchmark for this jurisdiction and property type.
+   *
+   * False for nine jurisdiction × property-type combinations: the three
+   * territories at either property type, and PEI, Halifax and Saskatoon condos.
+   * In that state `price` is 0, which is arithmetic and never an answer, so a
+   * screen whose figures derive from it must ASK for a price instead of printing
+   * one. "$0 is within reach" is a worse answer than no answer, and a $0
+   * headline is the shape it takes; `page-contracts.test.tsx` sweeps every
+   * jurisdiction × property type and fails on one.
+   */
+  priceKnown: boolean;
   /**
    * The down payment percentage the app MODELS, with the legal minimum applied.
    *
@@ -115,6 +138,16 @@ export interface ResolvedInputs {
   renewalRate: number | null;
 
   rent: number;
+  /**
+   * Whether the rent being compared against is a real figure — the reader's own,
+   * or one this jurisdiction's record publishes.
+   *
+   * False for the six records that carry no rent. `rent` then falls back to
+   * DEFAULT_RENT so the arithmetic is defined, but that number is nobody's rent
+   * and least of all this place's: Rent vs Buy asks for one rather than printing
+   * a verdict, and the field beside the ask suggests nothing.
+   */
+  rentKnown: boolean;
   /** Fraction, not a percentage — the engine takes fractions. */
   rentInflation: number;
   holding: number;
@@ -143,14 +176,19 @@ export function resolveInputs(
   const income2 = stored.income2 ?? 0;
   const otherIncome = stored.otherIncome ?? 0;
   const benchmark = benchmarkPrice(j, stored.ptype);
-  // `?? 0` is the last rung and is unreachable today — an invariant in
-  // resolve-inputs.test.ts asserts every jurisdiction still publishes a benchmark for
-  // every property type. It is here so the nulls the verification milestone is about to
-  // introduce (no MLS HPI covers a territory) land somewhere defined rather than
-  // crashing, and 0 is the one number no screen can mistake for a market price. When
-  // those nulls arrive, `benchmark === null` is the fact to branch on, and the screen
-  // that ASKS the reader for a price belongs to the Closing Costs milestone.
+  // `?? 0` is the last rung and it IS reached: nine jurisdiction × property-type
+  // combinations have no published benchmark — no MLS HPI covers a territory, and PEI,
+  // Halifax and Saskatoon publish no apartment series. An invariant in
+  // resolve-inputs.test.ts allows a null benchmark ONLY where that record's own
+  // provenance records conf "none", so the rung is reachable by design rather than by
+  // omission.
+  //
+  // 0 is the one number no screen can mistake for a market price, and it is arithmetic,
+  // not an answer: `priceKnown` is the fact every consumer branches on, and a screen
+  // whose figures derive from the price asks the reader for one in place rather than
+  // computing against this zero.
   const price = stored.price ?? benchmark ?? 0;
+  const priceKnown = stored.price !== null || benchmark !== null;
   // Half a dollar of slack, matching scenario()'s own test in engine.ts: a
   // percentage that lands a rounding error under the floor is not a reader
   // asking for something illegal. Expressed in dollars, not percentage points,
@@ -166,6 +204,7 @@ export function resolveInputs(
   return {
     price,
     benchmark,
+    priceKnown,
     dpPct,
     dpPctRequested: stored.dpPct,
     belowMinimum,
@@ -214,6 +253,10 @@ export function resolveInputs(
     renewalRate: stored.renewalRate,
 
     rent: stored.rent ?? j.rent ?? DEFAULT_RENT,
+    // `j.rent` is optional AND nullable — a record may omit the field or record it
+    // explicitly suppressed — and both mean the same thing to a reader: nobody
+    // published a rent for here.
+    rentKnown: stored.rent !== null || (j.rent ?? null) !== null,
     rentInflation: stored.rentInflation / 100,
     holding: stored.holding,
     appreciation: F.appreciation[stored.apprKey],

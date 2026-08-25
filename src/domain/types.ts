@@ -210,7 +210,26 @@ export type AssessmentBasis =
   | "market"
   | "portioned"        // MB: taxable base is assessed value x a statutory class portion
   | "percentOfValue"   // SK: taxable base is a provincially-set Percentage of Value
-  | "frozenBaseYear";  // ON (MPAC frozen at 2016), NT (base-year general assessment)
+  | "frozenBaseYear"   // ON (MPAC frozen at 2016), YT (biennial roll, DRC improvements)
+  /**
+   * We could not establish what the assessment base IS. Not a fifth kind of base — an
+   * admission that the question is open, and the only member that does NOT describe the
+   * taxing authority's practice.
+   *
+   * It exists because the alternative was worse. NT and NU both carry an unsourced
+   * effective rate with no ratio behind it, and both were labelled `market` with a ratio of
+   * 1 purely to satisfy the "ratio 1 iff market" invariant — while their own provenance
+   * notes said, in words, that neither territory assesses at market. The invariant was being
+   * defeated by exactly the move it exists to catch, and because `basis` is a live UI signal
+   * (Affordability shows an estimate caveat wherever the base is not market value) the
+   * mislabel also suppressed a caveat that should have rendered.
+   *
+   * The ratio stays 1 under `unknown`, meaning "none established" rather than "the base is
+   * market value" — so `effective === publishedRate` and the derivation invariant still
+   * holds. The ratio invariant exempts `unknown` explicitly, in one place, where it can be
+   * read.
+   */
+  | "unknown";
 
 /**
  * Published mill rates apply to an ASSESSMENT, but the engine multiplies market price. Storing
@@ -223,7 +242,11 @@ export interface PropertyTax {
   effective: number;
   /** The rate as the taxing authority publishes it, against its own assessment base. */
   publishedRate: number;
-  /** assessment / market price. Exactly 1 where the base IS market value. */
+  /**
+   * assessment / market price. Exactly 1 where the base IS market value, and also 1 under
+   * `basis: "unknown"` — where it means no ratio was established, not that none is needed.
+   * Read it together with `basis`; on its own a 1 does not distinguish the two.
+   */
   assessmentRatio: number;
   basis: AssessmentBasis;
 }

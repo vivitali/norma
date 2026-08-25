@@ -138,3 +138,51 @@ describe("Amortization — French", () => {
     expect(screen.getAllByText(/Amortissement et renouvellement/).length).toBeGreaterThan(0);
   });
 });
+
+describe("Amortization — with no published price, it asks", () => {
+  /**
+   * Nobody publishes an MLS HPI benchmark for a territory, so `resolved.price` is 0
+   * there. A payment schedule for a $0 mortgage is not a smaller answer than a real
+   * one, it is a false one: it quoted "$0" as this reader's payment, in the same type
+   * at the same size as Toronto's $6,387, with nothing on screen saying otherwise.
+   */
+  const inYukon = () =>
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "yt" }));
+
+  it("replaces the payment with the ask, and prints no figure at all", () => {
+    inYukon();
+    renderPage();
+    expect(screen.getByText(/Nobody publishes a benchmark price for Yukon/)).toBeInTheDocument();
+    expect(screen.queryByText("$0")).not.toBeInTheDocument();
+    // The sections are the derivation of a payment there is no price to compute.
+    expect(screen.queryAllByRole("button", { expanded: true })).toHaveLength(0);
+  });
+
+  it("asks on the price field itself, and suggests nothing in it", () => {
+    inYukon();
+    renderPage();
+    const price = screen.getByLabelText("Purchase price");
+    expect(price).toHaveValue("");
+    expect(price).not.toHaveAttribute("placeholder", expect.stringContaining("0"));
+    expect(screen.getByText(/No published price for Yukon/)).toBeInTheDocument();
+  });
+
+  it("asks in French too, with the place name inside the sentence", () => {
+    // The ask carries an ICU argument in both locales, and a French reader meeting
+    // `Inputs.noPriceHead` instead of a sentence is the failure this catches.
+    inYukon();
+    renderPage("fr");
+    expect(screen.getByText(/Personne ne publie de prix de référence pour Yukon/)).toBeInTheDocument();
+    expect(screen.getByText(/Aucun prix publié pour Yukon/)).toBeInTheDocument();
+  });
+
+  it("answers in full the moment the reader gives a price", async () => {
+    inYukon();
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByLabelText("Purchase price"), "640000");
+    await user.tab();
+    expect(screen.getAllByText(/your payment never changes/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
+  });
+});

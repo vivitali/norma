@@ -319,6 +319,11 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
   for (const bucket of groups.values()) {
     if (bucket.length < 2) continue;
     const best = bucket.reduce((a, b) => (b.amount > a.amount ? b : a));
+    // Nothing supersedes nothing. Above BC's phase-out ceiling every member of the group is
+    // worth zero, and `reduce` still names one of them the winner — which used to mark the
+    // rest "superseded" and claim a choice the buyer never got. When no member pays, each row
+    // keeps the status it earned (phasedOut, overCeiling, ftbOnly), which is the true reason.
+    if (best.amount <= 0) continue;
     for (const c of bucket) {
       if (c === best) continue;
       c.amount = 0;

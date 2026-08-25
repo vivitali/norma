@@ -196,6 +196,33 @@ function provenanceEntries(map: ProvenanceMap): [string, Provenance][] {
   return Object.entries(map).filter((pair): pair is [string, Provenance] => Boolean(pair[1]));
 }
 
+/**
+ * Whether a provenance path is a FIGURE, for the coverage count only.
+ *
+ * The count backs a claim rendered on every tool page ("most figures name a dated published
+ * source"), so it has to count the thing the sentence says it counts. Two kinds of entry are
+ * not figures and were inflating it:
+ *
+ * - `orgs.*` is the NAME OF A BODY — "TRREB MLS® HPI", "Yukon Land Titles Office". Sourcing a
+ *   publisher's name against that publisher is circular, and it is not a number a reader could
+ *   be wrong about.
+ * - `propTax.effective` is DEFINED as `publishedRate × assessmentRatio`, and an invariant test
+ *   asserts exactly that. Counting all three made one property tax rate contribute three
+ *   "figures", two of them derived — which flatters the count in the one place the milestone
+ *   is most sensitive about derivation. It is excluded only where both of its inputs are
+ *   present, so a record carrying `effective` alone is still counted once.
+ *
+ * The grouped inventory still SHOWS all of these: a reader wants to see the derivation and the
+ * publisher. This predicate governs the arithmetic behind the sentence, not what is displayed.
+ */
+function countsAsFigure(path: string, map: ProvenanceMap): boolean {
+  if (path.startsWith("orgs.")) return false;
+  if (path === "propTax.effective") {
+    return !(map["propTax.publishedRate"] && map["propTax.assessmentRatio"]);
+  }
+  return true;
+}
+
 export interface GroupedProvenance {
   groups: readonly FigureGroup[];
   /** Paths `groupOf` did not recognise. Asserted empty; see `groupOf`. */
@@ -253,7 +280,9 @@ export interface Coverage {
  */
 export function coverageOf(maps: readonly ProvenanceMap[], federal: ProvenanceMap): Coverage {
   const confidences = [...maps, federal].flatMap((map) =>
-    provenanceEntries(map).map(([, p]) => p.conf),
+    provenanceEntries(map)
+      .filter(([path]) => countsAsFigure(path, map))
+      .map(([, p]) => p.conf),
   );
   return {
     jurisdictions: maps.length,

@@ -17,7 +17,10 @@ export const nt: Jurisdiction = {
   cityData: false,
   pro: "lawyer",
   bench: { house: null, condo: null },
-  propTax: { effective: 0.0112, publishedRate: 0.0112, assessmentRatio: 1, basis: "market" },
+  // `unknown`, not `market`: nothing here is sourced — not the rate, not the base, not a
+  // ratio. The ratio of 1 records "none established", which is why `effective` equals
+  // `publishedRate`. See the provenance note on propTax.basis.
+  propTax: { effective: 0.0112, publishedRate: 0.0112, assessmentRatio: 1, basis: "unknown" },
   transfer: [
     // $2.00 for each $1,000 of value "or part thereof" — the engine's ceiling division is the
     // "or part thereof" — subject to a $100 minimum. Above $1,000,000 the statutory tariff steps
@@ -70,7 +73,7 @@ export const nt: Jurisdiction = {
     },
     "propTax.basis": {
       conf: "assumption",
-      note: "Recorded as `market` with a ratio of 1 because no assessment-to-market ratio is sourced, NOT because the NWT assesses at market. The City of Yellowknife values land at 100% of 2024 base-year market value and buildings at 100% of typical depreciated replacement cost, and holds both between general assessments (statutorily at least every nine years; Yellowknife went seven). Outside municipalities, the GNWT's General Taxation Area values land at development cost and improvements at TWO THIRDS of depreciated replacement cost — so reading this record as territory-wide is further wrong again. Correcting the shape needs a published rate and a ratio; we have neither, and inventing both to relabel the basis would be worse than saying so here.",
+      note: "`unknown`: we could not establish what the assessment base is, and the record says so instead of picking the nearest label. It previously said `market` with a ratio of 1 — which this very note contradicted in its own second sentence, and which existed only to satisfy the 'ratio 1 iff market' invariant. What is known: the City of Yellowknife values land at 100% of 2024 base-year market value and buildings at 100% of typical depreciated replacement cost, and holds both between general assessments (statutorily at least every nine years; Yellowknife went seven). Outside municipalities, the GNWT's General Taxation Area values land at development cost and improvements at TWO THIRDS of depreciated replacement cost — so reading this record as territory-wide is further wrong again. Naming a real base needs a published rate and a ratio to go with it; we have neither. Affordability reads `basis` directly and shows its estimate caveat wherever the base is not market value, so `unknown` now renders the caveat this record always warranted.",
     },
     "propTax.effective": {
       conf: "assumption",

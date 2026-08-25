@@ -21,8 +21,15 @@ import { Switch } from "@/components/ui/switch";
  */
 export interface PurchaseInputsProps {
   price: number | null;
-  /** What price resolves to when the reader has not set one — shown as placeholder, never as value. */
-  pricePlaceholder: number;
+  /**
+   * What price resolves to when the reader has not set one — shown as placeholder,
+   * never as value.
+   *
+   * `null` where nobody publishes a benchmark for this jurisdiction and property
+   * type. The field then suggests NOTHING and asks in place: a placeholder of
+   * "0" is a suggestion, and the one it makes is a house that costs nothing.
+   */
+  pricePlaceholder: number | null;
   /** What the reader picked. The control binds to this, so a chip is always selected. */
   dpPct: number;
   /**
@@ -64,9 +71,20 @@ export function PurchaseInputs({
   onChange,
 }: PurchaseInputsProps) {
   const t = useTranslations("Inputs");
+  const tJur = useTranslations("Jurisdictions");
   const fmt = useMoney();
   const pct = usePercent();
-  const effectivePrice = price ?? pricePlaceholder;
+  /**
+   * null when there is no price to model at all — see `pricePlaceholder`.
+   *
+   * A ZERO placeholder is folded into that null rather than shown. Resolving a
+   * jurisdiction with no published benchmark yields `price: 0`, so a caller that
+   * hands its resolved price straight through — as one still does — would offer
+   * "0" in the field as this city's suggested purchase price. Nothing is a
+   * suggestion worth making at zero dollars, and a component that can tell has no
+   * business waiting to be told.
+   */
+  const effectivePrice = price ?? (pricePlaceholder || null);
 
   return (
     <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
@@ -76,18 +94,35 @@ export function PurchaseInputs({
         id="price"
         label={t("price")}
         value={price}
-        placeholder={pricePlaceholder}
+        placeholder={effectivePrice === null ? undefined : (pricePlaceholder ?? undefined)}
         min={0}
         onCommit={(next) => onChange({ price: next })}
       />
+      {/*
+        The ask, in place, on the field that answers it. Not a new disclosure
+        gesture and not a banner: the app has exactly one gesture (DESIGN.md §1)
+        and this is the same quiet note the benchmark hint always was, saying the
+        one honest thing left to say when nobody publishes a price here.
+      */}
+      {effectivePrice === null ? (
+        <p className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
+          {t("noPrice", { place: tJur(jurisdiction.id) })}
+        </p>
+      ) : null}
 
       <SegmentedGroup
-        label={`${t("downPayment")} · ${fmt((effectivePrice * dpPctEffective) / 100)}`}
+        label={
+          effectivePrice === null
+            ? t("downPayment")
+            : `${t("downPayment")} · ${fmt((effectivePrice * dpPctEffective) / 100)}`
+        }
         value={dpPct}
         onChange={(next) => onChange({ dpPct: next })}
         options={DP_CHOICES.map((v) => ({ value: v, label: pct(v) }))}
       />
-      {belowMinimum ? (
+      {/* `belowMinimum` is false without a price — resolveInputs cannot raise a
+          floor it has no price to compute — so this reads a real figure. */}
+      {belowMinimum && effectivePrice !== null ? (
         <p className="-mt-1 text-[11px] leading-[1.45] text-caution">
           {t("belowMinimum", {
             p: pct(dpPctEffective, 1),

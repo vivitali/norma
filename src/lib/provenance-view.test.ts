@@ -165,12 +165,38 @@ describe("coverageOf", () => {
     federal.provenance,
   );
 
-  it("counts every record, federal included", () => {
+  it("counts figures, not provenance entries", () => {
+    // Deliberately NOT `Object.keys(provenance).length`. Two kinds of entry are not figures and
+    // were inflating the count that backs a sentence rendered on every tool page:
+    //
+    //   orgs.*              — the name of a publishing body, not a number a reader can be wrong
+    //                         about, and "sourced" against itself is circular.
+    //   propTax.effective   — defined as publishedRate x assessmentRatio, with an invariant
+    //                         asserting exactly that. Counting all three let one property tax
+    //                         rate contribute three figures, two of them derived.
+    //
+    // Both are still SHOWN in the inventory; this governs the arithmetic, not the display.
+    const isFigure = (map: Record<string, unknown>, path: string) =>
+      !path.startsWith("orgs.") &&
+      !(path === "propTax.effective" && map["propTax.publishedRate"] && map["propTax.assessmentRatio"]);
+
     const expected =
-      jurisdictions.reduce((n, j) => n + Object.keys(j.provenance).length, 0) +
-      Object.keys(federal.provenance).length;
+      jurisdictions.reduce(
+        (n, j) => n + Object.keys(j.provenance).filter((p) => isFigure(j.provenance, p)).length,
+        0,
+      ) + Object.keys(federal.provenance).filter((p) => isFigure(federal.provenance, p)).length;
+
     expect(coverage.total).toBe(expected);
     expect(coverage.jurisdictions).toBe(14);
+  });
+
+  it("actually excludes something — the exclusions are not vacuous", () => {
+    // Anti-vacuity: if a refactor stopped recording orgs.* or propTax.effective, the test above
+    // would still pass while silently measuring nothing.
+    const rawEntries =
+      jurisdictions.reduce((n, j) => n + Object.keys(j.provenance).length, 0) +
+      Object.keys(federal.provenance).length;
+    expect(coverage.total).toBeLessThan(rawEntries);
   });
 
   it("splits into exactly three buckets, with nothing falling between them", () => {

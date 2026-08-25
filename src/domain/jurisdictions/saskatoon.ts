@@ -24,6 +24,14 @@ export const saskatoon: Jurisdiction = {
     // ISC Registration of Mortgage, effective 2026-04-15: a step table on the amount secured,
     // not a flat fee. The whole band's amount is payable, so `brackets` (which is marginal)
     // cannot express it. Every tier is above the $160 the prototype carried.
+    //
+    // THE CEILINGS ARE THE SCHEDULE'S OWN, mixed conventions and all: ISC writes the first
+    // band "$0 to $249,999.99" and every later one on round dollars — "$250,000 to $500,000",
+    // "$500,000.01 to $750,000". `buildLines` compares `on <= cap`, so these ceilings
+    // reproduce that exactly: a $500,000 loan pays $275, and $525 starts one cent above.
+    // Yukon's steps carry .99 on EVERY ceiling because ITS schedule is written "less than
+    // $500,000" throughout. Two conventions because two schedules, not by oversight — the
+    // rule is that the ceilings match the source document, never each other.
     {
       key: "li_mortReg", ex: "ex_titleReg", tier: "provincial", kind: "stepped", on: "loan",
       steps: [[249999.99, 200], [500000, 275], [750000, 525], [1000000, 775], [null, 1000]],
@@ -60,10 +68,10 @@ export const saskatoon: Jurisdiction = {
     },
     "transfer.1.steps": {
       conf: "high",
-      src: "ISC Land Title Fees Table, Interest Registration Services — Registration of Mortgage: $200 / $275 / $525 / $775 / $1,000",
+      src: "ISC Land Title Fees Table, Interest Registration Services — Registration of Mortgage, by \"Interest Valued At\": $0 to $249,999.99 = $200.00; $250,000 to $500,000 = $275.00; $500,000.01 to $750,000 = $525.00; $750,000.01 to $1,000,000 = $775.00; $1,000,000.01 and greater = $1,000.00",
       asOf: "2026-04-15",
       url: "https://www.saskregistries.ca/hubfs/Land-Title-Fees-Table-04-2026.pdf",
-      note: "Re-read off the schedule and confirmed unchanged. NOT MODELLED: the tiers cover the first four titles, interests or shares affected; each additional one is a $55.00 flat fee. The previous schedule (05-2024) was $180 / $250 / $500 / $750 / $1,000, so this table has a history of moving.",
+      note: "BOUNDARIES ARE PART OF THE FIGURE for a step table, so they are quoted in `src` above rather than only the amounts. Re-read off the schedule and confirmed unchanged, boundaries included. The mixed punctuation is ISC's own — only the first band ends in .99; every later band ends on a round dollar and the next opens one cent higher. `buildLines` selects on `on <= cap`, so the ceilings here say precisely what the schedule says: a loan of exactly $500,000 (a $625,000 purchase at 20% down, an ordinary number) is inside the '$250,000 to $500,000' band at $275, and $525 begins at $500,000.01. The same holds at $750,000 and $1,000,000. Do not 'regularise' these to .99 to match Yukon's — Yukon's schedule reads 'less than $500,000' at every band and genuinely is exclusive; Saskatchewan's is not. The schedule leaves a one-cent gap between $249,999.99 and $250,000 that names no band; a value inside it takes the lower fee here, which is the buyer-favourable reading of a drafting slip and unreachable on any real loan. NOT MODELLED: the tiers cover the first four titles, interests or shares affected; each additional one is a $55.00 flat fee. The previous schedule (05-2024) was $180 / $250 / $500 / $750 / $1,000, so this table has a history of moving.",
     },
     "propTax.publishedRate": {
       conf: "high",

@@ -49,6 +49,10 @@ export function InputGroups({
 }: InputGroupsProps) {
   const t = useTranslations("Affordability");
   const tProv = useTranslations("Provinces");
+  const tInputs = useTranslations("Inputs");
+  // The reader-facing name. `jurisdiction.city` is the lowercase record key and
+  // rendered "winnipeg"; the Jurisdictions namespace is where the real name lives.
+  const tJur = useTranslations("Jurisdictions");
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -188,16 +192,26 @@ export function InputGroups({
             id="price"
             label={t("price")}
             value={stored.price}
-            placeholder={resolved.price}
+            // Nothing to suggest where nothing is published: a placeholder of "0"
+            // is still a suggestion, and the one it makes is a free house.
+            placeholder={resolved.priceKnown ? resolved.price : undefined}
             min={0}
             onCommit={(price) => update({ price })}
           />
           {/*
             `resolved.benchmark`, not `jurisdiction.bench[ptype]`: a benchmark can be
-            null now (nothing published for that market), and a hint with no figure in
-            it is worse than no hint. See benchmarkPrice() in resolve-inputs.ts.
+            null (nothing published for that market), and a hint with no figure in it
+            is worse than no hint. See benchmarkPrice() in resolve-inputs.ts.
+
+            Where it IS null the field does not go quiet — that left the reader a $0
+            price with LESS explanation than a priced city gets. It asks, in place, on
+            the field that answers it.
           */}
-          {resolved.benchmark === null ? null : (
+          {resolved.benchmark === null ? (
+            <span className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
+              {tInputs("noPrice", { place: tJur(jurisdiction.id) })}
+            </span>
+          ) : (
             <span className="-mt-1 text-[10.5px] text-ink3">
               {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(resolved.benchmark)}
             </span>

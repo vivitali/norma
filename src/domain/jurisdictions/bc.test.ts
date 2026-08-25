@@ -64,14 +64,26 @@ describe("BC newly-built-home exemption", () => {
 
   it("is gone at the top of the phase-out band", () => {
     // One dollar below the ceiling the published table still gives $419.60; at the ceiling it
-    // gives nothing. Asserted on the amount rather than `st`, because at $1,150,000 BOTH BC
-    // exemptions are zero and the group collapse then marks one of them "superseded" — a
-    // status that is meaningless when nothing was superseded. That is an engine wart, not a
-    // BC one, so it is recorded here rather than worked around in the data.
+    // gives nothing.
     const inBand = { ...base, price: 1149000, ptype: "newbuild" as const };
     expect(rebate("cr_pttNewBuild", inBand)?.amount).toBeCloseTo(419.6, 2);
     const atCeiling = { ...base, price: 1150000, ptype: "newbuild" as const };
     expect(rebate("cr_pttNewBuild", atCeiling)?.amount).toBe(0);
+  });
+
+  it("supersedes neither exemption once both have expired", () => {
+    // At $1,150,000 a first-time buyer of a new build gets nothing from either programme: the
+    // first-time-buyer band ended at $860,000 and the newly-built one runs out exactly here.
+    // Neither passed the other over, so neither may be labelled "superseded" — that label is
+    // rendered as a sentence telling the buyer another rebate paid more, and here none did.
+    const o = { ...base, price: 1150000, ftb: true, ptype: "newbuild" as const };
+    const j = van();
+    const C = credits(j, federal, o, buildLines(j, federal, o).gov);
+    const bcPtt = C.atClosing.filter((c) => c.group === "bcPtt");
+    expect(bcPtt).toHaveLength(2);
+    expect(bcPtt.map((c) => c.amount)).toEqual([0, 0]);
+    expect(bcPtt.map((c) => c.st)).not.toContain("superseded");
+    expect(C.atClosing.find((c) => c.key === "cr_pttExempt")?.st).toBe("phasedOut");
   });
 });
 

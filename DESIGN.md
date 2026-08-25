@@ -216,6 +216,32 @@ overlapped into unreadable text. Here comfort sits above the bar, target below i
 the ceiling is pinned to the right edge — the top of the scale by definition, so it can
 never collide with the two markers that move.
 
+### 5.3 The ask, where there is no answer
+
+Nine jurisdiction × property-type combinations have no published benchmark price —
+the three territories at either property type, and PEI, Halifax and Saskatoon
+condos — and six records carry no rent, because CMHC suppresses every Yukon cell
+and does not survey Nunavut. A screen with no price is not a screen with a small
+answer; it is a screen with none.
+
+- **`AnswerHead` renders without a figure.** No "$0" and no em-dash placeholder:
+  the first is a claim about a market and the second reads as a rendering fault
+  (§5's own note on the Rent vs Buy stat). The sentence takes the hero's slot at
+  24/28px, and the sub-line asks for the number.
+- **The sections go with it.** Every one of them derives from the price, and a
+  derivation of nothing is not a shorter derivation. The INPUTS stay exactly where
+  they were, because that is where the ask is answered.
+- **The field asks in place, at the size of the benchmark hint it replaces.** Same
+  quiet note under the same control — not a banner, not a modal, not a second
+  disclosure gesture (§1, §8). And it suggests nothing: a placeholder is a
+  suggestion, and "0" suggests a free house.
+- **Affordability is the one page that keeps its answer**, because its hero is the
+  price the reader's INCOME supports and no benchmark stands behind it. It drops the
+  three checks, the two price-derived stats and the verdict sentence.
+- **A figure nobody publishes never takes the jurisdiction's name.** "Typical for
+  Nunavut" for a rent CMHC never surveyed is the invented figure this product exists
+  not to ship; where nothing is published the tag says so instead.
+
 ## 6. Motion
 
 One keyframe: `v2-pulse`, 0.5s ease-out, keyed to a jurisdiction change so the answer

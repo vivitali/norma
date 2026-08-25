@@ -226,6 +226,7 @@
     "vShortCash": "You have enough income, but not yet enough cash to close.",
     "vMonths": "About {n} months away at your current savings rate.",
     "subComfort": "That is the price at which the monthly cost stays inside the ceiling you set — not the price a bank would sign off on.",
+    "noPriceSub": "Nobody publishes a benchmark price for {place}, so nothing here is being checked against one. The ceiling above comes from your income; enter the price you are considering, below, to test it.",
     "adjust": "Adjust your numbers",
     "closingCosts": "Closing costs",
     "separateNote": "Separate from the down payment, and due the same day.",
@@ -305,6 +306,8 @@
     "rebNone": "No rebate exists here",
     "rebCapped": "Capped at",
     "rebPhaseWhy": "Your price is above the threshold, so the rebate is reduced.",
+    "rebSuperseded": "You qualify for this, but another rebate here is worth more — only one can be claimed, so that one is applied instead.",
+    "rebOverCeiling": "This exemption stops above a set price, and your price is above it.",
     "cmhcPremium": "CMHC insurance premium",
     "addedToLoan": "added to the loan, not paid in cash",
     "mortgageAmount": "Mortgage amount",
@@ -574,6 +577,9 @@
     "leverNote": "Down payment sets the loan, whether CMHC insurance applies, and which contract rate you get. Amortization sets the payoff year marked on the chart.",
     "dRent": "Rent you are comparing against, monthly",
     "rentTag": "Typical for {city} — change it if you know yours",
+    "rentUnknownTag": "No published rent for {city} — enter the one you pay, or would pay",
+    "noRentHead": "Nobody publishes a rent for {city}.",
+    "noRentSub": "Enter the rent you are comparing against, below. A verdict measured against a rent we invented would not be a comparison.",
     "dAppr": "Appreciation assumption",
     "dRet": "Investment return assumption",
     "years": "years",
@@ -754,10 +760,13 @@
     "years": "{n} years",
     "purchase": "The purchase",
     "elsewhereWhy": "Outside Toronto there is no municipal land transfer tax on top of the provincial one.",
-    "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}"
+    "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}",
+    "noPrice": "No published price for {place}. Enter the one you are considering.",
+    "noPriceHead": "Nobody publishes a benchmark price for {place}.",
+    "noPriceSub": "Enter the price you are considering, below, and this page fills in. Until then there is nothing here to compute: a figure built on a price of zero is not an answer."
   },
   "Disclosure": {
-    "unverifiedFlag": "Most figures now name a dated published source; the rest are estimates we disclose, or are left unknown where nothing is published.",
+    "unverifiedFlag": "Every figure names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
     "lastVerified": "Rules last verified",
     "noCityData": "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates."
   },

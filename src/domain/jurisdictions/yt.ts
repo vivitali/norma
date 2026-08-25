@@ -5,25 +5,39 @@ const YT_TARIFF = "Yukon Land Titles Tariff of Fees Regulation, published schedu
 const YT_TARIFF_URL =
   "https://yukon.ca/en/housing-and-property/land-and-property/find-out-about-land-titles-fees";
 
+const YBS_REPORT =
+  "Yukon Bureau of Statistics, Yukon Real Estate Report, First Quarter 2026 — Whitehorse average sale price, single-detached house: $753,300 (32 sales, inclusive of country residential properties; $719,000 excluding them)";
+const YBS_REPORT_URL = "https://yukon.ca/sites/default/files/fin-yukon-real-estate-report-q1-2026.pdf";
+
 /**
- * Why `propTax.assessmentRatio` is 0.5, and why it is an estimate rather than a figure.
+ * Why `propTax.assessmentRatio` is 0.45, and why it is an estimate rather than a figure.
  *
  * The Government of Yukon values land at fair market value but improvements at *depreciated
  * replacement cost*, and reassesses each roll only every two years — so the roll is not market
  * value and the territory publishes no roll-to-market ratio. Two real 2026 Whitehorse tax bills
  * reported by CBC stand in for one: a 21-year-old downtown home paid $1,625 and a comparable new
  * Whistle Bend home paid $3,744, which at the 2026 residential rate of 1.097% imply assessments
- * of about $148,000 and $341,000. Against the Yukon Bureau of Statistics average downtown
- * single-detached sale price of $641,000 that is a ratio between 0.23 and 0.53.
+ * of about $148,000 and $341,000. Divided by the Yukon Bureau of Statistics' published Whitehorse
+ * single-detached average sale price of $753,300 (Q1 2026), that is a ratio between 0.20 and 0.45.
  *
- * 0.5 is the top of that observed range, chosen deliberately: a buyer paying today's market price
+ * 0.45 is the top of that observed range, chosen deliberately: a buyer paying today's market price
  * is buying the newer, more fully assessed end of the stock, and erring high on a recurring cost
  * keeps the comfort ceiling from being flattered. It is `assumption`, not `low`, because no
  * publisher produces this quantity at all — the number is ours, and the arithmetic is here so it
  * can be argued with.
+ *
+ * ONE STANDARD FOR THE PRICE, IN BOTH PLACES. This denominator used to be "$641,000, which CBC
+ * cites" while `bench.house` refused the very same figure as hearsay — the same number too weak
+ * to display as a price yet strong enough to set a recurring cost. That is fixed at the source:
+ * the denominator is now read off the Bureau's own quarterly PDF, not off a news article about
+ * it. What still keeps that figure out of `bench.house` is metric, not strength — `bench` holds
+ * constant-quality resale benchmarks, and an average of 32 sales that includes country
+ * residential acreages is not one. A benchmark is a claim about a typical house; an
+ * order-of-magnitude denominator inside a disclosed assumption is not, and survives a wobble of
+ * tens of thousands of dollars that would make a seeded purchase price wrong.
  */
 const WHITEHORSE_RATIO_NOTE =
-  "0.5, chosen as the top of an observed range rather than read off a publisher. Yukon assesses land at fair market value and improvements at depreciated replacement cost, reassessed every two years, and publishes no assessment-to-market ratio. CBC (2026) reports a 21-year-old downtown Whitehorse home paying $1,625 and a comparable new Whistle Bend home paying $3,744; at the 2026 residential rate of 1.097% those imply assessments near $148,000 and $341,000, against a Yukon Bureau of Statistics average downtown single-detached sale price of $641,000 — ratios of 0.23 and 0.53. The Association of Yukon Communities passed a resolution in May 2026 asking the territory to make the framework 'more reflective of market conditions', which is the same finding from the other side.";
+  "0.45, chosen as the top of an observed range rather than read off a publisher. Yukon assesses land at fair market value and improvements at depreciated replacement cost, reassessed every two years, and publishes no assessment-to-market ratio. CBC (2026) reports a 21-year-old downtown Whitehorse home paying $1,625 and a comparable new Whistle Bend home paying $3,744; at the 2026 residential rate of 1.097% those imply assessments near $148,000 and $341,000. Divided by the Yukon Bureau of Statistics' Whitehorse single-detached average sale price of $753,300 (Yukon Real Estate Report, Q1 2026) those are ratios of 0.20 and 0.45. 0.5 -> 0.45: the previous value was described as the top of the range and was not — it sat above a range then computed as 0.23 to 0.53 against $641,000, a figure taken from a news article rather than from the Bureau. Both halves are corrected together, so the number and the sentence explaining it now agree. THE DENOMINATOR IS A FIGURE THIS RECORD DECLINES TO DISPLAY AS A PRICE: bench.house stays null because `bench` holds constant-quality resale benchmarks and this is a small-sample average including country residential properties — a distinction of metric, not of sourcing, now that both readings rest on the same government PDF. It is admissible here because a ratio needs only the right order of magnitude and is disclosed as an assumption, whereas a benchmark would be seeded as a buyer's purchase price and read as a claim about a typical Whitehorse house. The Association of Yukon Communities passed a resolution in May 2026 asking the territory to make the framework 'more reflective of market conditions', which is the same finding from the other side.";
 
 const fees: JurisdictionFees = { lawyer: 1800, titleIns: 350, inspect: 700, appraisal: 500, statusCert: 150, moving: 3200, setup: 750 };
 
@@ -38,7 +52,7 @@ export const yt: Jurisdiction = {
   pro: "lawyer",
   bench: { house: null, condo: null },
   // The 1.097% residential mill rate is levied on the Yukon assessment roll, not on a sale price.
-  propTax: { effective: 0.005485, publishedRate: 0.01097, assessmentRatio: 0.5, basis: "frozenBaseYear" },
+  propTax: { effective: 0.0049365, publishedRate: 0.01097, assessmentRatio: 0.45, basis: "frozenBaseYear" },
   transfer: [
     // A STEP table by declared value, not a flat fee and not a rate: the band the declared value
     // lands in sets the whole charge. The prototype modelled a flat $650. Ceilings carry a .99
@@ -117,8 +131,9 @@ export const yt: Jurisdiction = {
     },
     "propTax.assessmentRatio": {
       conf: "assumption",
-      asOf: "2026",
-      src: "Estimated from two reported Whitehorse tax bills over a Yukon Bureau of Statistics average sale price",
+      asOf: "2026-Q1",
+      src: `Estimated: two reported 2026 Whitehorse tax bills over ${YBS_REPORT}`,
+      url: YBS_REPORT_URL,
       note: WHITEHORSE_RATIO_NOTE,
     },
     "propTax.basis": {
@@ -129,15 +144,19 @@ export const yt: Jurisdiction = {
       conf: "assumption",
       asOf: "2026",
       src: "Derived: publishedRate x assessmentRatio",
-      note: "0.0078 -> 0.005485. Inherits the confidence of the weaker half: a primary-sourced published rate multiplied by an estimated ratio. This moves DOWN, against the verification brief, which proposed 0.01123 on the reading that the mill rate applies to a market price. It does not: 1.097% of $641,000 is about $7,000 a year, and the two real Whitehorse bills on homes of about that value were $1,625 and $3,744.",
+      note: "0.0078 -> 0.005485 -> 0.0049365. Inherits the confidence of the weaker half: a primary-sourced published rate multiplied by an estimated ratio. This moves DOWN, against the verification brief, which proposed 0.01123 on the reading that the mill rate applies to a market price. It does not: 1.097% of the Yukon Bureau of Statistics' $753,300 Whitehorse single-detached average is about $8,300 a year, and the two real Whitehorse bills on homes in that market were $1,625 and $3,744. The second move, 0.005485 -> 0.0049365, is the ratio correction described under propTax.assessmentRatio and lowers the modelled annual tax on a $620,000 house from about $3,400 to about $3,060 — still inside the range of the two observed bills, which is the only check available.",
     },
+    // No `src`/`url` on either of these, on purpose: a `none` figure renders as "Not published"
+    // on /sources, and hanging a document title beside that would read as a source for a figure
+    // we are declining to give. The document is named inside the note instead, where the
+    // sentence can say what it does and does not establish.
     "bench.house": {
       conf: "none",
-      note: "No MLS® HPI covers Yukon and no CREA member board publishes one. The Yukon Bureau of Statistics does publish a quarterly Housing Price Index and average Whitehorse single-detached sale prices — CBC cites $641,000 downtown and $753,000 territory-wide in early 2026 — but an average sale price is not a benchmark, and citing a number a news article attributes to a series we could not open would be sourcing by hearsay. This is the single highest-value manual lookup left on the list.",
+      note: "No MLS® HPI covers Yukon and no CREA member board publishes one, so there is no benchmark price to record and the field stays null. THE LOOKUP IS NO LONGER OUTSTANDING, and the reason for the null has changed. The Yukon Bureau of Statistics' Yukon Real Estate Report has now been read directly — First Quarter 2026, yukon.ca/sites/default/files/fin-yukon-real-estate-report-q1-2026.pdf — which retires the earlier reasoning that a CBC-attributed number would be 'sourcing by hearsay'. What that report publishes is an AVERAGE SALE PRICE: $753,300 across 32 Whitehorse single-detached sales in the quarter, inclusive of country residential properties, or $719,000 excluding them. An average of a small, mixed sample is a different metric from the constant-quality resale benchmark every other bench.house in this dataset holds, and seeding it as a buyer's default purchase price would present it as a claim about a typical Whitehorse house, which it is not. The same figure IS used, disclosed as an assumption, as the denominator of propTax.assessmentRatio, where only the order of magnitude matters; that asymmetry is argued out in full in the note there. The open question for a later pass is whether to accept the average here behind a METRIC caveat, as Saskatoon accepts a composite HPI in place of a detached one.",
     },
     "bench.condo": {
       conf: "none",
-      note: "As above, and worse: no published Whitehorse apartment series was found in any form.",
+      note: "As above: the Bureau publishes an average, not a benchmark — $496,900 across 14 Whitehorse condominium apartment sales in Q1 2026 — and 14 sales is thinner still. The earlier claim that 'no published Whitehorse apartment series was found in any form' was simply wrong: the Bureau has reported condominium apartments separately since it split row houses out of 'condominium' in 2023. The field stays null for the metric reason, not for want of looking.",
     },
     "taxTime.0.amount": {
       conf: "high",

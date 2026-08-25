@@ -134,6 +134,42 @@ describe("resolveInputs", () => {
     expect(r.rent).toBe(winnipeg.rent ?? DEFAULT_RENT);
   });
 
+  it("says whether there is a price to model at all", () => {
+    // The zero behind an unpublished benchmark is arithmetic, and a screen must be able
+    // to tell it from a house that costs nothing. Without this the pages had only
+    // `price`, and `$0 <= your ceiling` is "within reach".
+    expect(resolveInputs(untouched, winnipeg, federal).priceKnown).toBe(true);
+    const territory = getJurisdiction("yt")!;
+    expect(benchmarkPrice(territory, "house")).toBeNull();
+    const unpriced = resolveInputs(untouched, territory, federal);
+    expect(unpriced.priceKnown).toBe(false);
+    expect(unpriced.price).toBe(0);
+    // The reader's own price is a price, wherever they are.
+    expect(resolveInputs({ ...untouched, price: 640000 }, territory, federal).priceKnown).toBe(true);
+  });
+
+  it("says whether the rent being compared against is anybody's real rent", () => {
+    // Six records carry no rent — CMHC suppresses every Yukon cell and does not survey
+    // Nunavut. DEFAULT_RENT keeps the arithmetic defined, but it is a national
+    // placeholder, and attributing it to the place that published nothing is exactly the
+    // invented figure this product exists not to ship.
+    expect(resolveInputs(untouched, winnipeg, federal).rentKnown).toBe(true);
+    const territory = getJurisdiction("nu")!;
+    expect(territory.rent ?? null).toBeNull();
+    const unrented = resolveInputs(untouched, territory, federal);
+    expect(unrented.rentKnown).toBe(false);
+    expect(unrented.rent).toBe(DEFAULT_RENT);
+    expect(resolveInputs({ ...untouched, rent: 2300 }, territory, federal).rentKnown).toBe(true);
+  });
+
+  it("keeps the down-payment floor off a price it does not have", () => {
+    // minDown() of nothing is nothing, so a raise would be announced against a $0
+    // deposit on a $0 house. The page asks for a price instead.
+    const unpriced = resolveInputs({ ...untouched, dpPct: 5 }, getJurisdiction("nt")!, federal);
+    expect(unpriced.belowMinimum).toBe(false);
+    expect(unpriced.dpPct).toBe(5);
+  });
+
   it("converts rent inflation from the stored percentage to the fraction the engine takes", () => {
     const r = resolveInputs({ ...untouched, rentInflation: 3 }, winnipeg, federal);
     expect(r.rentInflation).toBeCloseTo(0.03, 10);
@@ -288,8 +324,9 @@ describe("benchmarkPrice", () => {
     // with Saskatoon's apartment series. The invariant is not dropped, it is re-pointed — a
     // benchmark may be null ONLY where that record's own provenance records conf "none" for
     // the field, which is the milestone's rule that an unsourced figure is never displayed.
-    // So resolveInputs' `?? 0` last rung is now reachable, and `benchmark === null` is the
-    // fact a screen branches on; the UI that ASKS for a price is the Closing Costs milestone.
+    // So resolveInputs' `?? 0` last rung is now reachable, and `priceKnown` is the fact a
+    // screen branches on: every page whose figures derive from the price asks for one in
+    // place rather than printing an answer built on that zero.
     for (const j of jurisdictions) {
       for (const ptype of ["house", "condo", "newbuild"] as const) {
         if (benchmarkPrice(j, ptype) !== null) continue;

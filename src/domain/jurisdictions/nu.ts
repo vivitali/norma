@@ -20,7 +20,9 @@ export const nu: Jurisdiction = {
   cityData: false,
   pro: "lawyer",
   bench: { house: null, condo: null },
-  propTax: { effective: 0.009, publishedRate: 0.009, assessmentRatio: 1, basis: "market" },
+  // `unknown`, not `market`: no rate, no base and no ratio is sourced. The ratio of 1 records
+  // "none established". See the provenance note on propTax.basis.
+  propTax: { effective: 0.009, publishedRate: 0.009, assessmentRatio: 1, basis: "unknown" },
   transfer: [
     // Nunavut kept the pre-1999 NWT tariff and did NOT follow the NWT's September 2025 revision,
     // so these two rates genuinely differ from nt.ts now and must not be maintained as twins.
@@ -72,7 +74,7 @@ export const nu: Jurisdiction = {
     },
     "propTax.basis": {
       conf: "assumption",
-      note: "Recorded as `market` with a ratio of 1 because nothing is sourced, NOT because Nunavut assesses at market. Nunavut inherited the NWT's Property Assessment and Taxation Act framework, under which assessed value is a base-year figure with improvements at depreciated replacement cost. Relabelling the basis would require inventing both a published rate and a ratio to keep the derivation consistent.",
+      note: "`unknown`: nothing about the assessment base is sourced, and the record now says that rather than claiming the nearest label. It previously said `market` with a ratio of 1 — a claim this note itself denied in its next sentence, kept only because the 'ratio 1 iff market' invariant left no honest alternative. What is known: Nunavut inherited the NWT's Property Assessment and Taxation Act framework, under which assessed value is a base-year figure with improvements at depreciated replacement cost. Naming that base for real would require inventing both a published rate and a ratio to keep the derivation consistent. `unknown` also restores the Affordability estimate caveat, which reads `basis` and is exactly the disclosure a record with no sourced rate should carry.",
     },
     "bench.house": {
       conf: "none",

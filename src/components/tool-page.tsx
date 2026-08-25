@@ -42,6 +42,15 @@ export interface HeadStat {
  */
 export function AnswerHead({
   eyebrow,
+  /**
+   * Omitted when the page HAS no answer — a jurisdiction with no published
+   * benchmark price, where every figure the page would print derives from a zero
+   * that is arithmetic rather than a price. The sentence then takes the hero's
+   * place at its own larger size, because the ask IS the page's content in that
+   * state, and no placeholder figure stands in for it: a "$0" or a bare em-dash
+   * at 72px reads as a rendering fault, and the one thing a reader must not take
+   * from this screen is that we know something we do not.
+   */
   figure,
   /** Changing this replays the pulse — used to acknowledge a jurisdiction switch. */
   pulseKey,
@@ -51,7 +60,7 @@ export function AnswerHead({
   stats,
 }: {
   eyebrow: string;
-  figure: string;
+  figure?: string;
   pulseKey?: string;
   head: string;
   sub?: string;
@@ -80,13 +89,22 @@ export function AnswerHead({
       <h1 className="eyebrow mb-5 text-ac">{eyebrow}</h1>
       <div className="flex flex-wrap items-end gap-8 sm:gap-10">
         <div className="min-w-0 flex-1 sm:min-w-[420px]">
-          <div
-            key={pulseKey}
-            className="v2-pulse text-[52px] leading-none font-bold tracking-[-0.045em] text-ac sm:text-[72px]"
+          {figure === undefined ? null : (
+            <div
+              key={pulseKey}
+              data-slot="answer-figure"
+              className="v2-pulse text-[52px] leading-none font-bold tracking-[-0.045em] text-ac sm:text-[72px]"
+            >
+              {figure}
+            </div>
+          )}
+          <p
+            className={
+              figure === undefined
+                ? "max-w-[560px] text-[24px] leading-[1.3] font-semibold tracking-[-0.02em] text-pretty sm:text-[28px]"
+                : "mt-4 max-w-[560px] text-[17px] leading-[1.45] font-medium tracking-[-0.01em] text-pretty sm:text-[19px]"
+            }
           >
-            {figure}
-          </div>
-          <p className="mt-4 max-w-[560px] text-[17px] leading-[1.45] font-medium tracking-[-0.01em] text-pretty sm:text-[19px]">
             {head}
           </p>
           {sub ? (

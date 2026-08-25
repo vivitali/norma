@@ -336,3 +336,27 @@ describe("Scenarios — the phone layout is a carousel of cards, not a narrowed 
     }
   });
 });
+
+describe("Scenarios — four columns of nothing is not a comparison", () => {
+  // Every column here is the same price at a different deposit. With no price
+  // published and none given, all four were $425 a month of insurance-free
+  // nothing, presented as a recommendation.
+  it("asks for a price instead of comparing four $0 purchases", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nt" }));
+    renderPage();
+    expect(
+      screen.getByText(/Nobody publishes a benchmark price for Northwest Territories/),
+    ).toBeInTheDocument();
+    expect(screen.queryAllByRole("table")).toHaveLength(0);
+  });
+
+  it("compares in full once a price is given", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nt" }));
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByLabelText("Purchase price"), "525000");
+    await user.tab();
+    expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
+    expect(screen.getAllByRole("table").length).toBeGreaterThan(0);
+  });
+});

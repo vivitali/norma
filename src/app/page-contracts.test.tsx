@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { jurisdictions } from "@/domain/jurisdictions";
+import { benchmarkPrice } from "@/lib/resolve-inputs";
 
 import AffordabilityPage from "./[locale]/affordability/page";
 import ClosingCostsPage from "./[locale]/closing-costs/page";
@@ -46,6 +47,19 @@ const PAGES = [
   ["Rent vs buy", RentVsBuyPage],
   ["Scenarios", ScenariosPage],
 ] as const;
+
+/**
+ * The pages whose headline figure is computed FROM the purchase price, and which therefore
+ * must ask for one rather than answer where no benchmark is published. Named positively so
+ * that adding a page here is a claim about that page, not an exemption granted to it.
+ */
+const PRICE_DERIVED_HEADLINE = new Set<string>([
+  "Closing costs",
+  "Down payment",
+  "Amortization",
+  "Rent vs buy",
+  "Scenarios",
+]);
 
 /** Rendered figures that are not numbers. `undefined` catches a missing message too. */
 const GARBAGE = /NaN|Infinity|\bundefined\b|\[object Object\]/;
@@ -101,30 +115,76 @@ describe("no screen renders a non-finite figure", () => {
     });
   }
 
-  it("holds for every jurisdiction, on the pages whose figures are provincial", async () => {
+  it("holds for every jurisdiction and property type, and no headline is a $0", async () => {
     // A jurisdiction record missing a field the engine reads is the other way
     // this surfaces, and it only shows on the jurisdiction that is missing it.
+    //
+    // PROPERTY TYPE is swept alongside it, and the pair carries a second
+    // assertion, because the garbage regex was blind to the worst figure the app
+    // can print: a well-formed **$0**. Nine jurisdiction × property-type
+    // combinations have no published benchmark price — the three territories at
+    // either type, and PEI, Halifax and Saskatoon condos — and `resolved.price`
+    // is 0 in all nine. That zero is arithmetic, never an answer: it made
+    // Amortization quote a $0 payment and Affordability call $0 "within reach",
+    // with LESS explanation on screen than a priced city gets, and every test in
+    // this file passed throughout. A page with no price must ASK for one; what
+    // it must never do is print a headline figure of nothing.
     for (const jurisdiction of jurisdictions) {
-      window.localStorage.setItem(
-        "norma.inputs.v2",
-        JSON.stringify({ jurId: jurisdiction.id }),
-      );
-      for (const [name, Page] of PAGES) {
-        renderWithIntl(
-          <JurisdictionProvider>
-            <Page />
-          </JurisdictionProvider>,
+      for (const ptype of ["house", "condo", "newbuild"] as const) {
+        window.localStorage.setItem(
+          "norma.inputs.v2",
+          JSON.stringify({ jurId: jurisdiction.id, ptype }),
         );
-        expect(document.body.textContent, `${name} / ${jurisdiction.id}`).not.toMatch(GARBAGE);
-        cleanup();
+        for (const [name, Page] of PAGES) {
+          const { container } = renderWithIntl(
+            <JurisdictionProvider>
+              <Page />
+            </JurisdictionProvider>,
+          );
+          const where = `${name} / ${jurisdiction.id} / ${ptype}`;
+          expect(document.body.textContent, where).not.toMatch(GARBAGE);
+          // Absent is fine and is what a page with no price to model renders;
+          // present and zero is the failure. `$0.00` and `0 $` (fr) are the same
+          // figure in other clothes, so the match is on the digits either side of
+          // any currency mark rather than on one formatted string.
+          const headline = container.querySelector('[data-slot="answer-figure"]');
+          const digits = headline?.textContent?.replace(/[^\d.,]/g, "") ?? "";
+          expect(digits, where).not.toMatch(/^0([.,]0+)?$/);
+          // Stronger than "not zero", and it had to be. Closing Costs printed
+          // $7,420 at `yt` — the fixed lawyer, inspection and moving fees, which
+          // do not depend on a price — as "cash needed at closing" for a purchase
+          // that has no price. A plausible wrong number sails past a check for a
+          // zero, so where nothing is published the contract is that there is no
+          // headline figure AT ALL: the page asks instead of answering.
+          //
+          // Stated as an ALLOWLIST of the pages whose headline is derived from
+          // price, not as a list of exemptions. Two pages legitimately answer
+          // without one and adding them as exceptions would have been indistinguishable
+          // from weakening the test until it passed:
+          //   Affordability — its headline is the ceiling the reader's INCOME
+          //     supports; no benchmark stands behind it. What it must not do is
+          //     compare that ceiling to a price it does not have, so it drops its
+          //     verdict, both price-derived stats and all five sections.
+          //   RRSP-HBP — `hbpPlay` takes no price argument at all; its headline is
+          //     a withdrawal against the reader's own RRSP balance.
+          // If a page is ever added here, the question to answer is whether its
+          // headline can be computed without a price — not whether the test is
+          // inconvenient.
+          if (PRICE_DERIVED_HEADLINE.has(name) && benchmarkPrice(jurisdiction, ptype) === null) {
+            expect(headline, `${where}: answered without a published price`).toBeNull();
+          }
+          cleanup();
+        }
       }
     }
-    // Ninety-eight full page renders, and Scenarios now renders two layouts of
-    // its comparison — the table and the phone cards — on every one of them.
-    // That took the sweep from 4.0s to 5.4s against a 5s default and made it a
-    // timeout rather than an assertion. Raised deliberately: shrinking the
-    // matrix would cost the coverage the test exists for.
-  }, 30_000);
+    // Two hundred and ninety-four full page renders — fourteen jurisdictions by
+    // three property types by seven pages — and Scenarios renders two layouts of
+    // its comparison, the table and the phone cards, on every one of them. The
+    // matrix is the coverage: the defect this sweep now catches was invisible at
+    // the default property type on thirteen of the fourteen records, and one
+    // sweep asserting both facts is three times cheaper than two sweeps walking
+    // the same matrix. The timeout is raised to match rather than the matrix cut.
+  }, 90_000);
 });
 
 describe("cross-page links stay within their cap", () => {

@@ -437,6 +437,24 @@ describe("credits — mutually exclusive rebate groups", () => {
     expect(C.atClosing.find((c) => c.key === "cr_small")?.st).toBe("superseded");
   });
 
+  it("supersedes nothing when every member of the group is worth zero", () => {
+    // Both bands are long past their phase-out, so neither programme beat the other — they
+    // both expired. `reduce` still names a winner among equals, and marking the rest
+    // "superseded" told the buyer a rebate was passed over for a better one that does not
+    // exist. Each row must keep the status that explains its own zero.
+    const bothExpired: Jurisdiction = {
+      ...getJurisdiction("vancouver")!,
+      rebates: [
+        { key: "cr_a", kind: "exemptBand", full: 100000, partial: 200000, capBase: 100000, on: "li_ptt", timing: "closing", group: "bcPtt" },
+        { key: "cr_b", kind: "exemptBand", full: 150000, partial: 250000, capBase: 150000, on: "li_ptt", timing: "closing", group: "bcPtt" },
+      ],
+    };
+    const o = { ...base, price: 900000 };
+    const C = credits(bothExpired, federal, o, buildLines(bothExpired, federal, o).gov);
+    expect(C.atClosing.map((c) => c.amount)).toEqual([0, 0]);
+    expect(C.atClosing.map((c) => c.st)).toEqual(["phasedOut", "phasedOut"]);
+  });
+
   it("leaves ungrouped rebates alone", () => {
     const toronto = getJurisdiction("toronto")!;
     const C = credits(toronto, federal, base, buildLines(toronto, federal, base).gov);
@@ -842,7 +860,8 @@ describe("buildLines — stepped", () => {
     buildLines(sk(), federal, o).gov.find((l) => l.key === "li_mortReg")!.amount;
 
   it("charges a flat amount within a band, not a marginal rate", () => {
-    // ISC Registration of Mortgage: $250,000–$500,000 is a flat $275.
+    // ISC Land Title Fees Table (effective 2026-04-15), Registration of Mortgage, by "Interest
+    // Valued At": "$0 to $249,999.99" is $200.00 and "$250,000 to $500,000" is a flat $275.00.
     const a = mortReg({ ...base, price: 300000, dpPct: 20 }); // loan 240,000 -> $200 band
     const b = mortReg({ ...base, price: 400000, dpPct: 20 }); // loan 320,000 -> $275 band
     expect(a).toBe(200);
@@ -867,6 +886,23 @@ describe("buildLines — stepped", () => {
     // is $275; four dollars more and the whole fee is $525 — never $275 plus a marginal slice.
     expect(mortReg({ ...base, price: 625000, dpPct: 20 })).toBe(275); // loan 500,000
     expect(mortReg({ ...base, price: 625005, dpPct: 20 })).toBe(525); // loan 500,004
+  });
+
+  it("puts the $500,000 edge INSIDE the $275 band, as ISC's schedule writes it", () => {
+    // $500,000 is not an edge case invented by the model: it is a $625,000 purchase at 20%
+    // down. The schedule reads "$250,000 to $500,000 — $275.00" and "$500,000.01 to $750,000
+    // — $525.00", so the round dollar belongs to the LOWER band and the jump happens at the
+    // cent. Only the first band ("$0 to $249,999.99") is written exclusively, which is why
+    // one ceiling here carries .99 and the rest do not — the mixed convention is the
+    // document's, not a slip in this record. Yukon's tariff is written "less than $X"
+    // throughout and its ceilings are .99 throughout; the two must not be made to match.
+    expect(mortReg({ ...base, price: 625000, dpPct: 20 })).toBe(275); // loan 500,000.00
+    expect(mortReg({ ...base, price: 625000.05, dpPct: 20 })).toBe(525); // loan 500,000.04
+    expect(mortReg({ ...base, price: 937500, dpPct: 20 })).toBe(525); // loan 750,000.00
+    expect(mortReg({ ...base, price: 1250000, dpPct: 20 })).toBe(775); // loan 1,000,000.00
+    // ...and the one ceiling that IS exclusive behaves that way.
+    expect(mortReg({ ...base, price: 312499.9875, dpPct: 20 })).toBe(200); // loan 249,999.99
+    expect(mortReg({ ...base, price: 312500, dpPct: 20 })).toBe(275); // loan 250,000.00
   });
 });
 

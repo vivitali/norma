@@ -81,10 +81,41 @@ describe("jurisdictions", () => {
     }
   });
 
-  it("uses a ratio below 1 wherever the assessment base is not market value", () => {
+  it("uses a ratio below 1 wherever a NAMED assessment base is not market value", () => {
+    // `unknown` is exempt, deliberately and in the open. This pair of invariants was once
+    // satisfied by nt and nu labelling themselves `market` with a ratio of 1 while their own
+    // provenance notes said neither territory assesses at market — the invariant defeated by
+    // exactly the move it exists to catch. The exemption is the fix: a record that cannot name
+    // its base says `unknown` and keeps a ratio of 1 meaning "none established", and the
+    // separate test below is what holds `unknown` to account instead.
     for (const j of jurisdictions) {
-      if (j.propTax.basis === "market") continue;
+      if (j.propTax.basis === "market" || j.propTax.basis === "unknown") continue;
       expect(j.propTax.assessmentRatio, `${j.id}`).toBeLessThan(1);
+    }
+  });
+
+  it("makes an unknown assessment base admit itself rather than derive anything", () => {
+    // The escape hatch has to cost something, or it becomes the easy label. Under `unknown`
+    // there is no ratio to believe (1, meaning none established), so the effective rate must
+    // BE the published one — no derivation is being claimed — and the basis must carry a
+    // provenance note saying why the base could not be established.
+    for (const j of jurisdictions) {
+      if (j.propTax.basis !== "unknown") continue;
+      expect(j.propTax.assessmentRatio, `${j.id} ratio`).toBe(1);
+      expect(j.propTax.effective, `${j.id} effective`).toBe(j.propTax.publishedRate);
+      const p = j.provenance["propTax.basis"];
+      expect(p?.conf, `${j.id} propTax.basis conf`).toBe("assumption");
+      expect(p?.note, `${j.id} propTax.basis note`).toBeTruthy();
+    }
+  });
+
+  it("keeps the estimate caveat on wherever the base is not market value", () => {
+    // Affordability renders its "estimates the rate against market value" caveat on
+    // `basis !== "market"`. Mislabelling a base as `market` therefore does not just weaken the
+    // data — it silently drops a disclosure. Pinned here so the two territories that most need
+    // that caveat cannot lose it by a one-word edit.
+    for (const id of ["nt", "nu"]) {
+      expect(getJurisdiction(id)!.propTax.basis, id).not.toBe("market");
     }
   });
 
