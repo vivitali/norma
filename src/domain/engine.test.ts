@@ -904,6 +904,15 @@ describe("buildLines — stepped", () => {
     expect(mortReg({ ...base, price: 312499.9875, dpPct: 20 })).toBe(200); // loan 249,999.99
     expect(mortReg({ ...base, price: 312500, dpPct: 20 })).toBe(275); // loan 250,000.00
   });
+
+  it("sends a value in the schedule's one-cent gap to the HIGHER band", () => {
+    // ISC leaves a cent unnamed between "$0 to $249,999.99" and "$250,000 to $500,000".
+    // `buildLines` takes the first step whose ceiling the value does not exceed, so half a
+    // cent above $249,999.99 fails that band and falls through to $275 — the higher fee, not
+    // the lower one. Unreachable on a real loan, and pinned only because the provenance note
+    // describes this behaviour verbatim on /sources and once described it backwards.
+    expect(mortReg({ ...base, price: 312499.99375, dpPct: 20 })).toBe(275); // loan 249,999.995
+  });
 });
 
 describe("buildLines — NS non-resident deed transfer tax", () => {

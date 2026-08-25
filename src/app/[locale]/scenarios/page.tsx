@@ -397,7 +397,7 @@ export default function ScenariosPage() {
       ) : (
         <AnswerHead
           eyebrow={t("title")}
-          head={tInputs("noPriceHead", { place: tJur(jurisdiction.id) })}
+          head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
           sub={tInputs("noPriceSub")}
         />
       )}

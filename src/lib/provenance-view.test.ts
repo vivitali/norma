@@ -165,6 +165,20 @@ describe("coverageOf", () => {
     federal.provenance,
   );
 
+  it("agrees with the per-group totals a reader can add up", () => {
+    // The one page whose job is to be countable must survive being counted. The headline
+    // paragraph and the per-group rows are computed by different functions, and they drifted:
+    // the paragraph filtered through `countsAsFigure` while the rows did not, so the sentence
+    // said 288 and the rows summed to 306. A reader adding the rows got a different number from
+    // the sentence directly above them.
+    const rows =
+      jurisdictions.reduce(
+        (n, j) => n + groupProvenance(j.provenance).groups.reduce((g, grp) => g + grp.total, 0),
+        0,
+      ) + federalGroup(federal.provenance).total;
+    expect(rows).toBe(coverage.total);
+  });
+
   it("counts figures, not provenance entries", () => {
     // Deliberately NOT `Object.keys(provenance).length`. Two kinds of entry are not figures and
     // were inflating the count that backs a sentence rendered on every tool page:
@@ -212,6 +226,74 @@ describe("coverageOf", () => {
   it("still has honest gaps, so the unknown case is not decorative", () => {
     expect(coverage.unknown).toBeGreaterThan(0);
     expect(coverage.assumed).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * The footer sentence on every tool page, checked against the records it describes:
+ *
+ *   "Every figure that carries a sourcing record names where it came from: a dated
+ *    published source, an estimate we disclose, or nothing at all where nothing is
+ *    published."
+ *
+ * It is a UNIVERSAL over the sourcing record, and this is where the universal is
+ * enforced — entry by entry, over all fourteen jurisdictions and the federal rules,
+ * so a new record that files a figure under no source makes the footer's own claim
+ * fail rather than quietly become false on the page.
+ *
+ * The sentence deliberately does NOT quantify over every figure in `src/domain`: 26 of
+ * the 373 numeric leaves there carry no provenance entry of their own — transfer-line
+ * parameters (`per`, `unit`, `base`) whose sibling entry quotes the whole statutory
+ * formula, and nt/nu's property tax inputs behind an `effective` rate already marked an
+ * assumption. Nor does it rest on a ratio: the claim is about the record's completeness
+ * of KIND, which cannot be tipped by a handful of records the way a proportion can.
+ */
+describe("the sourcing record backs the sentence rendered over it", () => {
+  const records: [string, Record<string, Provenance | undefined>][] = [
+    ...jurisdictions.map((j) => [j.id, j.provenance] as [string, Record<string, Provenance | undefined>]),
+    ["federal", federal.provenance],
+  ];
+  const entries = records.flatMap(([id, map]) =>
+    Object.entries(map)
+      .filter((pair): pair is [string, Provenance] => Boolean(pair[1]))
+      .map(([path, p]) => [`${id}.${path}`, p] as [string, Provenance]),
+  );
+
+  it("has entries to check, so the three tests below are not vacuous", () => {
+    expect(entries.length).toBeGreaterThan(200);
+  });
+
+  it("names a source for every figure claimed to have one", () => {
+    for (const [where, p] of entries) {
+      if (!isSourced(p.conf)) continue;
+      expect(p.src, `${where} is ${p.conf} but names no source`).toBeTruthy();
+    }
+  });
+
+  it("dates every named source", () => {
+    // "dated" in the sentence. `asOf` normally carries it; a statute citation carries
+    // its own year instead ("Assessment Act (RSBC 1996, c. 20)"), which is the date of
+    // the document and not a second-best. Both count; nothing else does.
+    for (const [where, p] of entries) {
+      if (!isSourced(p.conf)) continue;
+      const dated = Boolean(p.asOf) || /\b(?:19|20)\d{2}\b/.test(p.src ?? "");
+      expect(dated, `${where} names a source with no date: ${p.src}`).toBe(true);
+    }
+  });
+
+  it("discloses every estimate that is ours rather than anybody's fact", () => {
+    for (const [where, p] of entries) {
+      if (p.conf !== "assumption") continue;
+      expect(p.note, `${where} is our assumption with nothing disclosing it`).toBeTruthy();
+    }
+  });
+
+  it("leaves nothing between the three cases the sentence names", () => {
+    // A fourth kind of entry would be a figure the footer does not describe.
+    for (const [where, p] of entries) {
+      const named = isSourced(p.conf) || p.conf === "assumption" || p.conf === "none";
+      expect(named, `${where} has confidence "${p.conf}", which the footer does not name`).toBe(true);
+    }
   });
 });
 

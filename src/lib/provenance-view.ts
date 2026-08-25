@@ -176,20 +176,38 @@ function toneOf(confidences: readonly Confidence[]): Tone {
   return "pass";
 }
 
-function toGroup(id: FigureGroupId | "federal", entries: readonly [string, Provenance][]): FigureGroup {
-  const confidences = entries.map(([, p]) => p.conf);
+/**
+ * `entries` is everything to SHOW; `map` is needed to decide what to COUNT.
+ *
+ * The two differ, and letting them drift produced a page that failed its own purpose: the
+ * headline paragraph counted figures (288) while the per-group rows counted provenance entries
+ * (306), so a reader who added up the rows on the one page whose job is to be countable got a
+ * different number from the sentence above them. `countsAsFigure` now governs both.
+ *
+ * Display is deliberately NOT filtered. A reader wants to see the publisher behind `orgs.market`
+ * and the derivation behind `propTax.effective`; they simply are not figures to be tallied.
+ */
+function toGroup(
+  id: FigureGroupId | "federal",
+  entries: readonly [string, Provenance][],
+  map: ProvenanceMap,
+): FigureGroup {
+  const counted = entries.filter(([path]) => countsAsFigure(path, map));
+  const confidences = counted.map(([, p]) => p.conf);
   return {
     id,
     entries: collectSources(entries),
-    total: entries.length,
+    total: counted.length,
     sourced: confidences.filter(isSourced).length,
-    tone: toneOf(confidences),
+    // Tone reads the FULL set, not the counted one: a `conf: "none"` on a field that is not
+    // tallied is still an unpublished thing sitting in this group, and the dot exists to warn.
+    tone: toneOf(entries.map(([, p]) => p.conf)),
   };
 }
 
 /** The federal rules are one group: they are not a kind of figure, they are a layer. */
 export function federalGroup(map: ProvenanceMap): FigureGroup {
-  return toGroup("federal", provenanceEntries(map));
+  return toGroup("federal", provenanceEntries(map), map);
 }
 
 function provenanceEntries(map: ProvenanceMap): [string, Provenance][] {
@@ -243,7 +261,7 @@ export function groupProvenance(map: ProvenanceMap): GroupedProvenance {
     else buckets.set(group, [pair]);
   }
   return {
-    groups: FIGURE_GROUPS.map((id) => toGroup(id, buckets.get(id) ?? [])),
+    groups: FIGURE_GROUPS.map((id) => toGroup(id, buckets.get(id) ?? [], map)),
     unmapped,
   };
 }
@@ -272,11 +290,15 @@ export interface Coverage {
 }
 
 /**
- * What the whole dataset looks like, counted rather than claimed.
+ * What the whole dataset looks like, counted rather than claimed — derived on every render
+ * from the same records the pages read, so the sentence on `/sources` cannot drift from them.
  *
- * The standing disclosure says "most figures now name a dated published source".
- * This is the count that has to be true for it to stay honest, and it is derived
- * on every render from the same records the pages read.
+ * It no longer backs a PROPORTION claim. The standing footer used to say "most figures now
+ * name a dated published source", which was true at 162 of 288 but thin, and counted
+ * `conf: "low"` — which this app's own legend defines as derived rather than read. A line
+ * rendered on every tool page should not rest on a ratio a few records could tip, so the
+ * copy was rewritten to make no proportion claim and this count now feeds only the
+ * three-way split shown on `/sources` itself.
  */
 export function coverageOf(maps: readonly ProvenanceMap[], federal: ProvenanceMap): Coverage {
   const confidences = [...maps, federal].flatMap((map) =>

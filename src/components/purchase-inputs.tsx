@@ -83,8 +83,13 @@ export function PurchaseInputs({
    * "0" in the field as this city's suggested purchase price. Nothing is a
    * suggestion worth making at zero dollars, and a component that can tell has no
    * business waiting to be told.
+   *
+   * The reader's OWN zero is folded into it too, for the same reason and to keep this
+   * in step with `resolveInputs`: `price` is nullable with `min: 0`, so 0 is typable,
+   * and it is not a price there either. Without the fold the deposit line under the
+   * field read "Down payment · $0" while the page above it modelled the benchmark.
    */
-  const effectivePrice = price ?? (pricePlaceholder || null);
+  const effectivePrice = (price || null) ?? (pricePlaceholder || null);
 
   return (
     <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
@@ -106,7 +111,7 @@ export function PurchaseInputs({
       */}
       {effectivePrice === null ? (
         <p className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
-          {t("noPrice", { place: tJur(jurisdiction.id) })}
+          {t("noPrice", { place: tJur(`at.${jurisdiction.id}`) })}
         </p>
       ) : null}
 

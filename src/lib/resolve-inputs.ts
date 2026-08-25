@@ -61,8 +61,9 @@ export interface ResolvedInputs {
    */
   benchmark: number | null;
   /**
-   * Whether there is a real price to model at all — the reader gave one, or a
-   * publisher produces a benchmark for this jurisdiction and property type.
+   * Whether there is a real price to model at all — the reader gave a positive
+   * one, or a publisher produces a benchmark for this jurisdiction and property
+   * type. A stored **0** is not a price: it is typable, and it used to pass.
    *
    * False for nine jurisdiction × property-type combinations: the three
    * territories at either property type, and PEI, Halifax and Saskatoon condos.
@@ -140,7 +141,8 @@ export interface ResolvedInputs {
   rent: number;
   /**
    * Whether the rent being compared against is a real figure — the reader's own,
-   * or one this jurisdiction's record publishes.
+   * or one this jurisdiction's record publishes. A stored **0** is not a rent,
+   * for the same reason a stored 0 is not a price.
    *
    * False for the six records that carry no rent. `rent` then falls back to
    * DEFAULT_RENT so the arithmetic is defined, but that number is nobody's rent
@@ -187,8 +189,21 @@ export function resolveInputs(
   // not an answer: `priceKnown` is the fact every consumer branches on, and a screen
   // whose figures derive from the price asks the reader for one in place rather than
   // computing against this zero.
-  const price = stored.price ?? benchmark ?? 0;
-  const priceKnown = stored.price !== null || benchmark !== null;
+  //
+  // A stored ZERO is not a price and does not take the first rung. It is reachable —
+  // `SHARED_INPUT_SCHEMA.price` is nullable with `min: 0` and NumberField clamps to the
+  // minimum and commits — and `stored.price !== null` used to call it one, which put back
+  // every defect this zero is here to prevent: a $0 payment on Amortization, the fixed
+  // lawyer and moving fees printed as "cash needed at closing", "$0 is within reach" on
+  // Affordability. It falls through to the benchmark instead, exactly like the blank field
+  // it means, so a priced city keeps answering and keeps every sentence on it true: the
+  // ask reads "Nobody publishes a benchmark price for {place}", which is a claim about the
+  // publisher and would be FALSE in Winnipeg.
+  const givenPrice = stored.price !== null && stored.price > 0 ? stored.price : null;
+  const price = givenPrice ?? benchmark ?? 0;
+  // Read off `price` itself, so the two can never disagree: `priceKnown` true with a price
+  // of 0 is the $0 headline wearing a permission slip.
+  const priceKnown = price > 0;
   // Half a dollar of slack, matching scenario()'s own test in engine.ts: a
   // percentage that lands a rounding error under the floor is not a reader
   // asking for something illegal. Expressed in dollars, not percentage points,
@@ -200,6 +215,15 @@ export function resolveInputs(
   const student = stored.student ?? 0;
   const cc = stored.cc ?? 0;
   const otherDebt = stored.otherDebt ?? 0;
+  // The same hole `priceKnown` had, closed the same way. `SHARED_INPUT_SCHEMA.rent` is
+  // nullable with `min: 0`, so a reader can type 0, and `stored.rent !== null` called that a
+  // rent — Rent vs Buy would then print a verdict resting on the claim that living somewhere
+  // costs nothing, which is the one verdict on that page nobody should be able to buy with a
+  // keystroke. A non-positive rent is no rent, from either source, and it falls through the
+  // same rungs a blank field does: the figure published for here, then DEFAULT_RENT, which
+  // keeps the arithmetic defined while `rentKnown` stops the page printing anything from it.
+  const storedRent = stored.rent !== null && stored.rent > 0 ? stored.rent : null;
+  const publishedRent = j.rent != null && j.rent > 0 ? j.rent : null;
 
   return {
     price,
@@ -252,11 +276,11 @@ export function resolveInputs(
     termYears: stored.termYears,
     renewalRate: stored.renewalRate,
 
-    rent: stored.rent ?? j.rent ?? DEFAULT_RENT,
+    rent: storedRent ?? publishedRent ?? DEFAULT_RENT,
     // `j.rent` is optional AND nullable — a record may omit the field or record it
     // explicitly suppressed — and both mean the same thing to a reader: nobody
     // published a rent for here.
-    rentKnown: stored.rent !== null || (j.rent ?? null) !== null,
+    rentKnown: storedRent !== null || publishedRent !== null,
     rentInflation: stored.rentInflation / 100,
     holding: stored.holding,
     appreciation: F.appreciation[stored.apprKey],

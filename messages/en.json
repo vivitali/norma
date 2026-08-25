@@ -126,7 +126,23 @@
     "pe": "Prince Edward Island",
     "yt": "Yukon",
     "nt": "Northwest Territories",
-    "nu": "Nunavut"
+    "nu": "Nunavut",
+    "at": {
+      "toronto": "Toronto",
+      "ottawa": "Ottawa",
+      "vancouver": "Vancouver",
+      "halifax": "Halifax",
+      "winnipeg": "Winnipeg",
+      "montreal": "Montréal",
+      "calgary": "Calgary",
+      "saskatoon": "Saskatoon",
+      "nb": "New Brunswick",
+      "nl": "Newfoundland and Labrador",
+      "pe": "Prince Edward Island",
+      "yt": "Yukon",
+      "nt": "Northwest Territories",
+      "nu": "Nunavut"
+    }
   },
   "Affordability": {
     "income1": "Your annual income",
@@ -766,13 +782,13 @@
     "noPriceSub": "Enter the price you are considering, below, and this page fills in. Until then there is nothing here to compute: a figure built on a price of zero is not an answer."
   },
   "Disclosure": {
-    "unverifiedFlag": "Every figure names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
+    "unverifiedFlag": "Every figure that carries a sourcing record names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
     "lastVerified": "Rules last verified",
     "noCityData": "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates."
   },
   "Sources": {
     "title": "Where these numbers come from",
-    "subtitle": "Every figure carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted.",
+    "subtitle": "Each figure below carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted.",
     "ruleHeading": "Marked “rule”",
     "ruleBody": "The figure follows a rule in the tables: land transfer tax brackets, CMHC premium bands, the GDS and TDS limits, the stress-test floor and buffer, and the minimum down payment. Exact given the table — and how well the table itself is sourced is what the inventory below says.",
     "estimateHeading": "Marked “estimate”",

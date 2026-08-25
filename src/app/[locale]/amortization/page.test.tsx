@@ -167,13 +167,23 @@ describe("Amortization — with no published price, it asks", () => {
     expect(screen.getByText(/No published price for Yukon/)).toBeInTheDocument();
   });
 
-  it("asks in French too, with the place name inside the sentence", () => {
+  it("asks in French too, with the place name correctly articled inside the sentence", () => {
     // The ask carries an ICU argument in both locales, and a French reader meeting
     // `Inputs.noPriceHead` instead of a sentence is the failure this catches.
+    //
+    // It asserted "pour Yukon" and so pinned a grammatical error rather than the fix: these
+    // strings are reachable only on the six records that have no published price, and every
+    // one of them takes an article — le Yukon, les Territoires du Nord-Ouest,
+    // l'Île-du-Prince-Édouard. The article comes from `Jurisdictions.at.<id>`, a table rather
+    // than a rule, because French articles are not derivable from spelling — and Terre-Neuve
+    // takes none at all. The negative assertion is what stops the bare form coming back.
     inYukon();
     renderPage("fr");
-    expect(screen.getByText(/Personne ne publie de prix de référence pour Yukon/)).toBeInTheDocument();
-    expect(screen.getByText(/Aucun prix publié pour Yukon/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Personne ne publie de prix de référence pour le Yukon/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Aucun prix publié pour le Yukon/)).toBeInTheDocument();
+    expect(screen.queryByText(/pour Yukon/)).not.toBeInTheDocument();
   });
 
   it("answers in full the moment the reader gives a price", async () => {

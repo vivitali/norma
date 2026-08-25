@@ -175,7 +175,7 @@ export default function AffordabilityPage() {
         sub={
           resolved.priceKnown
             ? sub
-            : t("noPriceSub", { place: tJur(jurisdiction.id) })
+            : t("noPriceSub", { place: tJur(`at.${jurisdiction.id}`) })
         }
         tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
         stats={

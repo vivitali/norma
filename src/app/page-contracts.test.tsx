@@ -185,6 +185,56 @@ describe("no screen renders a non-finite figure", () => {
     // sweep asserting both facts is three times cheaper than two sweeps walking
     // the same matrix. The timeout is raised to match rather than the matrix cut.
   }, 90_000);
+
+  it("holds when the reader has typed a zero into the price, not only when none is published", () => {
+    // The sweep above only ever writes `{ jurId, ptype }`, so it tests the price the app
+    // DERIVES and never the one the reader stores. That is a hole the width of the whole
+    // contract: `price` is `{ kind: "number", nullable: true, min: 0 }` and NumberField
+    // clamps to the minimum and commits, so a stored 0 is one keystroke away on every page
+    // — and `priceKnown` used to be `stored.price !== null`, which called it a price. Every
+    // defect the nine unpublished-benchmark combinations taught us about came back through
+    // the front door, in Toronto, where nothing on screen suggests anything is missing.
+    //
+    // The contract is the same one, and deliberately not a special case for zero: where a
+    // benchmark stands behind the field the zero falls through to it and the page answers
+    // as it always did; where nothing is published there is nothing to fall through to and
+    // the page must ask. What no page may do is print an answer built on nothing.
+    for (const jurisdiction of jurisdictions) {
+      window.localStorage.setItem(
+        "norma.inputs.v2",
+        JSON.stringify({ jurId: jurisdiction.id, ptype: "house", price: 0 }),
+      );
+      for (const [name, Page] of PAGES) {
+        const { container } = renderWithIntl(
+          <JurisdictionProvider>
+            <Page />
+          </JurisdictionProvider>,
+        );
+        const where = `${name} / ${jurisdiction.id} / typed 0`;
+        expect(document.body.textContent, where).not.toMatch(GARBAGE);
+        const headline = container.querySelector('[data-slot="answer-figure"]');
+        const digits = headline?.textContent?.replace(/[^\d.,]/g, "") ?? "";
+        expect(digits, where).not.toMatch(/^0([.,]0+)?$/);
+        if (PRICE_DERIVED_HEADLINE.has(name) && benchmarkPrice(jurisdiction, "house") === null) {
+          expect(headline, `${where}: answered without a price`).toBeNull();
+        }
+        cleanup();
+      }
+    }
+    // And the other half of the same fact, on the page that has the field: a priced city
+    // keeps its answer rather than being told nobody publishes one there.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "toronto", ptype: "house", price: 0 }),
+    );
+    const { container } = renderWithIntl(
+      <JurisdictionProvider>
+        <AmortizationPage />
+      </JurisdictionProvider>,
+    );
+    expect(container.querySelector('[data-slot="answer-figure"]')).not.toBeNull();
+    expect(document.body.textContent).not.toMatch(/Nobody publishes a benchmark price/);
+  }, 60_000);
 });
 
 describe("cross-page links stay within their cap", () => {

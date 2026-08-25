@@ -126,7 +126,23 @@
     "pe": "Île-du-Prince-Édouard",
     "yt": "Yukon",
     "nt": "Territoires du Nord-Ouest",
-    "nu": "Nunavut"
+    "nu": "Nunavut",
+    "at": {
+      "toronto": "Toronto",
+      "ottawa": "Ottawa",
+      "vancouver": "Vancouver",
+      "halifax": "Halifax",
+      "winnipeg": "Winnipeg",
+      "montreal": "Montréal",
+      "calgary": "Calgary",
+      "saskatoon": "Saskatoon",
+      "nb": "le Nouveau-Brunswick",
+      "nl": "Terre-Neuve-et-Labrador",
+      "pe": "l’Île-du-Prince-Édouard",
+      "yt": "le Yukon",
+      "nt": "les Territoires du Nord-Ouest",
+      "nu": "le Nunavut"
+    }
   },
   "Affordability": {
     "income1": "Votre revenu annuel",
@@ -766,13 +782,13 @@
     "noPriceSub": "Indiquez ci-dessous le prix que vous envisagez et la page se remplira. D’ici là, il n’y a rien à calculer : un chiffre bâti sur un prix de zéro n’est pas une réponse."
   },
   "Disclosure": {
-    "unverifiedFlag": "Chaque chiffre indique d’où il vient : une source publiée et datée, une estimation que nous déclarons, ou rien du tout lorsque rien n’est publié.",
+    "unverifiedFlag": "Tout chiffre accompagné d’une fiche de provenance indique d’où il vient : une source publiée et datée, une estimation que nous déclarons, ou rien du tout lorsque rien n’est publié.",
     "lastVerified": "Règles vérifiées le",
     "noCityData": "Aucun chiffre municipal vérifié ici pour l'instant. Les règles provinciales sont exactes; les coûts locaux utilisent des moyennes provinciales et sont des estimations."
   },
   "Sources": {
     "title": "D’où viennent ces chiffres",
-    "subtitle": "Chaque chiffre est accompagné d’une fiche de provenance : le document consulté, la date de ce document, et jusqu’où l’on peut s’y fier.",
+    "subtitle": "Chaque chiffre ci-dessous est accompagné d’une fiche de provenance : le document consulté, la date de ce document, et jusqu’où l’on peut s’y fier.",
     "ruleHeading": "Marqué « règle »",
     "ruleBody": "Le chiffre suit une règle des tables : tranches de droits de mutation, bandes de prime SCHL, limites ABD et ATD, plancher et marge du test de résistance, mise de fonds minimale. Exact selon la table — et la qualité des sources de la table elle-même, c’est l’inventaire ci-dessous qui la dit.",
     "estimateHeading": "Marqué « estimation »",

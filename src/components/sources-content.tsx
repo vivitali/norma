@@ -217,8 +217,14 @@ export function SourcesContent() {
         <p className="micro pb-2 text-ink3">
           {/* Through the Jurisdictions namespace, like every other surface that names
               one. `jurisdiction.city` is the lowercase record key, so this rendered
-              "For winnipeg" to the reader. */}
-          {t("forJurisdiction", { city: tJur(jurisdiction.id) })}
+              "For winnipeg" to the reader.
+
+              `at.<id>` and not the bare name: this sits after a preposition, and
+              French takes an article on every province and territory — "Pour le
+              Yukon", not "Pour Yukon". The bare form stays right for the eight city
+              records, and `at.<id>` equals it there, so one lookup serves all
+              fourteen. English is identical either way. */}
+          {t("forJurisdiction", { city: tJur(`at.${jurisdiction.id}`) })}
         </p>
         {groups.map((group) => {
           const def = SOURCES_SECTIONS.find((s) => s.id === group.id)!;

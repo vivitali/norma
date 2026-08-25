@@ -245,10 +245,17 @@ describe("Affordability — the disclosure stays", () => {
     // was true at 162 of 288 but thin, and counted conf "low" — which this app's own
     // legend defines as derived rather than read. A footer on every page should not rest
     // on a ratio that a few records could tip.
+    //
+    // Nor does it universally quantify over FIGURES, which the wording before this one
+    // did ("Every figure names where it came from") and which was false: 26 of the 373
+    // numeric leaves in src/domain/jurisdictions carry no provenance entry of their own —
+    // transfer-line parameters covered in prose by a sibling entry, and nt/nu's property
+    // tax inputs. It quantifies over the SOURCING RECORD instead, which is exactly what
+    // provenance-view.test.ts can and does check entry by entry.
     renderPage();
     expect(
       screen.getByText(
-        "Every figure names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
+        "Every figure that carries a sourcing record names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
       ),
     ).toBeVisible();
     expect(screen.getByText(/Rules last verified/)).toBeVisible();
@@ -351,5 +358,21 @@ describe("Affordability — with no published price, it keeps the ceiling and as
     await user.tab();
     expect(screen.getByRole("button", { name: /Approval/ })).toBeInTheDocument();
     expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
+  });
+
+  it("stops asking for a price on the field that now has one", async () => {
+    // The ask under the price field is the same gesture PurchaseInputs makes on the other
+    // four pages, and it branched on a different fact: whether a PUBLISHER produces a
+    // benchmark, rather than whether a price resolves. So the identical state — 640,000
+    // entered at `yt` — dropped the note on Amortization and kept it here, under the
+    // reader's own figure, telling them to enter the one they are considering.
+    inYukon();
+    const user = userEvent.setup();
+    renderPage();
+    // Present first, so the assertion below cannot pass by querying nothing.
+    expect(screen.getByText(/No published price for Yukon/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Purchase price you're considering"), "640000");
+    await user.tab();
+    expect(screen.queryByText(/No published price for Yukon/)).not.toBeInTheDocument();
   });
 });

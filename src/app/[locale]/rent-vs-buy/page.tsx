@@ -398,13 +398,13 @@ export default function RentVsBuyPage() {
       ) : !resolved.priceKnown ? (
         <AnswerHead
           eyebrow={t("title")}
-          head={tInputs("noPriceHead", { place: tJur(jurisdiction.id) })}
+          head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
           sub={tInputs("noPriceSub")}
         />
       ) : (
         <AnswerHead
           eyebrow={t("title")}
-          head={t("noRentHead", { city: tJur(jurisdiction.id) })}
+          head={t("noRentHead", { city: tJur(`at.${jurisdiction.id}`) })}
           sub={t("noRentSub")}
         />
       )}
@@ -451,8 +451,8 @@ export default function RentVsBuyPage() {
                     product exists not to ship, and it was the more specific for naming the
                     territory. Either a rent published for here, or no published rent at all. */}
                 {resolved.rentKnown
-                  ? t("rentTag", { city: tJur(jurisdiction.id) })
-                  : t("rentUnknownTag", { city: tJur(jurisdiction.id) })}
+                  ? t("rentTag", { city: tJur(`at.${jurisdiction.id}`) })
+                  : t("rentUnknownTag", { city: tJur(`at.${jurisdiction.id}`) })}
               </p>
             ) : null}
             <NumberField

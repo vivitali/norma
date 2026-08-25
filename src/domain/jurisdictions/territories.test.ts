@@ -129,7 +129,7 @@ describe("Yukon land titles tariff (Land Titles Act, 2015)", () => {
     // The Government of Yukon values improvements at depreciated replacement cost and
     // reassesses every two years, so the 1.097% residential rate cannot be applied to a sale
     // price. Two reported 2026 bills were $1,625 and $3,744, against a Yukon Bureau of
-    // Statistics Whitehorse single-detached average sale price of $753,300 (Q1 2026).
+    // Statistics Whitehorse in-town single-detached average sale price of $719,000 (Q1 2026).
     const p = yt().propTax;
     expect(p.publishedRate).toBeCloseTo(0.01097, 8);
     expect(p.basis).toBe("frozenBaseYear");
@@ -145,14 +145,49 @@ describe("Yukon land titles tariff (Land Titles Act, 2015)", () => {
     // The note used to claim 0.5 was "the top of that observed range" while computing a range
     // of 0.23 to 0.53 — a number and a sentence disagreeing about the same figure. Both halves
     // are pinned here because neither is checkable on its own: $1,625 and $3,744 at 1.097%
-    // imply assessments of ~$148,100 and ~$341,300, and over $753,300 that is 0.20 to 0.45.
+    // imply assessments of ~$148,100 and ~$341,300, and over $719,000 that is 0.206 to 0.4747.
     const p = yt().propTax;
-    const lo = 1625 / p.publishedRate / 753300;
-    const hi = 3744 / p.publishedRate / 753300;
-    expect(lo).toBeCloseTo(0.2, 2);
-    expect(hi).toBeCloseTo(0.45, 2);
+    const lo = 1625 / p.publishedRate / 719000;
+    const hi = 3744 / p.publishedRate / 719000;
+    expect(lo).toBeCloseTo(0.206, 3);
+    expect(hi).toBeCloseTo(0.4747, 4);
+    // "The top of the range" is true BY CONSTRUCTION, not by assertion: the stored ratio
+    // rounds the top UP, never to the nearest, so it can never sit inside its own range.
+    expect(p.assessmentRatio).toBeGreaterThanOrEqual(hi);
     expect(p.assessmentRatio).toBeCloseTo(hi, 2);
-    expect(p.assessmentRatio).toBeLessThanOrEqual(0.45);
+  });
+
+  it("divides by the in-town average, which is the conservative one, not the flattering one", () => {
+    // The Bureau publishes the same quarter twice: $753,300 across 32 Whitehorse
+    // single-detached sales INCLUDING country residential acreages, $719,000 excluding them.
+    // Both CBC bills are on in-town houses, so the comparable denominator is $719,000 — and
+    // it is also the smaller one, so it raises the recurring cost rather than lowering it.
+    // The record's own stated principle is that erring high on a recurring cost keeps the
+    // comfort ceiling from being flattered; picking the larger denominator would have broken
+    // it by ~4.4%. Pinned so the choice cannot silently revert to the flattering number.
+    const p = yt().propTax;
+    const inTown = 3744 / p.publishedRate / 719000;
+    const acreageInclusive = 3744 / p.publishedRate / 753300;
+    expect(acreageInclusive).toBeLessThan(inTown);
+    expect(p.assessmentRatio).toBeGreaterThan(acreageInclusive);
+    expect(p.publishedRate * acreageInclusive).toBeLessThan(p.effective);
+    const note = yt().provenance["propTax.assessmentRatio"]!.note!;
+    expect(note).toMatch(/719,000/);
+    expect(note).toMatch(/753,300/);
+  });
+
+  it("states the defect it is correcting, rather than its opposite", () => {
+    // The correction note claimed 0.5 "sat above a range then computed as 0.23 to 0.53".
+    // 0.5 is INSIDE 0.23-0.53 — the defect was that it sat BELOW the top while being called
+    // the top. A provenance note renders verbatim on /sources, so an inverted one is a wrong
+    // claim shipped to a reader on the page whose whole job is showing what is actually true.
+    const oldLo = 1625 / 0.01097 / 641000;
+    const oldHi = 3744 / 0.01097 / 641000;
+    expect(0.5).toBeGreaterThan(oldLo);
+    expect(0.5).toBeLessThan(oldHi);
+    const note = yt().provenance["propTax.assessmentRatio"]!.note!;
+    expect(note).not.toMatch(/sat above a range/i);
+    expect(note).toMatch(/below the top of the range/i);
   });
 
   it("derives the ratio from a published document, not from a news article about one", () => {
@@ -164,7 +199,7 @@ describe("Yukon land titles tariff (Land Titles Act, 2015)", () => {
     const ratio = yt().provenance["propTax.assessmentRatio"]!;
     expect(ratio.conf).toBe("assumption");
     expect(ratio.url).toMatch(/yukon\.ca\/.*real-estate-report/);
-    expect(ratio.note).toMatch(/753,300/);
+    expect(ratio.note).toMatch(/719,000/);
     expect(ratio.note).toMatch(/declines to display as a price/i);
     // And the refusal at the other end says the same thing from its side: not "unsourced",
     // but "an average is not a benchmark".

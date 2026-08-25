@@ -316,6 +316,8 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     if (bucket) bucket.push(c);
     else groups.set(c.group, [c]);
   }
+  // Rows removed because a sibling is worth EXACTLY the same — see the tie note below.
+  const duplicates = new Set<CreditLine>();
   for (const bucket of groups.values()) {
     if (bucket.length < 2) continue;
     const best = bucket.reduce((a, b) => (b.amount > a.amount ? b : a));
@@ -326,6 +328,21 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     if (best.amount <= 0) continue;
     for (const c of bucket) {
       if (c === best) continue;
+      // And nothing supersedes an equal. `superseded` renders as "another rebate here is
+      // worth more — only one can be claimed, so that one is applied instead", and on an
+      // exact tie the first half of that sentence is false. It is an ordinary band, not a
+      // corner: BOTH BC exemptions forgive the entire tax on a new build a first-time buyer
+      // pays $500,000 or less for, because the first-time-buyer one is computed on the first
+      // $500,000 and there is nothing above it to leave behind.
+      //
+      // The tied row is dropped rather than relabelled. The reason the loser is normally
+      // kept is to let the UI explain the CHOICE — and a tie is not a choice: whichever
+      // programme the buyer claims, the money is identical to the dollar. So the group
+      // reports the relief once, and says nothing untrue about the row it does not print.
+      if (c.amount === best.amount) {
+        duplicates.add(c);
+        continue;
+      }
       c.amount = 0;
       c.st = "superseded";
     }
@@ -348,7 +365,10 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
           : (Math.min(gst, g.cap) * (g.zeroAt - o.price)) / (g.zeroAt - g.fullTo);
     if (amt > 0) later.push({ key: "cr_gstFthb", ex: "ex_gstFthb", amount: amt });
   }
-  return { atClosing, later };
+  return {
+    atClosing: duplicates.size === 0 ? atClosing : atClosing.filter((c) => !duplicates.has(c)),
+    later,
+  };
 }
 
 /** Total cash at closing without the itemised table — for screens that only need the number. */

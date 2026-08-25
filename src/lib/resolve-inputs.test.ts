@@ -148,6 +148,42 @@ describe("resolveInputs", () => {
     expect(resolveInputs({ ...untouched, price: 640000 }, territory, federal).priceKnown).toBe(true);
   });
 
+  it("does not count a typed zero as a price", () => {
+    // Zero is REACHABLE: the schema is `{ kind: "number", nullable: true, min: 0 }` and
+    // NumberField clamps to the minimum and commits, so it is one keystroke away on every
+    // page. `stored.price !== null` admitted it, which put back every defect the unpublished
+    // -benchmark work removed — a $0 payment on Amortization, the fixed lawyer and moving
+    // fees printed as "cash needed at closing", "$0 is within reach" on Affordability — in a
+    // priced city, where nothing else on the page suggests anything is missing.
+    //
+    // It falls through to the benchmark, like the blank field it means, rather than being
+    // treated as an unpriced market: the ask is worded "Nobody publishes a benchmark price
+    // for {place}", and in Winnipeg somebody does.
+    const zeroed = resolveInputs({ ...untouched, price: 0 }, winnipeg, federal);
+    expect(zeroed.price).toBe(winnipeg.bench.house);
+    expect(zeroed.priceKnown).toBe(true);
+    // Where nothing is published there is nothing to fall through to, and the zero stays a
+    // zero that no screen may print an answer from.
+    const territory = getJurisdiction("yt")!;
+    const nowhere = resolveInputs({ ...untouched, price: 0 }, territory, federal);
+    expect(nowhere.price).toBe(0);
+    expect(nowhere.priceKnown).toBe(false);
+  });
+
+  it("keeps price and priceKnown from ever disagreeing", () => {
+    // The invariant the fix above rests on, asserted directly rather than left implied:
+    // every consumer branches on `priceKnown` and then prints `price`, so a true flag over a
+    // zero is the $0 headline with a permission slip.
+    for (const j of jurisdictions) {
+      for (const ptype of ["house", "condo", "newbuild"] as const) {
+        for (const price of [null, 0, 640000]) {
+          const r = resolveInputs({ ...untouched, ptype, price }, j, federal);
+          expect(r.priceKnown, `${j.id}/${ptype}/${price}`).toBe(r.price > 0);
+        }
+      }
+    }
+  });
+
   it("says whether the rent being compared against is anybody's real rent", () => {
     // Six records carry no rent — CMHC suppresses every Yukon cell and does not survey
     // Nunavut. DEFAULT_RENT keeps the arithmetic defined, but it is a national
@@ -160,6 +196,26 @@ describe("resolveInputs", () => {
     expect(unrented.rentKnown).toBe(false);
     expect(unrented.rent).toBe(DEFAULT_RENT);
     expect(resolveInputs({ ...untouched, rent: 2300 }, territory, federal).rentKnown).toBe(true);
+  });
+
+  it("does not count a typed zero as a rent either", () => {
+    // The identical hole, in the identical shape: `rent` is nullable with `min: 0`, so a
+    // reader can commit 0, and `stored.rent !== null` called it a rent. Rent vs Buy would
+    // then print a verdict resting on living somewhere for nothing — and it would pick the
+    // renting side every time, which is the one verdict on the page nobody should be able to
+    // buy with a keystroke.
+    // Same resolution as the price: the zero falls through to the figure published for
+    // here, which is a real rent, so the comparison is the one the untouched page makes.
+    const zeroed = resolveInputs({ ...untouched, rent: 0 }, winnipeg, federal);
+    expect(zeroed.rent).toBe(winnipeg.rent);
+    expect(zeroed.rentKnown).toBe(true);
+    // And where CMHC published nothing there is nothing to fall through to: the zero does
+    // not become a rent, the placeholder stands only so the arithmetic is defined, and the
+    // page asks instead of printing a verdict.
+    const territory = getJurisdiction("nu")!;
+    const nowhere = resolveInputs({ ...untouched, rent: 0 }, territory, federal);
+    expect(nowhere.rentKnown).toBe(false);
+    expect(nowhere.rent).toBe(DEFAULT_RENT);
   });
 
   it("keeps the down-payment floor off a price it does not have", () => {

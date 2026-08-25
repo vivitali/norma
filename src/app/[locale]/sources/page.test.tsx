@@ -151,7 +151,7 @@ describe("SourcesContent", () => {
     render();
     expect(
       screen.getByText(
-        "Every figure names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
+        "Every figure that carries a sourcing record names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
       ),
     ).toBeVisible();
     expect(screen.getByText(/Rules last verified/)).toBeVisible();
@@ -162,6 +162,30 @@ describe("SourcesContent", () => {
     // reader reads an English paragraph as a translation that failed.
     render("fr");
     expect(screen.getByText(/conservées en anglais/)).toBeVisible();
+  });
+
+  it("gives the French jurisdiction name its article after a preposition", () => {
+    // "Pour Yukon" is not French. The six records with no city — nt, nu, yt, nb, nl,
+    // pe — all take an article in French and the article is not derivable from the
+    // spelling, so it is data: Jurisdictions.at.<id> is the name as it appears after
+    // a preposition, and every "for {place}" surface reads that and not the bare name.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "yt" }));
+    render("fr");
+    expect(screen.getByText("Pour le Yukon")).toBeVisible();
+    expect(screen.queryByText("Pour Yukon")).not.toBeInTheDocument();
+  });
+
+  it("gives a province the same article, and a city none", () => {
+    // Two records, because a per-territory special case would pass on Yukon and
+    // still ship "pour Nouveau-Brunswick" — and because the eight city records
+    // must NOT gain an article they do not take.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nb" }));
+    render("fr");
+    expect(screen.getByText("Pour le Nouveau-Brunswick")).toBeVisible();
+    cleanup();
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "winnipeg" }));
+    render("fr");
+    expect(screen.getByText("Pour Winnipeg")).toBeVisible();
   });
 
   it("renders no raw message key in French, with every group open", async () => {

@@ -353,7 +353,7 @@ export default function AmortizationPage() {
       ) : (
         <AnswerHead
           eyebrow={t("title")}
-          head={tInputs("noPriceHead", { place: tJur(jurisdiction.id) })}
+          head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
           sub={tInputs("noPriceSub")}
         />
       )}

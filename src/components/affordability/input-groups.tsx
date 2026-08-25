@@ -206,14 +206,21 @@ export function InputGroups({
             Where it IS null the field does not go quiet — that left the reader a $0
             price with LESS explanation than a priced city gets. It asks, in place, on
             the field that answers it.
+
+            But it asks only while the question is open. The ask is a THIRD state, not
+            the other half of the hint: once the reader has given a price there is a
+            price to model, and "Enter the one you are considering" sat under their own
+            640,000 at `yt` — the same state that correctly says nothing on Amortization,
+            because PurchaseInputs branches on whether a price resolves rather than on
+            whether a publisher produces one. One fact, `priceKnown`, in both places.
           */}
-          {resolved.benchmark === null ? (
-            <span className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
-              {tInputs("noPrice", { place: tJur(jurisdiction.id) })}
-            </span>
-          ) : (
+          {resolved.benchmark !== null ? (
             <span className="-mt-1 text-[10.5px] text-ink3">
               {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(resolved.benchmark)}
+            </span>
+          ) : resolved.priceKnown ? null : (
+            <span className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
+              {tInputs("noPrice", { place: tJur(`at.${jurisdiction.id}`) })}
             </span>
           )}
           {/*
