@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
 
-  // Must stay "affordmath": afordmath.com is attached to the Worker of this name.
+  // Must stay "affordmath": affordmath.com is attached to the Worker of this name.
   // Renaming this deploys to a different Worker and silently leaves production
   // serving the old code.
   "name": "affordmath",
@@ -9,7 +9,7 @@
   "compatibility_date": "2026-04-15",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 
-  // Production serves only from the custom domain (afordmath.com). Leaving
+  // Production serves only from the custom domain (affordmath.com). Leaving
   // workers.dev enabled gives the site a second reachable hostname; Cloudflare
   // marks it noindex, but one canonical host is the point.
   "workers_dev": false,
