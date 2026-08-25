@@ -35,10 +35,12 @@ describe("routing.pathnames", () => {
       "/amortization",
       "/closing-costs",
       "/down-payment",
+      "/privacy",
       "/rent-vs-buy",
       "/rrsp-hbp",
       "/scenarios",
       "/sources",
+      "/terms",
     ]);
   });
 
