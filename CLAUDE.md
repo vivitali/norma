@@ -54,6 +54,23 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
   `src/lib/shared-inputs.ts`. The hook keys an effect on the array's identity; an inline literal is
   an infinite render loop, not a type error. This has bitten twice.
 - User-facing strings go in `messages/en.json` / `messages/fr.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy.
+- **Never interpolate a jurisdiction name into a sentence with `tJur(jurisdiction.id)`.** Use
+  `` tJur(`at.${jurisdiction.id}`) `` — the `Jurisdictions.at.<id>` form is the name as it appears
+  *after a preposition*. French needs the article and it is not derivable from spelling: *le*
+  Yukon, *les* Territoires du Nord-Ouest, *l'*Île-du-Prince-Édouard, and Terre-Neuve-et-Labrador
+  takes none at all, which is why this is a table and not a rule. English `at.<id>` is
+  byte-identical to the bare name (asserted), so call sites can use `at.` unconditionally without
+  reasoning about which records a string can reach. The bare form is correct in exactly one place:
+  `jurisdiction-picker.tsx`, where the name stands alone rather than in a sentence.
+- **A figure the reader has not given and nobody publishes must not be computed around.**
+  `resolveInputs()` returns `priceKnown` and `rentKnown` alongside the numbers; `price` still
+  resolves to `0` and `rent` to `DEFAULT_RENT` so the arithmetic stays defined, but a screen whose
+  headline derives from either must ASK rather than answer while the flag is false. Both flags read
+  off the RESOLVED figure (`priceKnown = price > 0`), never off `stored.x !== null` — a typed zero
+  is not a price, and a flag that can disagree with its own figure is how "$0 is within reach"
+  shipped. Affordability and RRSP-HBP legitimately keep answering: their headlines are computed
+  from income and from an RRSP balance, with no price term. `page-contracts.test.tsx` enforces this
+  as an allowlist of the price-derived pages.
 - shadcn/ui components: `npx shadcn@latest add <component>` (this project's shadcn CLI needs explicit `-b radix -p nova` if it re-prompts).
 - Branches: `claude/<ticket-or-slug>`; commits: conventional commits; never push to `main`.
 - Persisted user input lives in one localStorage blob under `norma.inputs.v2`, behind
@@ -137,6 +154,18 @@ Amortization · Rent vs Buy · Scenarios · Sources. Eleven routes, every one pr
 moving FOCUS on a hash arrival, not just scroll), and `src/components/purchase-inputs.tsx`. This
 markup IS the Affordability screen's markup — extracted from it, not designed ahead of it.
 
+`AnswerHead`'s `figure` is optional, and that is the **ask state**: a page with nothing honest to
+compute renders its eyebrow, the ask in the hero slot and the sub-line, with no figure and no
+em-dash placeholder (DESIGN.md §5.3, and a bare em-dash at figure size reads as a rendering fault).
+It is a state of the existing gesture, not a second one. `FigureFooter` takes a `children` slot for
+per-page provenance rather than each page growing its own footer.
+
+**Copy that names a source is domain data and is English.** `Provenance.src` and `.note` have no
+i18n mechanism, so they render untranslated on French pages. `/sources` discloses this in French,
+and the Affordability footer's French label says its citation is quoted in English. Machine-glossing
+a verification record would be worse than showing it; translating them properly is real separate
+work. If you surface a `src` or `note` anywhere new, the disclosure has to travel with it.
+
 **Copy is mined from `design-reference/`, en and fr, never newly written.** The reference tables
 are `hbt-data.js`'s global `t` (Closing Costs, Down Payment, RRSP-HBP) and a per-page `S = {...}`
 literal inside each `.dc.html` (Amortization, Rent vs Buy, Scenarios), each value a
@@ -179,13 +208,53 @@ statute quoted in provenance, so nobody re-opens them:
    overstate by ~$420; under the Land Titles Act, 2015 we *understated* by $330.
 4. **NL's $5,000 cap is on the mortgage line only.** s.2(2) does not list a conveyance. The plan's
    test asserted what a rate-comparison site publishes.
+5. **Whitehorse's property tax goes DOWN, not up.** The spec says 0.0078 → 0.01123, "a ~30%
+   understatement". Yukon values improvements at depreciated replacement cost on a two-year cycle,
+   so the base is not market value; the spec's figure would bill ~$7,200/yr on a $641,000 home
+   against two real bills of $1,625 and $3,744. The ratio is derived from those bills over the
+   Yukon Bureau of Statistics' **in-town** average and rounds UP, so "the top of the observed
+   range" is true by construction.
+6. **Yellowknife's replacement values are arithmetically impossible.** `effective: 0.0112` with
+   `publishedRate: 0.00986` and `assessmentRatio: 1` fails the derivation invariant, and
+   `frozenBaseYear` additionally requires a ratio below 1 — which cannot raise `effective` above
+   `publishedRate`. The record is unchanged and annotated instead.
+
+**A reviewer finding is a hypothesis, not an instruction.** Two of the review's findings were
+investigated and rejected on the evidence, and both rejections are recorded in provenance so they
+are not re-opened: Saskatchewan's step ceilings genuinely mix conventions because ISC's schedule
+does (only the first band is exclusive), and the rule is now *ceilings match their source document,
+never each other*; and `rent`/`yoy` provenance was already complete on all eight records that hold
+values. Go to the primary source before complying.
 
 Two consequences of the old placeholders are now resolved by real data rather than by argument:
 Rent vs Buy's default verdict is no longer driven by an invented benchmark, and every market figure
 says which metric it is. `capacityPer100` is still zero at every income for debt-free households.
 
 **Open issues:**
-- [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists in `design-reference/hbt-data.js`)
+- [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists
+  in `design-reference/hbt-data.js`). Note this now costs more than it did: a new locale needs a
+  `Jurisdictions.at.<id>` table of its own, and Ukrainian and Spanish decline place names
+  differently again.
+- ~~[#21](https://github.com/vivitali/norma/issues/21)~~ — **closed by this branch.** All 33
+  orphaned Affordability keys resolved and `KNOWN_ORPHANS` is now `{}`, so any new orphan in any
+  namespace fails outright. One limitation is documented rather than fixed: the scanner matches a
+  bare quoted string, so a section id and a message key spelling the same word cover for each other.
+
+**Raised by this branch, not yet filed:**
+- **`bench` holds three different metrics** — MLS® HPI benchmarks (Toronto, Vancouver, Calgary,
+  Ottawa), a median (Montreal, because QPAREB publishes medians), and board averages (Winnipeg).
+  They are not interchangeable, each record's provenance says which it is, and tests fail if that
+  disclosure is edited away. Picking one across the dataset is a **product** decision and was
+  deliberately not taken.
+- **`hbp.ruleDays` is 90 and CRA says 89.** Not changed, because the RRSP-HBP metadata hardcodes
+  "wait 90 days" in both locale files and a value/copy split is worse than a consistent rounding.
+  Needs one edit to each locale file and then the constant, together.
+- **`cmhc.bands` cannot express the 4.50% band** that applies at 90.01–95% LTV when the down
+  payment is borrowed — about $2,500 under-charged on a $500k loan. The shape change belongs with
+  the input that would tell us where the down payment came from.
+- **An exact-tie rebate is dropped rather than labelled.** No `CreditLine.st` is true of a tie, so
+  the group reports the relief once. If both rows should stay visible, it needs a new status plus a
+  reworded `rebSuperseded` (drop "is worth more").
 - ~~[#2](https://github.com/vivitali/norma/issues/2)~~ — **closed, before this branch, not by it.**
   `credits()` already looked its rebate target up by key in both `gov` and `j.transfer`
   (`engine.ts:182`, `engine.ts:200`), so the phantom-rebate defect was gone: `elsewhere` is safe to
