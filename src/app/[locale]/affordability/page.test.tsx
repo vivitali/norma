@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
+import type { Locale } from "@/lib/locales";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { getJurisdiction } from "@/domain/jurisdictions";
 import AffordabilityPage from "./page";
@@ -9,7 +10,7 @@ import AffordabilityPage from "./page";
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
-const renderPage = (locale: "en" | "fr" = "en") =>
+const renderPage = (locale: Locale = "en") =>
   renderWithIntl(
     <JurisdictionProvider>
       <AffordabilityPage />

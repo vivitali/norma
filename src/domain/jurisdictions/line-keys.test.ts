@@ -2,17 +2,17 @@ import { describe, expect, it } from "vitest";
 import { buildLines, credits } from "../engine";
 import { federal } from "../federal";
 import { jurisdictions } from "./index";
-import en from "../../../messages/en.json";
-import fr from "../../../messages/fr.json";
+import { CATALOGUES } from "@/test/catalogues";
 
-const CLOSING = {
-  en: (en as unknown as Record<string, Record<string, string>>).ClosingCosts,
-  fr: (fr as unknown as Record<string, Record<string, string>>).ClosingCosts,
-};
+/** The ClosingCosts namespace of every locale, keyed by locale. */
+const CLOSING = Object.entries(CATALOGUES).map(
+  ([locale, messages]) =>
+    [locale, (messages as unknown as Record<string, Record<string, string>>).ClosingCosts] as const,
+);
 
 /**
  * Every line item, explanation and credit key the engine can emit, for EVERY
- * jurisdiction, must have copy in both locales.
+ * jurisdiction, must have copy in EVERY locale.
  *
  * The Closing Costs page resolves these dynamically — `t(item.key)`,
  * `t(item.ex)`, `t(c.key)` — so no typecheck and no source scan can see them,
@@ -58,8 +58,9 @@ describe("every jurisdiction's line-item keys have copy", () => {
       }
       expect(seen.size).toBeGreaterThan(0);
       for (const key of seen) {
-        expect(CLOSING.en[key], `en ClosingCosts.${key}`).toBeDefined();
-        expect(CLOSING.fr[key], `fr ClosingCosts.${key}`).toBeDefined();
+        for (const [locale, namespace] of CLOSING) {
+          expect(namespace[key], `${locale} ClosingCosts.${key}`).toBeDefined();
+        }
       }
     });
   }

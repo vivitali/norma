@@ -5,7 +5,8 @@ internal codename.
 
 ## Purpose
 
-norma shows Canadians what they can genuinely afford to buy or rent — not what a bank will pre-approve them for. Bank affordability is GDS/TDS ratios against gross income; norma instead works from real net income, real carrying costs (property tax, insurance, condo fees, utilities), and each province's actual tax and cost-of-ownership rules (land transfer tax, first-time-buyer rebates, registration fees), in English and French.
+norma shows Canadians what they can genuinely afford to buy or rent — not what a bank will pre-approve them for. Bank affordability is GDS/TDS ratios against gross income; norma instead works from real net income, real carrying costs (property tax, insurance, condo fees, utilities), and each province's actual tax and cost-of-ownership rules (land transfer tax, first-time-buyer rebates, registration fees), in English, French, Ukrainian
+and Spanish.
 
 Monetization direction is undecided — noted here so scope decisions don't assume "free forever."
 
@@ -16,11 +17,11 @@ npm install
 npm run dev
 ```
 
-App runs at `http://localhost:3000`, redirecting to `/en` (also supports `/fr`).
+App runs at `http://localhost:3000`, redirecting to `/en`. Also `/fr`, `/uk` and `/es`.
 
 ## Stack
 
-Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui (Radix base, Nova preset) · next-intl (en/fr) · Vitest + Testing Library · deployed to Cloudflare Workers via `@opennextjs/cloudflare`
+Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui (Radix base, Nova preset) · next-intl (en, fr, uk, es) · Vitest + Testing Library · deployed to Cloudflare Workers via `@opennextjs/cloudflare`
 
 ## Commands (scripts contract — always use these, never raw stack commands)
 
@@ -37,7 +38,7 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 
 ## What exists
 
-Nine pages across eleven locale-prefixed routes, every one prerendered:
+Nine pages across eleven locale-prefixed routes, in four languages, every one prerendered:
 
 **Affordability** · **Closing Costs** · **Down Payment** · **RRSP & Home Buyers' Plan** ·
 **Amortization** · **Rent vs Buy** · **Scenarios** · **Sources** · plus the home page.
@@ -75,7 +76,13 @@ rather than seeding one you might mistake for a market rate.
 `scripts/check` must pass before review, and every page route must stay prerendered
 (`scripts/verify-prerender`). Tests accompany every behaviour change. Province rules live in
 `src/domain/jurisdictions/`, never inline in a component, and all user-facing copy lives in
-`messages/en.json` and `messages/fr.json`, which are kept key-identical by a test.
+`messages/<locale>.json` — English is the source, and a test keeps every other catalogue
+key-identical to it, with the same ICU placeholders.
+
+Adding a locale is three edits and a translation: the code list in `src/i18n/routing.ts`, the
+presentation facts in `src/lib/locales.ts` (which is a `Record<Locale, …>`, so omitting it is a
+compile error), the catalogue in `src/test/catalogues.ts`, and `messages/<locale>.json` itself.
+Every cross-locale test iterates that registry, so nothing else needs touching.
 
 See `CLAUDE.md` for the working conventions and the seams to touch when adding a page, and
 `DESIGN.md` for the visual system.

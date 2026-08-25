@@ -30,8 +30,8 @@ describe("AppHeader", () => {
   it("renders the brand link, jurisdiction picker, locale switcher, and theme toggle together", async () => {
     renderHeader();
     expect(screen.getByRole("link", { name: "AffordMath" })).toHaveAttribute("href", "/");
-    expect(await screen.findByRole("combobox")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "EN" })).toBeInTheDocument();
+    expect(await screen.findByRole("combobox", { name: "Change location" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Change language" })).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "Theme" })).toBeInTheDocument();
   });
 
@@ -42,12 +42,15 @@ describe("AppHeader", () => {
     // 320px is CSS, which jsdom cannot measure -- this pins the DOM containment it depends on.
     renderHeader();
     const nav = document.querySelector("nav")!;
-    const picker = await screen.findByRole("combobox");
+    const picker = await screen.findByRole("combobox", { name: "Change location" });
     expect(nav.contains(picker)).toBe(false);
+    // Both settings are selects since the locale switcher stopped being a button row -- four
+    // locales do not fit a 44px-per-option segmented control beside the picker at 320px.
+    expect(nav.contains(screen.getByRole("combobox", { name: "Change language" }))).toBe(false);
 
     await userEvent.setup().click(screen.getByRole("button", { name: TRIGGER }));
-    expect(screen.getByRole("combobox")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "EN" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Change location" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Change language" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Theme" })).toBeInTheDocument();
   });
 });

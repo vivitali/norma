@@ -1,84 +1,71 @@
 import { describe, expect, it } from "vitest";
-import en from "../../messages/en.json";
-import fr from "../../messages/fr.json";
+import {
+  CATALOGUES,
+  SOURCE_LOCALE,
+  TRANSLATED_ENTRIES,
+  leafPaths,
+  leaves,
+  type Tree,
+} from "@/test/catalogues";
 
-type Tree = Record<string, unknown>;
-
-/** Every leaf path, e.g. "Affordability.ckApproval". */
-function paths(node: Tree, prefix = ""): string[] {
-  return Object.entries(node).flatMap(([key, value]) => {
-    const path = prefix ? `${prefix}.${key}` : key;
-    return value !== null && typeof value === "object" && !Array.isArray(value)
-      ? paths(value as Tree, path)
-      : [path];
-  });
-}
+const source = CATALOGUES[SOURCE_LOCALE] as Tree;
+const sourcePaths = leafPaths(source);
 
 /**
- * The locales must carry the same keys, exactly.
+ * Every locale must carry the same keys, exactly.
  *
- * next-intl renders the raw key when one is missing, so an untranslated string
- * reaches a French reader as `RentVsBuy.secWealth` rather than as English — the
- * one failure mode worse than not translating it. There is no runtime check for
- * this and no type for it either: both files are plain JSON.
+ * next-intl renders the raw key when one is missing, so an untranslated string reaches
+ * the reader as `RentVsBuy.secWealth` rather than as English — the one failure mode
+ * worse than not translating it. There is no runtime check for this and no type for it
+ * either: the catalogues are plain JSON.
+ *
+ * Written against `TRANSLATED_ENTRIES` rather than a hardcoded pair, so a fifth locale
+ * is covered by adding one line to `src/test/catalogues.ts` and nothing here.
  */
 describe("message catalogues", () => {
-  const enPaths = paths(en as Tree);
-  const frPaths = paths(fr as Tree);
-
-  it("has no key in English that French is missing", () => {
-    expect(enPaths.filter((p) => !frPaths.includes(p))).toEqual([]);
+  it.each(TRANSLATED_ENTRIES)("%s carries every key English has", (_locale, tree) => {
+    const theirs = new Set(leafPaths(tree));
+    expect(sourcePaths.filter((p) => !theirs.has(p))).toEqual([]);
   });
 
-  it("has no key in French that English is missing", () => {
-    // The reverse matters too: a French-only key is dead copy nobody maintains.
-    expect(frPaths.filter((p) => !enPaths.includes(p))).toEqual([]);
+  it.each(TRANSLATED_ENTRIES)("%s carries no key English lacks", (_locale, tree) => {
+    // The reverse matters too: a key in one locale only is dead copy nobody maintains.
+    const ours = new Set(sourcePaths);
+    expect(leafPaths(tree).filter((p) => !ours.has(p))).toEqual([]);
   });
 
-  it("leaves no string empty in either locale", () => {
-    for (const [locale, tree] of [["en", en], ["fr", fr]] as const) {
-      for (const path of paths(tree as Tree)) {
-        const value = path.split(".").reduce<unknown>((n, k) => (n as Tree)[k], tree);
-        expect(String(value).trim(), `${locale}: ${path}`).not.toBe("");
-      }
+  it.each(Object.entries(CATALOGUES))("%s leaves no string empty", (locale, tree) => {
+    for (const [path, value] of leaves(tree as Tree)) {
+      expect(value.trim(), `${locale}: ${path}`).not.toBe("");
     }
   });
 });
 
 /**
- * A missing ICU parameter is not a fallback — next-intl throws and renders the
- * raw key, so `Amortization.altText` reached the page as that literal string
- * until it was caught by hand. Two ways that happens: a call site forgets a
- * placeholder, or one locale's translation carries a placeholder the other does
- * not. This catches the second, which no call site can be blamed for.
+ * A missing ICU parameter is not a fallback — next-intl throws and renders the raw key,
+ * so `Amortization.altText` reached the page as that literal string until it was caught
+ * by hand. Two ways that happens: a call site forgets a placeholder, or one locale's
+ * translation carries a placeholder another does not. This catches the second, which no
+ * call site can be blamed for.
  */
 describe("ICU placeholders", () => {
   const placeholders = (value: string) =>
     [...value.matchAll(/\{(\w+)[^}]*\}/g)].map((m) => m[1]).sort();
 
-  function leaves(node: Tree, prefix = ""): [string, string][] {
-    return Object.entries(node).flatMap(([key, value]) => {
-      const path = prefix ? `${prefix}.${key}` : key;
-      return value !== null && typeof value === "object" && !Array.isArray(value)
-        ? leaves(value as Tree, path)
-        : ([[path, String(value)]] as [string, string][]);
-    });
-  }
+  const sourceLeaves = leaves(source);
 
-  it("uses the same placeholders in both locales, for every message", () => {
-    const frByPath = new Map(leaves(fr as Tree));
-    for (const [path, enValue] of leaves(en as Tree)) {
-      const frValue = frByPath.get(path);
-      if (frValue === undefined) continue; // covered by the parity tests above
-      expect(placeholders(frValue), path).toEqual(placeholders(enValue));
+  it.each(TRANSLATED_ENTRIES)("%s uses English's placeholders, message for message", (_l, tree) => {
+    const theirs = new Map(leaves(tree));
+    for (const [path, value] of sourceLeaves) {
+      const translated = theirs.get(path);
+      if (translated === undefined) continue; // covered by the parity tests above
+      expect(placeholders(translated), path).toEqual(placeholders(value));
     }
   });
 
-  it("leaves no unclosed or empty placeholder", () => {
-    for (const [locale, tree] of [["en", en], ["fr", fr]] as const) {
-      for (const [path, value] of leaves(tree as Tree)) {
-        expect(value, `${locale}: ${path}`).not.toMatch(/\{\s*\}/);
-      }
+  it.each(Object.entries(CATALOGUES))("%s leaves no unclosed or empty placeholder", (locale, tree) => {
+    for (const [path, value] of leaves(tree as Tree)) {
+      expect(value, `${locale}: ${path}`).not.toMatch(/\{\s*\}/);
     }
   });
 });

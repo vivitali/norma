@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { SITE_NAME } from "./seo";
-import en from "../../messages/en.json";
-import fr from "../../messages/fr.json";
+import { CATALOGUES } from "@/test/catalogues";
 
-const LOCALES = { en, fr } as const;
+const LOCALES = CATALOGUES;
 const PAGES = [
   "home",
   "affordability",
@@ -19,8 +18,9 @@ const PAGES = [
 
 /**
  * Google truncates titles near 60 characters and descriptions near 155.
- * French is the locale that breaks this: it runs 15-20% longer than English
- * for the same sentence, so both locales are checked, not just the source one.
+ * Every locale is checked, not just the source one, because the translations are the
+ * ones that break it: French runs 15-20% longer than English for the same sentence,
+ * Spanish similarly, and Ukrainian's declensions lengthen the words themselves.
  */
 describe("metadata copy", () => {
   for (const [locale, messages] of Object.entries(LOCALES)) {

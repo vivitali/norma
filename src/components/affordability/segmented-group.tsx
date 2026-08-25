@@ -68,7 +68,17 @@ export function SegmentedGroup<T extends string | number>({
               }
             }}
             className={cn(
-              "flex min-h-11 flex-1 items-center justify-center rounded-md px-2.5 text-[12px] sm:min-h-9",
+              // `min-w-0` is what lets a long label give way instead of pushing the page
+              // wider than the viewport. A flex item defaults to `min-width: auto`, so it
+              // refuses to shrink below its own min-content — and this control's
+              // min-content is the sum of the longest single WORD in each option, because
+              // a word cannot break. English never reaches the limit; Ukrainian does, on
+              // two controls, measured at 278px and 286px against a 256px budget at
+              // DESIGN.md §7's 320px floor. With `min-w-0` the row shrinks to fit and the
+              // global `overflow-wrap: break-word` (globals.css) breaks the word only when
+              // it would otherwise overflow — so a line that already fits is untouched, in
+              // every locale.
+              "flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-md px-2.5 text-center text-[12px] sm:min-h-9",
               value === option.value ? "bg-card font-semibold text-primary" : "text-muted-foreground",
             )}
           >

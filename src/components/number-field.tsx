@@ -5,9 +5,8 @@ import { useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatLocaleNumber, parseLocaleNumber } from "@/lib/number-format";
+import { localeProfile } from "@/lib/locales";
 import { cn } from "@/lib/utils";
-
-const INTL_LOCALES: Record<string, string> = { en: "en-CA", fr: "fr-CA" };
 
 export interface NumberFieldProps {
   id: string;
@@ -47,8 +46,7 @@ export function NumberField({
   describedBy,
   className,
 }: NumberFieldProps) {
-  const locale = useLocale();
-  const intlLocale = INTL_LOCALES[locale] ?? "en-CA";
+  const intlLocale = localeProfile(useLocale()).intl;
   /** Non-null only while the field is being edited. */
   const [draft, setDraft] = useState<string | null>(null);
   const suffixId = useId();

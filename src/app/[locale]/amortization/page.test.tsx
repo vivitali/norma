@@ -2,13 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
+import type { Locale } from "@/lib/locales";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import AmortizationPage from "./page";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
-const renderPage = (locale: "en" | "fr" = "en") =>
+const renderPage = (locale: Locale = "en") =>
   renderWithIntl(
     <JurisdictionProvider>
       <AmortizationPage />

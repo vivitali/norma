@@ -7,7 +7,7 @@ import { routing } from "@/i18n/routing";
 import { NAV } from "@/lib/routes";
 import { SECTION_REGISTRIES } from "@/lib/sections";
 import en from "../../messages/en.json";
-import fr from "../../messages/fr.json";
+import { CATALOGUES } from "@/test/catalogues";
 import { vi } from "vitest";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
@@ -38,17 +38,19 @@ describe("CrossLink", () => {
 });
 
 describe("the cross-link rules", () => {
-  it("keeps every sentence in both locales", () => {
+  it("keeps every sentence in every locale", () => {
     const enKeys = crossKeys(en as unknown as Catalogue).map(([ns, k]) => `${ns}.${k}`).sort();
-    const frKeys = crossKeys(fr as unknown as Catalogue).map(([ns, k]) => `${ns}.${k}`).sort();
-    expect(enKeys).toEqual(frKeys);
     expect(enKeys.length).toBeGreaterThan(0);
+    for (const [locale, messages] of Object.entries(CATALOGUES)) {
+      const keys = crossKeys(messages as unknown as Catalogue).map(([ns, k]) => `${ns}.${k}`).sort();
+      expect(keys, locale).toEqual(enKeys);
+    }
   });
 
   it("gives every sentence exactly one link, and never makes the link the whole sentence", () => {
     // A line whose entire text is the link is an advertisement. The rule is that
     // the sentence tells the reader something true even if they never click.
-    for (const [locale, messages] of [["en", en], ["fr", fr]] as const) {
+    for (const [locale, messages] of Object.entries(CATALOGUES)) {
       for (const [ns, key] of crossKeys(messages as unknown as Catalogue)) {
         const text = (messages as unknown as Catalogue)[ns][key];
         expect([...text.matchAll(/<link>/g)], `${locale} ${ns}.${key}`).toHaveLength(1);
@@ -64,7 +66,7 @@ describe("the cross-link rules", () => {
     // PRODUCT.md's voice: names what the other page computes, never asserts a
     // benefit and never sells the click.
     const banned = /learn more|find out|try (it|our)|explore|discover|check out|calculator|click here|would you like/i;
-    for (const [locale, messages] of [["en", en], ["fr", fr]] as const) {
+    for (const [locale, messages] of Object.entries(CATALOGUES)) {
       for (const [ns, key] of crossKeys(messages as unknown as Catalogue)) {
         expect((messages as unknown as Catalogue)[ns][key], `${locale} ${ns}.${key}`).not.toMatch(
           banned,

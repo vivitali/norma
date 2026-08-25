@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { routing } from "@/i18n/routing";
+import { localeProfile } from "@/lib/locales";
 
 /**
  * The canonical host. One host, always absolute: a relative canonical resolves
@@ -115,7 +116,11 @@ export function buildMetadata({
       title,
       description,
       url,
-      locale,
+      // og:locale wants a full language_TERRITORY tag, not a bare language subtag:
+      // "es" alone tells a crawler nothing about which Spanish, and Facebook's own
+      // parser ignores a value it cannot match. The territory comes off the same
+      // table that decides how figures are formatted, so the two cannot disagree.
+      locale: localeProfile(locale).intl.replace("-", "_"),
       images: ["/og.png"],
     },
     twitter: {

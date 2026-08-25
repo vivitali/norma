@@ -60,6 +60,8 @@ describe("buildMetadata", () => {
     expect(meta.openGraph?.siteName).toBe(SITE_NAME);
     expect(meta.openGraph?.url).toBe(absoluteUrl("en", "/affordability"));
     expect(meta.openGraph?.title).toBe("What can you afford?");
+    // A full language_TERRITORY tag, not the bare "en" this used to emit.
+    expect(meta.openGraph?.locale).toBe("en_CA");
   });
 
   it("sets a summary_large_image twitter card", () => {
