@@ -10,7 +10,7 @@
     },
     "sources": {
       "title": "Sources and provenance — AffordMath",
-      "description": "Where every figure comes from: which are exact provincial rules, which are estimates, and which are not yet verified."
+      "description": "Where every figure comes from: the document it was checked against, that document's date, and how far it can be trusted."
     },
     "notFound": {
       "title": "Page not found — AffordMath",
@@ -68,7 +68,7 @@
     "rulesManitobaLabel": "Manitoba",
     "rulesManitoba": "The land transfer tax applies in full: there is no first-time-buyer rebate to reduce it.",
     "rulesNote": "Which is why the answer moves when you change the city, and why a national average would be wrong in all fourteen places at once.",
-    "rulesUnverified": "One caveat, stated plainly: the jurisdiction figures are placeholders carried over from the prototype this was built from, not read off 2026 government schedules. Every figure in the app is marked as a rule or an estimate — <sources>sources and provenance</sources> explains which is which, and names the bodies the figures must be checked against.",
+    "rulesUnverified": "Where the figures come from, stated plainly: each jurisdiction figure carries a sourcing record naming the document it was checked against and that document's date. Most are read off the issuing authority's own schedule; some are defaults we chose and disclose, because legal fees and moving costs have no authoritative publisher; a few are left empty because nobody publishes them at all. <sources>Sources and provenance</sources> lists every one, figure by figure.",
     "toolsHeading": "What each tool answers",
     "toolsIntro": "Every tool runs on the same engine and the same inputs, so a number you enter once follows you across all of them. Nothing is gated behind anything else — start wherever your question is.",
     "tool_affordability": "What your income actually carries, with the lender's qualified maximum beside it and the binding limit named.",
@@ -78,7 +78,7 @@
     "tool_rrspHbp": "What an RRSP withdrawal is worth once the refund lands, and what fifteen years of repayments do to the years after.",
     "tool_amortization": "Nobody holds one rate for twenty-five years. What renewing into a higher rate does to the payment, and to the interest over the whole loan.",
     "tool_scenarios": "Four down payments at one price, compared on monthly cost, cash at closing, lender approval and lifetime interest. The cheapest month rarely wins.",
-    "tool_sources": "Which figures come from a rule, which are estimates, and which are not verified yet.",
+    "tool_sources": "Where every figure comes from: the document it was checked against, its date, and how far it can be trusted.",
     "faqHeading": "Questions this answers",
     "faqQ_afford": "How much house can I afford in Canada?",
     "faqA_afford": "It depends which ceiling binds. Give the affordability tool your income, your city and your down payment and it computes both — the maximum a lender would qualify you for, and the price your net income carries after ownership costs — then names the lower one.",
@@ -89,7 +89,7 @@
     "faqQ_jurisdiction": "Does this work outside Ontario?",
     "faqA_jurisdiction": "Fourteen jurisdictions are modelled separately. Alberta and Saskatchewan charge land titles registration instead of a transfer tax; Toronto adds a municipal land transfer tax to Ontario's; Manitoba levies the tax with no first-time-buyer rebate against it.",
     "faqQ_verified": "Are the numbers verified?",
-    "faqA_verified": "Not yet. Every jurisdiction figure is a placeholder carried over from the prototype this was built from, not taken from a 2026 government schedule. Each figure is marked as a rule or an estimate, and the sources page explains the marks and names the bodies each figure has to be checked against. Confirm anything you are about to act on."
+    "faqA_verified": "Most of them, and every figure says which. Each one carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted. Most were read off the issuing authority's own schedule. Others are modelling defaults we chose and disclose, because legal fees, inspections and moving costs have no authoritative publisher in Canada. A few are left empty because nobody publishes them at all, and the app asks you for those rather than inventing one. The sources page lists every figure with its document and date. Confirm anything you are about to act on."
   },
   "AppHeader": {
     "theme": "Theme",
@@ -779,12 +779,12 @@
     "confAssumptionWhat": "Nobody publishes this, so we chose a default and say so. It is our figure, not a fact.",
     "confNone": "Not published",
     "confNoneWhat": "Nobody publishes it and we will not invent one, so the figure is left empty and the page asks you for it instead.",
-    "coverage": "Across {jurisdictions} jurisdictions and the federal rules, {total} figures carry a sourcing record: {sourced} were checked against a published document, {assumed} are modelling assumptions we chose and disclose, and {unknown} are left unknown because nobody publishes them.",
+    "coverage": "Across {jurisdictions} jurisdictions and the federal rules, {total} figures carry a sourcing record: {sourced} are traced to a published document, {assumed} are modelling assumptions we chose and disclose, and {unknown} are left unknown because nobody publishes them.",
     "inventory": "Figure by figure",
     "forJurisdiction": "For {city}",
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
-    "sourcedOf": "{n} of {total} figures checked against a published document",
+    "sourcedOf": "{n} of {total} figures traced to a published source",
     "secFederal": "Federal rules",
     "secCharges": "Transfer tax and registration",
     "secCredits": "Rebates and credits",

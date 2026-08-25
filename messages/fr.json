@@ -10,7 +10,7 @@
     },
     "sources": {
       "title": "Sources et provenance — AffordMath",
-      "description": "D’où vient chaque chiffre — règles provinciales exactes, estimations, et chiffres qui ne sont pas encore vérifiés."
+      "description": "D’où vient chaque chiffre : le document consulté, sa date, et jusqu’où l’on peut s’y fier — pour les quatorze juridictions."
     },
     "notFound": {
       "title": "Page introuvable — AffordMath",
@@ -68,7 +68,7 @@
     "rulesManitobaLabel": "Manitoba",
     "rulesManitoba": "Les droits de mutation s’appliquent en entier : aucun remboursement pour un premier achat ne vient les réduire.",
     "rulesNote": "C’est pourquoi la réponse bouge dès que vous changez de ville, et pourquoi une moyenne nationale serait fausse dans les quatorze cas à la fois.",
-    "rulesUnverified": "Une réserve, dite clairement : les valeurs propres aux juridictions sont provisoires, reprises du prototype d’origine et non relevées sur les barèmes gouvernementaux de 2026. Chaque valeur de l’application est marquée comme règle ou estimation — <sources>sources et provenance</sources> explique laquelle est laquelle, et nomme les organismes auprès desquels elles doivent être vérifiées.",
+    "rulesUnverified": "D’où viennent les chiffres, dit clairement : chaque valeur propre à une juridiction est accompagnée d’une fiche de provenance nommant le document consulté et sa date. La plupart sont relevées dans le barème de l’organisme lui-même; certaines sont des valeurs par défaut que nous avons choisies et que nous déclarons, car les honoraires juridiques et les frais de déménagement n’ont aucun éditeur officiel; quelques-unes restent vides faute de publication. <sources>Sources et provenance</sources> les énumère une à une.",
     "toolsHeading": "Ce que répond chaque outil",
     "toolsIntro": "Tous les outils reposent sur le même moteur et les mêmes données saisies : un chiffre entré une fois vous suit partout. Rien n’est verrouillé derrière autre chose — commencez là où se trouve votre question.",
     "tool_affordability": "Ce que vos revenus portent réellement, avec le maximum qualifié par un prêteur à côté, et la limite contraignante nommée.",
@@ -78,7 +78,7 @@
     "tool_rrspHbp": "Ce que vaut un retrait REER une fois le remboursement d’impôt encaissé, et ce que quinze ans de remises font aux années suivantes.",
     "tool_amortization": "Personne ne garde le même taux pendant vingt-cinq ans. Ce qu’un renouvellement à un taux plus élevé fait au versement, et aux intérêts sur toute la durée.",
     "tool_scenarios": "Quatre mises de fonds à un même prix, comparées sur le coût mensuel, le comptant à la clôture, l’approbation du prêteur et les intérêts totaux. Le versement le plus bas gagne rarement.",
-    "tool_sources": "Quels chiffres viennent d’une règle, lesquels sont des estimations, et lesquels ne sont pas encore vérifiés.",
+    "tool_sources": "D’où vient chaque chiffre : le document consulté, sa date, et jusqu’où l’on peut s’y fier.",
     "faqHeading": "Les questions auxquelles ceci répond",
     "faqQ_afford": "Quelle maison puis-je me permettre au Canada ?",
     "faqA_afford": "Cela dépend du plafond qui contraint. Donnez à l’outil de capacité d’achat votre revenu, votre ville et votre mise de fonds : il calcule les deux — le maximum qu’un prêteur qualifierait, et le prix que votre revenu net porte une fois les coûts de propriété payés — puis nomme le plus bas.",
@@ -89,7 +89,7 @@
     "faqQ_jurisdiction": "Est-ce que cela fonctionne ailleurs qu’en Ontario ?",
     "faqA_jurisdiction": "Quatorze juridictions sont modélisées séparément. L’Alberta et la Saskatchewan perçoivent des frais d’enregistrement des titres plutôt qu’un droit de mutation; Toronto ajoute des droits municipaux à ceux de l’Ontario; le Manitoba perçoit les droits sans aucun remboursement pour un premier achat.",
     "faqQ_verified": "Les chiffres sont-ils vérifiés ?",
-    "faqA_verified": "Pas encore. Chaque valeur propre à une juridiction est provisoire, reprise du prototype d’origine et non tirée d’un barème gouvernemental de 2026. Chaque valeur est marquée comme règle ou estimation, et la page des sources explique les marques et nomme les organismes auprès desquels chaque valeur doit être vérifiée. Vérifiez tout ce sur quoi vous vous apprêtez à agir."
+    "faqA_verified": "En grande partie, et chaque chiffre le précise. Chacun est accompagné d’une fiche de provenance : le document consulté, la date de ce document, et jusqu’où l’on peut s’y fier. La plupart ont été relevés dans le barème de l’organisme lui-même. D’autres sont des valeurs par défaut que nous avons choisies et que nous déclarons, car les honoraires juridiques, les inspections et les frais de déménagement n’ont aucun éditeur officiel au Canada. Quelques-uns restent vides faute de publication, et l’application vous les demande plutôt que d’en inventer. La page des sources énumère chaque chiffre avec son document et sa date. Vérifiez tout ce sur quoi vous vous apprêtez à agir."
   },
   "AppHeader": {
     "theme": "Thème",
@@ -779,12 +779,12 @@
     "confAssumptionWhat": "Personne ne publie ce chiffre : nous avons choisi une valeur par défaut et nous le disons. C’est notre chiffre, pas un fait.",
     "confNone": "Non publié",
     "confNoneWhat": "Personne ne le publie et nous n’en inventerons pas : le chiffre reste vide et la page vous le demande plutôt.",
-    "coverage": "Pour {jurisdictions} territoires et les règles fédérales, {total} chiffres sont accompagnés d’une fiche de provenance : {sourced} ont été vérifiés dans un document publié, {assumed} sont des hypothèses de modélisation que nous avons choisies et que nous déclarons, et {unknown} restent inconnus faute de publication.",
+    "coverage": "Pour {jurisdictions} juridictions et les règles fédérales, {total} chiffres sont accompagnés d’une fiche de provenance : {sourced} sont rattachés à un document publié, {assumed} sont des hypothèses de modélisation que nous avons choisies et que nous déclarons, et {unknown} restent inconnus faute de publication.",
     "inventory": "Chiffre par chiffre",
     "forJurisdiction": "Pour {city}",
     "expandAll": "Tout déplier",
     "collapseAll": "Tout replier",
-    "sourcedOf": "{n} chiffres sur {total} vérifiés dans un document publié",
+    "sourcedOf": "{n} chiffres sur {total} rattachés à une source publiée",
     "secFederal": "Règles fédérales",
     "secCharges": "Droits de mutation et enregistrement",
     "secCredits": "Remboursements et crédits",
