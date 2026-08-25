@@ -36,6 +36,10 @@ the code needs to run.
   inherently a redirect to buymeacoffee.com and back. There is no seamless version of it. Stripe
   Embedded Checkout keeps the user on norma.
 - **Host: Cloudflare Workers via `@opennextjs/cloudflare`.** Rationale below.
+- **The adapter needs an incremental cache even with no ISR.** OpenNext serves *every*
+  prerendered page through it, so configuring none builds the HTML but leaves it unreachable —
+  every route 404s. `staticAssetsIncrementalCache` serves it from the Workers static-assets
+  binding, requiring no R2 bucket or KV namespace. Found by deploying; no test caught it.
 - **Ads carry a flagged, non-blocking product concern.** Ad inventory on a financial calculator is
   overwhelmingly finance inventory — lenders and mortgage brokers. norma's entire positioning is
   "not the bank's approval math." Recorded here so the tradeoff is deliberate if it is ever taken.
