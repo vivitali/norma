@@ -161,11 +161,28 @@ renders the raw key when one is missing, which reaches a French reader as `RentV
    Scalability constraint that later pages must be additive, not rewrites
 5. Open issues below
 
-**What is left is data, not pages.** Every jurisdiction figure in `src/domain/` is still an
-unverified placeholder. Two visible consequences already: Rent vs Buy ships a default verdict of
-"renting wins" that is driven entirely by the placeholder benchmark price and rent (the model is
-sound — the verdict flips at a rent-to-price ratio around 0.5% a month, and the sensitivity is
-under test), and `capacityPer100` is zero at every income for debt-free households.
+**The data is now verified — [#5](https://github.com/vivitali/norma/issues/5) is done.** Every one
+of the 14 jurisdiction records and `federal.ts` carries a `provenance` map naming the document each
+figure was checked against, that document's date, and how far it can be trusted.
+`UNVERIFIED_BENCHMARK`, `UNVERIFIED_PROP_TAX` and `PROVISIONAL_DERIVATION` have **zero call sites**.
+`/sources` renders the whole inventory from that data, grouped per jurisdiction.
+
+Read `docs/superpowers/specs/2026-08-17-data-verification-design.md` before touching `src/domain`,
+and note that **the spec is wrong in four places** — each corrected in the branch, each with the
+statute quoted in provenance, so nobody re-opens them:
+1. **PEI has no $200,000 exemption ceiling.** Repealed by EC428/16 in 2016; the Act (current to
+   2026-05-29) sets no threshold. `ceiling: null` is correct, and applying the spec's cap would
+   *create* the ~$3,880 error it claims to fix.
+2. **Quebec's credit has no phase-out.** It is 100% of the first $5,000 of duties plus 25% of the
+   next $3,500, capped at $5,875, flat above that. Hence `tieredCap`, not `tieredPhaseOut`.
+3. **Yukon's tariff is stepped, not per-value.** The spec carries the pre-2015 schedule and says we
+   overstate by ~$420; under the Land Titles Act, 2015 we *understated* by $330.
+4. **NL's $5,000 cap is on the mortgage line only.** s.2(2) does not list a conveyance. The plan's
+   test asserted what a rate-comparison site publishes.
+
+Two consequences of the old placeholders are now resolved by real data rather than by argument:
+Rent vs Buy's default verdict is no longer driven by an invented benchmark, and every market figure
+says which metric it is. `capacityPer100` is still zero at every income for debt-free households.
 
 **Open issues:**
 - [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists in `design-reference/hbt-data.js`)
@@ -182,10 +199,29 @@ under test), and `capacityPer100` is zero at every income for debt-free househol
   design, it *is* the rate model, and `defaultContractRate()` restores it. `federal.contractRate`
   is the field that is now unread, left in place rather than churned.
 
-**Known limitation, load-bearing:** every jurisdiction figure in `src/domain/` is an *unverified
-placeholder* carried over from the prototype — not sourced from 2026 government data. The UI
-discloses this. Verifying them per-jurisdiction is real, un-started work that must happen before
-this product is useful to anyone.
+**How to read a figure's standing.** `Provenance.conf` is five values and they are not a gradient —
+two of them are categorically different from the other three, and the distinction is load-bearing:
+
+- `high` / `medium` / `low` — a claim about a *published* quantity. `low` means derived or inferred
+  from something published (Ontario's assessment ratio, which MPAC does not publish), not
+  "we are unsure".
+- `assumption` — **nobody publishes this**, so we chose a default and disclose it. Required to carry
+  a `note`. Most `fees.*` are here: no authority publishes a conveyancing tariff or a moving cost.
+- `none` — **nobody publishes it and we will not invent one.** An invariant test requires the value
+  to be `null` or absent, which makes "an unsourced number norma nonetheless displays"
+  unrepresentable. The territorial and two Atlantic market figures are here.
+
+Collapsing `assumption` and `none` into one label is what let twelve invented territorial prices sit
+beside a legitimately-estimated inspection fee, indistinguishable. Don't.
+
+**What is genuinely still open, and it is not a placeholder problem:**
+- Halifax's *type-level* benchmark sits behind CREA's REALTOR® login, which is why its house figure
+  is `medium` and its condo figure is `null`.
+- `federal.rates.insured` / `.uninsured` are `medium` and cannot do better: no official publisher
+  exists for 5-year *fixed* contract rates. The Bank of Canada's only broker series is variable, and
+  its "conventional mortgage: 5-year" is a *posted* rate near 6%, not comparable.
+- The verification notes in `src/domain` render in English on the French `/sources`. They are domain
+  data with no i18n mechanism; the page says so in French. Translating them is a real separate job.
 
 ## Open product decisions
 
@@ -221,15 +257,24 @@ pending in `design-reference/` for later phases.
   disclosure sitting next to them. An FAQ answer may say *which rules exist and who levies them*
   (Toronto stacks a municipal land transfer tax; Alberta charges land titles registration instead;
   Manitoba levies the tax with no first-time-buyer rebate) because those are qualitative and
-  checkable. It may carry a **number** only where a verification date covers it — today that means
-  `federal.verified` and federal parameters only, and jurisdiction figures never travel. The rule
-  loosens by itself as [#5](https://github.com/vivitali/norma/issues/5) dates each jurisdiction, so
-  the next answer does not need re-arguing.
-- **Don't do SEO outreach, link-building or directory submissions until
-  [#5](https://github.com/vivitali/norma/issues/5) lands** — every jurisdiction figure is still an
-  unverified placeholder, and a wrong land transfer tax in a placed article becomes the story about
-  a product whose whole promise is showing what is actually true. The in-app disclosure is honest
-  for someone who finds us organically; it is not honest for someone we pitched. The technical
-  foundation, metadata, hreflang, content structure and `/sources` copy are all safe to build now
-  and depend on none of it. Gate and split recorded in
+  checkable. It may carry a **number** only where a verification date covers it. This rule said it
+  would loosen once [#5](https://github.com/vivitali/norma/issues/5) dated each jurisdiction, and
+  #5 has landed — so the test is now mechanical rather than blanket:
+
+  > A figure may travel **only if its own `provenance` entry is `conf: "high"` and carries an
+  > `asOf`.** Quote the `asOf` alongside it.
+
+  `medium`, `low`, `assumption` and `none` **never** travel, whatever the surrounding page says.
+  `medium` means we could not reach the publisher's primary document; `low` means we derived it;
+  `assumption` means we chose it. None of those survive being stripped of context by a machine,
+  which is precisely what structured data is for.
+- **SEO outreach, link-building and directory submissions were gated on
+  [#5](https://github.com/vivitali/norma/issues/5), which has now landed.** The reason for the gate
+  was that a wrong land transfer tax in a placed article becomes the story about a product whose
+  whole promise is showing what is actually true. That risk is materially reduced: the statutory
+  figures are now read off the issuing authority's own documents. It is **not** zero, and lifting
+  the gate is a judgement call for the owner, not an automatic consequence — Halifax's benchmark is
+  still `medium`, the fixed contract rates cannot be primary-sourced at all, and the `/sources`
+  notes are still English-only on the French page. Decide deliberately; do not treat "#5 landed" as
+  the answer. Gate and split recorded in
   [#12](https://github.com/vivitali/norma/issues/12).
