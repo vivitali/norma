@@ -64,10 +64,14 @@ describe("SegmentedGroup", () => {
    * 31 characters where Ukrainian failed at 36, because Cyrillic runs wider per character.
    * Measuring in a browser is the only real check; this stops the fix being deleted.
    */
-  it("lets a long label shrink rather than widen the page", () => {
+  it("lets a long label shrink rather than widen the page, and centres it when it wraps", () => {
     renderGroup();
     for (const radio of screen.getAllByRole("radio")) {
       expect(radio.className, radio.textContent ?? "").toContain("min-w-0");
+      // `justify-center` centres the anonymous flex item, not the lines inside it, so a
+      // label that wraps to two lines is start-aligned without this — which French
+      // ("Construction neuve") and Spanish ("Condominio de reventa") both do at 320px.
+      expect(radio.className, radio.textContent ?? "").toContain("text-center");
     }
   });
 });

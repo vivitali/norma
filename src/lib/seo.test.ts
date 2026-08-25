@@ -72,6 +72,26 @@ describe("buildMetadata", () => {
   });
 });
 
+describe("og:locale", () => {
+  // Pinned for every locale, not just the source one: the value is derived from the same
+  // table that decides how figures are formatted, and "the two cannot disagree" is a
+  // description of the coupling rather than a test of it.
+  it.each([
+    ["en", "en_CA"],
+    ["fr", "fr_CA"],
+    ["uk", "uk_UA"],
+    ["es", "es_MX"],
+  ])("emits %s as %s", (locale, expected) => {
+    const meta = buildMetadata({
+      locale,
+      href: "/affordability",
+      title: "t",
+      description: "d",
+    });
+    expect(meta.openGraph?.locale).toBe(expected);
+  });
+});
+
 describe("locale prefixing", () => {
   // Guards the rule reimplemented in seo.ts. These expectations change when
   // Task 8 switches localePrefix to "as-needed" — that is the point of having

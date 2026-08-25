@@ -79,7 +79,7 @@ rather than seeding one you might mistake for a market rate.
 `messages/<locale>.json` — English is the source, and a test keeps every other catalogue
 key-identical to it, with the same ICU placeholders.
 
-Adding a locale is three edits and a translation: the code list in `src/i18n/routing.ts`, the
+Adding a locale is four edits and a translation: the code list in `src/i18n/routing.ts`, the
 presentation facts in `src/lib/locales.ts` (which is a `Record<Locale, …>`, so omitting it is a
 compile error), the catalogue in `src/test/catalogues.ts`, and `messages/<locale>.json` itself.
 Every cross-locale test iterates that registry, so nothing else needs touching.

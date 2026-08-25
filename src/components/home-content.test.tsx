@@ -181,7 +181,7 @@ describe("positioning", () => {
     // pass ("#1", "award"); the rest are the same claims in each language. `gratis`/`gratuit`
     // matter most: monetization is undecided, so no locale may promise a price.
     const banned = [
-      /trusted by|thousands|join \d|millions|#1\b|award|\bfree\b|verified rules|official rates|no cost/i,
+      /trusted by|thousands|join \d|millions|#1\b|award|free|verified rules|official rates|no cost/i,
       /gratuit|sans frais|approuv[ée] par des milliers/i,
       /gratis|sin costo|miles de (usuarios|personas)|premiad/i,
       /безкоштовн|безплатн|тисячі (користувачів|людей)|нагород/i,

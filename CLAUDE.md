@@ -183,7 +183,9 @@ fails on a raw message key or an unformatted value; it is the only thing that ca
 locale has and another does not, which Ukrainian's four plural categories introduced.
 
 **Adding or changing a page — the seams, in order:**
-1. `src/i18n/routing.ts` — the route key and its French slug
+1. `src/i18n/routing.ts` — the route key and its localized slugs. **French and Spanish are
+   both required** and a test enforces each; Ukrainian deliberately takes none (see the
+   conventions above). A route added with only a French slug fails the suite.
 2. `src/lib/routes.ts` — the nav entry and its `built` flag
 3. `src/lib/sections.ts` — the page's section registry, added to `SECTION_REGISTRIES` so the
    message-key test covers it. **Add it when the page ships, not before**: a registry naming a
@@ -223,7 +225,7 @@ genuinely translated from the shipped English — see [#1](https://github.com/vi
 above for why the reference's uk/es columns were a glossary and not a catalogue.) The reference tables
 are `hbt-data.js`'s global `t` (Closing Costs, Down Payment, RRSP-HBP) and a per-page `S = {...}`
 literal inside each `.dc.html` (Amortization, Rent vs Buy, Scenarios), each value a
-`[en, fr, uk, es]` tuple. `src/lib/messages.test.ts` fails if en and fr ever diverge — next-intl
+`[en, fr, uk, es]` tuple. `src/lib/messages.test.ts` fails if any locale ever diverges from English — next-intl
 renders the raw key when one is missing, which reaches a French reader as `RentVsBuy.secWealth`.
 
 **Three engine departures from the reference, all deliberate:**

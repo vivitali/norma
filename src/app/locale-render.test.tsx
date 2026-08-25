@@ -2,10 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { CATALOGUES } from "@/test/catalogues";
+import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import type { Locale } from "@/lib/locales";
 
+import { HomeContent } from "@/components/home-content";
+import { AppHeader } from "@/components/app-header";
+import { ThemeProvider } from "@/components/theme-provider";
 import AffordabilityPage from "./[locale]/affordability/page";
 import ClosingCostsPage from "./[locale]/closing-costs/page";
 import DownPaymentPage from "./[locale]/down-payment/page";
@@ -21,6 +24,15 @@ vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
 const PAGES = [
+  // Home first, and it is not a formality: it is the URL every inbound link lands on, and
+  // the only page whose copy is also emitted as FAQPage structured data — so a message
+  // that fails to format there reaches a machine that strips the surrounding context.
+  // `home-content.test.tsx` renders it in en and fr only.
+  ["Home", HomeContent],
+  // The chrome. `AppHeader` and `Nav` are in SHARED below, but no page component here
+  // mounts them, so without this entry those 17 keys were never rendered in uk or es at
+  // all — the namespaces were exempted from the check by being named in it.
+  ["AppHeader", AppHeader],
   ["Affordability", AffordabilityPage],
   ["ClosingCosts", ClosingCostsPage],
   ["DownPayment", DownPaymentPage],
@@ -40,18 +52,30 @@ const LOCALES = Object.keys(CATALOGUES) as Locale[];
 const SHARED = ["AppHeader", "Nav", "Jurisdictions", "Provinces", "Inputs", "Disclosure", "Provenance"];
 
 /**
- * A raw message key on the page. next-intl renders `Amortization.altText` verbatim when
- * a message is missing OR when its ICU cannot be formatted, and neither throws.
+ * The exact key paths that could leak on this page — not a pattern that looks like one.
  *
- * Scoped to the namespaces the page under test actually renders, rather than all
- * seventeen, and that is not merely tidiness. `/sources` prints the verification notes
- * out of `src/domain` verbatim, and one of them discusses a message key by name —
- * federal.ts explains that the HBP's 90-day constant cannot be corrected to CRA's 89
- * without also editing `Metadata.rrspHbp.description`. That sentence is English prose,
- * not a leaked key, and a catch-all pattern reads it as a failure.
+ * next-intl renders `Amortization.altText` verbatim when a message is missing OR when its
+ * ICU cannot be formatted, and neither throws. The obvious check is a regex like
+ * `/\b(Nav|Inputs|...)\.\w+/`, and it is worse than useless: `textContent` concatenates
+ * adjacent elements with no separator, so a leaked key arrives glued to the text before
+ * it — "AffordMath" + "Nav.menu" — and `\b` finds no boundary between `h` and `N`. That
+ * version of this test passed with `Nav.menu` deleted from the catalogue.
+ *
+ * Matching the real key list instead is exact in both directions: every leak is caught
+ * wherever it lands, and nothing that merely looks like a key is.
+ *
+ * Still scoped to the namespaces the page under test renders, for a reason the pattern
+ * shares: `/sources` prints the verification notes out of `src/domain` verbatim, and one
+ * of them (federal.ts, on why the HBP's 90 days cannot be corrected to CRA's 89) names
+ * `Metadata.rrspHbp.description` in prose. That is English text, not a leaked key, and
+ * `Metadata` is not a namespace any page body renders.
  */
-const rawKeyPattern = (namespace: string) =>
-  new RegExp(`\\b(${[namespace, ...SHARED].join("|")})\\.[a-zA-Z_]+`);
+function leakableKeys(namespace: string): string[] {
+  const tree = CATALOGUES.en as Tree;
+  return [namespace, ...SHARED].flatMap((ns) =>
+    ns in tree ? leafPaths(tree[ns] as Tree).map((path) => `${ns}.${path}`) : [],
+  );
+}
 
 /** Rendered figures that are not numbers — a missing ICU argument shows up here too. */
 const GARBAGE = /NaN|Infinity|\bundefined\b|\[object Object\]/;
@@ -79,9 +103,11 @@ describe.each(LOCALES)("every page renders in %s", (locale) => {
   it.each(PAGES)("%s", async (namespace, Page) => {
     const user = userEvent.setup();
     renderWithIntl(
-      <JurisdictionProvider>
-        <Page />
-      </JurisdictionProvider>,
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>
+      </ThemeProvider>,
       { locale },
     );
 
@@ -89,7 +115,8 @@ describe.each(LOCALES)("every page renders in %s", (locale) => {
     for (const button of expandAll) await user.click(button);
 
     const text = document.body.textContent ?? "";
-    expect(text, `${locale}: raw message key`).not.toMatch(rawKeyPattern(namespace));
+    const leaked = leakableKeys(namespace).filter((key) => text.includes(key));
+    expect(leaked, `${locale}: message keys rendered verbatim`).toEqual([]);
     expect(text, `${locale}: unformatted value`).not.toMatch(GARBAGE);
   });
 });
