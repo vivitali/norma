@@ -152,7 +152,12 @@ export const vancouver: Jurisdiction = {
       note: "Only ON, QC and SK tax the premium; MB repealed its charge in 2020. Consistent across industry sources but not confirmed against a BC government PST exemption schedule.",
     },
     "fees.statusCert": {
-      conf: "low",
+      // "assumption", not "low". Low means derived or inferred from something published; $60 is
+      // derived from nothing — it matches neither figure below, which is the whole point of the
+      // note. It is a default we chose, which is what assumption means, and labelling it low was
+      // also counting it as a figure checked against a published document in the /sources
+      // coverage split. Every other fee field in the dataset is an assumption for the same reason.
+      conf: "assumption",
       note: "Neither figure matches reality: BC's Strata Property Regulation caps a Form B information certificate at $35, while strata management firms bill document packages of $150-$400. $60 matches neither, and a human has to decide which the model means.",
     },
     "fees.lawyer": { conf: "assumption", note: "No regulated conveyancing tariff exists in BC. Cited market range $1,200-$2,100 for a purchase with a mortgage; this sits mid-range." },
