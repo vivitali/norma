@@ -128,7 +128,7 @@ Implement → invoke `reviewer` subagent on the diff → fix → repeat until ap
 
 ## Deployment
 
-**Production is https://afordmath.com** — a custom domain on the `affordmath` Worker.
+**Production is https://affordmath.com** — a custom domain on the `affordmath` Worker.
 `workers.dev` is disabled for production (`workers_dev: false`); it serves PR previews only.
 
 Cloudflare Workers via `@opennextjs/cloudflare`. Deploys run from CI on push to `main`

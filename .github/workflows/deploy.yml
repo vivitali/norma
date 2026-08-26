@@ -34,7 +34,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      # Production is afordmath.com; workers.dev is disabled for this Worker.
+      # Production is affordmath.com; workers.dev is disabled for this Worker.
       #
       # This step exists because of a real incident: a deploy passed lint, typecheck,
       # 116 tests, the prerender guard, and `wrangler deploy --dry-run`, and still
@@ -42,4 +42,4 @@ jobs:
       # prerendered HTML. Nothing short of an HTTP request against the deployed
       # Worker could catch that, so CI now makes that request.
       - name: Smoke-test production
-        run: ./scripts/smoke https://afordmath.com
+        run: ./scripts/smoke https://affordmath.com
