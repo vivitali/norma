@@ -60,6 +60,8 @@ describe("buildMetadata", () => {
     expect(meta.openGraph?.siteName).toBe(SITE_NAME);
     expect(meta.openGraph?.url).toBe(absoluteUrl("en", "/affordability"));
     expect(meta.openGraph?.title).toBe("What can you afford?");
+    // A full language_TERRITORY tag, not the bare "en" this used to emit.
+    expect(meta.openGraph?.locale).toBe("en_CA");
   });
 
   it("sets a summary_large_image twitter card", () => {
@@ -67,6 +69,26 @@ describe("buildMetadata", () => {
     // has to be narrowed before the property is readable.
     const twitter = meta.twitter as { card?: string } | null | undefined;
     expect(twitter?.card).toBe("summary_large_image");
+  });
+});
+
+describe("og:locale", () => {
+  // Pinned for every locale, not just the source one: the value is derived from the same
+  // table that decides how figures are formatted, and "the two cannot disagree" is a
+  // description of the coupling rather than a test of it.
+  it.each([
+    ["en", "en_CA"],
+    ["fr", "fr_CA"],
+    ["uk", "uk_UA"],
+    ["es", "es_MX"],
+  ])("emits %s as %s", (locale, expected) => {
+    const meta = buildMetadata({
+      locale,
+      href: "/affordability",
+      title: "t",
+      description: "d",
+    });
+    expect(meta.openGraph?.locale).toBe(expected);
   });
 });
 

@@ -10,11 +10,11 @@
 
 ## Purpose
 
-Shows Canadians what they can genuinely afford to buy or rent — computed from real net income and real carrying costs, with each province's actual tax and cost-of-ownership rules built in, not GDS/TDS bank-approval math. English and French.
+Shows Canadians what they can genuinely afford to buy or rent — computed from real net income and real carrying costs, with each province's actual tax and cost-of-ownership rules built in, not GDS/TDS bank-approval math. English, French, Ukrainian and Spanish.
 
 ## Stack
 
-Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui (Radix base, Nova preset) · next-intl (locales: en, fr, prefix `/en` `/fr`) · Vitest + Testing Library
+Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui (Radix base, Nova preset) · next-intl (locales: en, fr, uk, es — every route locale-prefixed) · Vitest + Testing Library
 
 ## Commands (scripts contract — always use these, never raw stack commands)
 
@@ -44,24 +44,58 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
   the route to both, then flip `built: true` when the page exists. Tests enforce the pair in both
   directions, so forgetting either fails the suite. **Never write a route string anywhere else** —
   the folder name stays the canonical English key and the localized slug is a middleware rewrite.
-- `en` is deliberately absent from every `pathnames` entry: next-intl resolves a missing locale as
-  `pathnameConfig[locale] || internalTemplate`, so the canonical key *is* the English slug. This is
-  also why uk/es ([#1](https://github.com/vivitali/norma/issues/1)) is purely additive — new locales
-  get English slugs until someone translates one, a line at a time.
-- Slugs are ASCII, no accents (`/abordabilite`, not `/abordabilité`) — an accented path
-  percent-encodes the moment it is copied, pasted or logged.
+- **A locale is absent from a `pathnames` entry when its slug IS the canonical key.** next-intl
+  resolves a missing locale as `pathnameConfig[locale] || internalTemplate`, which is why `en`
+  appears nowhere — and it is the seam that makes a locale additive: it can ship with English
+  slugs and get them translated later, one line at a time.
+  - `fr` and `es` carry slugs. `uk` carries **none**, deliberately: slugs are ASCII (below), there
+    is no ASCII spelling of a Ukrainian word, and a transliteration is a string nobody searches
+    for or reads. `/uk/affordability` is at least recognisable from the English page.
+  - `/rrsp-hbp` has no Spanish slug either. RRSP and HBP are the names on the reader's own
+    Canadian bank and tax paperwork; there is nothing to translate them into.
+- Slugs are ASCII, no accents (`/abordabilite`, not `/abordabilité`; `/amortizacion`, not
+  `/amortización`) — an accented path percent-encodes the moment it is copied, pasted or logged.
+- **Adding a locale is four edits and a translation**, and three of them are one line:
+  `routing.locales` in `src/i18n/routing.ts`; the presentation facts in **`src/lib/locales.ts`**;
+  the catalogue in `src/test/catalogues.ts`; then `messages/<locale>.json` itself. `LOCALES` is a
+  `Record<Locale, LocaleProfile>`, so omitting it is a compile error rather than a silent fallback
+  to English conventions. **Every cross-locale test iterates those registries** — parity, ICU
+  placeholders, metadata length caps, section labels, Nav keys, cross-link rules, the engine's
+  dynamic line-item keys — so nothing else needs touching.
+  - The rule that used to live in three files as `locale !== "en"` was never a rule. It was a
+    two-locale coincidence, and Spanish breaks it: Latin American Spanish leads with the dollar
+    sign exactly as English does. Currency placement and percent spacing are per-locale facts and
+    live in the table.
+  - `es` formats through **`es-MX`**, not `es-ES`. The reader is a Spanish speaker in Canada
+    holding Canadian paperwork; peninsular grouping would render the same figure as `1.234.567`
+    where `en-CA` renders `1,234,567`, on the same screen, depending on the language toggle.
 - **Allowlists passed to `useSharedState` MUST be module-level constants** from
   `src/lib/shared-inputs.ts`. The hook keys an effect on the array's identity; an inline literal is
   an infinite render loop, not a type error. This has bitten twice.
-- User-facing strings go in `messages/en.json` / `messages/fr.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy.
+- User-facing strings go in `messages/<locale>.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy. **English is the source**; a test keeps every other catalogue key-identical to it with the same ICU placeholders.
 - **Never interpolate a jurisdiction name into a sentence with `tJur(jurisdiction.id)`.** Use
   `` tJur(`at.${jurisdiction.id}`) `` — the `Jurisdictions.at.<id>` form is the name as it appears
-  *after a preposition*. French needs the article and it is not derivable from spelling: *le*
-  Yukon, *les* Territoires du Nord-Ouest, *l'*Île-du-Prince-Édouard, and Terre-Neuve-et-Labrador
-  takes none at all, which is why this is a table and not a rule. English `at.<id>` is
-  byte-identical to the bare name (asserted), so call sites can use `at.` unconditionally without
-  reasoning about which records a string can reach. The bare form is correct in exactly one place:
-  `jurisdiction-picker.tsx`, where the name stands alone rather than in a sentence.
+  *after a preposition*. Seven messages interpolate it and all seven use one preposition, which is
+  what lets a single table serve them. **What the table holds differs by language, and no shared
+  rule exists** — writing one is how "pour Yukon" shipped:
+  - **en** — byte-identical to the bare name (asserted), so call sites can use `at.`
+    unconditionally without reasoning about which records a string can reach.
+  - **fr** — every province and territory takes an article and no city does: *le* Yukon, *les*
+    Territoires du Nord-Ouest, *l'*Île-du-Prince-Édouard — and Terre-Neuve-et-Labrador takes none
+    at all, which is why this is a table and not a rule.
+  - **es** — fewer names take an article, and which ones is not predictable from the form: *la*
+    Isla del Príncipe Eduardo and *los* Territorios del Noroeste do; Yukón, Nunavut, Nuevo
+    Brunswick and Terranova y Labrador do not.
+  - **uk** — the shape the other three share breaks. «для» governs the genitive, so the NAME
+    inflects and **cities are not exempt**: Оттава → Оттави, Юкон → Юкону. Only Торонто and
+    Калгарі are indeclinable and match their bare form. Ukrainian also splits the genitive by
+    referent — settlements take *-а* (Ванкувера), regions and territories take *-у* (Нунавуту) —
+    and spelling never tells you which, which is the clearest single reason this cannot be code.
+
+  `messages/parity.test.ts` asserts each locale's own rule separately, because there is no
+  cross-locale invariant beyond "every id appears in both tables". The bare form is correct in
+  exactly one place: `jurisdiction-picker.tsx`, where the name stands alone rather than in a
+  sentence.
 - **A figure the reader has not given and nobody publishes must not be computed around.**
   `resolveInputs()` returns `priceKnown` and `rentKnown` alongside the numbers; `price` still
   resolves to `0` and `rent` to `DEFAULT_RENT` so the arithmetic stays defined, but a screen whose
@@ -147,8 +181,36 @@ registry), and `AppNav`.
 **ALL NINE PAGES ARE BUILT.** Home · Affordability · Closing Costs · Down Payment · RRSP-HBP ·
 Amortization · Rent vs Buy · Scenarios · Sources. Eleven routes, every one prerendered.
 
+**Four locales ship** — en, fr, uk, es — closing [#1](https://github.com/vivitali/norma/issues/1).
+The plumbing was generalized rather than doubled: `src/lib/locales.ts` holds the presentation facts
+(switcher label, Intl tag, currency placement, percent spacing) as a `Record<Locale, …>`, and
+`src/test/catalogues.ts` holds the catalogues, so every cross-locale test iterates a registry
+instead of a hardcoded `{ en, fr }` pair — which is what ten test files each carried before, meaning
+"in both locales" only ever meant "in the two this file happened to list".
+Two tests carry the locales, and they cover different failure modes:
+
+- **`src/lib/messages-icu.test.ts`** constructs and formats every leaf in every locale, at counts
+  that reach every plural category each locale declares (asserted, not assumed — Ukrainian `other`
+  needs a fraction and French/Spanish `many` starts at 1,000,000). This is what catches ICU one
+  locale has and another does not, which Ukrainian introduced by needing four plural categories
+  where English has two: placeholder parity sees the same argument NAME on both sides and passes,
+  because it cannot see inside the ICU. It also compares rich-text tags — drop `<sources>` from
+  `Home.rulesUnverified` in one catalogue and next-intl throws nothing and renders the provenance
+  disclosure without its link.
+- **`src/app/locale-render.test.tsx`** renders every page in every locale with every section
+  expanded. It catches what a catalogue check cannot: a call site that forgets an argument.
+
+**A trap worth remembering, because it cost this branch a green test that checked nothing.** That
+render test originally looked for a leaked key with `/\b(Nav|Inputs|…)\.\w+/`. `textContent`
+concatenates adjacent elements with NO separator, so a leaked key arrives glued to the text before
+it — `AffordMath` + `Nav.menu` — and `\b` finds no boundary between `h` and `N`. Deleting
+`Nav.menu` from a catalogue left the suite green. Match the real key list from `en.json`, never a
+pattern that resembles one. The same applies to any future assertion over rendered text.
+
 **Adding or changing a page — the seams, in order:**
-1. `src/i18n/routing.ts` — the route key and its French slug
+1. `src/i18n/routing.ts` — the route key and its localized slugs. **French and Spanish are
+   both required** and a test enforces each; Ukrainian deliberately takes none (see the
+   conventions above). A route added with only a French slug fails the suite.
 2. `src/lib/routes.ts` — the nav entry and its `built` flag
 3. `src/lib/sections.ts` — the page's section registry, added to `SECTION_REGISTRIES` so the
    message-key test covers it. **Add it when the page ships, not before**: a registry naming a
@@ -170,15 +232,25 @@ It is a state of the existing gesture, not a second one. `FigureFooter` takes a 
 per-page provenance rather than each page growing its own footer.
 
 **Copy that names a source is domain data and is English.** `Provenance.src` and `.note` have no
-i18n mechanism, so they render untranslated on French pages. `/sources` discloses this in French,
-and the Affordability footer's French label says its citation is quoted in English. Machine-glossing
-a verification record would be worse than showing it; translating them properly is real separate
-work. If you surface a `src` or `note` anywhere new, the disclosure has to travel with it.
+i18n mechanism, so they render untranslated on **three of the four** locales — the cost of this
+went up when uk and es shipped, and it is now the largest untranslated surface in the product.
+`/sources` discloses it in every locale, and the Affordability footer's label says its citation is
+quoted in English in fr, uk and es (English itself does not, which is now the inconsistency —
+see the raised items). Machine-glossing a verification record would be worse than showing it;
+translating them properly is real separate work. If you surface a `src` or `note` anywhere new,
+the disclosure has to travel with it.
 
-**Copy is mined from `design-reference/`, en and fr, never newly written.** The reference tables
+One consequence to watch: `/sources` prints those English notes verbatim, and one of them
+(`federal.ts`) discusses a message key by name. Any test that greps rendered output for a leaked
+key must therefore be scoped to the namespaces the page under test actually renders — see
+`src/app/locale-render.test.tsx`.
+
+**Copy is mined from `design-reference/`, en and fr, never newly written.** (uk and es were
+genuinely translated from the shipped English — see [#1](https://github.com/vivitali/norma/issues/1)
+above for why the reference's uk/es columns were a glossary and not a catalogue.) The reference tables
 are `hbt-data.js`'s global `t` (Closing Costs, Down Payment, RRSP-HBP) and a per-page `S = {...}`
 literal inside each `.dc.html` (Amortization, Rent vs Buy, Scenarios), each value a
-`[en, fr, uk, es]` tuple. `src/lib/messages.test.ts` fails if en and fr ever diverge — next-intl
+`[en, fr, uk, es]` tuple. `src/lib/messages.test.ts` fails if any locale ever diverges from English — next-intl
 renders the raw key when one is missing, which reaches a French reader as `RentVsBuy.secWealth`.
 
 **Three engine departures from the reference, all deliberate:**
@@ -240,16 +312,54 @@ Rent vs Buy's default verdict is no longer driven by an invented benchmark, and 
 says which metric it is. `capacityPer100` is still zero at every income for debt-free households.
 
 **Open issues:**
-- [#1](https://github.com/vivitali/norma/issues/1) — uk/es locales (translated copy already exists
-  in `design-reference/hbt-data.js`). Note this now costs more than it did: a new locale needs a
-  `Jurisdictions.at.<id>` table of its own, and Ukrainian and Spanish decline place names
-  differently again.
-- ~~[#21](https://github.com/vivitali/norma/issues/21)~~ — **closed by this branch.** All 33
+- ~~[#1](https://github.com/vivitali/norma/issues/1)~~ — **closed by this branch.** Ukrainian and
+  Spanish ship complete: 787 leaves each, key-identical to English, every route prerendered in all
+  four locales. Both `Jurisdictions.at.<id>` tables were written from scratch — the pre-translated
+  copy in `design-reference/hbt-data.js` was used as a ~570-pair terminology memory, not as the
+  catalogue, because it covers the prototype's copy rather than the shipped copy and carries real
+  defects (a price claim, «шаблон» for a tax *bracket*, stray stress marks). Every override is in
+  the PR description.
+- ~~[#21](https://github.com/vivitali/norma/issues/21)~~ — **closed by the data-verification
+  branch.** All 33
   orphaned Affordability keys resolved and `KNOWN_ORPHANS` is now `{}`, so any new orphan in any
   namespace fails outright. One limitation is documented rather than fixed: the scanner matches a
   bare quoted string, so a section id and a message key spelling the same word cover for each other.
 
-**Raised by this branch, not yet filed:**
+**Raised by the uk/es translation pass, not yet filed:**
+- **`Inputs.elsewhereIn` is a dangling fragment at one of its two call sites.** In
+  `input-groups.tsx` it renders as `{t("elsewhereIn")} {tProv(...)}` → "Somewhere else in Ontario",
+  which is fine; in `purchase-inputs.tsx` it renders **alone**, as a switch label reading
+  "Somewhere else in" with nothing after it. Already wrong in English and French; the new locales
+  only inherit it. It needs a second key, or the province appended in both places. Ukrainian is
+  safe from a case-agreement problem here *only* because the toggle is gated to `prov === "ON"`
+  and «Онтаріо» is indeclinable — the moment a second province qualifies, the concatenation needs
+  the locative and breaks.
+- **`RentVsBuy.years` is a bare noun concatenated in JSX**, not a message with an argument:
+  `` `${year} ${t("years")}` `` against 3, 5, 10, 15, 25, 40. Ukrainian needs «роки» at 3 and
+  «років» at 5+, and a concatenated string cannot see the number. Worked around with the
+  abbreviation «р.», which is correct at every value. Change it to `t("years", { n })` and it can
+  become a real ICU plural like `Amortization.yearsWord`.
+- **`Home.rulesUnverified` and `Home.faqA_verified` say the same thing twice** — the same
+  three-way disclosure in slightly different words on one page. Not wrong, but it doubles the
+  translation surface for every future locale.
+- **`Affordability.propTaxSource` does not disclose that the citation it introduces is English.**
+  French already extends the label to say so and English does not. The uk and es catalogues follow
+  the French, so English is now the odd one out.
+- ~~**Segmented controls could be widened past the viewport by a long label**~~ — **fixed in this
+  branch, structurally.** Their options sit in one row, so a control's minimum width was the sum of
+  the longest single WORD in each label; a word cannot break, and a flex item defaults to
+  `min-width: auto`. Ukrainian went over on two of them — property type at 278px and the
+  investment-return assumption at 286px, against a 256px budget (a 320px phone less the page's
+  `px-5` and the card's `p-3`) — pushing four pages wider than the viewport. `min-w-0` on the
+  button lets the row give way, and globals.css's `overflow-wrap: break-word` then breaks the word
+  only when it would otherwise overflow, so a line that already fits is untouched. The labels were
+  ALSO reworded, because a mid-word break is a worse read than a shorter word.
+  **jsdom has no layout engine, so no test in this suite can measure a pixel** — the guard is a
+  class assertion in `segmented-group.test.tsx`, and the real check is a browser at 320px. A
+  character count cannot substitute: French passes at 31 characters where Ukrainian failed at 36,
+  because Cyrillic runs wider per character.
+
+**Raised by the data-verification branch, not yet filed:**
 - **`bench` holds three different metrics** — MLS® HPI benchmarks (Toronto, Vancouver, Calgary,
   Ottawa), a median (Montreal, because QPAREB publishes medians), and board averages (Winnipeg).
   They are not interchangeable, each record's provenance says which it is, and tests fail if that

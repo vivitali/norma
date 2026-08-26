@@ -68,7 +68,26 @@ export function SegmentedGroup<T extends string | number>({
               }
             }}
             className={cn(
-              "flex min-h-11 flex-1 items-center justify-center rounded-md px-2.5 text-[12px] sm:min-h-9",
+              // `min-w-0` is what lets a long label give way instead of pushing the page
+              // wider than the viewport. A flex item defaults to `min-width: auto`, so it
+              // refuses to shrink below its own min-content — and this control's
+              // min-content is the sum of the longest single WORD in each option, because
+              // a word cannot break. English never reaches the limit; Ukrainian did, on
+              // two controls, measured at 278px and 286px against a 256px budget at
+              // DESIGN.md §7's 320px floor, and pushed four pages wider than the viewport.
+              //
+              // It does change the columns: with `flex: 1 1 0%` the segments were
+              // previously clamped to their own content and so came out unequal in French,
+              // and they are now even thirds — which is what a segmented control is meant
+              // to look like anyway. What it does NOT do is break words. Measured at 320px
+              // in all four locales, with word-breaking force-disabled as the control: no
+              // button changes height, i.e. nothing wraps mid-word. A word longer than its
+              // third (French `Construction` at 69px in a 63px content box) overflows into
+              // its own `px-2.5` instead, and the row still fits. `text-center` is required
+              // the moment any label wraps to two lines — `justify-center` centres the
+              // anonymous flex item, not the lines inside it — which French and Spanish
+              // both do here.
+              "flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-md px-2.5 text-center text-[12px] sm:min-h-9",
               value === option.value ? "bg-card font-semibold text-primary" : "text-muted-foreground",
             )}
           >

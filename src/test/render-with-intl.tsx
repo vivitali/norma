@@ -1,18 +1,16 @@
 import { render, type RenderOptions } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactElement } from "react";
-import enMessages from "../../messages/en.json";
-import frMessages from "../../messages/fr.json";
-
-const MESSAGES = { en: enMessages, fr: frMessages };
+import { CATALOGUES } from "./catalogues";
+import type { Locale } from "@/lib/locales";
 
 export function renderWithIntl(
   ui: ReactElement,
-  options?: RenderOptions & { locale?: "en" | "fr" },
+  options?: RenderOptions & { locale?: Locale },
 ) {
   const { locale = "en", ...renderOptions } = options ?? {};
   return render(
-    <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
+    <NextIntlClientProvider locale={locale} messages={CATALOGUES[locale]}>
       {ui}
     </NextIntlClientProvider>,
     renderOptions,

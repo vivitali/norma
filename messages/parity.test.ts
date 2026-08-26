@@ -1,18 +1,9 @@
 import { describe, expect, it } from "vitest";
-import en from "./en.json";
-import fr from "./fr.json";
 import { jurisdictions } from "@/domain/jurisdictions";
-
-function paths(value: unknown, prefix = ""): string[] {
-  if (value === null || typeof value !== "object") return [prefix];
-  return Object.entries(value as Record<string, unknown>).flatMap(([k, v]) =>
-    paths(v, prefix ? `${prefix}.${k}` : k),
-  );
-}
-
-function at(messages: unknown, path: string): unknown {
-  return path.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], messages);
-}
+import { CATALOGUES, type Tree } from "@/test/catalogues";
+import fr from "./fr.json";
+import es from "./es.json";
+import uk from "./uk.json";
 
 /**
  * The bare names, plus `at` — the same names in prepositional position.
@@ -20,75 +11,55 @@ function at(messages: unknown, path: string): unknown {
  */
 type JurisdictionMessages = Record<string, string> & { at: Record<string, string> };
 
-const catalogues = [en, fr] as unknown as { Jurisdictions: JurisdictionMessages }[];
-const [enJur, frJur] = catalogues.map((m) => m.Jurisdictions);
+const jurisdictionTables = Object.entries(CATALOGUES).map(
+  ([locale, messages]) =>
+    [locale, (messages as Tree).Jurisdictions as unknown as JurisdictionMessages] as const,
+);
 
-describe("message parity", () => {
-  it("has the same keys in both locales", () => {
-    // A key present in one locale and missing in the other renders as the raw
-    // key path to half the users, and nothing fails until someone sees it.
-    const [a, b] = [paths(en).sort(), paths(fr).sort()];
-    expect(a.filter((k) => !b.includes(k))).toEqual([]);
-    expect(b.filter((k) => !a.includes(k))).toEqual([]);
+const IDS = jurisdictions.map((j) => j.id);
+
+/**
+ * Key parity, empty strings and ICU placeholders are checked across every locale in
+ * `src/lib/messages.test.ts`. This file owns the one thing that check cannot see: that
+ * the jurisdiction tables line up with the jurisdictions the engine actually has.
+ */
+describe("jurisdiction names", () => {
+  it.each(jurisdictionTables)("%s names every jurisdiction, bare and prepositional", (_l, table) => {
+    const { at: prep, ...bare } = table;
+    expect(IDS.filter((id) => !bare[id])).toEqual([]);
+    expect(IDS.filter((id) => !prep[id])).toEqual([]);
   });
 
-  it("has no empty string anywhere", () => {
-    for (const messages of [en, fr]) {
-      const empties = paths(messages).filter((p) => {
-        const value = at(messages, p);
-        return typeof value === "string" && value.trim() === "";
-      });
-      expect(empties).toEqual([]);
-    }
+  it.each(jurisdictionTables)("%s names no id that no longer exists", (_locale, table) => {
+    const ids = new Set(IDS);
+    const { at: prep, ...bare } = table;
+    expect(Object.keys(bare).filter((k) => !ids.has(k))).toEqual([]);
+    expect(Object.keys(prep).filter((k) => !ids.has(k))).toEqual([]);
+  });
+});
+
+/**
+ * `Jurisdictions.at.<id>` is the name as it appears AFTER a preposition — what follows
+ * "for" / "pour" / «для» / "para". Seven messages interpolate it, all with the same
+ * preposition, which is what lets one table serve all of them.
+ *
+ * What the table HOLDS differs by language, and none of it is derivable from the
+ * spelling — which is why it is data and not code. English never differs from the bare
+ * name. French takes an article on every province and territory but none on a city.
+ * Ukrainian inflects the name itself, cities included. Spanish articles some names and
+ * not others. Each locale therefore gets its own assertions below; there is no shared
+ * rule to write, and inventing one is how "pour Yukon" shipped.
+ */
+describe("the prepositional form, per locale", () => {
+  it("is identical to the bare name in English", () => {
+    const { at: prep, ...bare } = jurisdictionTables.find(([l]) => l === "en")![1];
+    for (const id of IDS) expect(prep[id], id).toBe(bare[id]);
   });
 
-  it("carries the same placeholders in both locales", () => {
-    // A {n} dropped in translation renders the sentence with the number missing
-    // and no error anywhere.
-    const placeholders = (s: unknown) =>
-      typeof s === "string" ? [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort() : [];
-    for (const path of paths(en)) {
-      expect(placeholders(at(fr, path)), path).toEqual(placeholders(at(en, path)));
-    }
-  });
-
-  it("names every jurisdiction in both locales, bare and prepositional", () => {
-    for (const messages of catalogues) {
-      const { at: prep, ...bare } = messages.Jurisdictions;
-      const ids = jurisdictions.map((j) => j.id);
-      expect(ids.filter((id) => !bare[id])).toEqual([]);
-      expect(ids.filter((id) => !prep[id])).toEqual([]);
-    }
-  });
-
-  it("carries no jurisdiction name for an id that no longer exists", () => {
-    const ids = new Set(jurisdictions.map((j) => j.id));
-    for (const messages of catalogues) {
-      const { at: prep, ...bare } = messages.Jurisdictions;
-      expect(Object.keys(bare).filter((k) => !ids.has(k))).toEqual([]);
-      expect(Object.keys(prep).filter((k) => !ids.has(k))).toEqual([]);
-    }
-  });
-
-  /**
-   * `Jurisdictions.at.<id>` is the name as it appears AFTER a preposition —
-   * what follows "for" / "pour". English never differs from the bare name;
-   * French takes an article on every province and territory, and a French
-   * article is not derivable from the spelling of the name, so it is data and
-   * not code. See the article test below for what breaks without it.
-   */
-  it("leaves the English prepositional form identical to the bare name", () => {
-    const { at: prep, ...bare } = enJur;
-    for (const id of jurisdictions.map((j) => j.id)) {
-      expect(prep[id], id).toBe(bare[id]);
-    }
-  });
-
-  it("gives every French province and territory its article", () => {
-    // The six records reachable by the "for {place}" strings are exactly the ones
-    // with no city: a reader on Yukon saw "pour Yukon", which is not French. The
-    // eight city records take no article and must stay bare.
-    const prep = frJur.at;
+  it("carries the article in French, on every province and territory", () => {
+    // The six records reachable by the "for {place}" strings are exactly the ones with
+    // no city: a reader on Yukon saw "pour Yukon", which is not French.
+    const prep = (fr as unknown as { Jurisdictions: JurisdictionMessages }).Jurisdictions.at;
     expect(prep.yt).toBe("le Yukon");
     expect(prep.nt).toBe("les Territoires du Nord-Ouest");
     expect(prep.nu).toBe("le Nunavut");
@@ -97,8 +68,51 @@ describe("message parity", () => {
     // Terre-Neuve-et-Labrador takes no article in French usage — a deliberate
     // exception, and the reason this is a table rather than a rule.
     expect(prep.nl).toBe("Terre-Neuve-et-Labrador");
+  });
+
+  it("leaves the French city names bare, because a city takes no article", () => {
+    const { at: prep, ...bare } = (fr as unknown as { Jurisdictions: JurisdictionMessages })
+      .Jurisdictions;
     for (const j of jurisdictions.filter((j) => j.cityData)) {
-      expect(prep[j.id], j.id).toBe(frJur[j.id]);
+      expect(prep[j.id], j.id).toBe(bare[j.id]);
+    }
+  });
+
+  it("articles the two Spanish names that take one, and leaves the rest alone", () => {
+    // Spanish articles fewer names than French does, and which ones is not predictable
+    // from the form: an island and a plural take an article; Yukón, Nunavut, Nuevo
+    // Brunswick and Terranova y Labrador do not. "para el Yukón" is the error this
+    // pins shut, the exact counterpart of French's "pour Yukon".
+    const prep = (es as unknown as { Jurisdictions: JurisdictionMessages }).Jurisdictions.at;
+    expect(prep.pe).toBe("la Isla del Príncipe Eduardo");
+    expect(prep.nt).toBe("los Territorios del Noroeste");
+    for (const id of ["yt", "nu", "nb", "nl"]) {
+      expect(prep[id], id).not.toMatch(/^(el|la|los|las) /);
+    }
+  });
+
+  it("inflects the Ukrainian names into the genitive, cities included", () => {
+    // Ukrainian is the case that breaks the shape French and Spanish share. There is no
+    // article to add and nothing to leave bare: «для» governs the genitive, so the NAME
+    // changes — Оттава becomes Оттави, Юкон becomes Юкону. A city is not exempt, which
+    // is why "cities stay bare" could never have been the shared rule it looks like.
+    const table = (uk as unknown as { Jurisdictions: JurisdictionMessages }).Jurisdictions;
+    const { at: prep, ...bare } = table;
+    expect(prep.ottawa).toBe("Оттави");
+    expect(prep.yt).toBe("Юкону");
+    expect(prep.nt).toBe("Північно-Західних територій");
+    expect(prep.pe).toBe("Острова Принца Едварда");
+    // Торонто and Калгарі are indeclinable in Ukrainian, so those two — and only those
+    // two — legitimately match their bare form.
+    const unchanged = Object.keys(bare).filter((id) => prep[id] === bare[id]);
+    expect(unchanged.sort()).toEqual(["calgary", "toronto"]);
+  });
+
+  it("leaves the Spanish city names bare, because Spanish does not inflect them", () => {
+    const { at: prep, ...bare } = (es as unknown as { Jurisdictions: JurisdictionMessages })
+      .Jurisdictions;
+    for (const j of jurisdictions.filter((j) => j.cityData)) {
+      expect(prep[j.id], j.id).toBe(bare[j.id]);
     }
   });
 });

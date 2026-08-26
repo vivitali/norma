@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
+import type { Locale } from "@/lib/locales";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { SourcesContent } from "@/components/sources-content";
 
@@ -24,7 +25,7 @@ describe("/sources route", () => {
   });
 });
 
-const render = (locale: "en" | "fr" = "en") =>
+const render = (locale: Locale = "en") =>
   renderWithIntl(
     <JurisdictionProvider>
       <SourcesContent />

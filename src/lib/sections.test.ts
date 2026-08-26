@@ -113,15 +113,19 @@ describe("every section registry", () => {
     }
   });
 
-  it("resolves every label key in BOTH locales", async () => {
-    // A section whose label is missing in French renders the raw key to a French
+  it("resolves every label key in EVERY locale", async () => {
+    // A section whose label is missing in one locale renders the raw key to that
     // reader. Checking en alone would have let that ship on six new pages at once.
-    const en = (await import("../../messages/en.json")).default as unknown as Record<string, Record<string, string>>;
-    const fr = (await import("../../messages/fr.json")).default as unknown as Record<string, Record<string, string>>;
-    for (const { namespace, sections } of SECTION_REGISTRIES) {
-      for (const section of sections) {
-        expect(en[namespace]?.[section.labelKey], `en ${namespace}.${section.labelKey}`).toBeDefined();
-        expect(fr[namespace]?.[section.labelKey], `fr ${namespace}.${section.labelKey}`).toBeDefined();
+    const { CATALOGUES } = await import("@/test/catalogues");
+    for (const [locale, messages] of Object.entries(CATALOGUES)) {
+      const tree = messages as unknown as Record<string, Record<string, string>>;
+      for (const { namespace, sections } of SECTION_REGISTRIES) {
+        for (const section of sections) {
+          expect(
+            tree[namespace]?.[section.labelKey],
+            `${locale} ${namespace}.${section.labelKey}`,
+          ).toBeDefined();
+        }
       }
     }
   });

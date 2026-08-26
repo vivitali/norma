@@ -5,10 +5,62 @@ set -euo pipefail
 # script works for production and for a PR preview.
 #
 # Checks the things a green build cannot: that prerendered HTML is reachable, that
-# the locale middleware survived the adapter, and that both locales render.
+# the locale middleware survived the adapter, and that EVERY locale renders its own
+# copy rather than falling back to English.
 
 BASE="${1:?usage: scripts/smoke <base-url>}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FAILED=0
+
+# The locales come from the app's own routing config, never from a list written here.
+# This script used to name /en and /fr and claim in its own comment that it checked
+# "both locales"; the day a third shipped it would have kept passing while covering
+# half the product — a green check that checks less than it says is the failure mode
+# this repo spends the most effort on.
+#
+# Read TEXTUALLY rather than imported. `scripts/assert-prerendered.mjs` imports the
+# same file through Node's type stripping, but it runs after a build, inside an
+# installed tree. This runs against a deployed URL and wants to work from anywhere —
+# importing routing.ts pulls in next-intl, so a checkout without node_modules would
+# fail here for a reason that has nothing to do with the deploy it is testing.
+#
+# The parse is deliberately strict: no match is a hard failure, never an empty list
+# quietly checked. That is the same rule assert-prerendered states — go red rather
+# than silently stop checking.
+#
+# The expected copy comes from the catalogues for the same reason: `Home.heading` is
+# distinct in every locale, so a page that 200s in English under /uk is caught.
+# Punctuation is stripped because "¿" and the narrow no-break space before French "?"
+# survive into the HTML but make a brittle grep.
+read -r -d '' PROBE_SCRIPT <<'JS' || true
+import { readFileSync } from "node:fs";
+const root = process.argv[1];
+const source = readFileSync(`${root}/src/i18n/routing.ts`, "utf8");
+const declaration = /\blocales:\s*\[([^\]]*)\]/.exec(source);
+if (!declaration) throw new Error("no `locales: [...]` declaration in src/i18n/routing.ts");
+const locales = [...declaration[1].matchAll(/["'`]([a-z]{2}(?:-[A-Za-z0-9]+)?)["'`]/g)].map((m) => m[1]);
+if (locales.length === 0) throw new Error("src/i18n/routing.ts declares an empty locale list");
+for (const locale of locales) {
+  const messages = JSON.parse(readFileSync(`${root}/messages/${locale}.json`, "utf8"));
+  const probe = String(messages.Home.heading)
+    .replace(/[&<>"'‘’“”¿¡]/g, "")
+    .replace(/[?!.\s\u00a0\u202f]+$/u, "")
+    .trim();
+  if (probe.length < 12) throw new Error(`${locale}: probe too short to be distinctive: "${probe}"`);
+  console.log(`${locale}\t${probe}`);
+}
+JS
+
+if ! PROBES=$(node --input-type=module -e "$PROBE_SCRIPT" "$ROOT"); then
+  echo "FAIL  cannot read the locale list from src/i18n/routing.ts"
+  echo "      Without it this script silently narrows to whatever it can reach."
+  exit 1
+fi
+
+if [ -z "$PROBES" ]; then
+  echo "FAIL  src/i18n/routing.ts declared no locales"
+  exit 1
+fi
 
 # The edge and DNS can lag a fresh deploy; retry rather than flake.
 #
@@ -21,7 +73,8 @@ fetch_status() {
     --retry 5 --retry-delay 3 --retry-all-errors --max-time 30 "$1"
 }
 
-for path in /en /fr /en/affordability /fr/affordability; do
+check_status() {
+  local path="$1" status
   status=$(fetch_status "$BASE$path")
   if [ "$status" = "200" ]; then
     echo "ok    $path -> $status"
@@ -29,23 +82,33 @@ for path in /en /fr /en/affordability /fr/affordability; do
     echo "FAIL  $path -> $status"
     FAILED=1
   fi
-done
+}
+
+while IFS=$'\t' read -r locale probe; do
+  [ -n "$locale" ] || continue
+  check_status "/$locale"
+  # The canonical key doubles as the English slug and redirects to the localized one,
+  # so this exercises the rewrite for every locale, including those with no slug of
+  # their own.
+  check_status "/$locale/affordability"
+
+  # A 200 that renders the wrong language would pass every check above.
+  if curl -s -L --max-redirs 5 --max-time 30 "$BASE/$locale" | grep -qF "$probe"; then
+    echo "ok    /$locale renders its own copy"
+  else
+    echo "FAIL  /$locale did not render its own copy (looked for: $probe)"
+    FAILED=1
+  fi
+done <<< "$PROBES"
 
 # The locale redirect is the only dynamic surface; if the middleware did not survive
-# the adapter, this is where it shows.
+# the adapter, this is where it shows. One non-default locale is enough to prove
+# negotiation works at all, and French is the one guaranteed to have a slug.
 redirect=$(curl -s -o /dev/null -w '%{redirect_url}' -H 'Accept-Language: fr-CA,fr;q=0.9' \
   --retry 5 --retry-delay 3 --retry-all-errors --max-time 30 "$BASE/")
 case "$redirect" in
   */fr) echo "ok    / (Accept-Language: fr) -> $redirect" ;;
   *)    echo "FAIL  / (Accept-Language: fr) -> ${redirect:-<none>}"; FAILED=1 ;;
 esac
-
-# A 200 that renders the wrong language would pass every check above.
-if curl -s --max-time 30 "$BASE/fr" | grep -q "vraiment vous permettre"; then
-  echo "ok    /fr renders French"
-else
-  echo "FAIL  /fr did not render French copy"
-  FAILED=1
-fi
 
 exit "$FAILED"

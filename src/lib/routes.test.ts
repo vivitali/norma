@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { routing } from "@/i18n/routing";
-import enMessages from "../../messages/en.json";
-import frMessages from "../../messages/fr.json";
+import { CATALOGUES, type Tree } from "@/test/catalogues";
 import { NAV, builtEntries } from "./routes";
 
 describe("nav registry", () => {
@@ -61,15 +60,16 @@ describe("nav registry", () => {
     expect([...navRoutes].sort()).toEqual(Object.keys(routing.pathnames).sort());
   });
 
-  it("has a Nav message key for every label and heading, in both locales", () => {
+  it("has a Nav message key for every label and heading, in every locale", () => {
     const keys = new Set<string>();
     for (const group of NAV) {
       keys.add(group.heading);
       for (const entry of group.entries) keys.add(entry.label);
     }
-    for (const key of keys) {
-      expect(enMessages.Nav, `Nav.${key} missing in en.json`).toHaveProperty(key);
-      expect(frMessages.Nav, `Nav.${key} missing in fr.json`).toHaveProperty(key);
+    for (const [locale, messages] of Object.entries(CATALOGUES)) {
+      for (const key of keys) {
+        expect((messages as Tree).Nav, `Nav.${key} missing in ${locale}.json`).toHaveProperty(key);
+      }
     }
   });
 });

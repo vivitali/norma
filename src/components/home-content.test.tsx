@@ -5,6 +5,7 @@ import { NAV, builtEntries } from "@/lib/routes";
 import { faqPageSchema } from "@/components/json-ld";
 import en from "../../messages/en.json";
 import fr from "../../messages/fr.json";
+import { CATALOGUES } from "@/test/catalogues";
 import { HOME_FAQ_KEYS, HomeContent } from "./home-content";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -172,13 +173,22 @@ describe("positioning", () => {
     expect(text).toMatch(/nobody publishes them/);
   });
 
-  it("claims no adoption, no verification and no price, in either locale", () => {
-    // PRODUCT.md, Evidence on Hand: no users, no traffic, no testimonials, no press, no revenue,
-    // and every jurisdiction figure unverified. Copy may not fabricate any of them.
-    const banned =
-      /trusted by|thousands|join \d|millions|#1\b|award|free|verified rules|official rates|no cost/i;
-    for (const [locale, messages] of [["en", en], ["fr", fr]] as const) {
-      expect(JSON.stringify(messages.Home), locale).not.toMatch(banned);
+  it("claims no adoption, no verification and no price, in any locale", () => {
+    // PRODUCT.md, Evidence on Hand: no users, no traffic, no testimonials, no press, no revenue.
+    // Copy may not fabricate any of them, and a translator has no more licence than a writer.
+    //
+    // English patterns catch the untranslated brand-speak that tends to survive a translation
+    // pass ("#1", "award"); the rest are the same claims in each language. `gratis`/`gratuit`
+    // matter most: monetization is undecided, so no locale may promise a price.
+    const banned = [
+      /trusted by|thousands|join \d|millions|#1\b|award|free|verified rules|official rates|no cost/i,
+      /gratuit|sans frais|approuv[ée] par des milliers/i,
+      /gratis|sin costo|miles de (usuarios|personas)|premiad/i,
+      /безкоштовн|безплатн|тисячі (користувачів|людей)|нагород/i,
+    ];
+    for (const [locale, messages] of Object.entries(CATALOGUES)) {
+      const home = JSON.stringify((messages as unknown as Record<string, unknown>).Home);
+      for (const pattern of banned) expect(home, locale).not.toMatch(pattern);
     }
   });
 });
