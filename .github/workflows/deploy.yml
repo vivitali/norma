@@ -33,6 +33,14 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # The Web Analytics site tag. Not a secret — it is served in the page
+          # source to every visitor by design; a secret here would only add a
+          # silent-failure mode when it is missing. Inlined at build time, so it
+          # has to be present for this step, not at runtime.
+          #
+          # Set only on production: preview builds would report into the same
+          # dataset and make the numbers meaningless.
+          NEXT_PUBLIC_CF_BEACON_TOKEN: 67df29e1c24f486a92b2bddc8cbddc26
 
       # Production is affordmath.com; workers.dev is disabled for this Worker.
       #

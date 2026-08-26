@@ -131,6 +131,23 @@ Implement → invoke `reviewer` subagent on the diff → fix → repeat until ap
 **Production is https://affordmath.com** — a custom domain on the `affordmath` Worker.
 `workers.dev` is disabled for production (`workers_dev: false`); it serves PR previews only.
 
+**Security headers and the analytics beacon live at the Cloudflare edge and in the app
+respectively — not in a `_headers` file.** `public/_headers` was tried and removed: the file
+ships into `.open-next/assets/`, but `@opennextjs/cloudflare` serves assets through the Worker,
+and Cloudflare's `_headers` processing never sees those responses. The file was live for days
+setting nothing. Verified by `curl -sSI https://affordmath.com/en`.
+
+The same limitation applies to Web Analytics: automatic injection (`auto_install`) does not reach
+Worker-rendered HTML, so it is turned off and `<Analytics />` injects the beacon itself, from
+`NEXT_PUBLIC_CF_BEACON_TOKEN` set in `deploy.yml`.
+
+The rule for anything edge-flavoured on this stack: **verify against a deployed response, not
+against the build output.** A file being in the bundle proves nothing about it taking effect.
+
+Current headers come from a zone-level Transform Rule (Rules → Transform Rules → Modify Response
+Header) plus the zone HSTS setting: CSP, `X-Frame-Options`, `Referrer-Policy`,
+`Permissions-Policy`, `Cross-Origin-Opener-Policy`, HSTS and `nosniff`.
+
 Cloudflare Workers via `@opennextjs/cloudflare`. Deploys run from CI on push to `main`
 (i.e. after a PR merges) — never from this machine, unless you deliberately run
 `scripts/ship`. PRs get a preview URL from `scripts/ship --preview`.
