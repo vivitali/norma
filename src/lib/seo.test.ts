@@ -6,6 +6,7 @@ import {
   absoluteUrl,
   buildMetadata,
   languageAlternates,
+  ogImagePath,
 } from "./seo";
 
 describe("absoluteUrl", () => {
@@ -114,5 +115,46 @@ describe("locale prefixing", () => {
 
   it("maps the root to a bare locale path with no trailing slash", () => {
     expect(absoluteUrl("en", "/")).toBe(`${SITE_URL}/en`);
+  });
+});
+
+describe("social card metadata", () => {
+  const meta = buildMetadata({
+    locale: "fr",
+    href: "/affordability",
+    title: "Calculateur",
+    description: "Deux plafonds.",
+  });
+
+  it("points each locale at its own card", () => {
+    expect(ogImagePath("fr", "/affordability")).toBe("/og/fr/affordability.png");
+    expect(ogImagePath("uk", "/")).toBe("/og/uk/home.png");
+  });
+
+  it("declares the image dimensions", () => {
+    // Slack, LinkedIn and Discord lay the card out before the image finishes
+    // downloading; without these some skip the image on first paste.
+    const [image] = meta.openGraph?.images as { width: number; height: number }[];
+    expect(image.width).toBe(1200);
+    expect(image.height).toBe(630);
+  });
+
+  it("describes the image with the page title", () => {
+    const [image] = meta.openGraph?.images as { alt: string; url: string }[];
+    expect(image.alt).toBe("Calculateur");
+    expect(image.url).toBe("/og/fr/affordability.png");
+  });
+
+  it("gives twitter the same card, not a bare url", () => {
+    const [image] = meta.twitter?.images as { url: string; alt: string }[];
+    expect(image.url).toBe("/og/fr/affordability.png");
+    expect(image.alt).toBe("Calculateur");
+  });
+
+  it("declares the other locales to social scrapers", () => {
+    const alt = meta.openGraph?.alternateLocale as string[];
+    expect(alt).not.toContain("fr_CA");
+    expect(alt.length).toBe(routing.locales.length - 1);
+    for (const value of alt) expect(value).toMatch(/^[a-z]{2}_[A-Z]{2}$/);
   });
 });
