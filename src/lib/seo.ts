@@ -1,6 +1,23 @@
 import type { Metadata } from "next";
 import { routing } from "@/i18n/routing";
 import { localeProfile } from "@/lib/locales";
+import {
+  INDEXABLE_ROUTES,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
+  ROUTE_METADATA_KEY,
+  ogImagePath,
+  type IndexableRoute,
+} from "./og-manifest";
+
+export {
+  INDEXABLE_ROUTES,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
+  ROUTE_METADATA_KEY,
+  ogImagePath,
+  type IndexableRoute,
+};
 
 /**
  * The canonical host. One host, always absolute: a relative canonical resolves
@@ -9,21 +26,6 @@ import { localeProfile } from "@/lib/locales";
  */
 export const SITE_URL = "https://affordmath.com";
 export const SITE_NAME = "AffordMath";
-
-/** Routes that belong in the sitemap. Extend as pages ship. */
-export const INDEXABLE_ROUTES = [
-  "/",
-  "/affordability",
-  "/closing-costs",
-  "/down-payment",
-  "/rrsp-hbp",
-  "/amortization",
-  "/rent-vs-buy",
-  "/scenarios",
-  "/sources",
-] as const;
-
-export type IndexableRoute = (typeof INDEXABLE_ROUTES)[number];
 
 type LocalePrefixMode = "always" | "as-needed" | "never";
 
@@ -103,6 +105,14 @@ export function buildMetadata({
   description: string;
 }): Metadata {
   const url = absoluteUrl(locale, href);
+  const image = {
+    url: ogImagePath(locale, href),
+    width: OG_IMAGE_WIDTH,
+    height: OG_IMAGE_HEIGHT,
+    alt: title,
+    type: "image/png",
+  };
+
   return {
     title,
     description,
@@ -121,13 +131,21 @@ export function buildMetadata({
       // parser ignores a value it cannot match. The territory comes off the same
       // table that decides how figures are formatted, so the two cannot disagree.
       locale: localeProfile(locale).intl.replace("-", "_"),
-      images: ["/og.png"],
+      // Declaring the other locales lets a crawler that lands on one language
+      // know the others exist. Distinct from hreflang, which search engines
+      // read; this is what social scrapers read.
+      alternateLocale: routing.locales
+        .filter((other) => other !== locale)
+        .map((other) => localeProfile(other).intl.replace("-", "_")),
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/og.png"],
+      // Next derives twitter:image:alt from the alt on this object, so the card
+      // is described for screen readers on the platforms that expose it.
+      images: [image],
     },
   };
 }

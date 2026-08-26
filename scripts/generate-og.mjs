@@ -1,52 +1,129 @@
-import { writeFileSync } from "node:fs";
-// next has no "./og" entry in its export map, so this resolves the shipped
-// module by path. Verified present at next 16.3.1.
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { ImageResponse } from "next/dist/server/og/image-response.js";
+import { routing } from "../src/i18n/routing.ts";
+import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY } from "../src/lib/og-manifest.ts";
 
 /**
- * Renders the social card once, at author time, into public/og.png.
+ * Renders one social card per route per locale into public/og/<locale>/<slug>.png.
  *
- * Deliberately NOT an opengraph-image route: a route renders per request on the
- * Worker, under a 10ms CPU cap, for an image that never changes — which is
- * exactly what scripts/verify-prerender exists to prevent.
+ * Author-time, not a route: an opengraph-image route renders per request on the
+ * Worker under a 10ms CPU cap, for images that never change.
  *
- * Re-run with: node scripts/generate-og.mjs
+ * next has no "./og" entry in its export map, hence the deep import.
+ *
+ * Re-run after changing a Metadata title: node scripts/generate-og.mjs
  */
-const image = new ImageResponse(
-  {
-    type: "div",
-    props: {
-      style: {
-        width: "1200px",
-        height: "630px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "80px",
-        background: "#0b0b0c",
-        color: "#fafafa",
-        fontSize: 64,
-        fontWeight: 600,
-      },
-      children: [
-        { type: "div", props: { children: "AffordMath" } },
-        {
-          type: "div",
-          props: {
-            style: {
-              fontSize: 34,
-              marginTop: 24,
-              color: "#a1a1aa",
-              lineHeight: 1.35,
-            },
-            children: "What a lender would approve, and what you can actually carry.",
-          },
+
+const WIDTH = 1200;
+const HEIGHT = 630;
+
+/**
+ * IBM Plex Sans, matching the app. Not decoration: the default font has no
+ * Cyrillic coverage, so every Ukrainian card would render as blank boxes.
+ *
+ * Served from @fontsource via jsDelivr rather than the Google Fonts CSS API.
+ * Google now hands out an extensionless /l/font?kit=... URL whose payload is
+ * not a format satori can read, regardless of the User-Agent trick that used
+ * to force TTF.
+ *
+ * satori reads TTF, OTF and WOFF — but NOT WOFF2. The magic-number check below
+ * matters because a WOFF2 payload does not throw; it renders every glyph blank.
+ */
+const FONT_BASE = "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5/files";
+
+async function loadFont(subset, weight) {
+  const url = `${FONT_BASE}/ibm-plex-sans-${subset}-${weight}-normal.woff`;
+  const data = new Uint8Array(await fetch(url).then((r) => r.arrayBuffer()));
+
+  const magic = String.fromCharCode(...data.subarray(0, 4));
+  const isTtf = data[0] === 0 && data[1] === 1 && data[2] === 0 && data[3] === 0;
+  if (!isTtf && !["wOFF", "true", "ttcf", "OTTO"].includes(magic)) {
+    throw new Error(`${subset} ${weight}: expected TTF/OTF/WOFF, got "${magic}" — satori cannot read it`);
+  }
+  return data;
+}
+
+function card({ title, fonts }) {
+  return new ImageResponse(
+    {
+      type: "div",
+      props: {
+        style: {
+          width: `${WIDTH}px`,
+          height: `${HEIGHT}px`,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "72px 80px",
+          background: "#0b0b0c",
+          color: "#fafafa",
+          fontFamily: "IBM Plex Sans",
         },
-      ],
+        children: [
+          {
+            type: "div",
+            props: {
+              style: { fontSize: 30, fontWeight: 600, color: "#a1a1aa", letterSpacing: "0.02em" },
+              children: "AffordMath",
+            },
+          },
+          {
+            type: "div",
+            props: {
+              style: { fontSize: 60, fontWeight: 600, lineHeight: 1.15, maxWidth: "980px" },
+              children: title,
+            },
+          },
+          {
+            type: "div",
+            props: {
+              style: { fontSize: 26, fontWeight: 400, color: "#71717a" },
+              children: "affordmath.com",
+            },
+          },
+        ],
+      },
     },
-  },
-  { width: 1200, height: 630 },
+    { width: WIDTH, height: HEIGHT, fonts },
+  );
+}
+
+const messages = Object.fromEntries(
+  await Promise.all(
+    routing.locales.map(async (locale) => [
+      locale,
+      JSON.parse(await import("node:fs").then((fs) => fs.readFileSync(`messages/${locale}.json`, "utf8"))),
+    ]),
+  ),
 );
 
-writeFileSync("public/og.png", Buffer.from(await image.arrayBuffer()));
-console.log("wrote public/og.png");
+// Both subsets at both weights. satori falls back across the supplied fonts
+// per glyph, which is how a Cyrillic title renders next to a Latin brand name.
+const fonts = [];
+for (const weight of [400, 600]) {
+  for (const subset of ["latin", "cyrillic"]) {
+    fonts.push({
+      name: "IBM Plex Sans",
+      data: await loadFont(subset, weight),
+      weight,
+      style: "normal",
+    });
+  }
+}
+
+let written = 0;
+for (const locale of routing.locales) {
+  for (const href of INDEXABLE_ROUTES) {
+    const key = ROUTE_METADATA_KEY[href];
+    const title = messages[locale].Metadata[key]?.title;
+    if (!title) throw new Error(`missing Metadata.${key}.title for ${locale}`);
+
+    const slug = href === "/" ? "home" : href.replace(/^\//, "");
+    const path = `public/og/${locale}/${slug}.png`;
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, Buffer.from(await card({ title, fonts }).arrayBuffer()));
+    written += 1;
+  }
+}
+console.log(`wrote ${written} cards to public/og/`);
