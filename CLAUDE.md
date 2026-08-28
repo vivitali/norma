@@ -158,14 +158,23 @@ once passed lint, typecheck, 116 tests, the prerender guard, and a deploy dry-ru
 404 on every page — the adapter needs an incremental cache to serve prerendered HTML. Only a
 real HTTP request catches that class of failure.
 
-Repository secrets required: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`,
-`ANTHROPIC_API_KEY`.
+Repository secrets required: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 
-The preview deploy and the Claude review job are both gated to branches on this repo. GitHub
-withholds secrets from fork pull requests by design, so on a fork those jobs are skipped rather
-than failing on a blank key — meaning **outside contributions get no preview URL and no automated
-review**, and need a human to look. `wrangler versions upload` also requires the Worker to exist,
-so the first production deploy must land on `main` before any preview can work.
+**There is no automated PR review.** `claude-review.yml` was removed: the action failed at
+`is_error: true` roughly 20 seconds in, on every pull request regardless of contents, so what it
+actually produced was a permanently red check that trained everyone to ignore a red check. A
+review job that never runs is worse than none, because the PR page claims one happened. If it
+comes back, it needs a green run on a real PR before it is trusted, and `ANTHROPIC_API_KEY` goes
+back in the secrets list above.
+
+Review therefore happens the way `## Workflow` says: the `reviewer` subagent on the diff, before
+the PR, and a human on the PR.
+
+The preview deploy is gated to branches on this repo. GitHub withholds secrets from fork pull
+requests by design, so on a fork that job is skipped rather than failing on a blank key — meaning
+**outside contributions get no preview URL** and need a human to look. `wrangler versions upload`
+also requires the Worker to exist, so the first production deploy must land on `main` before any
+preview can work.
 
 **Every page route must stay prerendered.** `scripts/verify-prerender` fails if any page route is
 server-rendered on demand, and CI runs it on every PR. This is not a style rule: Cloudflare serves

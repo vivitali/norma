@@ -222,6 +222,9 @@ step to be safe. `scripts/test` remains available for a targeted run.
   `main` is never pushed to directly; the deploy trigger must respect that rather than provide a
   side door around it.
 
+> **Superseded 2026-08-28.** `claude-review.yml` was removed — the action failed
+> `is_error: true` on every pull request, so the check was permanently red. See CLAUDE.md.
+
 **`claude-review.yml`**
 - The CI reviewer workflow this project's `CLAUDE.md` already earmarks. Requires an
   `ANTHROPIC_API_KEY` secret or the GitHub Claude app.
