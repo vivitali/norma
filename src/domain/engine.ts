@@ -431,6 +431,38 @@ export function defaultContractRate(F: FederalRules, dpPct: number): number {
  * approve; `comfort` is what actually fits inside the household's real monthly budget. Mirrors
  * the Affordability tab of the Winnipeg reference model.
  */
+/**
+ * The share of a purchase price that ends up as mortgage debt at this down payment,
+ * CMHC premium included.
+ *
+ * This exists because both ceilings below are solved for price, so the loan has to be
+ * expressed as a FRACTION of the unknown rather than as a dollar figure. It replaces a
+ * hardcoded `0.8` — a flat 20%-down assumption carried over from the source model —
+ * which made the down payment control point the wrong way: it changed the interest rate
+ * (`defaultContractRate` picks the insured rate below 20% and the uninsured rate at or
+ * above it) while never changing the size of the loan. A 5% buyer therefore got the
+ * cheaper insured rate applied to an 80% mortgage, with neither the extra 15% of debt
+ * nor the premium, and the page reported that putting LESS down let them afford MORE.
+ * Measured in Winnipeg at a 30-year amortization: $398,313 at 5% against $389,015 at
+ * 25%, where the true figures run the other way, $344,739 against $405,995.
+ *
+ * The premium rate depends only on the down payment and the amortization, never on the
+ * price, so the ceiling equations stay linear and solvable.
+ *
+ * TWO BOUNDARIES ARE NOT MODELLED HERE, both of them pre-existing. Insurance is
+ * unavailable at or above `cmhc.insuredCap`, so a sub-20% ceiling that solves above
+ * $1.5M is not actually reachable at that down payment; and `minDown` is progressive,
+ * so 5% is below the legal minimum on a home over $500,000. The page flags the second
+ * against the reader's own target price (`belowMinimum`); neither is enforced against
+ * the solved ceiling.
+ */
+export function financedFraction(F: FederalRules, dpPct: number, amortYears: number): number {
+  const ltv = 1 - dpPct / 100;
+  if (dpPct >= 20) return ltv;
+  const band = F.cmhc.bands.find((b) => ltv <= b[0]) ?? F.cmhc.bands[F.cmhc.bands.length - 1];
+  return ltv * (1 + band[1] + (amortYears > 25 ? F.cmhc.longAmortSurcharge : 0));
+}
+
 export function affordability(j: Jurisdiction, F: FederalRules, o: AffordabilityInput) {
   const gross = o.income1 + o.income2 + o.otherIncome;
   const qualIncome = gross * (1 - o.haircut / 100);
@@ -443,8 +475,10 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const binding = Math.min(gdsAllow, tdsAllow);
   const tdsBinds = tdsAllow < gdsAllow;
 
-  // Solved so property tax scales with price. Assumes 20% down, as the source model does.
-  const denomLender = 0.8 * fq + j.propTax.effective / 12;
+  // Solved so property tax scales with price, at the loan this down payment actually
+  // produces rather than at a flat 80% — see financedFraction above.
+  const financed = financedFraction(F, o.dpPct, o.amortYears);
+  const denomLender = financed * fq + j.propTax.effective / 12;
   /**
    * The ceiling this household would reach carrying `debts` of monthly obligation.
    * Parameterised because the debt-impact figures below are the DIFFERENCE between
@@ -459,7 +493,7 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const ceiling = ceilingCarrying(o.debts);
 
   const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee;
-  const denomComfort = 0.8 * fc + j.propTax.effective / 12 + F.maintenanceReserve / 12;
+  const denomComfort = financed * fc + j.propTax.effective / 12 + F.maintenanceReserve / 12;
   const comfort = Math.max(0, budget) / denomComfort;
 
   // The target price, actually financed at the actual down payment.
@@ -541,9 +575,11 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
     capacityPer100: ceiling - ceilingCarrying(o.debts + 100),
     cashGap,
     monthsToClose,
-    impliedMortgage: ceiling * 0.8,
-    comfortDown: comfort * 0.2,
-    comfortPI: comfort * 0.8 * fc,
+    // All three follow the same down payment the ceilings were solved at, so the
+    // breakdown rows cannot describe a different mortgage from the price above them.
+    impliedMortgage: ceiling * financed,
+    comfortDown: (comfort * o.dpPct) / 100,
+    comfortPI: comfort * financed * fc,
     approvalPass: o.price <= ceiling,
     comfortPass: monthly.total <= o.comfortCeiling,
     comfortGap: monthly.total - o.comfortCeiling,
