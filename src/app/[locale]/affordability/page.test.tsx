@@ -377,3 +377,70 @@ describe("Affordability — with no published price, it keeps the ceiling and as
     expect(screen.queryByText(/No published price for Yukon/)).not.toBeInTheDocument();
   });
 });
+
+describe("Affordability — the headline is the comfort price, never the lower ceiling", () => {
+  /**
+   * A DELIBERATE choice, pinned here because the product's own home page used to promise
+   * the opposite and nothing caught it.
+   *
+   * `page.tsx` puts `result.comfort` in the hero unconditionally. That price has no
+   * income term at all — it is `(the monthly all-in you state − insurance/12 − utilities
+   * − condo fee) ÷ carrying cost` — so income never moves it, and at a low enough income
+   * it sits ABOVE the lender ceiling. Reported from production as "$371,930 always the
+   * same and not changing", which is exactly how it looks from outside: income is the
+   * first thing a reader edits here, and it is the one input that cannot move the answer.
+   *
+   * The alternative — headline = min(comfort, lender) — was considered and not taken. The
+   * comfort price answers "what can I carry", which is the question this product exists
+   * for, and the lender ceiling is shown beside it with the binding constraint named.
+   * What had to change was the copy: the home page said "the lower ceiling sets the
+   * price", and that claim is gone in all four locales.
+   *
+   * Asserted as a RELATIONSHIP rather than against fixed figures. Hardcoding "$371,930"
+   * would pin today's default comfort ceiling, rate and property tax as well, so the test
+   * would go red for reasons that have nothing to do with the rule it exists to protect.
+   */
+  const figure = (label: string) => {
+    const labelEl = [...document.querySelectorAll("div")].find(
+      (d) => (d.textContent ?? "").trim().startsWith(label) && d.children.length <= 1,
+    );
+    return labelEl?.nextElementSibling?.querySelector("span")?.textContent ?? "";
+  };
+  const hero = () => document.querySelector('[data-slot="answer-figure"]')?.textContent ?? "";
+  const amount = (text: string) => Number(text.replace(/[^0-9]/g, ""));
+
+  const poorEnoughToBeDeclined = () =>
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "winnipeg", income1: 40000, income2: 30000 }),
+    );
+
+  it("keeps the comfort price in the hero even when a lender would approve less", () => {
+    poorEnoughToBeDeclined();
+    renderPage();
+    const lender = amount(figure("Lender ceiling"));
+    expect(lender, "the lender ceiling should be the binding one at this income").toBeGreaterThan(0);
+    // The hero and the ceiling beside it disagree, and the hero is the HIGHER of the two.
+    expect(amount(hero())).toBeGreaterThan(lender);
+  });
+
+  it("says a lender would decline, rather than letting the figure stand unqualified", () => {
+    // The headline being un-financeable is only defensible because the page says so.
+    poorEnoughToBeDeclined();
+    renderPage();
+    expect(screen.getByText(/A lender would decline at this price/)).toBeInTheDocument();
+  });
+
+  it("does not move when income changes, which is the surprising part", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const heroBefore = hero();
+    const lenderBefore = figure("Lender ceiling");
+    const income = screen.getByLabelText("Applicant 1, gross annual");
+    await user.clear(income);
+    await user.type(income, "500000");
+    await user.tab();
+    expect(hero(), "the comfort price has no income term").toBe(heroBefore);
+    expect(figure("Lender ceiling"), "the lender ceiling does").not.toBe(lenderBefore);
+  });
+});

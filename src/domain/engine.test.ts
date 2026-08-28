@@ -7,6 +7,7 @@ import {
   closingTotal,
   credits,
   defaultContractRate,
+  financedFraction,
   financing,
   minDown,
   money,
@@ -934,5 +935,67 @@ describe("buildLines — NS non-resident deed transfer tax", () => {
     const gov = buildLines(halifax(), federal, o).gov;
     expect(gov.find((l) => l.key === "li_deedMuni")?.amount).toBeCloseTo(8775, 2);
     expect(gov.find((l) => l.key === "li_deedProvNonRes")?.amount).toBeCloseTo(58500, 2);
+  });
+});
+
+describe("affordability — a bigger down payment must buy a bigger house", () => {
+  /**
+   * The invariant that was missing, and its absence is why the bug shipped: nothing
+   * pinned either ceiling against the down payment, so a change that inverted the
+   * relationship left 1381 tests green.
+   *
+   * Both ceilings used a hardcoded `0.8` — a flat 20%-down assumption — while
+   * `defaultContractRate` correctly moved the rate with the down payment (insured below
+   * 20%, uninsured at or above it). A 5% buyer therefore got the cheaper insured rate
+   * applied to an 80% mortgage, carrying neither the extra debt nor the CMHC premium, and
+   * the page told them that putting LESS down let them afford MORE. In Winnipeg over 30
+   * years it reported $398,313 at 5% against $389,015 at 25%.
+   *
+   * Asserted as a direction rather than against figures, so it survives a rate, premium
+   * or property-tax revision — the thing that must never come back is the sign.
+   */
+  const winnipeg = getJurisdiction("winnipeg")!;
+  const rung = (dpPct: number) => {
+    const o = {
+      price: 454264, dpPct, amortYears: 30, ftb: true, ptype: "newbuild" as const,
+      elsewhere: false, residency: "resident" as const,
+      contractRate: defaultContractRate(federal, dpPct),
+      income1: 100000, income2: 30000, otherIncome: 0, haircut: 0, debts: 10,
+      comfortCeiling: 2700, insuranceAnnual: 1500, utilities: 300, condoFee: 0,
+    };
+    return affordability(winnipeg, federal, o);
+  };
+
+  const LADDER = [5, 10, 15, 20, 25, 35] as const;
+
+  it("raises the comfort price at every step up the down payment ladder", () => {
+    const prices = LADDER.map((dp) => rung(dp).comfort);
+    for (let i = 1; i < prices.length; i++) {
+      expect(prices[i], `${LADDER[i]}% must beat ${LADDER[i - 1]}%`).toBeGreaterThan(prices[i - 1]);
+    }
+  });
+
+  it("raises the lender ceiling at every step too", () => {
+    const ceilings = LADDER.map((dp) => rung(dp).ceiling);
+    for (let i = 1; i < ceilings.length; i++) {
+      expect(ceilings[i], `${LADDER[i]}% must beat ${LADDER[i - 1]}%`).toBeGreaterThan(ceilings[i - 1]);
+    }
+  });
+
+  it("crosses the 20% rate boundary without the ranking flipping", () => {
+    // The exact place it broke: 19% takes the insured rate and a premium, 20% takes the
+    // uninsured rate and none. A cheaper rate on a bigger loan must still lose.
+    expect(rung(20).comfort).toBeGreaterThan(rung(19).comfort);
+    expect(rung(20).ceiling).toBeGreaterThan(rung(19).ceiling);
+  });
+
+  it("counts the CMHC premium as debt below 20% and not at or above it", () => {
+    expect(financedFraction(federal, 5, 25)).toBeGreaterThan(0.95);
+    expect(financedFraction(federal, 20, 25)).toBe(0.8);
+    expect(financedFraction(federal, 25, 25)).toBe(0.75);
+  });
+
+  it("charges the long-amortization surcharge on a 30-year insured loan", () => {
+    expect(financedFraction(federal, 5, 30)).toBeGreaterThan(financedFraction(federal, 5, 25));
   });
 });

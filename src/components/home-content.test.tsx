@@ -132,7 +132,42 @@ describe("positioning", () => {
     const text = document.body.textContent ?? "";
     expect(text).toContain("Two ceilings, computed side by side");
     expect(text).toContain("GDS and TDS");
-    expect(text).toMatch(/The lower ceiling sets the price/);
+    expect(text).toMatch(/whichever one binds is named/);
+  });
+
+  it("does not promise that the lower ceiling sets the headline price", () => {
+    // It does not. `affordability/page.tsx` puts `result.comfort` in the hero
+    // unconditionally, so when a low income drops the lender ceiling BELOW the comfort
+    // price the headline is the higher of the two — see the contract test in
+    // affordability/page.test.tsx, which pins that deliberately.
+    //
+    // This page used to say "The lower ceiling sets the price and the other one is
+    // noise" and "The lower one decides". Both were false of the built product, on the
+    // one page whose copy is also emitted as FAQPage structured data — where a claim is
+    // stripped of the screen that would have contradicted it.
+    const banned = [
+      /lower ceiling sets the price/i,
+      /lower one decides/i,
+      /names the lower one/i,
+      /plus bas des deux qui décide|plafond le plus bas qui fixe le prix/i,
+      /[Dd]ecide el más bajo|techo más bajo fija el precio/i,
+      /Вирішує нижча|Ціну задає нижча межа/i,
+    ];
+    for (const [locale, messages] of Object.entries(CATALOGUES)) {
+      const home = JSON.stringify((messages as unknown as Record<string, unknown>).Home);
+      for (const pattern of banned) expect(home, locale).not.toMatch(pattern);
+    }
+  });
+
+  it("describes the second ceiling as a budget you set, not as your income", () => {
+    // The deeper half of the same error: the comfort ceiling does not start from net
+    // income. It is `comfortCeiling` — a monthly all-in figure the reader states, which
+    // defaults to a flat $2,700 — so there is no income term in the headline at all.
+    // Saying "net income after tax, minus property tax…" told the reader the number
+    // would move when they typed their salary, and it never does.
+    renderWithIntl(<HomeContent />);
+    const text = document.body.textContent ?? "";
+    expect(text).toMatch(/You set that figure — nothing here infers it from your income/);
   });
 
   it("says provincial rules are applied, across fourteen jurisdictions", () => {
