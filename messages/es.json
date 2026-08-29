@@ -693,7 +693,10 @@
     "fCondo": "Cuota de condominio, mensual",
     "crossNever": "No dentro de {n} años",
     "assumptionsLine": "Ambos lados: {buy, plural, one {# favorece} other {# favorecen}} comprar, {rent, plural, one {# favorece} other {# favorecen}} alquilar.",
-    "xClosing": "El capital aportado al inicio es el pago inicial más la cuenta del día del cierre, desglosada en <link>la página de gastos de cierre</link>."
+    "xClosing": "El capital aportado al inicio es el pago inicial más la cuenta del día del cierre, desglosada en <link>la página de gastos de cierre</link>.",
+    "mismatchHead": "¿Cuánto costaría alquilar una vivienda comparable?",
+    "mismatchSub": "El único alquiler publicado para {city} es el promedio de CMHC para un apartamento de dos habitaciones, {rent} al mes. Usted está evaluando una casa, así que esa cifra responde a otra pregunta. Indique cuánto costaría alquilar una vivienda como la de arriba.",
+    "rentMismatchTag": "CMHC publica {rent} para un apartamento de dos habitaciones — una vivienda más pequeña que la evaluada arriba"
   },
   "Scenarios": {
     "title": "Escenarios de pago inicial",

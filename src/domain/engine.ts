@@ -1173,6 +1173,31 @@ export type HbpResult = ReturnType<typeof hbpPlay>;
  * Rent vs buy
  * ================================================================= */
 
+/**
+ * Whether the rent this jurisdiction publishes describes the dwelling being priced.
+ *
+ * Every `rent` in the dataset is a CMHC two-bedroom apartment average, and
+ * `bench.house` beside it is a detached house. Running the comparison across
+ * that gap is not a close call — on Toronto's own figures it is a $1,455,200
+ * house against a $2,045 apartment, and the record's provenance note already
+ * says the condo-apartment average is $2,891, "a different and higher
+ * quantity". The verdict that falls out is about two different lives.
+ *
+ * So an apartment rent answers a CONDO purchase and nothing else. For a house
+ * or a new build there is no comparable published rent in Canada, which makes
+ * this the same shape as `priceKnown`: the honest move is to ASK rather than to
+ * answer from the wrong series. `resolveInputs` turns a false here into
+ * `rentKnown: false`, and the page's existing ask state does the rest.
+ *
+ * A rent the READER gave is always comparable — they know what they would rent.
+ */
+export function rentComparable(j: Jurisdiction, ptype: PropertyType): boolean {
+  if (j.rentBasis === undefined) return false;
+  // The one basis the dataset holds. `newbuild` reads the house benchmark
+  // (see `benchmarkPrice`), so it inherits the house answer.
+  return j.rentBasis === "apartment2br" && ptype === "condo";
+}
+
 export interface RentVsBuyInput extends ClosingInput {
   insuranceAnnual: number;
   utilities: number;
@@ -1187,6 +1212,26 @@ export interface RentVsBuyInput extends ClosingInput {
   appreciationOn: boolean;
   /** Annual return on invested money, as a fraction. */
   investReturn: number;
+  /**
+   * The contract rate the reader is actually being quoted, as a fraction.
+   *
+   * Optional, and absent means "derive it from the down payment" — the same
+   * default every other page starts from. It exists because this page used to
+   * read `F.rates.insured` / `.uninsured` directly and could not be told
+   * otherwise: `RentVsBuyInput extends ClosingInput extends FinancingInput`,
+   * none of which carries a rate. A reader who set their real rate on
+   * Affordability or Amortization saw it honoured there and silently ignored
+   * here, on the page that projects it forward for forty years.
+   */
+  contractRate?: number;
+  /** Years per mortgage term. The mortgage is re-priced at the end of each one. */
+  termYears: number;
+  /**
+   * The rate to renew at, as a fraction. `null` means model no renewal shock —
+   * which is a CHOICE the reader makes, and no longer the silent default it was
+   * when this page could not see the input at all.
+   */
+  renewalRate: number | null;
   /**
    * Invest the monthly difference between owning and renting. Off compares bare
    * outlays; on compares terminal wealth, which is the only comparison that does
@@ -1204,6 +1249,14 @@ export interface RentVsBuyRow {
   balance: number;
   propTax: number;
   insurance: number;
+  /** In-suite services. Charged to BOTH sides — a tenant pays hydro too. */
+  services: number;
+  /** Strata / condo fee. Owner only; a tenant's rent already buys the building. */
+  strata: number;
+  /** The contract rate in force this year, as a fraction. Changes at renewal. */
+  rate: number;
+  /** Tax-time rebates received in year 1, grown at the investment return. */
+  taxTimeCredits: number;
   utilities: number;
   maintenance: number;
   ownerOutlay: number;
@@ -1270,9 +1323,12 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
   // to the loan, so it is never upfront cash. The provincial sales tax ON the
   // premium is not financeable and IS in `cc.total`, where it belongs.
   const upFront = cc.net;
-  const rate = fin.insured ? F.rates.insured : F.rates.uninsured;
-  const i = Math.pow(1 + rate / 2, 2 / 12) - 1;
-  const pay = fin.loan * payFactor(rate, o.amortYears);
+  // The reader's own rate when they gave one, otherwise the same derivation every
+  // other page starts from. Not `F.rates.insured` read directly, which is what made
+  // this the one page that ignored an override the reader had already set.
+  // `/ 100` because `defaultContractRate` returns a PERCENTAGE while everything in
+  // this function is a fraction. Without it the loan never amortizes.
+  const rate0 = o.contractRate ?? defaultContractRate(F, o.dpPct) / 100;
   const g = o.appreciationOn ? o.appreciation : 0;
   const ret = o.investReturn;
 
@@ -1282,7 +1338,39 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
   let payoffYear: number | null = null;
   const rows: RentVsBuyRow[] = [];
 
+  // A Canadian mortgage is priced for a TERM, not for its amortization, and this
+  // page projects across up to forty years of them. Holding `rate0` for the whole
+  // horizon handed the buyer a fixed rate no Canadian lender writes, while the
+  // renter met full rent inflation every year — worth roughly $125,000 of the
+  // verdict at a two-point renewal on Toronto's benchmark, always in buying's
+  // favour. `Amortization.riskBody` one route away calls that exact assumption the
+  // mistake that breaks budgets; this page used to make it silently, because
+  // `renewalRate` could not reach it.
+  //
+  // `null` still means no shock — but now because the reader chose it.
+  let rate = rate0;
+  let i = Math.pow(1 + rate / 2, 2 / 12) - 1;
+  let pay = fin.loan * payFactor(rate, o.amortYears);
+  let renewedAt: number | null = null;
+
   for (let t = 1; t <= years; t++) {
+    // Renewal lands at the START of the year after each whole term, and re-amortizes
+    // the surviving balance over what is LEFT of the amortization — not over a fresh
+    // one, which would quietly lower the payment by extending the loan.
+    const termsElapsed = o.termYears > 0 ? (t - 1) / o.termYears : 0;
+    if (
+      o.renewalRate !== null &&
+      bal > 0.005 &&
+      t > 1 &&
+      Number.isInteger(termsElapsed) &&
+      termsElapsed >= 1
+    ) {
+      rate = o.renewalRate;
+      i = Math.pow(1 + rate / 2, 2 / 12) - 1;
+      const yearsLeft = Math.max(1, o.amortYears - (t - 1));
+      pay = bal * payFactor(rate, yearsLeft);
+      renewedAt ??= t;
+    }
     const opening = bal;
     let interest = 0;
     let paid = 0;
@@ -1305,10 +1393,24 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
     const infl = Math.pow(1 + F.nonShelterInflation, t - 1);
     const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax.effective;
     const insurance = o.insuranceAnnual * infl;
-    const utilities = (o.utilities + o.condoFee) * 12 * infl;
-    const maintenance = o.price * F.maintenanceReserve * Math.pow(1 + g, t - 1);
+    // Split, because only ONE half of this is a cost the renter escapes. A strata
+    // fee buys the building; a tenant's rent already buys it. In-suite services —
+    // hydro, heat where it is not included, internet — a tenant pays exactly as an
+    // owner does, and charging them to owning alone put ~$50,000 into the renter's
+    // column over ten years on the defaults, invested and compounded.
+    const services = o.utilities * 12 * infl;
+    const strata = o.condoFee * 12 * infl;
+    const utilities = services + strata;
+    // Grows at the cost of SERVICES, not at the price of the house. Materials and
+    // trades inflate whether or not the market does, and tying this to `g` meant
+    // switching appreciation off — the honest floor case the page offers precisely
+    // so the verdict can be stress-tested — also froze the owner's largest recurring
+    // cost, quietly flattering the case it was meant to test by ~$36,000.
+    const maintenance = o.price * F.maintenanceReserve * infl;
     const ownerOutlay = paid + propTax + insurance + utilities + maintenance;
-    const renterOutlay = o.rent * 12 * Math.pow(1 + o.rentInflation, t - 1);
+    // The tenant pays the same in-suite services the owner does. Rent, and the
+    // building costs folded into it, are the parts that differ.
+    const renterOutlay = o.rent * 12 * Math.pow(1 + o.rentInflation, t - 1) + services;
     const diff = ownerOutlay - renterOutlay;
 
     // Whoever spends LESS this year invests the difference. Only one side is
@@ -1321,11 +1423,18 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
     const homeValue = o.price * Math.pow(1 + g, t);
     const sellingCost = homeValue * F.sellingCost;
     const equity = homeValue - sellingCost - bal;
-    const buyW = equity + (o.investDiff ? bp : 0);
+    // Rebates that arrive at TAX TIME rather than at the closing table — the home
+    // buyers' amount, and the GST rebate where it applies. `upFront` already nets
+    // off the at-closing ones; dropping these was the same omission one step later,
+    // and it is the buyer's money either way. Received in the first year and
+    // invested alongside everything else.
+    const taxTimeCredits = cc.later * Math.pow(1 + ret, t - 1);
+    const buyW = equity + taxTimeCredits + (o.investDiff ? bp : 0);
     const rentW = upFront * Math.pow(1 + ret, t) + (o.investDiff ? rp : 0);
 
     rows.push({
       t, opening, interest, paid, balance: bal, propTax, insurance, utilities, maintenance,
+      services, strata, rate, taxTimeCredits,
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
@@ -1334,9 +1443,15 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
   }
 
   return {
-    fin, cc, upFront, pay,
-    /** Percentage. */
-    rate: rate * 100,
+    fin, cc, upFront,
+    /** The opening payment. It changes at renewal; every row carries its own rate. */
+    pay,
+    /** Percentage. The rate the mortgage OPENS at. */
+    rate: rate0 * 100,
+    /** Percentage, or null when no renewal shock is modelled. */
+    renewalRate: o.renewalRate === null ? null : o.renewalRate * 100,
+    /** First year the mortgage was re-priced. null when it never was. */
+    renewedAt,
     rows,
     /** First year buying is ahead. null means never, inside the horizon modelled. */
     breakEven: rows.find((r) => r.adv > 0)?.t ?? null,

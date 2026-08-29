@@ -391,7 +391,7 @@ describe("rentVsBuy", () => {
     price: 700000, dpPct: 20, amortYears: 25, ftb: true, ptype: "house" as const, elsewhere: false, residency: "resident" as const,
     insuranceAnnual: 1500, utilities: 300, condoFee: 0,
     rent: 2400, rentInflation: 0.03, appreciation: 0.031, appreciationOn: true,
-    investReturn: 0.046, investDiff: true, years: 40,
+    investReturn: 0.046, termYears: 5, renewalRate: null, investDiff: true, years: 40,
   };
 
   it("stops the mortgage payment at payoff, which is where the buy line steepens", () => {
@@ -548,7 +548,7 @@ describe("rentVsBuy — the renter invests what the buyer actually produces", ()
     appreciation: federal.appreciation.shelter,
     appreciationOn: true,
     investReturn: federal.investReturn.balanced,
-    investDiff: true,
+    termYears: 5, renewalRate: null, investDiff: true,
   });
 
   it("tracks the down-payment slider, less the closing costs a bigger down payment avoids", () => {

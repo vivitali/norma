@@ -1,5 +1,5 @@
 import type { FederalRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
-import { defaultContractRate, minDown } from "@/domain/engine";
+import { defaultContractRate, minDown, rentComparable } from "@/domain/engine";
 import type { ToolFormState } from "./shared-inputs";
 
 /**
@@ -150,6 +150,12 @@ export interface ResolvedInputs {
    * a verdict, and the field beside the ask suggests nothing.
    */
   rentKnown: boolean;
+  /**
+   * True when a rent IS published here but measures a different dwelling than the
+   * one being priced — an apartment against a house. Distinct from `!rentKnown`
+   * alone, which is also true where nobody publishes anything.
+   */
+  rentBasisMismatch: boolean;
   /** Fraction, not a percentage — the engine takes fractions. */
   rentInflation: number;
   holding: number;
@@ -223,7 +229,14 @@ export function resolveInputs(
   // same rungs a blank field does: the figure published for here, then DEFAULT_RENT, which
   // keeps the arithmetic defined while `rentKnown` stops the page printing anything from it.
   const storedRent = stored.rent !== null && stored.rent > 0 ? stored.rent : null;
-  const publishedRent = j.rent != null && j.rent > 0 ? j.rent : null;
+  // A published rent only counts when it describes the dwelling being priced. Every
+  // rent in the dataset is a CMHC two-bedroom APARTMENT average and `bench.house`
+  // beside it is a detached house, so for a house or a new build there is no
+  // comparable published figure and the page must ask rather than answer from the
+  // wrong series. See `rentComparable`.
+  const comparable = rentComparable(j, stored.ptype);
+  const publishedRent =
+    j.rent != null && j.rent > 0 && comparable ? j.rent : null;
 
   return {
     price,
@@ -281,6 +294,11 @@ export function resolveInputs(
     // explicitly suppressed — and both mean the same thing to a reader: nobody
     // published a rent for here.
     rentKnown: storedRent !== null || publishedRent !== null,
+    // WHY the page is asking, when it is. "Nobody publishes a rent for here" and
+    // "what is published is an apartment and you are pricing a house" are different
+    // sentences, and the second one is the reader's cue that the figure they enter
+    // has to be for the dwelling they would actually rent.
+    rentBasisMismatch: storedRent === null && j.rent != null && j.rent > 0 && !comparable,
     rentInflation: stored.rentInflation / 100,
     holding: stored.holding,
     appreciation: F.appreciation[stored.apprKey],

@@ -61,6 +61,32 @@ const PRICE_DERIVED_HEADLINE = new Set<string>([
   "Scenarios",
 ]);
 
+
+/**
+ * Stored state a page needs before it will render an ANSWER at all.
+ *
+ * Rent vs buy weighs a purchase against a PUBLISHED rent, and every rent in this
+ * dataset is a CMHC two-bedroom apartment average. That answers a condo purchase
+ * and nothing else, so on the default `ptype: "house"` the page correctly asks
+ * for a rent instead of printing a verdict — and a contract about sections, or
+ * about figures inside them, then has nothing to inspect. Seeding a condo puts
+ * the page in the state these contracts are actually about. The ask state has its
+ * own tests, in the page's own file.
+ */
+const SEED: Record<string, Record<string, unknown>> = {
+  "Rent vs buy": { ptype: "condo" },
+};
+
+function seed(name: string) {
+  const s = SEED[name];
+  if (!s) return;
+  // MERGES rather than overwrites: several tests below set their own state first
+  // (a jurisdiction, a cash position), and this only supplies the field that
+  // decides whether the page answers at all.
+  const cur = JSON.parse(window.localStorage.getItem("norma.inputs.v2") ?? "{}") as Record<string, unknown>;
+  window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ...cur, ...s }));
+}
+
 /** Rendered figures that are not numbers. `undefined` catches a missing message too. */
 const GARBAGE = /NaN|Infinity|\bundefined\b|\[object Object\]/;
 
@@ -78,6 +104,7 @@ describe("exactly one section opens on arrival", () => {
   // exactly like the old behaviour and would otherwise go unnoticed.
   for (const [name, Page] of PAGES) {
     it(name, () => {
+      seed(name);
       renderWithIntl(
         <JurisdictionProvider>
           <Page />
@@ -103,6 +130,7 @@ describe("no screen renders a non-finite figure", () => {
   for (const [name, Page] of PAGES) {
     it(`${name}, every section open`, async () => {
       const user = userEvent.setup();
+      seed(name);
       renderWithIntl(
         <JurisdictionProvider>
           <Page />
@@ -205,6 +233,7 @@ describe("no screen renders a non-finite figure", () => {
         JSON.stringify({ jurId: jurisdiction.id, ptype: "house", price: 0 }),
       );
       for (const [name, Page] of PAGES) {
+        seed(name);
         const { container } = renderWithIntl(
           <JurisdictionProvider>
             <Page />
@@ -304,6 +333,7 @@ describe("cross-page links stay within their cap", () => {
       it(`${name}, ${state}`, async () => {
         window.localStorage.setItem("norma.inputs.v2", JSON.stringify(inputs));
         const user = userEvent.setup();
+        seed(name);
         renderWithIntl(
           <JurisdictionProvider>
             <Page />

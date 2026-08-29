@@ -10,6 +10,7 @@ export const saskatoon: Jurisdiction = {
   cityData: true,
   pro: "lawyer",
   rent: 1559,
+  rentBasis: "apartment2br",
   yoy: 0.04,
   // A COMPOSITE MLS® HPI benchmark, not a detached one — the SRA publishes no type split for
   // Saskatoon, which is also why condo is null rather than a number. See provenance.

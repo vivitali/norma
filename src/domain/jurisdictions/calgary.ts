@@ -10,6 +10,7 @@ export const calgary: Jurisdiction = {
   cityData: true,
   pro: "lawyer",
   rent: 1908,
+  rentBasis: "apartment2br",
   yoy: -0.02,
   // MLS® HPI benchmarks, split by property type, from CREB's own July 2026 release.
   bench: { house: 743900, condo: 297600 },

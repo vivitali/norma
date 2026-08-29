@@ -16,6 +16,7 @@ export const montreal: Jurisdiction = {
   cityData: true,
   pro: "notary",
   rent: 1346,
+  rentBasis: "apartment2br",
   yoy: 0.04,
   bench: { house: 650000, condo: 431500 },
   // 0.746922 $ per 100 $ of assessment: the unweighted mean of the 19 boroughs' all-in 2026

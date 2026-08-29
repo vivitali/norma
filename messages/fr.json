@@ -693,7 +693,10 @@
     "fCondo": "Frais de copropriété, mensuels",
     "crossNever": "Jamais en {n} ans",
     "assumptionsLine": "Des deux côtés : {buy, plural, one {# favorise} other {# favorisent}} l’achat, {rent, plural, one {# favorise} other {# favorisent}} la location.",
-    "xClosing": "Le capital engagé au départ, c’est la mise de fonds plus la facture du jour de la clôture, détaillée sur <link>la page des frais de clôture</link>."
+    "xClosing": "Le capital engagé au départ, c’est la mise de fonds plus la facture du jour de la clôture, détaillée sur <link>la page des frais de clôture</link>.",
+    "mismatchHead": "Quel serait le loyer d'un logement comparable ?",
+    "mismatchSub": "Le seul loyer publié pour {city} est la moyenne de la SCHL pour un appartement de deux chambres, soit {rent} par mois. Vous évaluez une maison : ce chiffre répond à une autre question. Indiquez le loyer d'un logement comparable à celui ci-dessus.",
+    "rentMismatchTag": "La SCHL publie {rent} pour un appartement de deux chambres — un logement plus petit que celui évalué ci-dessus"
   },
   "Scenarios": {
     "title": "Scénarios de mise de fonds",

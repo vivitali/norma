@@ -26,6 +26,7 @@ export const ottawa: Jurisdiction = {
   cityData: true,
   pro: "lawyer",
   rent: 1916,
+  rentBasis: "apartment2br",
   yoy: -0.005,
   bench: { house: 725000, condo: 385500 },
   // As in Toronto: the published rate is levied on a January 2016 MPAC assessment, not on the
