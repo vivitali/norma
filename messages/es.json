@@ -403,7 +403,7 @@
     "secCalc": "Cómo se calculó esto",
     "calcLine": "Cada partida, sumada",
     "calcWhy": "La cifra de efectivo en la parte superior de esta página, término a término. Cada grupo es el total de la sección que lo detalla, de modo que una cifra de aquí se puede rastrear hasta el documento del que salió.",
-    "calcTraceCaption": "Efectivo necesario el día del cierre",
+    "calcTraceCaption": "Lo que realmente entrega el día del cierre",
     "calcGov": "Impuestos y tasas gubernamentales",
     "calcPro": "Honorarios profesionales y de terceros",
     "calcAdj": "Ajustes y mudanza",
@@ -557,7 +557,8 @@
     "calcBandTop": "Ingreso antes de la deducción",
     "calcBandBottom": "Ingreso después",
     "calcRefund": "Impuesto sobre ese tramo",
-    "calcRepay": "A devolver cada año"
+    "calcRepay": "A devolver cada año",
+    "calcRepayYears": "Años para devolverlo"
   },
   "Amortization": {
     "title": "Amortización y renovación",
@@ -627,12 +628,13 @@
     "payoffLabel": "Liquidada",
     "secCalc": "Cómo se calculó esto",
     "calcLine": "De dónde sale el pago, paso a paso",
-    "calcWhy": "Un precio y un porcentaje se convierten en un pago mensual en cuatro pasos, y la prima del seguro es uno de ellos. El calendario año por año está en la sección de arriba.",
+    "calcWhy": "Un precio y un porcentaje se convierten en un pago mensual, y donde se aplica el seguro hipotecario, la prima se suma al préstamo antes de calcular el pago. El calendario año por año está en la sección de arriba.",
     "calcTraceCaption": "Cómo se forma el pago",
     "calcPrice": "Precio de compra",
     "calcDown": "Pago inicial",
     "calcBaseLoan": "Prestado antes del seguro",
-    "calcLoan": "Hipoteca"
+    "calcLoan": "Hipoteca",
+    "calcAmortYears": "Amortización"
   },
   "RentVsBuy": {
     "title": "Alquilar o comprar",
@@ -738,7 +740,6 @@
     "calcTraceCaption": "Año {n} — cómo se construyó esta cifra",
     "calcLedgerCaption": "Registro año por año: cada costo, ambas carteras y la ventaja acumulada, para cada año modelado.",
     "calcTaxCredits": "Reembolsos recibidos en la declaración, capitalizados",
-    "calcInvested": "Excedente invertido",
     "calcUpfrontGrown": "Capital inicial, capitalizado al rendimiento",
     "calcBuying": "Comprar",
     "calcRenting": "Alquilar",
@@ -751,7 +752,9 @@
     "cServices": "Servicios",
     "cStrata": "Cuota de condominio",
     "cHomeValue": "Valor de la vivienda",
-    "upFrontNote": "El efectivo que había que aportar el día del cierre, {up}, invertido en su lugar."
+    "upFrontNote": "El efectivo que había que aportar el día del cierre, {up}, invertido en su lugar.",
+    "calcInvestedBuy": "Excedente invertido, comprar",
+    "calcInvestedRent": "Excedente invertido, alquilar"
   },
   "Scenarios": {
     "title": "Escenarios de pago inicial",
@@ -864,7 +867,8 @@
     "cGds": "GDS",
     "cTds": "TDS",
     "cLifetime": "Costo de financiamiento",
-    "cScenario": "Escenario"
+    "cScenario": "Escenario",
+    "cModelled": "Modelado al"
   },
   "Provenance": {
     "rule": "regla",

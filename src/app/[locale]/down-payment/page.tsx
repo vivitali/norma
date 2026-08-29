@@ -515,15 +515,22 @@ export default function DownPaymentPage() {
                     ? [{ label: t("calcCredits"), value: fmt(closing.creditsAtClosing), op: "minus" as const }]
                     : []),
                   { label: t("needLabel"), value: fmt(need), op: "equals", strong: true },
-                  { label: t("calcDrawn"), value: fmt(flow.drawnTotal), op: "minus", rule: true },
-                  {
-                    // One line or the other, never a zero of both: "short by $0" and
-                    // "left over $0" are each a claim, and only one of them is ever true.
-                    label: flow.shortfall > 0.5 ? t("calcShortfall") : t("calcSurplus"),
-                    value: fmt(flow.shortfall > 0.5 ? flow.shortfall : flow.surplus),
-                    op: "equals",
-                    strong: true,
-                  },
+                  // TWO DIFFERENT SUBTRACTIONS, and the operator has to tell the truth
+                  // about which one ran. A shortfall is measured against what was
+                  // DRAWN (`need − drawnTotal`, which is exactly what the waterfall
+                  // returns); a surplus is measured against everything AVAILABLE
+                  // (`totalAvailable − need`). Printing "drawn" above both read
+                  // "$60,000 − $60,000 = $140,000" for every fully funded reader.
+                  ...(flow.shortfall > 0.5
+                    ? [
+                        { label: t("calcDrawn"), value: fmt(flow.drawnTotal), op: "minus" as const, rule: true },
+                        { label: t("calcShortfall"), value: fmt(flow.shortfall), op: "equals" as const, strong: true },
+                      ]
+                    : [
+                        { label: t("totalAvailable"), value: fmt(flow.totalAvailable), rule: true },
+                        { label: t("needLabel"), value: fmt(need), op: "minus" as const },
+                        { label: t("calcSurplus"), value: fmt(flow.surplus), op: "equals" as const, strong: true },
+                      ]),
                 ]}
               />,
             )}

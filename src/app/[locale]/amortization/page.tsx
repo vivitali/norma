@@ -418,8 +418,14 @@ export default function AmortizationPage() {
                     ? [{ label: t("premium"), value: fmt(result.fin.premium), op: "plus" as const }]
                     : []),
                   { label: t("calcLoan"), value: fmt(result.fin.loan), op: "equals", rule: true, strong: true },
-                  { label: t("cRate"), value: pct(resolved.contractRate, 2), rule: true },
-                  { label: t("cPayment"), value: fmt(result.rows[0].payment), op: "equals", strong: true },
+                  // The payment is a function of THREE operands and the third was
+                  // missing, so the figure could not be reproduced from what was on
+                  // screen. `firstPayment` rather than `rows[0].payment`: `rows` is
+                  // empty whenever the loan is zero (100% down is reachable through
+                  // stored input), and the canonical field is always defined.
+                  { label: t("cRate"), value: pct(resolved.contractRate, 2), op: "times", rule: true },
+                  { label: t("calcAmortYears"), value: t("yearsWord", { n: resolved.amortYears }), op: "times" },
+                  { label: t("cPayment"), value: fmt(result.firstPayment), op: "equals", strong: true },
                 ]}
               />,
             )}

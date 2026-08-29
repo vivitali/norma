@@ -24,12 +24,13 @@ import { cn } from "@/lib/utils";
  * the two are different claims about the same digits.
  */
 
-export type CalcOp = "plus" | "minus" | "times" | "equals";
+export type CalcOp = "plus" | "minus" | "times" | "divide" | "equals";
 
 const GLYPH: Record<CalcOp, string> = {
   plus: "+",
   minus: "−",
   times: "×",
+  divide: "÷",
   equals: "=",
 };
 
@@ -77,27 +78,32 @@ export function CalcTrace({
               line.rule && "mt-1 border-t border-hairline pt-2.5",
             )}
           >
-            <span
-              aria-hidden="true"
-              className="text-[13px] leading-[1.45] text-ink3 tabular-nums"
-            >
-              {line.op ? GLYPH[line.op] : ""}
-            </span>
+            {/*
+              The operator lives INSIDE the term, not in a sibling span: a `dl` may
+              contain only `dt`/`dd` (plus script-supporting elements), and a bare
+              `span` between them is invalid content. Grid placement is by
+              `col-start`, so nothing moves — the glyph is positioned into the
+              gutter and the label into the second column from within one element.
+            */}
             <dt
               className={cn(
-                "min-w-0 text-[13px] leading-[1.45] text-ink2",
+                "col-start-1 col-end-3 grid grid-cols-subgrid text-[13px] leading-[1.45] text-ink2",
                 line.strong && "font-semibold text-ink",
               )}
             >
-              {/*
-                The operator is aria-hidden above and restated here for a screen
-                reader, because "− $98,471" read aloud from two cells is
-                "minus ninety-eight thousand" either way, while a bare glyph in
-                its own cell is announced as punctuation or skipped entirely.
-              */}
-              {line.op ? <span className="sr-only">{GLYPH[line.op]} </span> : null}
-              {line.label}
-              {line.mark ? <> {line.mark}</> : null}
+              <span aria-hidden="true" className="text-ink3 tabular-nums">
+                {line.op ? GLYPH[line.op] : ""}
+              </span>
+              <span className="min-w-0">
+                {/*
+                  Restated for a screen reader, because the glyph above is decorative
+                  in its own cell: a lone "−" is announced as punctuation or skipped,
+                  where "minus ninety-eight thousand" is the claim being made.
+                */}
+                {line.op ? <span className="sr-only">{GLYPH[line.op]} </span> : null}
+                {line.label}
+                {line.mark ? <> {line.mark}</> : null}
+              </span>
             </dt>
             <dd
               className={cn(
@@ -108,9 +114,9 @@ export function CalcTrace({
               {line.value}
             </dd>
             {line.note ? (
-              <p className="col-start-2 col-end-4 mt-0.5 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
+              <dd className="col-start-2 col-end-4 m-0 mt-0.5 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
                 {line.note}
-              </p>
+              </dd>
             ) : null}
           </div>
         ))}
@@ -152,13 +158,17 @@ export function CalcLedger({
 }: {
   columns: readonly LedgerColumn[];
   rows: readonly LedgerRow[];
-  /** Describes the table for a screen reader, and titles it on screen. */
+  /** Describes the table for a screen reader. Not rendered visibly — the section heading titles it. */
   caption: string;
   /** Which column is the row's header — the year, normally. */
   rowHeader: string;
 }) {
   return (
-    <div className="max-h-[420px] overflow-auto rounded-md border border-hairline">
+    // `min-w-0` and `relative` are the repo's scroll-container contract
+    // (page-contracts.test.tsx), not decoration: without `min-w-0` a flex or grid
+    // child defaults to `min-width: auto` and widens its parent instead of
+    // scrolling, and `relative` is what the sr-only caption is positioned against.
+    <div className="relative max-h-[420px] min-w-0 overflow-x-auto overflow-y-auto rounded-md border border-hairline">
       <table className="w-full border-collapse text-[12.5px]">
         <caption className="sr-only">{caption}</caption>
         <thead className="sticky top-0 z-10 bg-card">

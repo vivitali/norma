@@ -462,11 +462,18 @@ describe("Rent vs buy — showing the work", () => {
     renderPage();
     await open(user, /How this was calculated/);
     const calc = panel("calc");
-    const diff = calc.getByText(/^Difference/).parentElement!;
-    // Renting wins on the seeded figures, so the advantage of buying is negative.
-    // money() puts the sign outside the currency mark, and the operator gutter is
-            // restated for screen readers, so the row reads "== Difference− $41,169".
-    expect(diff.textContent).toMatch(/−\s?\$[\d,]+/);
+    // The `<dt>` holding the label and the `<dd>` immediately after it holding the
+    // value — not `parentElement.textContent`, which sweeps up the operator gutter
+    // and would go on passing on a row whose figure had gone missing entirely.
+    const term = calc.getByText(/^Difference/).closest("dt")!;
+    const value = term.nextElementSibling!.textContent!.trim();
+    // It IS the hero. A trace that recomputed could agree with itself while
+    // disagreeing with the answer above it, which is the one failure this cannot have.
+    const hero = document.querySelector('[data-slot="answer-figure"]')!.textContent!.trim();
+    // The hero is unsigned — the head says which side wins — so compare the digits,
+    // then assert the sign separately: renting wins on the seeded figures.
+    expect(value.replace(/^−\s?/, "")).toBe(hero);
+    expect(value).toMatch(/^−/);
   });
 
   it("prints a row for every year the model runs, not a sample of them", async () => {

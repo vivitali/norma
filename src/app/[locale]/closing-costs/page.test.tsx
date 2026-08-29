@@ -70,10 +70,12 @@ beforeEach(() => {
 describe("Closing costs — the answer comes first", () => {
   it("leads with cash needed on closing day, before anyone types", () => {
     renderPage();
-    // getAllByText: the same label now names the figure in two places — the head,
-    // and the last line of the derivation in the calc section, which is the same
-    // number by construction.
-    expect(screen.getAllByText("Cash needed on closing day").length).toBeGreaterThan(0);
+    // Scoped to the HEAD, not counted across the document. The same label now names
+    // the figure in three places — the head, the derivation's terminal line and its
+    // caption — so `getAllByText(...).length > 0` would have gone on passing with the
+    // head deleted outright, and this test is named for the lead.
+    const figure = document.querySelector('[data-slot="answer-figure"]')!;
+    expect(figure.parentElement!.textContent).toContain("Cash needed on closing day");
     expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
   });
 

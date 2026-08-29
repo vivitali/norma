@@ -352,12 +352,15 @@ export default function RrspHbpPage() {
               {
                 label: t("calcRefund"),
                 value: fmt(play.refund),
-                op: "equals",
+                // NOT `equals`: the refund is the tax ON that band, not the band
+                // itself, and an `=` between the two asserted something false about
+                // the line above it. The rule and the note carry the relation.
                 rule: true,
                 strong: true,
                 note: t("refundWhy"),
               },
               { label: t("withdraw"), value: fmt(play.withdraw), rule: true },
+              { label: t("calcRepayYears"), value: String(federal.hbp.repayYears), op: "divide" },
               { label: t("calcRepay"), value: fmt(play.repayAnnual), op: "equals" },
             ]}
           />,

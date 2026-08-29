@@ -403,7 +403,7 @@
     "secCalc": "Comment ce chiffre est calculé",
     "calcLine": "Chaque poste, additionné",
     "calcWhy": "Le montant en haut de cette page, terme par terme. Chaque groupe est le total de la section qui le détaille, de sorte qu'un chiffre ici remonte au document dont il provient.",
-    "calcTraceCaption": "Argent nécessaire le jour de la clôture",
+    "calcTraceCaption": "Ce que vous versez réellement le jour de la clôture",
     "calcGov": "Taxes et frais gouvernementaux",
     "calcPro": "Honoraires professionnels et frais de tiers",
     "calcAdj": "Ajustements et emménagement",
@@ -557,7 +557,8 @@
     "calcBandTop": "Revenu avant la déduction",
     "calcBandBottom": "Revenu après",
     "calcRefund": "Impôt sur cette tranche",
-    "calcRepay": "À rembourser chaque année"
+    "calcRepay": "À rembourser chaque année",
+    "calcRepayYears": "Années de remboursement"
   },
   "Amortization": {
     "title": "Amortissement et renouvellement",
@@ -627,12 +628,13 @@
     "payoffLabel": "Remboursé",
     "secCalc": "Comment ce chiffre est calculé",
     "calcLine": "D'où vient le paiement, étape par étape",
-    "calcWhy": "Un prix et un pourcentage deviennent un paiement mensuel en quatre étapes, dont la prime d'assurance. L'échéancier année par année se trouve dans la section ci-dessus.",
+    "calcWhy": "Un prix et un pourcentage deviennent un paiement mensuel ; lorsque l'assurance hypothécaire s'applique, elle est ajoutée au prêt avant le calcul du paiement. L'échéancier année par année se trouve dans la section ci-dessus.",
     "calcTraceCaption": "Comment le paiement est construit",
     "calcPrice": "Prix d'achat",
     "calcDown": "Mise de fonds",
     "calcBaseLoan": "Emprunté avant l'assurance",
-    "calcLoan": "Prêt hypothécaire"
+    "calcLoan": "Prêt hypothécaire",
+    "calcAmortYears": "Amortissement"
   },
   "RentVsBuy": {
     "title": "Louer ou acheter",
@@ -738,7 +740,6 @@
     "calcTraceCaption": "Année {n} — comment ce chiffre est obtenu",
     "calcLedgerCaption": "Tableau année par année : chaque coût, les deux portefeuilles et l'avantage cumulé, pour chaque année modélisée.",
     "calcTaxCredits": "Remboursements reçus à l'impôt, capitalisés",
-    "calcInvested": "Excédent investi",
     "calcUpfrontGrown": "Capital initial, capitalisé au rendement",
     "calcBuying": "Acheter",
     "calcRenting": "Louer",
@@ -751,7 +752,9 @@
     "cServices": "Services",
     "cStrata": "Charges de copropriété",
     "cHomeValue": "Valeur de la propriété",
-    "upFrontNote": "L'argent qu'il fallait fournir le jour de la clôture, {up}, investi à la place."
+    "upFrontNote": "L'argent qu'il fallait fournir le jour de la clôture, {up}, investi à la place.",
+    "calcInvestedBuy": "Excédent investi, achat",
+    "calcInvestedRent": "Excédent investi, location"
   },
   "Scenarios": {
     "title": "Scénarios de mise de fonds",
@@ -864,7 +867,8 @@
     "cGds": "ABD",
     "cTds": "ATD",
     "cLifetime": "Coût d'emprunt",
-    "cScenario": "Scénario"
+    "cScenario": "Scénario",
+    "cModelled": "Modélisé à"
   },
   "Provenance": {
     "rule": "règle",

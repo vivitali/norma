@@ -504,6 +504,7 @@ export default function ScenariosPage() {
                 rowHeader="scenario"
                 columns={[
                   { key: "scenario", label: t("cScenario") },
+                  { key: "modelled", label: t("cModelled"), numeric: true },
                   { key: "down", label: t("cDown"), numeric: true },
                   { key: "premium", label: t("cPremium"), numeric: true },
                   { key: "mortgage", label: t("cMortgage"), numeric: true },
@@ -523,17 +524,24 @@ export default function ScenariosPage() {
                   // pointing at one of these".
                   highlight: recommendedPct !== null && col.dpPct === recommendedPct,
                   cells: {
-                    // The EFFECTIVE percentage, which is what was modelled — a request
-                    // below the legal floor is raised, and printing the request here
-                    // would label the row with a mortgage nobody may write.
-                    scenario: t("column", { p: pct(col.dpPctEff, 0) }),
+                    // The REQUESTED percentage, matching `compare-grid.tsx`'s column
+                    // headings. Labelling by the effective figure made two tables of the
+                    // same four scenarios on one page unmatchable — and above the
+                    // insured cap every column floors to 20%, so all four rows rendered
+                    // as "20%", indistinguishable. The raise is disclosed in its own
+                    // column instead, where it does not collide with the identity.
+                    scenario: t("column", { p: pct(col.dpPct, 0) }),
+                    modelled: col.belowMinimum ? pct(col.dpPctEff, 1) : "—",
                     down: fmt(col.down),
                     premium: fmt(col.premium),
                     mortgage: fmt(col.totalMortgage),
                     monthly: fmt(col.monthly.total),
                     cash: fmt(col.net),
-                    gds: pct(col.gds * 100, 1),
-                    tds: pct(col.tds * 100, 1),
+                    // Already percentages out of `scenario()` (engine.ts:1547). The
+                    // qualification panel forty lines up renders them the same way;
+                    // scaling here printed 3,240.0% beside its own 32.4%.
+                    gds: pct(col.gds, 1),
+                    tds: pct(col.tds, 1),
                     lifetime: fmt(col.costOfBorrowing),
                   },
                 }))}

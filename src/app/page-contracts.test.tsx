@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { jurisdictions } from "@/domain/jurisdictions";
+import { SECTION_REGISTRIES } from "@/lib/sections";
 import { benchmarkPrice } from "@/lib/resolve-inputs";
 
 import AffordabilityPage from "./[locale]/affordability/page";
@@ -513,14 +514,62 @@ describe("horizontal scroll stays inside the element that owns it", () => {
  * neither computes anything — Sources IS the provenance inventory.
  */
 describe("every page that computes an answer can show its work", () => {
-  const COMPUTES = [
-    ["Closing costs", ClosingCostsPage],
-    ["Down payment", DownPaymentPage],
-    ["RRSP-HBP", RrspHbpPage],
-    ["Amortization", AmortizationPage],
-    ["Rent vs buy", RentVsBuyPage],
-    ["Scenarios", ScenariosPage],
-  ] as const;
+  /**
+   * Driven off the SECTION REGISTRY, not a hand-kept list of components.
+   *
+   * A hardcoded array would have meant a seventh computing page could be added to
+   * `SECTION_REGISTRIES` and `NAV` and ship with no disclosure at all, while this
+   * file stayed green and CLAUDE.md went on claiming otherwise. The allowlist below
+   * is the same shape `PRICE_DERIVED_HEADLINE` uses: named positively, so adding a
+   * namespace to it is a claim about that page rather than an exemption granted
+   * quietly.
+   */
+  const NO_CALC_SECTION: Record<string, string> = {
+    // Shipped the same disclosure first, under its own `math` section.
+    Affordability: "MathColumns",
+    // Computes nothing. `/sources` IS the provenance inventory.
+    Sources: "nothing to derive",
+  };
+
+  const PAGE_BY_NAMESPACE: Record<string, (typeof PAGES)[number][1]> = {
+    ClosingCosts: ClosingCostsPage,
+    DownPayment: DownPaymentPage,
+    RrspHbp: RrspHbpPage,
+    Amortization: AmortizationPage,
+    RentVsBuy: RentVsBuyPage,
+    Scenarios: ScenariosPage,
+  };
+
+  const NAME_BY_NAMESPACE: Record<string, string> = {
+    ClosingCosts: "Closing costs",
+    DownPayment: "Down payment",
+    RrspHbp: "RRSP-HBP",
+    Amortization: "Amortization",
+    RentVsBuy: "Rent vs buy",
+    Scenarios: "Scenarios",
+  };
+
+  it("every registered page either has a calc section or is named as not needing one", () => {
+    for (const { namespace, sections } of SECTION_REGISTRIES) {
+      if (namespace in NO_CALC_SECTION) continue;
+      expect(
+        sections.map((entry) => entry.id),
+        `${namespace} must offer a calc section, or be named in NO_CALC_SECTION`,
+      ).toContain("calc");
+      // And it must be reachable as a page, or the assertion above is vacuous.
+      expect(PAGE_BY_NAMESPACE[namespace], `${namespace} has no page in this test`).toBeDefined();
+    }
+  });
+
+  const COMPUTES = Object.entries(PAGE_BY_NAMESPACE).map(
+    ([ns, Page]) => [NAME_BY_NAMESPACE[ns], Page] as const,
+  );
+
+  async function openCalc(user: ReturnType<typeof userEvent.setup>) {
+    const button = screen.getByRole("button", { name: /How this was calculated/ });
+    if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+    return within(document.getElementById("calc")!);
+  }
 
   for (const [name, Page] of COMPUTES) {
     it(`${name} offers the calculation`, async () => {
@@ -531,9 +580,7 @@ describe("every page that computes an answer can show its work", () => {
           <Page />
         </JurisdictionProvider>,
       );
-      const button = screen.getByRole("button", { name: /How this was calculated/ });
-      if (button.getAttribute("aria-expanded") === "false") await user.click(button);
-      const body = within(document.getElementById("calc")!);
+      const body = await openCalc(user);
       // A derivation, a ledger, or both -- which of the two is a per-page judgement
       // (Amortization's schedule already IS the ledger), but SOMETHING has to be
       // there, and it has to carry figures rather than empty rows.
@@ -555,6 +602,69 @@ describe("every page that computes an answer can show its work", () => {
         screen.getByRole("button", { name: /How this was calculated/ }),
         name,
       ).toHaveAttribute("aria-expanded", "false");
+      unmount();
+    }
+  });
+
+  /**
+   * THE assertion this feature turns on.
+   *
+   * A trace that does its own arithmetic can agree with itself while disagreeing
+   * with the answer it claims to explain, and that is the one failure the feature
+   * cannot have. Three real defects shipped past 1538 green tests because nothing
+   * compared a derived figure to the headline above it: Scenarios rendered GDS at
+   * 100x the value in its own panel, Down Payment printed `x - x = y`, and Closing
+   * Costs derived a closing bill for a home with no published price.
+   */
+  it("the last line of a trace is the figure the page leads with", async () => {
+    // The pages whose trace TERMINATES in the hero. Amortization's does not and says
+    // so -- its hero is the payment after renewal, its trace builds the first
+    // payment -- and Scenarios has a ledger rather than a trace.
+    const TERMINAL = ["Closing costs", "Down payment", "Rent vs buy"] as const;
+    for (const name of TERMINAL) {
+      const Page = COMPUTES.find(([n]) => n === name)![1];
+      seed(name);
+      const user = userEvent.setup();
+      const { container, unmount } = renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+      );
+      const body = await openCalc(user);
+      const hero = container.querySelector('[data-slot="answer-figure"]')?.textContent?.trim();
+      expect(hero, `${name} renders no hero`).toBeTruthy();
+      const terminal = [...document.getElementById("calc")!.querySelectorAll("dd")]
+        .map((dd) => dd.textContent?.trim())
+        .filter(Boolean);
+      expect(terminal, `${name}: hero ${hero} appears nowhere in its own derivation`).toContain(hero);
+      unmount();
+    }
+  });
+
+  it("derives nothing where no price is published", async () => {
+    // The defect this file already documents one level up, at the headline: a page
+    // with no price must ASK, and a derivation is a headline in slower motion.
+    // `yt` publishes no benchmark at any property type.
+    //
+    // Scoped to the PRICE-DERIVED pages, reusing the set declared at the top of this
+    // file. RRSP-HBP is deliberately outside it — its refund is built from income and
+    // a contribution, with no price term, so it answers at `yt` for the same reason
+    // its headline does.
+    for (const [name, Page] of COMPUTES.filter(([n]) => PRICE_DERIVED_HEADLINE.has(n))) {
+      window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "yt" }));
+      const { container, unmount } = renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+      );
+      const calc = document.getElementById("calc");
+      if (calc) {
+        expect(
+          calc.textContent ?? "",
+          `${name} derives a figure for a home with no published price`,
+        ).not.toMatch(/\$[\d,]*[1-9][\d,]*/);
+      }
+      expect(container.textContent).toBeTruthy();
       unmount();
     }
   });

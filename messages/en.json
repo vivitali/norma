@@ -403,7 +403,7 @@
     "secCalc": "How this was calculated",
     "calcLine": "Every line, added up",
     "calcWhy": "The cash figure at the top of this page, operand by operand. Each group is the total of the section that lists it, so a figure here can be traced to the document it came from.",
-    "calcTraceCaption": "Cash needed on closing day",
+    "calcTraceCaption": "What you actually hand over on closing day",
     "calcGov": "Taxes and government fees",
     "calcPro": "Professional and third-party fees",
     "calcAdj": "Adjustments and moving in",
@@ -557,7 +557,8 @@
     "calcBandTop": "Income before the deduction",
     "calcBandBottom": "Income after it",
     "calcRefund": "Tax on that band",
-    "calcRepay": "Repayable each year"
+    "calcRepay": "Repayable each year",
+    "calcRepayYears": "Years to repay over"
   },
   "Amortization": {
     "title": "Amortization and renewal",
@@ -627,12 +628,13 @@
     "payoffLabel": "Paid off",
     "secCalc": "How this was calculated",
     "calcLine": "Where the payment comes from, step by step",
-    "calcWhy": "A price and a percentage become a monthly payment in four steps, and the insurance premium is one of them. The year-by-year schedule is in the section above.",
+    "calcWhy": "A price and a percentage become a monthly payment, and where mortgage insurance applies it is added to the loan before the payment is worked out. The year-by-year schedule is in the section above.",
     "calcTraceCaption": "How the payment is built",
     "calcPrice": "Purchase price",
     "calcDown": "Down payment",
     "calcBaseLoan": "Borrowed before insurance",
-    "calcLoan": "Mortgage"
+    "calcLoan": "Mortgage",
+    "calcAmortYears": "Amortization"
   },
   "RentVsBuy": {
     "title": "Rent versus buy",
@@ -738,7 +740,6 @@
     "calcTraceCaption": "Year {n} — how this figure was built",
     "calcLedgerCaption": "Year-by-year ledger: every cost, both portfolios and the running advantage, for each year modelled.",
     "calcTaxCredits": "Rebates received at tax time, grown",
-    "calcInvested": "Invested surplus",
     "calcUpfrontGrown": "Upfront capital, grown at the return",
     "calcBuying": "Buying",
     "calcRenting": "Renting",
@@ -751,7 +752,9 @@
     "cServices": "Services",
     "cStrata": "Strata fee",
     "cHomeValue": "Home value",
-    "upFrontNote": "The cash you had to produce on closing day, {up}, invested instead."
+    "upFrontNote": "The cash you had to produce on closing day, {up}, invested instead.",
+    "calcInvestedBuy": "Invested surplus, buying",
+    "calcInvestedRent": "Invested surplus, renting"
   },
   "Scenarios": {
     "title": "Down payment scenarios",
@@ -864,7 +867,8 @@
     "cGds": "GDS",
     "cTds": "TDS",
     "cLifetime": "Cost of borrowing",
-    "cScenario": "Scenario"
+    "cScenario": "Scenario",
+    "cModelled": "Modelled at"
   },
   "Provenance": {
     "rule": "rule",

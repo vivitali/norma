@@ -248,7 +248,8 @@ pattern that resembles one. The same applies to any future assertion over render
 
 **Every page that computes an answer can show its work.** `src/components/calc/calc-trace.tsx`
 holds `CalcTrace` (a derivation, one operand per line) and `CalcLedger` (a projection, a year per
-row). Six pages carry a `calc` section; `page-contracts.test.tsx` asserts it **across the
+row). A trace terminates in the figure the page leads with, except on Amortization, whose hero is
+the payment *after renewal* while its trace builds the first payment — `calcWhy` says so. Six pages carry a `calc` section; `page-contracts.test.tsx` asserts it **across the
 registry**, so a page added later cannot ship without one. Affordability is absent from that list
 and present in spirit — it shipped the same disclosure first, as `MathColumns` under its own
 `math` section. Home and Sources are absent because neither computes anything; `/sources` IS the

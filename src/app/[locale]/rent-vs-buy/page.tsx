@@ -466,18 +466,21 @@ export default function RentVsBuyPage() {
                       ? [{ label: t("calcTaxCredits"), value: fmt(atHorizon.taxTimeCredits), op: "plus" as const }]
                       : []),
                     ...(atHorizon.bp > 0
-                      ? [{ label: t("calcInvested"), value: fmt(atHorizon.bp), op: "plus" as const }]
+                      ? [{ label: t("calcInvestedBuy"), value: fmt(atHorizon.bp), op: "plus" as const }]
                       : []),
-                    { label: t("calcBuying"), value: fmt(atHorizon.buyW), rule: true, strong: true },
+                    { label: t("calcBuying"), value: fmt(atHorizon.buyW), op: "equals", rule: true, strong: true },
                     {
                       label: t("calcUpfrontGrown"),
                       value: fmt(atHorizon.rentW - atHorizon.rp),
                       note: t("upFrontNote", { up: fmt(result.upFront) }),
                     },
                     ...(atHorizon.rp > 0
-                      ? [{ label: t("calcInvested"), value: fmt(atHorizon.rp), op: "plus" as const }]
+                      ? [{ label: t("calcInvestedRent"), value: fmt(atHorizon.rp), op: "plus" as const }]
                       : []),
-                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), strong: true },
+                    // `minus`, so the final `=` is followable: the difference IS
+                    // buying less renting, and two bare subtotals stacked above an
+                    // equals sign left the reader to guess which way round.
+                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), op: "minus", strong: true },
                     { label: t("calcDifference"), value: fmt(atHorizon.adv), op: "equals", rule: true, strong: true },
                   ]}
                 />
