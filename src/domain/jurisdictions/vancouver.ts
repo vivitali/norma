@@ -41,6 +41,7 @@ export const vancouver: Jurisdiction = {
   cityData: true,
   pro: "lawyerOrNotary",
   rent: 2364,
+  rentBasis: "apartment2br",
   yoy: -0.062,
   bench: { house: 1822900, condo: 688000 },
   // BC Assessment values at market, so the City's published mill rate needs no unwinding:

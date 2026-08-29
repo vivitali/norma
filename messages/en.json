@@ -693,7 +693,10 @@
     "fCondo": "Condo fee, monthly",
     "crossNever": "Not within {n} years",
     "assumptionsLine": "Both sides — {buy, plural, one {# favours} other {# favour}} buying, {rent, plural, one {# favours} other {# favour}} renting.",
-    "xClosing": "Capital deployed up front is the down payment plus closing day's bill, itemised on <link>the closing-costs page</link>."
+    "xClosing": "Capital deployed up front is the down payment plus closing day's bill, itemised on <link>the closing-costs page</link>.",
+    "mismatchHead": "What would a comparable home rent for?",
+    "mismatchSub": "The only rent published for {city} is CMHC's two-bedroom apartment average, {rent} a month. You are pricing a house, so that figure answers a different question. Enter what a home like the one above would rent for.",
+    "rentMismatchTag": "CMHC publishes {rent} for a two-bedroom apartment — a smaller home than the one priced above"
   },
   "Scenarios": {
     "title": "Down payment scenarios",

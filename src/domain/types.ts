@@ -5,6 +5,13 @@ export type ProfessionalType = "lawyer" | "notary" | "lawyerOrNotary";
 
 export type PropertyType = "house" | "condo" | "newbuild";
 
+/**
+ * Which dwelling a published rent figure measures. One value today because the
+ * dataset holds one series; an enum rather than a boolean because the fix for
+ * the mismatch is eventually a second series, not a flag.
+ */
+export type RentBasis = "apartment2br";
+
 export type BracketTable = readonly (readonly [number | null, number])[];
 export type MarginalTable = readonly (readonly [number | null, number])[];
 
@@ -292,6 +299,22 @@ export interface Jurisdiction {
    * is not city-level at all.
    */
   rent?: number | null;
+  /**
+   * The dwelling the `rent` figure above actually describes.
+   *
+   * Every rent in this dataset is a CMHC Rental Market Survey **two-bedroom
+   * apartment** average — purpose-built in seven records, "row/apartment" in
+   * Vancouver's — because that is what the RMS publishes by centre. CMHC does
+   * not publish a detached-house rent anywhere in Canada.
+   *
+   * That matters because `bench.house` beside it IS a detached house. Comparing
+   * the two is comparing a $1.46M Toronto house against a two-bedroom
+   * apartment, and the resulting verdict is about two different lives, not two
+   * ways of paying for one. `rentComparable()` in engine.ts is the rule; this
+   * field is the fact it reads. Recorded per record rather than assumed
+   * globally so a record that ever carries a different series says so.
+   */
+  rentBasis?: RentBasis;
   /** Year-over-year price growth — only present alongside `rent`. */
   yoy?: number;
   /**

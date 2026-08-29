@@ -32,6 +32,7 @@ export const toronto: Jurisdiction = {
   cityData: true,
   pro: "lawyer",
   rent: 2045,
+  rentBasis: "apartment2br",
   yoy: -0.0383,
   bench: { house: 1455200, condo: 551900 },
   // The published rate is levied on a January 2016 assessment, not on today's price. Applying

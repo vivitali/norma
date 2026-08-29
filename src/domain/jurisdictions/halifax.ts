@@ -35,6 +35,7 @@ export const halifax: Jurisdiction = {
   cityData: true,
   pro: "lawyer",
   rent: 1828,
+  rentBasis: "apartment2br",
   yoy: 0,
   // A Halifax-Dartmouth COMPOSITE benchmark, not a detached one, and deliberately not the
   // Nova Scotia province-wide series that NSAR splits by property type. See provenance.

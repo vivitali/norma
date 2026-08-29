@@ -70,6 +70,14 @@ export default function RentVsBuyPage() {
       appreciationOn: resolved.appreciationOn,
       investReturn: resolved.investReturn,
       investDiff: resolved.investDiff,
+      // The reader's own rate, and their own renewal assumption. Both were already
+      // stored and both were invisible to this page: `RentVsBuyInput` carried
+      // neither, so a rate set on Affordability and a renewal set on Amortization
+      // were honoured there and silently dropped here, on the screen that projects
+      // them forward for forty years.
+      contractRate: resolved.contractRate / 100,
+      termYears: resolved.termYears,
+      renewalRate: resolved.renewalRate === null ? null : resolved.renewalRate / 100,
       years: HORIZON_YEARS,
     }),
     [resolved],
@@ -435,6 +443,20 @@ export default function RentVsBuyPage() {
           head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
           sub={tInputs("noPriceSub")}
         />
+      ) : resolved.rentBasisMismatch ? (
+        // A rent IS published here — it just measures a two-bedroom apartment while
+        // the price above is a detached house. That is a different sentence from
+        // "nobody publishes a rent for here", and the difference is what tells the
+        // reader the figure they type has to be for the home they would actually
+        // rent instead of this one.
+        <AnswerHead
+          eyebrow={t("title")}
+          head={t("mismatchHead")}
+          sub={t("mismatchSub", {
+            city: tJur(`at.${jurisdiction.id}`),
+            rent: fmt(jurisdiction.rent ?? 0),
+          })}
+        />
       ) : (
         <AnswerHead
           eyebrow={t("title")}
@@ -489,7 +511,9 @@ export default function RentVsBuyPage() {
                     territory. Either a rent published for here, or no published rent at all. */}
                 {resolved.rentKnown
                   ? t("rentTag", { city: tJur(`at.${jurisdiction.id}`) })
-                  : t("rentUnknownTag", { city: tJur(`at.${jurisdiction.id}`) })}
+                  : resolved.rentBasisMismatch
+                    ? t("rentMismatchTag", { rent: fmt(jurisdiction.rent ?? 0) })
+                    : t("rentUnknownTag", { city: tJur(`at.${jurisdiction.id}`) })}
               </p>
             ) : null}
             <NumberField

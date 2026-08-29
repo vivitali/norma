@@ -26,7 +26,31 @@ async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
   return button;
 }
 
-beforeEach(() => window.localStorage.clear());
+/**
+ * A CONDO, deliberately, in every test that expects a verdict.
+ *
+ * Every rent in the dataset is a CMHC two-bedroom apartment average, so it can
+ * answer a condo purchase and nothing else. On the default `ptype: "house"` this
+ * page now asks for a rent rather than weighing a detached house against an
+ * apartment — the state the last describe block below covers.
+ */
+function seedAnswerable(extra: Record<string, unknown> = {}) {
+  // A house WITH a rent the reader supplied. This is the state these tests were
+  // always about — the default jurisdiction is Winnipeg, so a $454,264 house
+  // weighed against $1,570 a month — except that the rent used to arrive
+  // silently from CMHC's two-bedroom APARTMENT survey. Stating it here changes
+  // nothing these tests observe and everything about whether the page was
+  // entitled to assume it.
+  window.localStorage.setItem(
+    "norma.inputs.v2",
+    JSON.stringify({ ptype: "house", rent: 1570, ...extra }),
+  );
+}
+
+beforeEach(() => {
+  window.localStorage.clear();
+  seedAnswerable();
+});
 
 describe("Rent vs buy — the horizon decides", () => {
   it("leads with a verdict tied to a holding period, not an abstract one", () => {
@@ -167,7 +191,7 @@ describe("Rent vs buy — an absent break-even is a finding, not a blank", () =>
     // "Buying pulls ahead — · Buying never pulls ahead within 40 years" read as
     // a rendering fault: an em-dash where the figure goes, and a note that
     // contradicted the label above it. `note` is a short qualifier, never the
-    // answer. At the placeholder rent for this city there is no break-even.
+    // answer. Against a house at an apartment-level rent there is no break-even.
     renderPage();
     // Innermost match: getAllByText matches ancestors too, in document order.
     const label = screen.getAllByText(/Buying pulls ahead/).at(-1)!;
@@ -217,6 +241,10 @@ describe("the rent placeholder names the jurisdiction the way a reader writes it
     // this asserts the same page does. Regression guard, not a style preference: it became more
     // visible when the territorial records gained a `city`, because the old
     // `city ?? prov` fallback had been hiding it behind "YT".
+    // A CONDO with no stored rent: the only state in which the page offers the
+    // city's published figure as a placeholder at all, now that an apartment
+    // average is not allowed to stand in for a house.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "condo" }));
     renderPage();
     expect(screen.getByText(/Typical for Winnipeg/)).toBeInTheDocument();
     expect(screen.queryByText(/Typical for winnipeg/)).not.toBeInTheDocument();
@@ -267,7 +295,8 @@ describe("Rent vs buy — it will not compare against a rent nobody published", 
 
   it("keeps the city's own rent where the survey does publish one", () => {
     // The tag is not deleted, it is made true: Toronto's rent IS a published figure.
-    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "toronto" }));
+    // For a CONDO, which is the purchase a two-bedroom apartment average can price.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "toronto", ptype: "condo" }));
     renderPage();
     expect(screen.getByText(/Typical for Toronto/)).toBeInTheDocument();
   });
@@ -349,5 +378,41 @@ describe("Rent vs buy — breaking the mortgage early", () => {
     const bullet = screen.getByText(/prepayment penalty/);
     expect(bullet).toBeInTheDocument();
     expect(bullet.textContent).not.toMatch(/\$|%/);
+  });
+});
+
+
+describe("Rent vs buy — an apartment rent cannot price a house", () => {
+  it("asks for a rent instead of weighing a house against a two-bedroom apartment", () => {
+    // The default property type. Toronto publishes a rent — $2,045, CMHC's
+    // two-bedroom purpose-built apartment average — and prices a $1,455,200
+    // detached house beside it. Running the comparison across that gap produced a
+    // verdict about two different lives, and it was the page's DEFAULT state.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "house" }));
+    renderPage();
+    expect(screen.getByText(/What would a comparable home rent for\?/)).toBeInTheDocument();
+    expect(screen.queryByText(/wins for your horizon/)).not.toBeInTheDocument();
+  });
+
+  it("says a rent IS published and what it measures, rather than that none exists", () => {
+    // Two different sentences. "Nobody publishes a rent for here" is true of the
+    // territories; here one is published and measures a smaller home, which is what
+    // tells the reader the figure they type has to be for a comparable one.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "house" }));
+    renderPage();
+    expect(screen.getByText(/two-bedroom apartment average/)).toBeInTheDocument();
+    expect(screen.queryByText(/No published rent for/)).not.toBeInTheDocument();
+  });
+
+  it("answers again as soon as the reader gives a rent of their own", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "house", rent: 4200 }));
+    renderPage();
+    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+  });
+
+  it("still answers for a condo, which is the purchase an apartment rent can price", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "condo" }));
+    renderPage();
+    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
   });
 });

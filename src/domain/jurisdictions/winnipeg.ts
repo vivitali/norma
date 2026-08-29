@@ -10,6 +10,7 @@ export const winnipeg: Jurisdiction = {
   cityData: true,
   pro: "lawyer",
   rent: 1570,
+  rentBasis: "apartment2br",
   yoy: 0.02,
   // AVERAGES, not MLS HPI benchmarks. The Winnipeg Regional Real Estate Board publishes no
   // benchmark at all; see the provenance notes, which are the disclosure and are under test.

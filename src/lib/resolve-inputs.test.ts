@@ -130,8 +130,40 @@ describe("resolveInputs", () => {
   });
 
   it("takes benchmark rent from the jurisdiction, not a universal constant", () => {
-    const r = resolveInputs(untouched, winnipeg, federal);
+    // A CONDO. Every rent in the dataset is a CMHC two-bedroom apartment average,
+    // so it prices a condo purchase and nothing else — see `rentComparable`.
+    const r = resolveInputs({ ...untouched, ptype: "condo" }, winnipeg, federal);
     expect(r.rent).toBe(winnipeg.rent ?? DEFAULT_RENT);
+  });
+
+  it("will not price a HOUSE against the apartment rent published for the city", () => {
+    // The published figure is real and correct for what it measures; it just does
+    // not measure this. `bench.house` beside it is a detached house, and running
+    // the comparison across that gap produced a verdict about two different lives
+    // — silently, on the page's default property type.
+    const r = resolveInputs(untouched, winnipeg, federal);
+    expect(winnipeg.rent).toBeGreaterThan(0);
+    expect(r.rentKnown).toBe(false);
+    expect(r.rentBasisMismatch).toBe(true);
+    expect(r.rent).toBe(DEFAULT_RENT);
+  });
+
+  it("tells a mismatch apart from a city nobody surveyed", () => {
+    // Different sentences, and the page says different things: one asks for a rent
+    // because what is published measures a smaller home, the other because nothing
+    // is published at all. CMHC suppresses every Yukon cell.
+    const yt = getJurisdiction("yt")!;
+    const r = resolveInputs({ ...untouched, ptype: "condo" }, yt, federal);
+    expect(r.rentKnown).toBe(false);
+    expect(r.rentBasisMismatch).toBe(false);
+  });
+
+  it("takes the reader's own rent for any dwelling, mismatch or not", () => {
+    // They know what they would rent. The gate is on the PUBLISHED figure only.
+    const r = resolveInputs({ ...untouched, rent: 3400 }, winnipeg, federal);
+    expect(r.rent).toBe(3400);
+    expect(r.rentKnown).toBe(true);
+    expect(r.rentBasisMismatch).toBe(false);
   });
 
   it("says whether there is a price to model at all", () => {
@@ -185,14 +217,15 @@ describe("resolveInputs", () => {
   });
 
   it("says whether the rent being compared against is anybody's real rent", () => {
+    // Condo throughout: the published apartment average can price one.
     // Six records carry no rent — CMHC suppresses every Yukon cell and does not survey
     // Nunavut. DEFAULT_RENT keeps the arithmetic defined, but it is a national
     // placeholder, and attributing it to the place that published nothing is exactly the
     // invented figure this product exists not to ship.
-    expect(resolveInputs(untouched, winnipeg, federal).rentKnown).toBe(true);
+    expect(resolveInputs({ ...untouched, ptype: "condo" }, winnipeg, federal).rentKnown).toBe(true);
     const territory = getJurisdiction("nu")!;
     expect(territory.rent ?? null).toBeNull();
-    const unrented = resolveInputs(untouched, territory, federal);
+    const unrented = resolveInputs({ ...untouched, ptype: "condo" }, territory, federal);
     expect(unrented.rentKnown).toBe(false);
     expect(unrented.rent).toBe(DEFAULT_RENT);
     expect(resolveInputs({ ...untouched, rent: 2300 }, territory, federal).rentKnown).toBe(true);
@@ -206,7 +239,7 @@ describe("resolveInputs", () => {
     // buy with a keystroke.
     // Same resolution as the price: the zero falls through to the figure published for
     // here, which is a real rent, so the comparison is the one the untouched page makes.
-    const zeroed = resolveInputs({ ...untouched, rent: 0 }, winnipeg, federal);
+    const zeroed = resolveInputs({ ...untouched, rent: 0, ptype: "condo" }, winnipeg, federal);
     expect(zeroed.rent).toBe(winnipeg.rent);
     expect(zeroed.rentKnown).toBe(true);
     // And where CMHC published nothing there is nothing to fall through to: the zero does
