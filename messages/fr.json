@@ -634,7 +634,9 @@
     "calcDown": "Mise de fonds",
     "calcBaseLoan": "Emprunté avant l'assurance",
     "calcLoan": "Prêt hypothécaire",
-    "calcAmortYears": "Amortissement"
+    "calcAmortYears": "Amortissement",
+    "calcBalanceAtRenewal": "Solde au renouvellement",
+    "calcAmortLeft": "Amortissement restant"
   },
   "RentVsBuy": {
     "title": "Louer ou acheter",

@@ -634,7 +634,9 @@
     "calcDown": "Down payment",
     "calcBaseLoan": "Borrowed before insurance",
     "calcLoan": "Mortgage",
-    "calcAmortYears": "Amortization"
+    "calcAmortYears": "Amortization",
+    "calcBalanceAtRenewal": "Balance at renewal",
+    "calcAmortLeft": "Amortization left"
   },
   "RentVsBuy": {
     "title": "Rent versus buy",

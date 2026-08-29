@@ -504,7 +504,13 @@ export default function ScenariosPage() {
                 rowHeader="scenario"
                 columns={[
                   { key: "scenario", label: t("cScenario") },
-                  { key: "modelled", label: t("cModelled"), numeric: true },
+                  // Present only when some column WAS raised. Otherwise it is four
+                  // em-dashes under a heading, and this codebase's rule is that an
+                  // absent row beats a dash row — a dash where a figure goes reads as
+                  // a rendering fault rather than as "nothing to report".
+                  ...(columns.some((c) => c.belowMinimum)
+                    ? [{ key: "modelled", label: t("cModelled"), numeric: true }]
+                    : []),
                   { key: "down", label: t("cDown"), numeric: true },
                   { key: "premium", label: t("cPremium"), numeric: true },
                   { key: "mortgage", label: t("cMortgage"), numeric: true },
@@ -531,6 +537,8 @@ export default function ScenariosPage() {
                     // as "20%", indistinguishable. The raise is disclosed in its own
                     // column instead, where it does not collide with the identity.
                     scenario: t("column", { p: pct(col.dpPct, 0) }),
+                    // "—" only ever renders on a row that was NOT raised inside a table
+                    // where some other row was; the column is absent when none was.
                     modelled: col.belowMinimum ? pct(col.dpPctEff, 1) : "—",
                     down: fmt(col.down),
                     premium: fmt(col.premium),

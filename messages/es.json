@@ -634,7 +634,9 @@
     "calcDown": "Pago inicial",
     "calcBaseLoan": "Prestado antes del seguro",
     "calcLoan": "Hipoteca",
-    "calcAmortYears": "Amortización"
+    "calcAmortYears": "Amortización",
+    "calcBalanceAtRenewal": "Saldo en la renovación",
+    "calcAmortLeft": "Amortización restante"
   },
   "RentVsBuy": {
     "title": "Alquilar o comprar",

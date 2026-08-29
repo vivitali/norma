@@ -502,3 +502,48 @@ describe("Scenarios — the all-in monthly total is one the reader can add up", 
     ).toBe(false);
   });
 });
+
+describe("Scenarios — the ledger shows a column only when it says something", () => {
+  const openCalc = async (user: ReturnType<typeof userEvent.setup>) => {
+    const b = screen.getByRole("button", { name: /Як це обчислено|How this was calculated/ });
+    if (b.getAttribute("aria-expanded") === "false") await user.click(b);
+    return within(document.getElementById("calc")!);
+  };
+
+  it("omits the 'modelled at' column when no scenario was raised to the floor", async () => {
+    // Four em-dashes under a heading is a rendering fault wearing a column, and this
+    // codebase's convention is that an absent row beats a dash row.
+    const user = userEvent.setup();
+    renderPage();
+    const calc = await openCalc(user);
+    expect(calc.queryByText("Modelled at")).not.toBeInTheDocument();
+  });
+
+  it("shows it, and the raised figure, when a scenario IS below the legal minimum", async () => {
+    // 5% down on a price above $500,000 is not allowed; the column is what says the
+    // row was modelled at something other than its own label.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "toronto", ptype: "condo", funds: 400000 }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    const calc = await openCalc(user);
+    expect(calc.getByText("Modelled at")).toBeInTheDocument();
+  });
+
+  it("labels rows by the requested percentage, matching the grid above", async () => {
+    // Two tables of the same four scenarios on one page have to be matchable. The
+    // effective percentage is disclosed in its own column instead.
+    const user = userEvent.setup();
+    renderPage();
+    const calc = await openCalc(user);
+    const rows = [...calc.getByRole("table").querySelectorAll("tbody tr th")];
+    expect(rows.map((th) => th.textContent)).toEqual([
+      "5% down",
+      "10% down",
+      "20% down",
+      "25% down",
+    ]);
+  });
+});

@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { amortization } from "@/domain/engine";
+import { amortization, rowAt } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
@@ -426,6 +426,42 @@ export default function AmortizationPage() {
                   { label: t("cRate"), value: pct(resolved.contractRate, 2), op: "times", rule: true },
                   { label: t("calcAmortYears"), value: t("yearsWord", { n: resolved.amortYears }), op: "times" },
                   { label: t("cPayment"), value: fmt(result.firstPayment), op: "equals", strong: true },
+                  // The trace has to end where the PAGE ends. This screen's hero is the
+                  // payment after renewal, not the first payment, and a derivation that
+                  // stopped one step short left the figure at the top unexplained —
+                  // the one thing the section exists to prevent. With no renewal rate
+                  // given the two are the same number and the block is absent, because
+                  // a second identical row would assert a step that never happened.
+                  // `resolved.renewalRate`, not `firstRenewal`: the engine re-prices at
+                  // every term boundary whether or not a rate was given — with none it
+                  // renews at the contract rate — so `rows.find(r => r.renewed)` is
+                  // non-null in both states and would have rendered a "renewal" that
+                  // changed nothing. The reader's own choice is the condition.
+                  ...(resolved.renewalRate !== null && firstRenewal !== null
+                    ? [
+                        {
+                          label: t("calcBalanceAtRenewal"),
+                          value: fmt(rowAt(result.rows, firstRenewal).opening),
+                          rule: true,
+                        },
+                        {
+                          label: t("renewalControl"),
+                          value: pct(resolved.renewalRate ?? resolved.contractRate, 2),
+                          op: "times" as const,
+                        },
+                        {
+                          label: t("calcAmortLeft"),
+                          value: t("yearsWord", { n: resolved.amortYears - (firstRenewal - 1) }),
+                          op: "times" as const,
+                        },
+                        {
+                          label: t("rPayAfter"),
+                          value: fmt(result.paymentAfterRenewal),
+                          op: "equals" as const,
+                          strong: true,
+                        },
+                      ]
+                    : []),
                 ]}
               />,
             )}

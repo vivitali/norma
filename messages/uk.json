@@ -634,7 +634,9 @@
     "calcDown": "Перший внесок",
     "calcBaseLoan": "Позичено до страхування",
     "calcLoan": "Іпотека",
-    "calcAmortYears": "Амортизація"
+    "calcAmortYears": "Амортизація",
+    "calcBalanceAtRenewal": "Залишок на момент переоформлення",
+    "calcAmortLeft": "Залишок строку амортизації"
   },
   "RentVsBuy": {
     "title": "Орендувати чи купувати",
