@@ -26,7 +26,8 @@ import { LineRows } from "@/components/closing-costs/line-rows";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
-import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { NOT_PRICED, NOT_PRICED_NEWBUILD } from "./omissions";
 
 export default function ClosingCostsPage() {
   const t = useTranslations("ClosingCosts");
@@ -34,7 +35,7 @@ export default function ClosingCostsPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
+  const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
 
   const resolved = useMemo(
@@ -152,6 +153,19 @@ export default function ClosingCostsPage() {
     return t("groupLine", { name: t(largest.key), a: fmt(largest.amount), n: group.length });
   };
 
+  /*
+    What is NOT in the bill above, composed rather than written out, so the count
+    in the sentence introducing it is read off the list it introduces.
+
+    The new-build entries join only for a new build: an inventory that lists costs
+    which cannot apply to this purchase teaches the reader to skim it, and skimming
+    is the failure mode this list exists to avoid.
+  */
+  const notPriced = [
+    ...NOT_PRICED,
+    ...(resolved.ptype === "newbuild" ? NOT_PRICED_NEWBUILD : []),
+  ];
+
   return (
     <ToolMain>
       {/*
@@ -163,9 +177,20 @@ export default function ClosingCostsPage() {
       */}
       {resolved.priceKnown ? (
         <>
+      {/*
+        One mechanism for "the stored inputs have not landed yet", shared by every
+        tool page — see `PendingFigures` in tool-page.tsx for why it hides rather
+        than omits, and what that trades.
+      */}
+      <PendingFigures pending={!hydrated}>
       <AnswerHead
         eyebrow={t("title")}
-        figure={fmt(total.cash)}
+        // NET, not gross. `cash` is down payment + costs before the credits that
+        // land on closing day; every one of the three stats beside it and the
+        // cash-check section below it are measured against `net`, so the hero was
+        // the only figure on the page disagreeing with the rest of the page. On a
+        // Toronto benchmark the difference was $207,777 against $199,302.
+        figure={fmt(total.net)}
         pulseKey={jurisdiction.id}
         head={t("cashTotal")}
         sub={t("separateNote")}
@@ -178,6 +203,7 @@ export default function ClosingCostsPage() {
             : []),
         ]}
       />
+      </PendingFigures>
 
       <div className="pt-8 sm:pt-[34px]">
         <SectionsHeader
@@ -268,6 +294,43 @@ export default function ClosingCostsPage() {
                 </p>
               </>
             ) : null}
+            {/*
+              A programme that applies here and that this app deliberately does not
+              price. `credits()` used to push the first-time buyers' GST/HST rebate
+              into `later` as MONEY, refunding up to $50,000 of a tax `buildLines`
+              never charges — so a new build showed a resale's bill plus a
+              five-figure credit. It now travels as a key with no amount attached,
+              and this is the treatment that convention requires: a label and an
+              explanation, never a figure and never a PanelRow, because a row with
+              a value is the claim the omission exists to withdraw.
+            */}
+            {/*
+              The two prices inside `ex_gstFthb` — full to $1M, nil at $1.5M — stay
+              typed into the copy, and that is a considered exception rather than an
+              oversight. `gstFthb.fullTo` and `.zeroAt` are both conf "high" with an
+              `asOf`, so they MAY travel; what they cannot do is travel through
+              `useMoney()`, which renders them "$1,000,000" and "$1,500,000". The
+              sentence is a plain-language description of a programme's shape, and
+              round compact figures are how the programme is described everywhere it
+              is described. Binding them would make the copy worse to read in order
+              to make it marginally easier to maintain, for two numbers a statute
+              changes at the same time it changes the programme this paragraph is
+              about. `Inputs.amortCapped` is the opposite case and was bound: a bare
+              "20%" restating a rule its own sibling key already reads from federal.ts.
+            */}
+            {credit.omitted.length > 0 ? (
+              <>
+                <p className="eyebrow pt-4 pb-1 text-ink3">{t("grpOmitted")}</p>
+                {credit.omitted.map((c) => (
+                  <div key={c.key}>
+                    <p className="text-[13.5px] font-medium">{t(c.key)}</p>
+                    <p className="max-w-[620px] pt-1 text-[12.5px] leading-[1.6] text-ink3 text-pretty">
+                      {t(c.ex)}
+                    </p>
+                  </div>
+                ))}
+              </>
+            ) : null}
           </>,
         )}
 
@@ -342,6 +405,37 @@ export default function ClosingCostsPage() {
           </>,
         )}
       </div>
+
+      {/*
+        MOVE 3 — the omissions inventory, the same mechanism Rent vs Buy already
+        ships in `omissions.ts`: a module-level list whose LENGTH feeds the sentence
+        introducing it, so the count cannot drift out of step with the list.
+
+        This is what turns `conf: "none"` from a data-layer convention into
+        something the reader can see. "Nobody publishes it and we will not invent
+        one" currently renders as silence, and silence is indistinguishable from
+        "this cost does not exist" to the one reader who most needs the difference.
+
+        Deliberately NOT a section. Sections are the page's own computation and are
+        registered in `src/lib/sections.ts`; this is a standing statement about the
+        computation, it hides nothing, and DESIGN.md §8's ban is on a second way to
+        REVEAL rather than on a paragraph.
+      */}
+      <section aria-labelledby="cc-omissions" className="mt-10 flex flex-col gap-2">
+        <h2 id="cc-omissions" className="text-[13px] font-semibold">
+          {t("notPricedTitle")}
+        </h2>
+        <p className="max-w-[620px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
+          {t("notPricedLine", { n: notPriced.length })}
+        </p>
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          {notPriced.map((key) => (
+            <li key={key} className="max-w-[620px] text-[12.5px] leading-[1.6] text-ink2 text-pretty">
+              {t(key)}
+            </li>
+          ))}
+        </ul>
+      </section>
         </>
       ) : (
         <AnswerHead
@@ -366,6 +460,9 @@ export default function ClosingCostsPage() {
             ptype={stored.ptype}
             ftb={stored.ftb}
             elsewhere={stored.elsewhere}
+            ftbEffective={resolved.ftb}
+            ptypeEffective={resolved.ptype}
+            residency={stored.residency}
             jurisdiction={jurisdiction}
             onChange={update}
           />
@@ -384,6 +481,23 @@ export default function ClosingCostsPage() {
             ) : null}
           </div>
         </div>
+        {/*
+          What `benchmarkPrice()` does for a new build, said out loud for the first
+          time. It maps `newbuild` to the RESALE HOUSE benchmark — documented at
+          resolve-inputs.ts:36-45 and surfaced nowhere — because no publisher
+          produces a new-build price level in Canada, and `bench.newbuild` was
+          deleted rather than corrected precisely because all fourteen of its values
+          were invented.
+
+          It PRICES NOTHING. A builder's warranty enrolment is published in at least
+          one province; levies, hookups and grading deposits have no publisher
+          anywhere, so quoting the one published item would understate the group
+          while looking authoritative — which is the failure mode this whole file
+          is written against.
+        */}
+        {resolved.ptype === "newbuild" ? (
+          <NoteLine tone="caution">{t("newBuildPriceNote")}</NoteLine>
+        ) : null}
       </section>
 
       <FigureFooter jurisdiction={jurisdiction} />

@@ -52,12 +52,33 @@ describe("shared input registry", () => {
     expect(SHARED_INPUT_DEFAULTS.ptype).toBe("house");
     expect(SHARED_INPUT_DEFAULTS.elsewhere).toBe(false);
     expect(SHARED_INPUT_DEFAULTS.haircut).toBe(0);
+    // The default a reader is charged at until they say otherwise, and the only safe one:
+    // a resident's deed transfer tax is the smaller bill, so an unasked question can never
+    // over-charge — it can only under-charge someone who then has the control to say so.
+    expect(SHARED_INPUT_DEFAULTS.residency).toBe("resident");
+  });
+
+  it("keeps residency binary, because it means one thing", () => {
+    // Nova Scotia's tax tests where you LIVE. Ontario's NRST and BC's additional property
+    // transfer tax turn on citizenship or permanent residence, which is a different
+    // question — widening this enum to carry both is an owner decision about the semantics,
+    // not a refactor to be done on the way past. See CLAUDE.md's open items.
+    expect(SHARED_INPUT_SCHEMA.residency).toEqual({
+      kind: "enum",
+      values: ["resident", "nonResident"],
+    });
   });
 
   it("covers every registry key across the key tuples", () => {
     // A key added to SharedInputs and to no tuple is never persisted and never
     // read — silently dead state, which is how `haircut` and `elsewhere` ended
     // up with no control at all.
+    //
+    // Tuple coverage is necessary and NOT sufficient, and `residency` is the proof:
+    // it was in TOOL_KEYS, in the schema, resolved and read by `applies()`, and no
+    // component anywhere wrote it, so Halifax's 10% non-resident deed transfer tax
+    // could never fire. What closes that hole is a control and a test over the
+    // control — purchase-inputs.test.tsx — not another assertion in this file.
     const covered = new Set<string>([...JURISDICTION_KEYS, ...TOOL_KEYS]);
     expect(Object.keys(SHARED_INPUT_DEFAULTS).filter((k) => !covered.has(k))).toEqual([]);
   });

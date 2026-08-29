@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { AnswerHead, SectionsHeader } from "./tool-page";
+import { AnswerHead, NoteLine, PendingFigures, SectionsHeader } from "./tool-page";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
@@ -131,5 +131,83 @@ describe("SectionsHeader", () => {
     );
     const button = screen.getByRole("button", { name: "Collapse all" });
     expect(button).toHaveClass("relative", "after:absolute", "after:h-11", "sm:after:hidden");
+  });
+});
+
+describe("NoteLine", () => {
+  it("renders a quiet ink3 note by default", () => {
+    const { container } = renderWithIntl(<NoteLine>Outside Toronto there is no MLTT.</NoteLine>);
+    const note = container.querySelector('[data-slot="note"]');
+    expect(note).toHaveTextContent("Outside Toronto there is no MLTT.");
+    expect(note).toHaveClass("text-ink3");
+    expect(note).not.toHaveClass("text-caution");
+  });
+
+  it("carries the caution colour when the app applied something the reader did not ask for", () => {
+    const { container } = renderWithIntl(<NoteLine tone="caution">Raised to the minimum.</NoteLine>);
+    expect(container.querySelector('[data-slot="note"]')).toHaveClass("text-caution");
+  });
+
+  it("sits at the Micro tier in both tones, not the fine-print tier", () => {
+    // DESIGN.md §3 records the 10.5-11px fine print as a tier the spec never had, and says
+    // outright that if it should not exist the fix is to raise those call sites to 11.5px
+    // rather than leave the spec and the code disagreeing. Both tones are 11.5px here.
+    const { container } = renderWithIntl(
+      <>
+        <NoteLine>quiet</NoteLine>
+        <NoteLine tone="caution">loud</NoteLine>
+      </>,
+    );
+    for (const note of container.querySelectorAll('[data-slot="note"]')) {
+      expect(note).toHaveClass("text-[11.5px]");
+    }
+  });
+
+  it("is not a second ImpactRow", () => {
+    // DESIGN.md §5 reserves the 3px left accent for one singular signal. The quiet
+    // consequence line has no accent, no border and no box: it is a sentence in the flow.
+    const { container } = renderWithIntl(<NoteLine tone="caution">x</NoteLine>);
+    const cls = container.querySelector('[data-slot="note"]')?.className ?? "";
+    expect(cls).not.toMatch(/border|rounded|bg-/);
+  });
+});
+
+describe("PendingFigures", () => {
+  const head = (
+    <AnswerHead eyebrow="Affordability" figure="$398,398" head="You can afford about" tag="Typical" />
+  );
+
+  it("keeps the answer in the document while the stored inputs are still landing", () => {
+    // The whole reason this is one mechanism. Two pages substituted a non-breaking
+    // space for every derived figure, and `hydrated` is false in the PRERENDERED
+    // html — so `/rent-vs-buy` and `/scenarios` shipped a blank hero into the static
+    // document, in four locales each, on routes that are in INDEXABLE_ROUTES.
+    const { container } = renderWithIntl(<PendingFigures pending>{head}</PendingFigures>);
+    expect(container.querySelector('[data-slot="answer-figure"]')?.textContent).toBe("$398,398");
+    expect(container.querySelector('[data-slot="answer-tag"]')?.textContent).toBe("Typical");
+  });
+
+  it("hides the figure, the stats and the badge together, and nothing else", () => {
+    // `"\u00A0"` is truthy, so substituting it left `AnswerHead` rendering the tag
+    // pill with nothing in it — an empty bordered accent box, where the pages that
+    // passed `undefined` correctly rendered no pill at all. DESIGN.md §5.3 rejects a
+    // bare em-dash at hero size for exactly this reason; a blank pill is the same
+    // fault by another route.
+    const { container } = renderWithIntl(<PendingFigures pending>{head}</PendingFigures>);
+    const hidden = container.firstElementChild!.className;
+    expect(hidden).toContain("[&_[data-slot=answer-figure]]:invisible");
+    expect(hidden).toContain("[&_[data-slot=answer-tag]]:invisible");
+    expect(hidden).toContain("[&_[data-slot=answer-stat]]:invisible");
+    // The sentence under the figure is NOT derived from stored input on any page
+    // that uses this — it is the verdict wording — and blanking it would leave the
+    // hero area empty rather than merely unanswered.
+    expect(screen.getByText("You can afford about")).toBeVisible();
+  });
+
+  it("marks nothing once the inputs have landed", () => {
+    const { container } = renderWithIntl(
+      <PendingFigures pending={false}>{head}</PendingFigures>,
+    );
+    expect(container.firstElementChild!.className).toBe("");
   });
 });

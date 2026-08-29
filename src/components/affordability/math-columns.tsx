@@ -69,7 +69,16 @@ export function MathColumns({
           why={result.tdsBinds ? t("ckTds") : t("ckGds")}
         />
         <MathRow label={t("mMaxPrice")} value={fmt(result.ceiling)} strong />
-        <MathRow label={t("mImplied")} value={fmt(result.impliedMortgage)} />
+        {/*
+          The down payment is an ARGUMENT, not a word in the copy. Both labels read
+          "at 20% down" in all four catalogues, left over from the flat 0.8 the engine
+          used before `financedFraction` — so once the deposit control started moving
+          the loan, the page labelled its figures with a deposit it had not used.
+          `mComfortPrice` is the page's hero: at the shipped defaults (Toronto, 10%
+          down, 30 years, $75,000) it printed $403,050 under the words "at 20% down",
+          where the real 20%-down figure is $440,156.
+        */}
+        <MathRow label={t("mImplied", { p: pct(resolved.dpPct) })} value={fmt(result.impliedMortgage)} />
       </div>
 
       <div>
@@ -92,7 +101,7 @@ export function MathColumns({
           label={`${t("mFactorContract")} · ${pct(resolved.contractRate, 2)}`}
           value={result.fc.toFixed(6)}
         />
-        <MathRow label={t("mComfortPrice")} value={fmt(result.comfort)} strong />
+        <MathRow label={t("mComfortPrice", { p: pct(resolved.dpPct) })} value={fmt(result.comfort)} strong />
         <MathRow label={t("mDownReq")} value={fmt(result.comfortDown)} />
         <MathRow label={t("mPiAt")} value={fmt(result.comfortPI)} />
       </div>

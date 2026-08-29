@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { federal } from "@/domain/federal";
 import type { Jurisdiction } from "@/domain/types";
 import { Provenance, type ProvenanceKind } from "@/components/provenance";
+import { cn } from "@/lib/utils";
 
 /**
  * The chrome every tool page shares.
@@ -24,6 +25,121 @@ export function ToolMain({ children }: { children: ReactNode }) {
     <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10">
       {children}
     </main>
+  );
+}
+
+/**
+ * One quiet line under the thing it is about.
+ *
+ * The `ex_` treatment, extracted rather than invented: the same micro paragraph
+ * already written by hand at eight call sites across five files — the price ask,
+ * the minimum-down caution, the Toronto toggle's explainer, Rent vs Buy's lever
+ * note. It is NOT a second `ImpactRow`: DESIGN.md §5 reserves the 3px accent for
+ * one singular signal, and replicating that mark beside every input would spend
+ * it. This is the quiet version — a sentence saying what the app did on the
+ * reader's behalf, at the size §3 calls Micro, in the flow, boxed by nothing.
+ *
+ * Two tones only, because §8 has no third state for a note: `quiet` is `--ink3`
+ * commentary, `caution` is `--caut` and means the app applied something the
+ * reader did not ask for or cannot have.
+ *
+ * `caution` is 11.5px here, not the 11px two of these call sites carried.
+ * DESIGN.md §3 records the 10.5-11px fine-print tier and says outright that if
+ * it should not exist the fix is to raise those call sites to 11.5px rather than
+ * leave the spec and the code disagreeing. Raising them is what this does.
+ */
+export function NoteLine({
+  tone = "quiet",
+  /** Pulls the note up against the control it belongs to, inside a gap-3 stack. */
+  tight,
+  children,
+}: {
+  tone?: "quiet" | "caution";
+  tight?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <p
+      data-slot="note"
+      className={cn(
+        "text-[11.5px] leading-[1.5] text-pretty",
+        tone === "caution" ? "text-caution" : "text-ink3",
+        tight && "-mt-1",
+      )}
+    >
+      {children}
+    </p>
+  );
+}
+
+/**
+ * The head's derived figures, held back until the stored inputs have landed.
+ *
+ * ONE mechanism, because four shipped in one branch and two of them were wrong.
+ * `useSharedState` asks pages to gate anything derived on `hydrated` — a returning
+ * reader must not read a dollar amount that is about to change — and four pages each
+ * answered it differently: a re-keyed pulse, a gated tag, an `invisible` wrapper, and
+ * a non-breaking space substituted for every figure.
+ *
+ * The last one is the one that had to go. Every route here is PRERENDERED, and
+ * `hydrated` is false in the prerendered HTML, so substituting a placeholder ships the
+ * static document with no answer in it — on two `INDEXABLE_ROUTES`, for the benefit of
+ * every machine that reads the document rather than painting it. `"\u00A0"` is also
+ * truthy, so `tag` rendered as an empty bordered pill, which is DESIGN.md §5.3's
+ * "reads as a rendering fault" by another route.
+ *
+ * `visibility: hidden` is what threads both needles: the figure keeps its box, so
+ * nothing moves when the real value arrives, and it keeps its TEXT, so the prerendered
+ * answer is still in the HTML. The cost, stated because it is real: the static paint
+ * shows a blank where the hero will be until hydration, including for a first-time
+ * reader whose figure was never going to change. The real fix is upstream — reading
+ * storage in a layout effect inside `useSharedState` would land the value before the
+ * first paint — and until then this is the honest trade, made once.
+ */
+export function PendingFigures({
+  pending,
+  children,
+}: {
+  pending: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={
+        pending
+          ? "[&_[data-slot=answer-figure]]:invisible [&_[data-slot=answer-stat]]:invisible [&_[data-slot=answer-tag]]:invisible"
+          : undefined
+      }
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * A field the page asks for in place, boxed in the accent so the reader can see the
+ * sentence above it is waiting on this one answer.
+ *
+ * DESIGN.md §5.3's endorsed placement — the field asks where the sentence that needs it
+ * is — extracted rather than invented: two route modules had grown a private component
+ * of this name with the same class string, differing only in whether the prompt was a
+ * prop or the children. `prompt` is optional, which is the union of the two: with it,
+ * the question and the field; without it, a sentence that IS the ask.
+ */
+export function InlineAsk({ prompt, children }: { prompt?: string; children: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "mt-4 max-w-[420px] rounded-lg border border-acbr bg-acbg p-3",
+        prompt === undefined && "text-[13px] leading-[1.5] text-ink2 text-pretty",
+        prompt !== undefined && "flex flex-col gap-2",
+      )}
+    >
+      {prompt === undefined ? null : (
+        <p className="text-[13px] leading-[1.5] text-ink2 text-pretty">{prompt}</p>
+      )}
+      {children}
+    </div>
   );
 }
 
@@ -111,7 +227,10 @@ export function AnswerHead({
             <p className="mt-2 max-w-[560px] text-[14.5px] leading-[1.6] text-ink2 text-pretty">{sub}</p>
           ) : null}
           {tag ? (
-            <p className="eyebrow mt-4 inline-block rounded-full border border-acbr px-2.5 py-1 text-ac">
+            <p
+              data-slot="answer-tag"
+              className="eyebrow mt-4 inline-block rounded-full border border-acbr px-2.5 py-1 text-ac"
+            >
               {tag}
             </p>
           ) : null}
@@ -135,7 +254,7 @@ export function AnswerHead({
                   {stat.mark ? <Provenance kind={stat.mark} /> : null}
                 </div>
                 {/* The note wraps under the value rather than off the screen. */}
-                <div className="flex flex-wrap items-baseline gap-x-2.5">
+                <div data-slot="answer-stat" className="flex flex-wrap items-baseline gap-x-2.5">
                   <span className="text-[22px] font-semibold tracking-[-0.02em]">{stat.value}</span>
                   {stat.note ? (
                     <span className="text-[12px] leading-[1.35] text-ink3">{stat.note}</span>

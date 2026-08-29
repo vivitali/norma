@@ -59,7 +59,9 @@ describe("Down payment — the waterfall", () => {
     renderPage();
     await open(user, /The funding order/);
     const text = document.body.textContent ?? "";
-    const order = ["FHSA", "Cash and savings", "Home Buyers’ Plan", "TFSA", "Gift", "Non-registered"];
+    // Free money first, all of it: `gift` used to sit BELOW `hbp` and `tfsa`,
+    // under copy reading "each source costs more than the one above it".
+    const order = ["FHSA", "Cash and savings", "Gift", "Home Buyers’ Plan", "TFSA", "Non-registered"];
     const positions = order.map((label) => text.indexOf(label));
     expect(positions.every((p) => p >= 0)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
@@ -85,6 +87,96 @@ describe("Down payment — the waterfall", () => {
     await open(user, /The funding order/);
     expect(screen.getByText(/must repay it over 15 years/)).toBeInTheDocument();
     expect(screen.getByText(/contribution room comes back/)).toBeInTheDocument();
+  });
+});
+
+describe("Down payment — the two accounts that require first-time-buyer status", () => {
+  /**
+   * C8. `waterfall()` drew FHSA and HBP money regardless of `ftb`, both of which
+   * are qualifying-home-buyer programmes in law. The rows stay — dropping them
+   * would tell a reader with $40,000 in an FHSA that the app forgot the account —
+   * and say the rule instead.
+   */
+  it("blocks them for a repeat buyer instead of spending the money", async () => {
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ ftb: false, fhsa: 40000, rrsp: 60000, cashSav: 5000 }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+
+    expect(screen.getAllByText("Not available").length).toBe(2);
+    expect(screen.getAllByText(/first-time home buyer programmes/).length).toBeGreaterThan(0);
+    // And neither blocked row reports "Left in the account: $0" back at a reader
+    // looking at their own balance in the field two lines below it. Four rows
+    // carry that line; the two blocked ones do not.
+    expect(screen.getAllByText(/Left in the account/).length).toBe(4);
+  });
+
+  it("spends them for a first-time buyer", async () => {
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ ftb: true, fhsa: 40000, rrsp: 60000, cashSav: 5000 }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    expect(screen.queryByText("Not available")).not.toBeInTheDocument();
+  });
+
+  it("warns that first-time is narrower than it sounds, once", () => {
+    // Someone eighteen months into Canada who owned a flat abroad is not a
+    // first-time buyer, and `ftb` DEFAULTS to true.
+    renderPage();
+    expect(screen.getAllByText(/wherever in the world/).length).toBe(1);
+  });
+});
+
+describe("Down payment — the FHSA finally says what it is worth", () => {
+  it("quotes the annual and lifetime room the app has always held", async () => {
+    // federal.fhsa.annual / .lifetime are conf "high", asOf 2026-08-24, sourced to
+    // CRA "Participating in your FHSAs" — and were read by no screen at all. They
+    // arrive as ICU arguments from `federal`, never typed into the catalogue.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    const fhsaWhy = screen.getByText(/First Home Savings Account/);
+    expect(fhsaWhy.textContent).toContain("$8,000");
+    expect(fhsaWhy.textContent).toContain("$40,000");
+    // The fact that decides it for a newcomer: the clock starts on the account,
+    // not on the arrival.
+    expect(fhsaWhy.textContent).toMatch(/open/i);
+  });
+});
+
+describe("Down payment — the ask can be answered from where it is made", () => {
+  it("points the opening section at the fields that answer it", () => {
+    // The hero asks for balances; all six fields sit inside the CLOSED waterfall
+    // section. The link opens it and moves focus to it.
+    renderPage();
+    const link = screen.getByRole("link", { name: /funding order/i });
+    expect(link).toHaveAttribute("href", "#waterfall");
+  });
+
+  it("drops the ask once a balance exists", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    const fhsa = screen.getByLabelText("FHSA");
+    await user.clear(fhsa);
+    await user.type(fhsa, "1000");
+    await user.tab();
+    expect(screen.queryByRole("link", { name: /funding order/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("Down payment — what it does not model", () => {
+  it("names the omissions rather than leaving them silent", () => {
+    renderPage();
+    expect(screen.getByText("Not modelled here")).toBeInTheDocument();
+    expect(screen.getByText(/lender will ask/)).toBeInTheDocument();
+    expect(screen.getByText(/single buyer/)).toBeInTheDocument();
   });
 });
 

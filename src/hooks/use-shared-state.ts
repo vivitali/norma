@@ -21,6 +21,20 @@ import { readStored, writeStored } from "@/lib/storage";
  * The third element, `hydrated`, is that same `ready` flag. Pages gate any DERIVED figure on it —
  * prerendered HTML necessarily shows defaults first, and a returning user must not be shown a
  * dollar amount that is about to change. Input controls never gate on it; they render immediately.
+ *
+ * What "any derived figure" means, because for a long time this paragraph described a contract no
+ * page kept — every call site destructured two elements and a returning reader watched the hero
+ * rewrite itself on load:
+ *
+ *  - The hero figure, AND the sentence and the badge beside it. They flip together, so gating the
+ *    figure alone leaves half the flash and reads worse than gating nothing: a headline that
+ *    changes under a caption that did not is a screen contradicting itself for a frame.
+ *  - Not the controls, and not their labels. A field that appears late is a field the reader is
+ *    already typing into when it moves.
+ *
+ * It goes true exactly once, in the same batched update as the hydrated state, and NEVER goes back
+ * to false. A page may therefore treat it as "storage has been read", not as "state is settled" —
+ * every later edit leaves it true, so nothing gated on it can flicker on a keystroke.
  */
 export function useSharedState<T extends Record<string, unknown>>(
   allowlist: readonly (keyof T & string)[],

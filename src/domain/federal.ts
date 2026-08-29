@@ -57,10 +57,12 @@ export const federal: FederalRules = {
     longAmortSurcharge: 0.002,
     insuredCap: 1500000,
   },
+  minDown: { bands: [[500000, 0.05], [null, 0.1]], uninsuredRate: 0.2 },
   stressTest: { floor: 5.25, buffer: 2 },
   gds: 39,
   tds: 44,
   heatAllowance: 150,
+  condoFeeInclusion: 0.5,
   rates: { insured: 0.0394, uninsured: 0.0424, variable: 0.0361, prime: 0.0445 },
   maxAmortFtbInsured: 30,
   maxAmortOther: 25,
@@ -81,6 +83,7 @@ export const federal: FederalRules = {
   sellingCost: 0.05,
   maintenanceReserve: 0.01,
   appreciation: { inflation: 0.021, shelter: 0.031, flat: 0 },
+  nonShelterInflation: 0.03,
   investReturn: { cash: 0.024, balanced: 0.046, growth: 0.058 },
   savingsReturn: 0.035,
   gstFthb: { rate: 0.05, fullTo: 1000000, zeroAt: 1500000, cap: 50000 },
@@ -107,6 +110,11 @@ export const federal: FederalRules = {
     // The premium schedule does not state the ceiling; CMHC's product pages do, as
     // "below $1,500,000" (raised from $1M on 2024-12-15).
     "cmhc.insuredCap": { conf: "high", asOf: "2026-08-24", src: CMHC_PURCHASE },
+    // The same document that sets the insured cap sets the minimum down payment schedule,
+    // and the two are the same boundary read from opposite sides: 20% is required at
+    // $1,500,000 precisely because no insurer will write the loan there.
+    "minDown.bands": { conf: "high", asOf: "2026-08-24", src: CMHC_PURCHASE },
+    "minDown.uninsuredRate": { conf: "high", asOf: "2026-08-24", src: CMHC_PURCHASE },
     // 30 years is not a general insured maximum — it is the CMHC Home Start product, open to
     // a first-time buyer OR a buyer of a newly built home, high-ratio only. Both halves of
     // that "or" are what the field means.
@@ -119,6 +127,12 @@ export const federal: FederalRules = {
     },
     gds: { conf: "high", asOf: "2026-08-24", src: CMHC_GDS_TDS },
     tds: { conf: "high", asOf: "2026-08-24", src: CMHC_GDS_TDS },
+    condoFeeInclusion: {
+      conf: "high",
+      asOf: "2026-08-28",
+      src: CMHC_GDS_TDS,
+      note: "Stated outright, not inferred: \"If applicable, 50% of the condominium fees must be included in the GDS and TDS calculations.\" Re-read on 2026-08-28 specifically to settle whether this could carry `high` — it had been living as a bare `* 0.5` in the engine's arithmetic with no entry at all. The 50% applies ONLY to the lender's qualifying ratios; the household still pays the whole fee every month, which is why the comfort budget and the monthly table use the full figure.",
+    },
 
     // --- OSFI ---------------------------------------------------------------
     // "The greater of the mortgage contract rate plus 2% or 5.25%", verbatim. OSFI reviews
@@ -196,6 +210,10 @@ export const federal: FederalRules = {
     "appreciation.flat": {
       conf: "assumption",
       note: "Zero appreciation, offered deliberately as the assumption-free case rather than as a forecast.",
+    },
+    nonShelterInflation: {
+      conf: "assumption",
+      note: "A modelling choice, and it sits 90bp ABOVE this file's own sourced general-inflation figure of 2.1%. The argument for the gap is that insurance, utilities and condo fees are services, whose prices have run ahead of headline CPI; the argument against is that FP Canada publishes 2.1% and this file uses it everywhere else, so an unexplained divergence in the one place nobody could see it is how a bias survives review. WHICH WAY IT BIASES: it inflates the owner's non-mortgage outlay on Rent vs Buy for up to forty compounding years, so it makes renting look better. Aligning it with appreciation.inflation is a product decision for the owner and is deliberately NOT taken here; what is fixed is that the figure is now disclosed on /sources instead of being structurally invisible.",
     },
     "investReturn.cash": { conf: "assumption", src: FP_PAG, note: INVEST_RETURN_NOTE },
     "investReturn.balanced": { conf: "assumption", src: FP_PAG, note: INVEST_RETURN_NOTE },

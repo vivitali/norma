@@ -67,6 +67,61 @@ describe("Amortization — renewal is the subject", () => {
   });
 });
 
+describe("Amortization — the section that opens is the one the head is about", () => {
+  /**
+   * The head is the renewal check in EVERY state: the hero figure is
+   * `paymentAfterRenewal`, the sentence is shockUp/shockDown/shockNone and the
+   * second head stat is the shock. `isSectionOpen`'s rule is "the section whose
+   * check produced the verdict", so renewal is that section whatever is stored.
+   *
+   * The old condition opened `payment` whenever no renewal rate had been set —
+   * i.e. on every first visit, the one state whose sub-line tells the reader in
+   * so many words to move the renewal rate, with the control that does it and
+   * with riskTitle/riskBody behind a closed caret.
+   */
+  it("opens renewal on a first visit, not the payment", () => {
+    renderPage();
+    expect(screen.getByRole("button", { name: /Renewal/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: /The payment/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("puts the term-versus-amortization explanation on screen unprompted", () => {
+    // The only place in the product that explains a Canadian term is not the
+    // amortization. It was reachable on a first visit only by pressing a caret.
+    renderPage();
+    expect(
+      screen.getByText(/Renewal risk is the largest unmodelled risk/),
+    ).toBeInTheDocument();
+  });
+
+  it("still opens renewal once a renewal rate has been stored", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ renewalRate: 7 }));
+    renderPage();
+    expect(screen.getByRole("button", { name: /Renewal/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("leads from the payment panel back to the renewal question", async () => {
+    // A note under "Paid off in year 30", which is where the misreading is made:
+    // a 30-year payoff beside one rate reads as a rate fixed for 30 years.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The payment/);
+    const jump = screen
+      .getAllByRole("link")
+      .filter((a) => a.getAttribute("href") === "#renewal");
+    expect(jump).toHaveLength(1);
+  });
+});
+
 describe("Amortization — the schedule", () => {
   it("renders a year row for every year of the loan", async () => {
     const user = userEvent.setup();

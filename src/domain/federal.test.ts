@@ -83,6 +83,32 @@ describe("federal rules — verified 2026 figures", () => {
     expect(federal.maxAmortOther).toBe(25);
   });
 
+  it("counts half a condominium fee in the lender's ratios, as CMHC's guidance states", () => {
+    // "If applicable, 50% of the condominium fees must be included in the GDS and TDS
+    // calculations." Quoted, not inferred -- this was a bare `* 0.5` at four call sites in
+    // the engine with no provenance entry, against the FULL fee in the comfort budget on
+    // the same screen. Both are correct; they answer different questions.
+    expect(federal.condoFeeInclusion).toBe(0.5);
+  });
+
+  it("carries the minimum down payment schedule as data, ending where insurance does", () => {
+    expect(federal.minDown.bands).toEqual([[500_000, 0.05], [null, 0.1]]);
+    expect(federal.minDown.uninsuredRate).toBe(0.2);
+    // The flat 20% starts exactly where mortgage insurance stops being available. Two
+    // fields, one boundary -- if they ever disagree, one of them has been edited alone.
+    expect(federal.cmhc.insuredCap).toBe(1_500_000);
+  });
+
+  it("keeps the non-shelter inflation figure ABOVE the general inflation it is not", () => {
+    // Deliberately not equal to appreciation.inflation, and deliberately not changed by the
+    // review that surfaced it: services have run ahead of headline CPI, and whether to align
+    // the two is an owner's product call. What the review DID fix is that the figure is now
+    // on the federal record with provenance, so /sources can disclose it -- as a module
+    // constant in engine.ts it compounded for forty years where nothing could see it.
+    expect(federal.nonShelterInflation).toBe(0.03);
+    expect(federal.nonShelterInflation).toBeGreaterThan(federal.appreciation.inflation);
+  });
+
   it("uses CRA's 2026 registered-plan figures", () => {
     expect(federal.rrspCap).toBe(33_810);
     expect(federal.fhsa).toEqual({ annual: 8_000, lifetime: 40_000 });
@@ -118,6 +144,10 @@ describe("federal provenance — the 2026 pass", () => {
     "cmhc.bands",
     "cmhc.longAmortSurcharge",
     "cmhc.insuredCap",
+    "minDown.bands",
+    "minDown.uninsuredRate",
+    "condoFeeInclusion",
+    "nonShelterInflation",
     "stressTest.floor",
     "stressTest.buffer",
     "gds",

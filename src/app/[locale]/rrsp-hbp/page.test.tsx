@@ -5,6 +5,7 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/lib/locales";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { federal } from "@/domain/federal";
+import { money } from "@/domain/engine";
 import RrspHbpPage from "./page";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
@@ -25,6 +26,9 @@ async function open(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
   if (button.getAttribute("aria-expanded") === "false") await user.click(button);
   return button;
 }
+
+/** The page's own formatter, so the assertion cannot drift from the rendered string. */
+const fmtCap = (n: number) => money(n, "en-CA", false);
 
 beforeEach(() => window.localStorage.clear());
 
@@ -80,12 +84,81 @@ describe("RRSP → HBP — no verdict it cannot support", () => {
   });
 });
 
+describe("RRSP → HBP — the clamp is explained, not printed as $0", () => {
+  /**
+   * `hbpPlay` models "contribute, then withdraw what you contributed", so a
+   * reader who already holds the money in an RRSP — contribution left at 0,
+   * withdrawal typed in — is clamped to nothing. The page answered that with
+   * $0 in every slot and the line "Enter a withdrawal amount to see what this
+   * is worth", told to someone who had just entered one.
+   */
+  const alreadyInTheRrsp = () =>
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ hbpContribution: 0, hbpWithdraw: 60000 }),
+    );
+
+  it("stops telling a reader who entered a withdrawal to enter a withdrawal", () => {
+    alreadyInTheRrsp();
+    renderPage();
+    expect(screen.queryByText(/Enter a withdrawal amount/)).not.toBeInTheDocument();
+  });
+
+  it("says which of the two inputs bound the answer", async () => {
+    const user = userEvent.setup();
+    alreadyInTheRrsp();
+    renderPage();
+    await open(user, /The refund/);
+    expect(screen.getByText(/cut back to/)).toBeInTheDocument();
+  });
+
+  it("says nothing about a clamp when the withdrawal fits the contribution", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The refund/);
+    expect(screen.queryByText(/cut back to/)).not.toBeInTheDocument();
+  });
+});
+
+describe("RRSP → HBP — the room the reader may not have", () => {
+  it("shows the RRSP dollar limit beside the HBP maximum", async () => {
+    // The contribution field defaults to the $60,000 HBP maximum, which is 78%
+    // above the most anyone's room can grow in a year — a figure the app already
+    // held at conf `high` and no screen had ever displayed.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The refund/);
+    expect(screen.getAllByText("Federal HBP maximum").length).toBeGreaterThan(0);
+    expect(screen.getByText(fmtCap(federal.rrspCap))).toBeInTheDocument();
+  });
+
+  it("points at the Notice of Assessment rather than stating an accrual rate", async () => {
+    // 18% of earned income, and the $2,000 over-contribution cushion, have no
+    // provenance entry in src/domain, so neither may travel. The document does.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The refund/);
+    expect(screen.getByText(/Notice of Assessment/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/18%/);
+  });
+});
+
 describe("RRSP → HBP — the rules", () => {
   it("states the waiting rule as absolute, because it is", async () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /The five steps/);
     expect(screen.getByText(/no exception and no appeal/)).toBeInTheDocument();
+  });
+
+  it("discloses the 2022-2025 cohort's extra three years beside the grace note", async () => {
+    // `graceYears` is 2 for everyone the engine computes for, and federal.ts
+    // records the exception. Disclosed rather than computed: deriving it needs
+    // the withdrawal year, which is a persisted input this page does not have.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The repayment/);
+    expect(screen.getByText(/three more years/)).toBeInTheDocument();
   });
 
   it("repays the whole withdrawal, to zero, over the statutory years", async () => {

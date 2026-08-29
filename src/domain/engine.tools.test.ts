@@ -6,6 +6,7 @@ import {
   hbpPlay,
   marginalRate,
   minDown,
+  taxOnBand,
   payFactor,
   rentVsBuy,
   rowAt,
@@ -120,7 +121,7 @@ describe("marginalRate", () => {
 
 describe("waterfall", () => {
   const base = {
-    need: 100000, prov: "ON", income: 100000,
+    need: 100000, prov: "ON", income: 100000, ftb: true,
     fhsa: 0, cash: 0, rrsp: 0, tfsa: 0, gift: 0, nonreg: 0, nonregGain: 0,
   };
 
@@ -130,6 +131,51 @@ describe("waterfall", () => {
     expect(drawn).toEqual(["fhsa", "cash", "hbp"]);
     // TFSA is available and untouched -- the order is by cost, not by balance.
     expect(w.rows.find((r) => r.key === "tfsa")!.untouched).toBe(true);
+  });
+
+  it("spends a gift before an HBP withdrawal or a TFSA", () => {
+    // The rows render in array order under copy reading "each source costs more than the
+    // one above it", and a gift costs nothing at all: drawing the RRSP first bought
+    // fifteen years of repayment obligation the reader did not need.
+    const w = waterfall(federal, { ...base, need: 30000, gift: 30000, rrsp: 60000, tfsa: 30000 });
+    const drawn = w.rows.filter((r) => r.drawn > 0).map((r) => r.key);
+    expect(drawn).toEqual(["gift"]);
+    expect(w.rows.find((r) => r.key === "hbp")!.repayAnnual).toBe(0);
+  });
+
+  it("orders the rows free, free, free, strings, strings, taxed", () => {
+    const w = waterfall(federal, base);
+    expect(w.rows.map((r) => r.key)).toEqual(["fhsa", "cash", "gift", "hbp", "tfsa", "nonreg"]);
+    expect(w.rows.map((r) => r.cost)).toEqual([
+      "free", "free", "free", "strings", "strings", "tax",
+    ]);
+  });
+
+  it("draws neither FHSA nor HBP money for a buyer who is not a first-time buyer", () => {
+    // Both are qualifying-home-buyer programmes in law. The waterfall used to spend them
+    // regardless, so a repeat buyer was funded from two accounts they may not touch.
+    const w = waterfall(federal, { ...base, ftb: false, need: 100000, fhsa: 40000, rrsp: 60000 });
+    const fhsa = w.rows.find((r) => r.key === "fhsa")!;
+    const hbp = w.rows.find((r) => r.key === "hbp")!;
+    expect(fhsa.drawn).toBe(0);
+    expect(hbp.drawn).toBe(0);
+    expect(w.shortfall).toBe(100000);
+  });
+
+  it("keeps the blocked rows present, with a reason, rather than dropping them", () => {
+    // Mirrors CreditLine.st === "ftbOnly": a reader with $40,000 in an FHSA must learn the
+    // rule that stops them using it here, not conclude the app forgot the account.
+    const w = waterfall(federal, { ...base, ftb: false, fhsa: 40000, rrsp: 60000 });
+    expect(w.rows.map((r) => r.key)).toContain("fhsa");
+    expect(w.rows.find((r) => r.key === "fhsa")!.blocked).toBe("ftb");
+    expect(w.rows.find((r) => r.key === "hbp")!.blocked).toBe("ftb");
+    expect(w.rows.find((r) => r.key === "cash")!.blocked).toBeUndefined();
+    expect(w.totalAvailable).toBe(0);
+  });
+
+  it("marks nothing blocked for a first-time buyer", () => {
+    const w = waterfall(federal, { ...base, fhsa: 40000, rrsp: 60000 });
+    expect(w.rows.every((r) => r.blocked === undefined)).toBe(true);
   });
 
   it("caps the HBP draw at the federal maximum, not at the RRSP balance", () => {
@@ -206,25 +252,90 @@ describe("glidePath", () => {
   });
 });
 
+describe("taxOnBand", () => {
+  it("integrates the bracket table over a band that spans three brackets", () => {
+    // Hand-computed against federal.marginal.ON, band by band:
+    //   15,000 -> 52,886 : 37,886 x 0.2005 = 7,596.143
+    //   52,886 -> 58,522 :  5,636 x 0.2415 = 1,361.094
+    //   58,522 -> 75,000 : 16,478 x 0.2965 = 4,885.727
+    //                                      = 13,842.964
+    expect(taxOnBand(federal, "ON", 15000, 75000)).toBeCloseTo(13842.964, 3);
+  });
+
+  it("agrees with the marginal rate on an infinitesimal band", () => {
+    const at = 90000;
+    const band = taxOnBand(federal, "ON", at, at + 1);
+    expect(band).toBeCloseTo(marginalRate(federal, "ON", at + 1), 9);
+  });
+
+  it("is additive across a split, so no bracket boundary is double-counted or skipped", () => {
+    const whole = taxOnBand(federal, "BC", 0, 250000);
+    const parts =
+      taxOnBand(federal, "BC", 0, 98560) +
+      taxOnBand(federal, "BC", 98560, 181400) +
+      taxOnBand(federal, "BC", 181400, 250000);
+    expect(parts).toBeCloseTo(whole, 6);
+  });
+
+  it("returns nothing for an empty or inverted band, and clamps a negative floor to zero", () => {
+    expect(taxOnBand(federal, "ON", 50000, 50000)).toBe(0);
+    expect(taxOnBand(federal, "ON", 75000, 15000)).toBeCloseTo(
+      taxOnBand(federal, "ON", 15000, 75000),
+      9,
+    );
+    expect(taxOnBand(federal, "ON", -20000, 10000)).toBeCloseTo(
+      taxOnBand(federal, "ON", 0, 10000),
+      9,
+    );
+  });
+
+  it("falls back to the national table for a province it does not carry", () => {
+    expect(taxOnBand(federal, "NU", 0, 60000)).toBeCloseTo(taxOnBand(federal, "CA", 0, 60000), 9);
+  });
+
+  it("keeps running above the final bracket, whose ceiling is null", () => {
+    const top = federal.marginal.ON[federal.marginal.ON.length - 1][1];
+    expect(taxOnBand(federal, "ON", 1_000_000, 1_100_000)).toBeCloseTo(100000 * top, 4);
+  });
+});
+
 describe("hbpPlay", () => {
+  const ON = { prov: "ON", income: 75000 };
+
   it("caps the contribution at the federal maximum", () => {
-    const h = hbpPlay(federal, { contribution: 100000, marginalRate: 0.3389, withdrawAmount: 100000 });
+    const h = hbpPlay(federal, { ...ON, contribution: 100000, withdrawAmount: 100000 });
     expect(h.contribution).toBe(federal.hbp.max);
     expect(h.withdraw).toBe(federal.hbp.max);
   });
 
   it("cannot withdraw more than was contributed", () => {
-    const h = hbpPlay(federal, { contribution: 20000, marginalRate: 0.3389, withdrawAmount: 60000 });
+    const h = hbpPlay(federal, { ...ON, contribution: 20000, withdrawAmount: 60000 });
     expect(h.withdraw).toBe(20000);
   });
 
-  it("values the refund at the marginal rate", () => {
-    const h = hbpPlay(federal, { contribution: 30000, marginalRate: 0.4, withdrawAmount: 30000 });
-    expect(h.refund).toBeCloseTo(12000, 6);
+  it("prices the deduction over the brackets it walks through, not at the top rate", () => {
+    // The defect this replaced: `contribution * marginalRate(income)` priced the whole
+    // $60,000 at Ontario's 29.65% and printed ~$17,790 as the page's hero figure. The
+    // deduction actually carries the taxpayer from $75,000 down to $15,000, through three
+    // brackets, and saves ~$13,842 -- a 29% overstatement, in the flattering direction.
+    const h = hbpPlay(federal, { ...ON, contribution: 60000, withdrawAmount: 60000 });
+    expect(h.refund).toBeCloseTo(13842.964, 3);
+    expect(h.refund).toBeLessThan(60000 * marginalRate(federal, "ON", 75000));
+  });
+
+  it("still prices the FIRST dollar of the deduction at the marginal rate", () => {
+    const h = hbpPlay(federal, { ...ON, contribution: 1, withdrawAmount: 1 });
+    expect(h.refund).toBeCloseTo(marginalRate(federal, "ON", 75000), 6);
+  });
+
+  it("never refunds tax on income that was never earned", () => {
+    // A $60,000 deduction against $20,000 of income cannot save tax on $40,000 of nothing.
+    const h = hbpPlay(federal, { prov: "ON", income: 20000, contribution: 60000, withdrawAmount: 60000 });
+    expect(h.refund).toBeCloseTo(taxOnBand(federal, "ON", 0, 20000), 6);
   });
 
   it("repays the whole withdrawal over the statutory years, to exactly zero", () => {
-    const h = hbpPlay(federal, { contribution: 60000, marginalRate: 0.3, withdrawAmount: 60000 });
+    const h = hbpPlay(federal, { ...ON, contribution: 60000, withdrawAmount: 60000 });
     expect(h.schedule).toHaveLength(federal.hbp.repayYears);
     expect(h.schedule[h.schedule.length - 1].balance).toBeCloseTo(0, 6);
     expect(h.schedule.reduce((t, s) => t + s.repay, 0)).toBeCloseTo(60000, 6);
@@ -232,16 +343,44 @@ describe("hbpPlay", () => {
 
   it("prices a missed repayment year at the marginal rate on the missed amount", () => {
     // The real risk of the manoeuvre, and permanent: the missed amount is added
-    // to income and there is no way to put it back.
-    const h = hbpPlay(federal, { contribution: 60000, marginalRate: 0.4, withdrawAmount: 60000 });
-    expect(h.taxIfMissed).toBeCloseTo((60000 / federal.hbp.repayYears) * 0.4, 6);
+    // to income and there is no way to put it back. The MARGINAL rate is right here --
+    // one year's repayment sits on top of an otherwise unchanged income.
+    const h = hbpPlay(federal, { ...ON, contribution: 60000, withdrawAmount: 60000 });
+    const rate = marginalRate(federal, "ON", 75000);
+    expect(h.marginalRate).toBe(rate);
+    expect(h.taxIfMissed).toBeCloseTo((60000 / federal.hbp.repayYears) * rate, 6);
+  });
+
+  it("says when the withdrawal was cut back to the contribution", () => {
+    // The state that collapsed the whole page to $0 with no explanation: someone who
+    // already holds $60,000 in an RRSP, contributes nothing further, and asks for it.
+    const h = hbpPlay(federal, { ...ON, contribution: 0, withdrawAmount: 60000 });
+    expect(h.withdraw).toBe(0);
+    expect(h.clampedByContribution).toBe(true);
+    expect(h.withdrawRequested).toBe(60000);
+  });
+
+  it("names the contribution even where the federal maximum ties with it", () => {
+    // Contributing the maximum makes the two caps identical, so the flag would be
+    // ambiguous if it were about which cap won. It is not: the contribution is capped at
+    // the federal maximum before either is applied, so a cut-back withdrawal is ALWAYS cut
+    // back to the contribution, and the sentence naming it is always true.
+    const h = hbpPlay(federal, { ...ON, contribution: 100000, withdrawAmount: 200000 });
+    expect(h.contribution).toBe(federal.hbp.max);
+    expect(h.withdraw).toBe(federal.hbp.max);
+    expect(h.clampedByContribution).toBe(true);
+  });
+
+  it("claims no clamp when the reader asked for less than they contributed", () => {
+    const h = hbpPlay(federal, { ...ON, contribution: 60000, withdrawAmount: 20000 });
+    expect(h.clampedByContribution).toBe(false);
   });
 
   it("ships no worthIt verdict", () => {
     // The reference returned one computed as `refund + growth > 0 && withdraw > 0`,
     // which is true whenever anything is withdrawn at all -- a verdict that could
     // only ever say yes, on the screen whose job is to say whether this is wise.
-    const h = hbpPlay(federal, { contribution: 1, marginalRate: 0.2, withdrawAmount: 1 });
+    const h = hbpPlay(federal, { ...ON, contribution: 1, withdrawAmount: 1 });
     expect(h).not.toHaveProperty("worthIt");
   });
 });
@@ -320,7 +459,7 @@ describe("scenario", () => {
   it("raises a below-minimum request to the legal floor and says it did", () => {
     const s = scenario(toronto, federal, { ...base, dpPct: 3 });
     expect(s.belowMinimum).toBe(true);
-    expect(s.down).toBeCloseTo(minDown(base.price), 6);
+    expect(s.down).toBeCloseTo(minDown(federal, base.price), 6);
     expect(s.dpPctEff).toBeGreaterThan(3);
   });
 

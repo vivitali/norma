@@ -53,6 +53,14 @@ describe("every jurisdiction's line-item keys have copy", () => {
               seen.add(c.key);
               if (c.ex) seen.add(c.ex);
             }
+            // A programme reported as an OMISSION still renders, in words rather than in
+            // dollars, so its keys need copy exactly as a paid credit's do — and the GST
+            // rebate now reaches the reader only this way, so dropping it from the sweep
+            // would take the app's one new-build disclosure out of the safety net.
+            for (const c of credit.omitted) {
+              seen.add(c.key);
+              seen.add(c.ex);
+            }
           }
         }
       }

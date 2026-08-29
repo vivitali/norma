@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
+import { maxAmortYears } from "@/domain/engine";
+import { federal } from "@/domain/federal";
 import type { Jurisdiction } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
@@ -19,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { NoteLine } from "@/components/tool-page";
 import { ImpactRow } from "./impact-row";
 import { SegmentedGroup } from "./segmented-group";
 
@@ -55,6 +58,20 @@ export function InputGroups({
   const tJur = useTranslations("Jurisdictions");
   const fmt = useMoney();
   const pct = usePercent();
+
+  /**
+   * The longest amortization this purchase can actually be written at.
+   *
+   * Read off the RESOLVED down payment, not the requested one: `resolveInputs` has
+   * already raised a request below the legal floor, and eligibility is a fact about
+   * the loan the app is modelling rather than about the button the reader pressed.
+   */
+  const maxAmort = maxAmortYears(federal, {
+    dpPct: resolved.dpPct,
+    price: resolved.price,
+    ftb: resolved.ftb,
+    ptype: resolved.ptype,
+  });
 
   /**
    * v2 has one disclosure gesture and it belongs to the sections above, so the
@@ -238,16 +255,56 @@ export function InputGroups({
             options={[5, 10, 20, 25].map((v) => ({ value: v, label: pct(v) }))}
           />
           {resolved.belowMinimum ? (
-            <span className="text-[11px] leading-[1.45] text-caution">
+            <NoteLine tone="caution">
               {t("belowMinimum", { p: pct(resolved.dpPct, 1), a: fmt((resolved.price * resolved.dpPct) / 100) })}
-            </span>
+            </NoteLine>
           ) : null}
+          {/*
+            The 30-year option is not always on offer, and until now nothing on any
+            screen said so. `financing()` charges `cmhc.longAmortSurcharge` for a
+            30-year loan without ever asking whether the borrower may have one, and
+            `maxAmortYears` is the predicate that closes that — three independent
+            grounds, all of which have to hold in the OR: 20% or more down, a price at
+            or above the insured cap, or CMHC Home Start's "first-time buyer OR new
+            build".
+
+            It GATES, it does not clamp, exactly as the engine's own doc requires: a
+            reader who already chose 30 keeps their choice, keeps `aria-checked`, and
+            keeps every figure on the page derived from it. What changes is that the
+            page stops being silent about it. Disabling via `aria-disabled` rather than
+            the `disabled` attribute is what preserves that — the option stays
+            focusable, so the radiogroup keeps its single tab stop even when the
+            unavailable option is the checked one.
+
+            The caution reuses `belowMinimum`'s shape a few lines up, because this is
+            the same kind of fact: a rule the app applied that the reader did not.
+
+            The predicate and the arguments are identical to `purchase-inputs.tsx`'s,
+            deliberately and by inspection rather than by extraction — the two
+            components render this control in different layouts, but a reader who
+            crosses between /affordability and /closing-costs must not find the same
+            rule stated two ways. `federal.maxAmortFtbInsured` rather than the reader's
+            own choice, because the sentence is about the option that is on offer or
+            not, and it fires whether or not they are sitting on it.
+          */}
           <SegmentedGroup
             label={t("amortYears")}
             value={resolved.amortYears}
             onChange={(amortYears) => update({ amortYears })}
-            options={[25, 30].map((v) => ({ value: v, label: String(v) }))}
+            options={[25, 30].map((v) => ({
+              value: v,
+              label: String(v),
+              disabled: v > maxAmort,
+            }))}
           />
+          {maxAmort < federal.maxAmortFtbInsured ? (
+            <NoteLine tone="caution">
+              {tInputs("amortCapped", {
+                n: federal.maxAmortFtbInsured,
+                p: pct(federal.minDown.uninsuredRate * 100),
+              })}
+            </NoteLine>
+          ) : null}
           <div className="flex flex-col gap-1">
             <Label htmlFor="ptype" className="text-[11.5px] font-semibold text-muted-foreground">
               {t("ptype")}
@@ -266,11 +323,30 @@ export function InputGroups({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-2">
-            <Switch id="ftb" checked={resolved.ftb} onCheckedChange={(ftb) => update({ ftb })} />
-            <Label htmlFor="ftb" className="text-[11.5px]">
-              {t("ftb")}
-            </Label>
+          {/*
+            This switch defaults to TRUE and drives every first-time-buyer rebate on
+            the closing bill plus every tax-time credit, and its entire copy was the
+            two words "First-time buyer". The tests behind those programs are
+            materially stricter than the phrase suggests — pe.ts's `rebates.0.ceiling`
+            provenance quotes one of them verbatim: Canadian citizenship or permanent
+            residence, a residency period, and no previous registered interest in a
+            principal residence. Someone eighteen months into Canada who owned a flat
+            abroad was being shown thousands of dollars of relief they cannot claim,
+            on default settings, with nothing on the page to make them check.
+
+            The note states the SHAPE of the test and says it varies by program. It
+            quotes no threshold: the look-back period is not in `src/domain`, so under
+            the sourcing rule it may not travel, and the honest move is to name the
+            document rather than the number.
+          */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Switch id="ftb" checked={resolved.ftb} onCheckedChange={(ftb) => update({ ftb })} />
+              <Label htmlFor="ftb" className="text-[11.5px]">
+                {t("ftb")}
+              </Label>
+            </div>
+            <NoteLine>{tInputs("ftbWhy")}</NoteLine>
           </div>
           {advanced(
             "adv-purchase",
@@ -313,13 +389,14 @@ export function InputGroups({
             min={0}
             onCommit={(comfortCeiling) => update({ comfortCeiling })}
           />
-          <NumberField
-            id="funds"
-            label={t("cFunds")}
-            value={stored.funds}
-            min={0}
-            onCommit={(funds) => update({ funds })}
-          />
+          {/*
+            `funds` and `condoFee` are DELIBERATELY absent from this grid. Both were
+            here AND in the panel that asks for them — funds under two different
+            labels — and each ask fires on exactly the condition that leaves its twin
+            here empty, so one press of Expand all put two fields for one value on
+            screen. The in-place ask is the endorsed placement (DESIGN.md §5.3), and
+            the survivors live in the cash and comfort panels on affordability/page.tsx.
+          */}
           <NumberField
             id="save"
             label={t("monthlySavings")}
@@ -345,14 +422,6 @@ export function InputGroups({
                 placeholder={resolved.utilities}
                 min={0}
                 onCommit={(utilities) => update({ utilities })}
-              />
-              <NumberField
-                id="condoFee"
-                label={t("cCondoFee")}
-                value={stored.condoFee}
-                placeholder={resolved.condoFee}
-                min={0}
-                onCommit={(condoFee) => update({ condoFee })}
               />
             </>,
           )}

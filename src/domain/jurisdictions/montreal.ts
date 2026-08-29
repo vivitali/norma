@@ -1,7 +1,13 @@
 import type { Jurisdiction, JurisdictionFees } from "../types";
 import { feesProvenance } from "../provenance";
 
-const fees: JurisdictionFees = { notary: 1800, locCert: 400, inspect: 600, appraisal: 400, statusCert: 0, moving: 1300, setup: 600 };
+// No `statusCert`. The field is optional and Montreal carried it as `0`, which is falsy —
+// so the engine's truthiness gate built no status-certificate line for a Montreal condo,
+// while `feesProvenance()` derived from this literal still disclosed an `assumption`-grade
+// modelling default for it on /sources. An absent field is the honest way to say a record
+// carries no figure: the provenance entry goes with it, and the engine's gate is now
+// `!= null` so a real 0 would render rather than vanish.
+const fees: JurisdictionFees = { notary: 1800, locCert: 400, inspect: 600, appraisal: 400, moving: 1300, setup: 600 };
 
 export const montreal: Jurisdiction = {
   id: "montreal",

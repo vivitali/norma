@@ -297,7 +297,7 @@ describe("the legal minimum down payment", () => {
     expect(r.belowMinimum).toBe(true);
     expect(r.dpPctRequested).toBe(5);
     expect(r.dpPct).toBeGreaterThan(5);
-    expect((r.price * r.dpPct) / 100).toBeCloseTo(minDown(1600000), 4);
+    expect((r.price * r.dpPct) / 100).toBeCloseTo(minDown(federal, 1600000), 4);
   });
 
   it("leaves a legal request exactly alone", () => {
@@ -342,8 +342,8 @@ describe("the blended tier — where the floor is not a round number", () => {
     // A request a fraction of a dollar under the floor is a rounding artefact,
     // not someone asking for something illegal.
     const price = 900000;
-    const exact = (minDown(price) / price) * 100;
-    const hair = ((minDown(price) - 0.25) / price) * 100;
+    const exact = (minDown(federal, price) / price) * 100;
+    const hair = ((minDown(federal, price) - 0.25) / price) * 100;
     expect(resolveInputs({ ...untouched, price, dpPct: exact }, winnipeg, federal).belowMinimum).toBe(false);
     expect(resolveInputs({ ...untouched, price, dpPct: hair }, winnipeg, federal).belowMinimum).toBe(false);
   });

@@ -19,7 +19,7 @@ import { ScheduleChart } from "@/components/amortization/schedule-chart";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
-import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 
 const TERM_CHOICES = [1, 3, 5, 10] as const;
 
@@ -31,13 +31,26 @@ export default function AmortizationPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
+  const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     AMORTIZATION_SECTIONS,
-    // Renewal when a renewal rate has been set, because that is then the whole
-    // subject; the opening payment otherwise. The head already calls renewal
-    // "the risk nobody models" -- it should not then be a closed row.
-    stored.renewalRate === null ? "payment" : "renewal",
+    /*
+     * Renewal, in every state — not `renewalRate === null ? "payment" : "renewal"`.
+     *
+     * `isSectionOpen`'s rule is "the section whose check produced the verdict".
+     * On this page that is renewal and only renewal, whatever is stored: the
+     * hero figure IS `paymentAfterRenewal`, the head is `shockUp`/`shockDown`/
+     * `shockNone` and the second head stat is the shock itself. The old
+     * condition opened `payment` on every first visit — the one state where the
+     * sub-line tells the reader in so many words to "move the renewal rate above
+     * your current one", with the control that does it, and with `riskTitle`/
+     * `riskBody` (the product's only explanation that a Canadian TERM is not the
+     * amortization) sitting behind a closed caret.
+     *
+     * The payment panel loses nothing by closing: `rPayNow` and `rInterest` are
+     * already head stats, so its two headline figures are on screen either way.
+     */
+    "renewal",
   );
   const fmt = useMoney();
   const pct = usePercent();
@@ -125,6 +138,13 @@ export default function AmortizationPage() {
       */}
       {resolved.priceKnown ? (
         <>
+          {/*
+            One mechanism for "the stored inputs have not landed yet", shared by
+            every tool page — see `PendingFigures` in tool-page.tsx. It keeps the
+            prerendered answer in the HTML and the hero's box on the page, which is
+            what the four hand-rolled variants this replaces could not all do.
+          */}
+          <PendingFigures pending={!hydrated}>
           <AnswerHead
             eyebrow={t("title")}
             figure={fmt(result.paymentAfterRenewal)}
@@ -144,6 +164,7 @@ export default function AmortizationPage() {
               { label: t("rInterest"), value: fmt(result.totalInterest), mark: "rule" },
             ]}
           />
+          </PendingFigures>
 
           <div className="pt-8 sm:pt-[34px]">
             <SectionsHeader
@@ -180,6 +201,26 @@ export default function AmortizationPage() {
                 />
                 <PanelRow label={t("rPayNow")} value={fmt(result.firstPayment)} strong />
                 <PanelRow label={t("payoffLabel")} value={t("payoffYear", { n: result.payoffYear })} />
+                {/*
+                  Directly under "Paid off in year 30", because that row is where
+                  the misreading is made: a newcomer reads a 30-year payoff beside
+                  a single rate and concludes the rate is theirs for 30 years. The
+                  term and the amortization are both the reader's own inputs, so
+                  this states no figure the app invented — and the link is an
+                  in-page jump, not a CrossLink: it goes to this page's own
+                  `renewal` section, which `useHashTarget` then opens and focuses.
+                */}
+                <NoteLine>
+                  {t.rich("termNote", {
+                    term: result.term,
+                    amort: resolved.amortYears,
+                    jump: (chunks) => (
+                      <a href="#renewal" className="text-ac underline underline-offset-2">
+                        {chunks}
+                      </a>
+                    ),
+                  })}
+                </NoteLine>
               </>,
             )}
 
@@ -363,6 +404,13 @@ export default function AmortizationPage() {
           {t("adjust")}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
+          {/*
+            No `residency` here, and that is the rule the prop's own doc states rather
+            than an omission of it: this page shows no closing bill. Nothing it computes
+            — loan, premium, payment, renewal shock — reads `residency`, so the switch
+            would ask a question no figure on the screen could answer. The four pages
+            that price the purchase bind it.
+          */}
           <PurchaseInputs
             price={stored.price}
             pricePlaceholder={resolved.priceKnown ? resolved.price : null}
@@ -370,6 +418,8 @@ export default function AmortizationPage() {
             dpPctEffective={resolved.dpPct}
             belowMinimum={resolved.belowMinimum}
             amortYears={stored.amortYears}
+            ftbEffective={resolved.ftb}
+            ptypeEffective={resolved.ptype}
             jurisdiction={jurisdiction}
             onChange={update}
           />
