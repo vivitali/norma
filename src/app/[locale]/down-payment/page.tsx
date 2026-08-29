@@ -4,6 +4,7 @@ import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { closingTotal, glidePath, minDown, waterfall, type SourceKey } from "@/domain/engine";
 import { federal } from "@/domain/federal";
+import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -490,6 +491,48 @@ export default function DownPaymentPage() {
                   />
                 </div>
               </>,
+            )}
+            {/*
+              "Show me how you got that."
+
+              The target, then the draw. Every operand comes off `closing` and `flow`
+              rather than being recomputed, so a reader following the trace lands on
+              the same shortfall the head reports — and can see WHICH account it turns
+              on, which is the thing a list of balances does not tell them.
+            */}
+            {section(
+              "calc",
+              "none",
+              t("calcLine"),
+              "",
+              t("calcWhy"),
+              <CalcTrace
+                caption={t("calcTraceCaption")}
+                lines={[
+                  { label: t("calcTargetDown"), value: fmt(closing.fin.down) },
+                  { label: t("calcTargetCosts"), value: fmt(closing.total), op: "plus" },
+                  ...(closing.creditsAtClosing > 0
+                    ? [{ label: t("calcCredits"), value: fmt(closing.creditsAtClosing), op: "minus" as const }]
+                    : []),
+                  { label: t("needLabel"), value: fmt(need), op: "equals", strong: true },
+                  // TWO DIFFERENT SUBTRACTIONS, and the operator has to tell the truth
+                  // about which one ran. A shortfall is measured against what was
+                  // DRAWN (`need − drawnTotal`, which is exactly what the waterfall
+                  // returns); a surplus is measured against everything AVAILABLE
+                  // (`totalAvailable − need`). Printing "drawn" above both read
+                  // "$60,000 − $60,000 = $140,000" for every fully funded reader.
+                  ...(flow.shortfall > 0.5
+                    ? [
+                        { label: t("calcDrawn"), value: fmt(flow.drawnTotal), op: "minus" as const, rule: true },
+                        { label: t("calcShortfall"), value: fmt(flow.shortfall), op: "equals" as const, strong: true },
+                      ]
+                    : [
+                        { label: t("totalAvailable"), value: fmt(flow.totalAvailable), rule: true },
+                        { label: t("needLabel"), value: fmt(need), op: "minus" as const },
+                        { label: t("calcSurplus"), value: fmt(flow.surplus), op: "equals" as const, strong: true },
+                      ]),
+                ]}
+              />,
             )}
           </div>
 

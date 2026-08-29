@@ -70,7 +70,12 @@ beforeEach(() => {
 describe("Closing costs — the answer comes first", () => {
   it("leads with cash needed on closing day, before anyone types", () => {
     renderPage();
-    expect(screen.getByText("Cash needed on closing day")).toBeInTheDocument();
+    // Scoped to the HEAD, not counted across the document. The same label now names
+    // the figure in three places — the head, the derivation's terminal line and its
+    // caption — so `getAllByText(...).length > 0` would have gone on passing with the
+    // head deleted outright, and this test is named for the lead.
+    const figure = document.querySelector('[data-slot="answer-figure"]')!;
+    expect(figure.parentElement!.textContent).toContain("Cash needed on closing day");
     expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
   });
 
@@ -332,7 +337,7 @@ describe("Closing costs — French", () => {
     const user = userEvent.setup();
     renderPage("fr");
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
-    expect(screen.getByText("Comptant requis le jour de la clôture")).toBeInTheDocument();
+    expect(screen.getAllByText("Comptant requis le jour de la clôture").length).toBeGreaterThan(0);
     expect(document.body.textContent).not.toMatch(/ClosingCosts\./);
   });
 });

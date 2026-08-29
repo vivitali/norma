@@ -252,3 +252,38 @@ describe("Amortization — with no published price, it asks", () => {
     expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
   });
 });
+
+describe("Amortization — the derivation ends where the page begins", () => {
+  it("terminates in the hero once a renewal rate is given", async () => {
+    // The hero on this page is the payment AFTER renewal. A trace that stopped at
+    // the first payment left the figure at the top of the page underived — which is
+    // the one thing this section exists to prevent.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ termYears: 5, renewalRate: 7 }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    const button = screen.getByRole("button", { name: /How this was calculated/ });
+    if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+
+    const hero = document.querySelector('[data-slot="answer-figure"]')!.textContent!.trim();
+    const values = [...document.getElementById("calc")!.querySelectorAll("dd")]
+      .map((dd) => dd.textContent!.trim());
+    expect(values).toContain(hero);
+  });
+
+  it("shows no renewal step when no renewal rate was given", async () => {
+    // With none, the payment after renewal IS the first payment, and a second
+    // identical row would assert a step that never happened.
+    const user = userEvent.setup();
+    renderPage();
+    const button = screen.getByRole("button", { name: /How this was calculated/ });
+    if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+    const calc = document.getElementById("calc")!;
+    expect(calc.textContent).not.toMatch(/Balance at renewal/);
+    // And it still lands on the hero, because the two figures are the same number.
+    const hero = document.querySelector('[data-slot="answer-figure"]')!.textContent!.trim();
+    expect([...calc.querySelectorAll("dd")].map((d) => d.textContent!.trim())).toContain(hero);
+  });
+});

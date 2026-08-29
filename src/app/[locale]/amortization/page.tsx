@@ -2,8 +2,9 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { amortization } from "@/domain/engine";
+import { amortization, rowAt } from "@/domain/engine";
 import { federal } from "@/domain/federal";
+import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -389,6 +390,81 @@ export default function AmortizationPage() {
                 </div>
               </>
             ))}
+            {/*
+              "Show me how you got that."
+
+              A TRACE only, deliberately: the schedule section directly above already
+              renders every year of the loan, and a second table of the same rows
+              would be duplication wearing a new label. What was missing was the step
+              BEFORE the schedule — how a price and a percentage become the payment
+              the whole page is about, insurance premium included.
+            */}
+            {section(
+              "calc",
+              "none",
+              t("calcLine"),
+              "",
+              t("calcWhy"),
+              <CalcTrace
+                caption={t("calcTraceCaption")}
+                lines={[
+                  { label: t("calcPrice"), value: fmt(resolved.price) },
+                  { label: t("calcDown"), value: fmt(result.fin.down), op: "minus", note: pct(resolved.dpPct, 2) },
+                  { label: t("calcBaseLoan"), value: fmt(result.fin.baseLoan), op: "equals", strong: true },
+                  // Absent when 20% or more is down, or the price is above the
+                  // insurable cap: there is no premium to show, and a $0 row reads as
+                  // a charge the reader is carrying.
+                  ...(result.fin.premium > 0
+                    ? [{ label: t("premium"), value: fmt(result.fin.premium), op: "plus" as const }]
+                    : []),
+                  { label: t("calcLoan"), value: fmt(result.fin.loan), op: "equals", rule: true, strong: true },
+                  // The payment is a function of THREE operands and the third was
+                  // missing, so the figure could not be reproduced from what was on
+                  // screen. `firstPayment` rather than `rows[0].payment`: `rows` is
+                  // empty whenever the loan is zero (100% down is reachable through
+                  // stored input), and the canonical field is always defined.
+                  { label: t("cRate"), value: pct(resolved.contractRate, 2), op: "times", rule: true },
+                  { label: t("calcAmortYears"), value: t("yearsWord", { n: resolved.amortYears }), op: "times" },
+                  { label: t("cPayment"), value: fmt(result.firstPayment), op: "equals", strong: true },
+                  // The trace has to end where the PAGE ends. This screen's hero is the
+                  // payment after renewal, not the first payment, and a derivation that
+                  // stopped one step short left the figure at the top unexplained —
+                  // the one thing the section exists to prevent. With no renewal rate
+                  // given the two are the same number and the block is absent, because
+                  // a second identical row would assert a step that never happened.
+                  // `resolved.renewalRate`, not `firstRenewal`: the engine re-prices at
+                  // every term boundary whether or not a rate was given — with none it
+                  // renews at the contract rate — so `rows.find(r => r.renewed)` is
+                  // non-null in both states and would have rendered a "renewal" that
+                  // changed nothing. The reader's own choice is the condition.
+                  ...(resolved.renewalRate !== null && firstRenewal !== null
+                    ? [
+                        {
+                          label: t("calcBalanceAtRenewal"),
+                          value: fmt(rowAt(result.rows, firstRenewal).opening),
+                          rule: true,
+                        },
+                        {
+                          label: t("renewalControl"),
+                          value: pct(resolved.renewalRate ?? resolved.contractRate, 2),
+                          op: "times" as const,
+                        },
+                        {
+                          label: t("calcAmortLeft"),
+                          value: t("yearsWord", { n: resolved.amortYears - (firstRenewal - 1) }),
+                          op: "times" as const,
+                        },
+                        {
+                          label: t("rPayAfter"),
+                          value: fmt(result.paymentAfterRenewal),
+                          op: "equals" as const,
+                          strong: true,
+                        },
+                      ]
+                    : []),
+                ]}
+              />,
+            )}
           </div>
         </>
       ) : (

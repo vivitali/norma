@@ -4,6 +4,7 @@ import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { minDown, scenario, type ScenarioResult } from "@/domain/engine";
 import { federal } from "@/domain/federal";
+import { CalcLedger } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -484,6 +485,76 @@ export default function ScenariosPage() {
                 </div>
               </>
             ))}
+            {/*
+              "Show me how you got that."
+
+              A LEDGER rather than a trace: this page's answer is not a sum, it is a
+              choice between columns, and the thing a reader cannot see from four
+              separate panels is which figures move TOGETHER. One row per scenario,
+              every axis at once, with the recommended row marked.
+            */}
+            {section(
+              "calc",
+              "none",
+              t("calcLine"),
+              "",
+              t("calcWhy"),
+              <CalcLedger
+                caption={t("calcLedgerCaption")}
+                rowHeader="scenario"
+                columns={[
+                  { key: "scenario", label: t("cScenario") },
+                  // Present only when some column WAS raised. Otherwise it is four
+                  // em-dashes under a heading, and this codebase's rule is that an
+                  // absent row beats a dash row — a dash where a figure goes reads as
+                  // a rendering fault rather than as "nothing to report".
+                  ...(columns.some((c) => c.belowMinimum)
+                    ? [{ key: "modelled", label: t("cModelled"), numeric: true }]
+                    : []),
+                  { key: "down", label: t("cDown"), numeric: true },
+                  { key: "premium", label: t("cPremium"), numeric: true },
+                  { key: "mortgage", label: t("cMortgage"), numeric: true },
+                  { key: "monthly", label: t("cMonthly"), numeric: true },
+                  { key: "cash", label: t("cCash"), numeric: true },
+                  { key: "gds", label: t("cGds"), numeric: true },
+                  { key: "tds", label: t("cTds"), numeric: true },
+                  { key: "lifetime", label: t("cLifetime"), numeric: true },
+                ]}
+                rows={columns.map((col) => ({
+                  key: col.dpPct,
+                  // The recommended column, not the reader's current one: this table
+                  // exists to be compared down, and the row worth finding in it is the
+                  // one the page is arguing for. `recommendedPct` is null when nothing
+                  // is recommended — no column qualifies, or none is fundable — and no
+                  // row is marked, which is the honest rendering of "we are not
+                  // pointing at one of these".
+                  highlight: recommendedPct !== null && col.dpPct === recommendedPct,
+                  cells: {
+                    // The REQUESTED percentage, matching `compare-grid.tsx`'s column
+                    // headings. Labelling by the effective figure made two tables of the
+                    // same four scenarios on one page unmatchable — and above the
+                    // insured cap every column floors to 20%, so all four rows rendered
+                    // as "20%", indistinguishable. The raise is disclosed in its own
+                    // column instead, where it does not collide with the identity.
+                    scenario: t("column", { p: pct(col.dpPct, 0) }),
+                    // "—" only ever renders on a row that was NOT raised inside a table
+                    // where some other row was; the column is absent when none was.
+                    modelled: col.belowMinimum ? pct(col.dpPctEff, 1) : "—",
+                    down: fmt(col.down),
+                    premium: fmt(col.premium),
+                    mortgage: fmt(col.totalMortgage),
+                    monthly: fmt(col.monthly.total),
+                    cash: fmt(col.net),
+                    // Already percentages out of `scenario()` (engine.ts:1547). The
+                    // qualification panel forty lines up renders them the same way;
+                    // scaling here printed 3,240.0% beside its own 32.4%.
+                    gds: pct(col.gds, 1),
+                    tds: pct(col.tds, 1),
+                    lifetime: fmt(col.costOfBorrowing),
+                  },
+                }))}
+              />,
+            )}
           </div>
         </>
       ) : (
