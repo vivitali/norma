@@ -47,6 +47,20 @@ function seedAnswerable(extra: Record<string, unknown> = {}) {
   );
 }
 
+/**
+ * A section's own subtree.
+ *
+ * `SectionRow` renders every body into the DOM and hides the closed ones with the
+ * `hidden` attribute, which `getByText` does not filter on — so once the calc
+ * section renders the same labels the panels above it use ("Cost of selling",
+ * "Property tax"), an unscoped query matches both. Scope to the section under
+ * test rather than reaching for `getAllByText(...)[0]`, which would pass for the
+ * wrong reason the moment the order changed.
+ */
+function panel(id: string) {
+  return within(document.getElementById(id)!);
+}
+
 beforeEach(() => {
   window.localStorage.clear();
   seedAnswerable();
@@ -314,7 +328,7 @@ describe("Rent vs buy — the money the model spends and never showed", () => {
     await open(user, /Where you end up/);
     // A regex, not the exact string: a PanelRow's label span also contains the
     // provenance mark, so its textContent is "Cost of sellingEstimate".
-    const row = screen.getByText(/^Cost of selling/).parentElement!;
+    const row = panel("wealth").getByText(/^Cost of selling/).parentElement!;
     expect(row.textContent).toMatch(/\$[\d,]+/);
   });
 
@@ -327,7 +341,7 @@ describe("Rent vs buy — the money the model spends and never showed", () => {
     renderPage();
     await open(user, /What each costs each year/);
     for (const label of [/^Property tax/, /^Maintenance reserve/]) {
-      const row = screen.getByText(label).parentElement!;
+      const row = panel("outlay").getByText(label).parentElement!;
       expect(row.textContent).toMatch(/\$[\d,]+/);
     }
   });
@@ -414,5 +428,78 @@ describe("Rent vs buy — an apartment rent cannot price a house", () => {
     window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "condo" }));
     renderPage();
     expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+  });
+});
+
+describe("Rent vs buy — showing the work", () => {
+  it("derives the headline at the reader's own horizon, not an abstract year", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const calc = panel("calc");
+    expect(calc.getByText(/Year 10 — how this figure was built/)).toBeInTheDocument();
+  });
+
+  it("shows the operands that make up the equity figure, in the order the engine uses", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const calc = panel("calc");
+    // Home value, less the cost of selling, less what is still owed.
+    // getAllByText: several of these labels are BOTH a trace line and a ledger
+    // column header, which is correct — the same figure, once derived and once
+    // per year.
+    for (const label of [/^Home value/, /^Cost of selling/, /^Mortgage balance/, /^Home equity/]) {
+      expect(calc.getAllByText(label).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("reconciles: the trace's last line IS the figure in the hero", async () => {
+    // The whole point of a trace. One that did its own arithmetic could agree
+    // with itself while disagreeing with the answer above it, so every line here
+    // reads off the same `result` the verdict does.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const calc = panel("calc");
+    const diff = calc.getByText(/^Difference/).parentElement!;
+    // Renting wins on the seeded figures, so the advantage of buying is negative.
+    // money() puts the sign outside the currency mark, and the operator gutter is
+            // restated for screen readers, so the row reads "== Difference− $41,169".
+    expect(diff.textContent).toMatch(/−\s?\$[\d,]+/);
+  });
+
+  it("prints a row for every year the model runs, not a sample of them", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const table = panel("calc").getByRole("table");
+    expect(table.querySelectorAll("tbody tr")).toHaveLength(40);
+  });
+
+  it("marks the reader's own horizon in the ledger", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const rows = [...panel("calc").getByRole("table").querySelectorAll("tbody tr")];
+    // Year 10 is the default holding period; its row header carries the accent.
+    expect(rows[9].querySelector("th")?.className).toMatch(/text-ac/);
+  });
+
+  it("carries the rate in the ledger, so a renewal is visible where it lands", async () => {
+    // A5 and A1 together: the page honours the reader's own rate and re-prices at
+    // each term boundary. Neither is legible unless the rate is on the row.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ ptype: "house", rent: 1570, termYears: 5, renewalRate: 7 }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const rows = [...panel("calc").getByRole("table").querySelectorAll("tbody tr")];
+    const rateOf = (i: number) => rows[i].children[1].textContent;
+    // Year 5 is still on the opening rate; year 6 opens the second term at 7%.
+    expect(rateOf(4)).not.toBe(rateOf(5));
+    expect(rateOf(5)).toMatch(/7\.00/);
   });
 });

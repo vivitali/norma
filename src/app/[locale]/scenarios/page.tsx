@@ -4,6 +4,7 @@ import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { minDown, scenario, type ScenarioResult } from "@/domain/engine";
 import { federal } from "@/domain/federal";
+import { CalcLedger } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -484,6 +485,60 @@ export default function ScenariosPage() {
                 </div>
               </>
             ))}
+            {/*
+              "Show me how you got that."
+
+              A LEDGER rather than a trace: this page's answer is not a sum, it is a
+              choice between columns, and the thing a reader cannot see from four
+              separate panels is which figures move TOGETHER. One row per scenario,
+              every axis at once, with the recommended row marked.
+            */}
+            {section(
+              "calc",
+              "none",
+              t("calcLine"),
+              "",
+              t("calcWhy"),
+              <CalcLedger
+                caption={t("calcLedgerCaption")}
+                rowHeader="scenario"
+                columns={[
+                  { key: "scenario", label: t("cScenario") },
+                  { key: "down", label: t("cDown"), numeric: true },
+                  { key: "premium", label: t("cPremium"), numeric: true },
+                  { key: "mortgage", label: t("cMortgage"), numeric: true },
+                  { key: "monthly", label: t("cMonthly"), numeric: true },
+                  { key: "cash", label: t("cCash"), numeric: true },
+                  { key: "gds", label: t("cGds"), numeric: true },
+                  { key: "tds", label: t("cTds"), numeric: true },
+                  { key: "lifetime", label: t("cLifetime"), numeric: true },
+                ]}
+                rows={columns.map((col) => ({
+                  key: col.dpPct,
+                  // The recommended column, not the reader's current one: this table
+                  // exists to be compared down, and the row worth finding in it is the
+                  // one the page is arguing for. `recommendedPct` is null when nothing
+                  // is recommended — no column qualifies, or none is fundable — and no
+                  // row is marked, which is the honest rendering of "we are not
+                  // pointing at one of these".
+                  highlight: recommendedPct !== null && col.dpPct === recommendedPct,
+                  cells: {
+                    // The EFFECTIVE percentage, which is what was modelled — a request
+                    // below the legal floor is raised, and printing the request here
+                    // would label the row with a mortgage nobody may write.
+                    scenario: t("column", { p: pct(col.dpPctEff, 0) }),
+                    down: fmt(col.down),
+                    premium: fmt(col.premium),
+                    mortgage: fmt(col.totalMortgage),
+                    monthly: fmt(col.monthly.total),
+                    cash: fmt(col.net),
+                    gds: pct(col.gds * 100, 1),
+                    tds: pct(col.tds * 100, 1),
+                    lifetime: fmt(col.costOfBorrowing),
+                  },
+                }))}
+              />,
+            )}
           </div>
         </>
       ) : (

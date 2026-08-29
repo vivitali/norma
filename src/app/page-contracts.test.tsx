@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
@@ -495,6 +495,67 @@ describe("horizontal scroll stays inside the element that owns it", () => {
     for (const match of verbatim) {
       const tag = source.slice(source.lastIndexOf("<", match.index), match.index);
       expect(tag, `verbatim text in ${tag.slice(0, 40)}…`).toContain("break-words");
+    }
+  });
+});
+
+/**
+ * "Show me how you got that."
+ *
+ * Every page that COMPUTES an answer has to be able to show the arithmetic behind
+ * it. Asserted across the registry rather than page by page, so a page added later
+ * cannot quietly ship without one — the same reason the nav and pathnames pairs are
+ * enforced in both directions.
+ *
+ * Affordability is absent from this list and present in spirit: it shipped the same
+ * disclosure first, as `MathColumns` under its own `math` section, and the two are
+ * the same promise under different labels. Home and Sources are absent because
+ * neither computes anything — Sources IS the provenance inventory.
+ */
+describe("every page that computes an answer can show its work", () => {
+  const COMPUTES = [
+    ["Closing costs", ClosingCostsPage],
+    ["Down payment", DownPaymentPage],
+    ["RRSP-HBP", RrspHbpPage],
+    ["Amortization", AmortizationPage],
+    ["Rent vs buy", RentVsBuyPage],
+    ["Scenarios", ScenariosPage],
+  ] as const;
+
+  for (const [name, Page] of COMPUTES) {
+    it(`${name} offers the calculation`, async () => {
+      const user = userEvent.setup();
+      seed(name);
+      renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+      );
+      const button = screen.getByRole("button", { name: /How this was calculated/ });
+      if (button.getAttribute("aria-expanded") === "false") await user.click(button);
+      const body = within(document.getElementById("calc")!);
+      // A derivation, a ledger, or both -- which of the two is a per-page judgement
+      // (Amortization's schedule already IS the ledger), but SOMETHING has to be
+      // there, and it has to carry figures rather than empty rows.
+      expect(body.getAllByText(/\$[\d,]+/).length).toBeGreaterThan(0);
+    });
+  }
+
+  it("does not open the calculation on arrival, on any of them", async () => {
+    // It is the deepest disclosure on the page, and a reader who wanted the answer
+    // should not have to scroll past the working to reach it.
+    for (const [name, Page] of COMPUTES) {
+      seed(name);
+      const { unmount } = renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+      );
+      expect(
+        screen.getByRole("button", { name: /How this was calculated/ }),
+        name,
+      ).toHaveAttribute("aria-expanded", "false");
+      unmount();
     }
   });
 });

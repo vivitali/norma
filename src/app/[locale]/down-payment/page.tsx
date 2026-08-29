@@ -4,6 +4,7 @@ import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { closingTotal, glidePath, minDown, waterfall, type SourceKey } from "@/domain/engine";
 import { federal } from "@/domain/federal";
+import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -490,6 +491,41 @@ export default function DownPaymentPage() {
                   />
                 </div>
               </>,
+            )}
+            {/*
+              "Show me how you got that."
+
+              The target, then the draw. Every operand comes off `closing` and `flow`
+              rather than being recomputed, so a reader following the trace lands on
+              the same shortfall the head reports — and can see WHICH account it turns
+              on, which is the thing a list of balances does not tell them.
+            */}
+            {section(
+              "calc",
+              "none",
+              t("calcLine"),
+              "",
+              t("calcWhy"),
+              <CalcTrace
+                caption={t("calcTraceCaption")}
+                lines={[
+                  { label: t("calcTargetDown"), value: fmt(closing.fin.down) },
+                  { label: t("calcTargetCosts"), value: fmt(closing.total), op: "plus" },
+                  ...(closing.creditsAtClosing > 0
+                    ? [{ label: t("calcCredits"), value: fmt(closing.creditsAtClosing), op: "minus" as const }]
+                    : []),
+                  { label: t("needLabel"), value: fmt(need), op: "equals", strong: true },
+                  { label: t("calcDrawn"), value: fmt(flow.drawnTotal), op: "minus", rule: true },
+                  {
+                    // One line or the other, never a zero of both: "short by $0" and
+                    // "left over $0" are each a claim, and only one of them is ever true.
+                    label: flow.shortfall > 0.5 ? t("calcShortfall") : t("calcSurplus"),
+                    value: fmt(flow.shortfall > 0.5 ? flow.shortfall : flow.surplus),
+                    op: "equals",
+                    strong: true,
+                  },
+                ]}
+              />,
             )}
           </div>
 

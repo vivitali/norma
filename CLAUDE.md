@@ -246,6 +246,31 @@ pattern that resembles one. The same applies to any future assertion over render
 5. `src/app/[locale]/<route>/layout.tsx` — metadata only. `page.tsx` is a client component and
    cannot export `generateMetadata`.
 
+**Every page that computes an answer can show its work.** `src/components/calc/calc-trace.tsx`
+holds `CalcTrace` (a derivation, one operand per line) and `CalcLedger` (a projection, a year per
+row). Six pages carry a `calc` section; `page-contracts.test.tsx` asserts it **across the
+registry**, so a page added later cannot ship without one. Affordability is absent from that list
+and present in spirit — it shipped the same disclosure first, as `MathColumns` under its own
+`math` section. Home and Sources are absent because neither computes anything; `/sources` IS the
+provenance inventory.
+  - **The components know no copy and no formatting.** Callers pass translated labels and
+    formatted values, so the page's own `useMoney()` is the one place a figure becomes text and a
+    trace can never disagree with the panel above it. Every operand reads off the SAME result
+    object the headline does — a trace that did its own arithmetic could agree with itself while
+    disagreeing with the answer it claims to explain.
+  - **Amortization gets a trace and no ledger**, deliberately: its `schedule` section already
+    renders every year, and a second table of the same rows is duplication wearing a new label.
+    Scenarios gets a ledger and no trace, because its answer is not a sum but a choice between
+    columns, and what four separate panels cannot show is which figures move together.
+  - Reusing an existing key for a trace line is right — it is the same figure — and it makes
+    `getByText` ambiguous. Scope the assertion to the section (`within(document.getElementById(id))`),
+    never `getAllByText(...)[0]`, which passes for the wrong reason the moment the order changes.
+    `SectionRow` renders every body into the DOM and hides closed ones with the `hidden`
+    attribute, which `getByText` does not filter on.
+  - A `calcLine` must not collide with another section's NAME on the same page: both are button
+    labels, and `getByRole("button", { name })` then matches two. This bit Amortization ("The
+    payment") and RRSP-HBP ("The refund").
+
 **Shared page chrome** lives in `src/components/tool-page.tsx` (`ToolMain`, `AnswerHead`,
 `SectionsHeader`, `FigureFooter`, `NoteLine`, `InlineAsk`, `PendingFigures`),
 `src/hooks/use-sections.ts` (the one disclosure gesture, incl. moving FOCUS on a hash arrival, not

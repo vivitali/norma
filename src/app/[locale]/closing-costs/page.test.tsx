@@ -70,7 +70,10 @@ beforeEach(() => {
 describe("Closing costs — the answer comes first", () => {
   it("leads with cash needed on closing day, before anyone types", () => {
     renderPage();
-    expect(screen.getByText("Cash needed on closing day")).toBeInTheDocument();
+    // getAllByText: the same label now names the figure in two places — the head,
+    // and the last line of the derivation in the calc section, which is the same
+    // number by construction.
+    expect(screen.getAllByText("Cash needed on closing day").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
   });
 
@@ -332,7 +335,7 @@ describe("Closing costs — French", () => {
     const user = userEvent.setup();
     renderPage("fr");
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
-    expect(screen.getByText("Comptant requis le jour de la clôture")).toBeInTheDocument();
+    expect(screen.getAllByText("Comptant requis le jour de la clôture").length).toBeGreaterThan(0);
     expect(document.body.textContent).not.toMatch(/ClosingCosts\./);
   });
 });

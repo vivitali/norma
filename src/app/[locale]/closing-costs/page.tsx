@@ -11,6 +11,7 @@ import {
   type LineItem,
 } from "@/domain/engine";
 import { federal } from "@/domain/federal";
+import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -28,6 +29,11 @@ import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 import { NOT_PRICED, NOT_PRICED_NEWBUILD } from "./omissions";
+
+/** Group totals for the trace. Same reduction `closingTotal` uses, so they agree by construction. */
+function sum(items: readonly { amount: number }[]) {
+  return items.reduce((t, r) => t + r.amount, 0);
+}
 
 export default function ClosingCostsPage() {
   const t = useTranslations("ClosingCosts");
@@ -480,6 +486,39 @@ export default function ClosingCostsPage() {
               />
             ) : null}
           </div>
+        {/*
+          "Show me how you got that."
+
+          Every operand is a GROUP TOTAL, not a re-derivation: each line here is the
+          sum of the section that lists it, so the trace can never disagree with the
+          rows above it, and any figure in it can be followed back to the document
+          its provenance names.
+        */}
+        {section(
+          "calc",
+          "secCalc",
+          "none",
+          t("calcLine"),
+          "",
+          t("calcWhy"),
+          <CalcTrace
+            caption={t("calcTraceCaption")}
+            lines={[
+              { label: t("downPaymentRow"), value: fmt(total.fin.down) },
+              { label: t("calcGov"), value: fmt(sum(lines.gov)), op: "plus" },
+              { label: t("calcPro"), value: fmt(sum(lines.pro)), op: "plus" },
+              { label: t("calcAdj"), value: fmt(sum(lines.adj)), op: "plus" },
+              { label: t("cashTotal"), value: fmt(total.cash), op: "equals", strong: true },
+              // Absent when nothing applies that day — a repeat buyer, or a province
+              // with no at-closing rebate — rather than a $0 row implying relief the
+              // reader does not get.
+              ...(total.creditsAtClosing > 0
+                ? [{ label: t("calcCredits"), value: fmt(total.creditsAtClosing), op: "minus" as const }]
+                : []),
+              { label: t("netCash"), value: fmt(total.net), op: "equals", rule: true, strong: true },
+            ]}
+          />,
+        )}
         </div>
         {/*
           What `benchmarkPrice()` does for a new build, said out loud for the first

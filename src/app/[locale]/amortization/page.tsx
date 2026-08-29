@@ -4,6 +4,7 @@ import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { amortization } from "@/domain/engine";
 import { federal } from "@/domain/federal";
+import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -389,6 +390,39 @@ export default function AmortizationPage() {
                 </div>
               </>
             ))}
+            {/*
+              "Show me how you got that."
+
+              A TRACE only, deliberately: the schedule section directly above already
+              renders every year of the loan, and a second table of the same rows
+              would be duplication wearing a new label. What was missing was the step
+              BEFORE the schedule — how a price and a percentage become the payment
+              the whole page is about, insurance premium included.
+            */}
+            {section(
+              "calc",
+              "none",
+              t("calcLine"),
+              "",
+              t("calcWhy"),
+              <CalcTrace
+                caption={t("calcTraceCaption")}
+                lines={[
+                  { label: t("calcPrice"), value: fmt(resolved.price) },
+                  { label: t("calcDown"), value: fmt(result.fin.down), op: "minus", note: pct(resolved.dpPct, 2) },
+                  { label: t("calcBaseLoan"), value: fmt(result.fin.baseLoan), op: "equals", strong: true },
+                  // Absent when 20% or more is down, or the price is above the
+                  // insurable cap: there is no premium to show, and a $0 row reads as
+                  // a charge the reader is carrying.
+                  ...(result.fin.premium > 0
+                    ? [{ label: t("premium"), value: fmt(result.fin.premium), op: "plus" as const }]
+                    : []),
+                  { label: t("calcLoan"), value: fmt(result.fin.loan), op: "equals", rule: true, strong: true },
+                  { label: t("cRate"), value: pct(resolved.contractRate, 2), rule: true },
+                  { label: t("cPayment"), value: fmt(result.rows[0].payment), op: "equals", strong: true },
+                ]}
+              />,
+            )}
           </div>
         </>
       ) : (

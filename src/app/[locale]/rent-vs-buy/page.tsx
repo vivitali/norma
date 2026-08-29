@@ -22,6 +22,7 @@ import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 import { FAVOURS_BUYING, FAVOURS_RENTING } from "./omissions";
+import { CalcLedger, CalcTrace } from "@/components/calc/calc-trace";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -434,6 +435,100 @@ export default function RentVsBuyPage() {
                 {notCaptured(t("favBuy"), FAVOURS_BUYING.map((k) => t(k)))}
                 {notCaptured(t("favRent"), FAVOURS_RENTING.map((k) => t(k)))}
               </>,
+            )}
+            {/*
+              "Show me how you got that."
+
+              The derivation at the reader's own horizon, then every year the model
+              runs. Both are built from figures already on `result` — this section
+              computes nothing of its own, which is the point: a trace that did its
+              own arithmetic could agree with itself while disagreeing with the
+              answer above it.
+            */}
+            {section(
+              "calc",
+              "none",
+              t("calcLine"),
+              "",
+              t("calcWhy"),
+              <div className="flex flex-col gap-5">
+                <CalcTrace
+                  caption={t("calcTraceCaption", { n: hold })}
+                  lines={[
+                    { label: t("cHomeValue"), value: fmt(atHorizon.homeValue) },
+                    { label: t("cSelling"), value: fmt(atHorizon.sellingCost), op: "minus" },
+                    { label: t("cBalance"), value: fmt(atHorizon.balance), op: "minus" },
+                    { label: t("cEquity"), value: fmt(atHorizon.equity), op: "equals", strong: true },
+                    // Absent rather than zero when nothing applies, matching the
+                    // convention buildLines uses everywhere else in this app: a row
+                    // of zeroes reads as a cost the reader has, and they do not.
+                    ...(atHorizon.taxTimeCredits > 0
+                      ? [{ label: t("calcTaxCredits"), value: fmt(atHorizon.taxTimeCredits), op: "plus" as const }]
+                      : []),
+                    ...(atHorizon.bp > 0
+                      ? [{ label: t("calcInvested"), value: fmt(atHorizon.bp), op: "plus" as const }]
+                      : []),
+                    { label: t("calcBuying"), value: fmt(atHorizon.buyW), rule: true, strong: true },
+                    {
+                      label: t("calcUpfrontGrown"),
+                      value: fmt(atHorizon.rentW - atHorizon.rp),
+                      note: t("upFrontNote", { up: fmt(result.upFront) }),
+                    },
+                    ...(atHorizon.rp > 0
+                      ? [{ label: t("calcInvested"), value: fmt(atHorizon.rp), op: "plus" as const }]
+                      : []),
+                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), strong: true },
+                    { label: t("calcDifference"), value: fmt(atHorizon.adv), op: "equals", rule: true, strong: true },
+                  ]}
+                />
+                <CalcLedger
+                  caption={t("calcLedgerCaption")}
+                  rowHeader="year"
+                  columns={[
+                    { key: "year", label: t("cYear") },
+                    { key: "rate", label: t("cRate"), numeric: true },
+                    { key: "interest", label: t("cInterest"), numeric: true },
+                    { key: "principal", label: t("cPrincipal"), numeric: true },
+                    { key: "balance", label: t("cBalance"), numeric: true },
+                    { key: "propTax", label: t("cPropTax"), numeric: true },
+                    { key: "insurance", label: t("cInsurance"), numeric: true },
+                    { key: "services", label: t("cServices"), numeric: true },
+                    { key: "strata", label: t("cStrata"), numeric: true },
+                    { key: "maint", label: t("cMaint"), numeric: true },
+                    { key: "owner", label: t("cOwner"), numeric: true },
+                    { key: "renter", label: t("cRenter"), numeric: true },
+                    { key: "equity", label: t("cEquity"), numeric: true },
+                    { key: "buyW", label: t("cBuyW"), numeric: true },
+                    { key: "rentW", label: t("cRentW"), numeric: true },
+                    { key: "adv", label: t("cAdv"), numeric: true },
+                  ]}
+                  rows={result.rows.map((row) => ({
+                    key: row.t,
+                    highlight: row.t === hold,
+                    cells: {
+                      year: String(row.t),
+                      rate: pct(row.rate * 100, 2),
+                      interest: fmt(row.interest),
+                      // Not carried on the row: principal is what the payment was
+                      // that the interest was not, and deriving it here keeps one
+                      // definition rather than two that can drift.
+                      principal: fmt(row.paid - row.interest),
+                      balance: fmt(row.balance),
+                      propTax: fmt(row.propTax),
+                      insurance: fmt(row.insurance),
+                      services: fmt(row.services),
+                      strata: fmt(row.strata),
+                      maint: fmt(row.maintenance),
+                      owner: fmt(row.ownerOutlay),
+                      renter: fmt(row.renterOutlay),
+                      equity: fmt(row.equity),
+                      buyW: fmt(row.buyW),
+                      rentW: fmt(row.rentW),
+                      adv: fmt(row.adv),
+                    },
+                  }))}
+                />
+              </div>,
             )}
           </div>
         </>

@@ -4,6 +4,7 @@ import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { hbpPlay } from "@/domain/engine";
 import { federal } from "@/domain/federal";
+import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
@@ -322,6 +323,44 @@ export default function RrspHbpPage() {
               {t("noVerdict")}
             </p>
           </>,
+        )}
+        {/*
+          "Show me how you got that."
+
+          The refund is the one figure on this page a reader is most likely to have
+          been quoted wrongly elsewhere, because the intuitive arithmetic — top
+          marginal rate times the whole contribution — overstates it by roughly a
+          third on a typical income. Naming the BAND is what makes the smaller,
+          correct number legible rather than looking like a mistake.
+        */}
+        {section(
+          "calc",
+          "none",
+          t("calcLine"),
+          "",
+          t("calcWhy"),
+          <CalcTrace
+            caption={t("calcTraceCaption")}
+            lines={[
+              { label: t("calcBandTop"), value: fmt(resolved.taxIncome) },
+              { label: t("calcContribution"), value: fmt(play.contribution), op: "minus" },
+              {
+                label: t("calcBandBottom"),
+                value: fmt(Math.max(0, resolved.taxIncome - play.contribution)),
+                op: "equals",
+              },
+              {
+                label: t("calcRefund"),
+                value: fmt(play.refund),
+                op: "equals",
+                rule: true,
+                strong: true,
+                note: t("refundWhy"),
+              },
+              { label: t("withdraw"), value: fmt(play.withdraw), rule: true },
+              { label: t("calcRepay"), value: fmt(play.repayAnnual), op: "equals" },
+            ]}
+          />,
         )}
       </div>
 

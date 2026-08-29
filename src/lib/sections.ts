@@ -37,6 +37,7 @@ export const CLOSING_SECTIONS: readonly SectionDef[] = [
   { id: "adjustments", labelKey: "secAdjustments" },
   { id: "credits", labelKey: "secCredits" },
   { id: "cash", labelKey: "secCash" },
+  { id: "calc", labelKey: "secCalc" },
 ] as const;
 
 export const DOWN_PAYMENT_SECTIONS: readonly SectionDef[] = [
@@ -44,6 +45,7 @@ export const DOWN_PAYMENT_SECTIONS: readonly SectionDef[] = [
   { id: "waterfall", labelKey: "secWaterfall" },
   { id: "cost", labelKey: "secCost" },
   { id: "glide", labelKey: "secGlide" },
+  { id: "calc", labelKey: "secCalc" },
 ] as const;
 
 export const RRSP_HBP_SECTIONS: readonly SectionDef[] = [
@@ -51,6 +53,7 @@ export const RRSP_HBP_SECTIONS: readonly SectionDef[] = [
   { id: "rules", labelKey: "secRules" },
   { id: "repayment", labelKey: "secRepayment" },
   { id: "risk", labelKey: "secRisk" },
+  { id: "calc", labelKey: "secCalc" },
 ] as const;
 
 export const AMORTIZATION_SECTIONS: readonly SectionDef[] = [
@@ -58,6 +61,7 @@ export const AMORTIZATION_SECTIONS: readonly SectionDef[] = [
   { id: "renewal", labelKey: "secRenewal" },
   { id: "interest", labelKey: "secInterest" },
   { id: "schedule", labelKey: "secSchedule" },
+  { id: "calc", labelKey: "secCalc" },
 ] as const;
 
 export const RENT_VS_BUY_SECTIONS: readonly SectionDef[] = [
@@ -65,6 +69,7 @@ export const RENT_VS_BUY_SECTIONS: readonly SectionDef[] = [
   { id: "outlay", labelKey: "secOutlay" },
   { id: "wealth", labelKey: "secWealth" },
   { id: "assumptions", labelKey: "secAssumptions" },
+  { id: "calc", labelKey: "secCalc" },
 ] as const;
 
 export const SCENARIOS_SECTIONS: readonly SectionDef[] = [
@@ -72,6 +77,7 @@ export const SCENARIOS_SECTIONS: readonly SectionDef[] = [
   { id: "cash", labelKey: "secCash" },
   { id: "approval", labelKey: "secApproval" },
   { id: "lifetime", labelKey: "secLifetime" },
+  { id: "calc", labelKey: "secCalc" },
 ] as const;
 
 /**
