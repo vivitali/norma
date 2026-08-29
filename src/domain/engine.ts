@@ -1250,7 +1250,26 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
   const years = Math.max(1, o.years);
   const fin = financing(F, o);
   const cc = closingTotal(j, F, o);
-  const upFront = fin.down + cc.total;
+  // The cash the buyer must actually PRODUCE on closing day, which is what the
+  // renter has to invest instead — so `net`, not `fin.down + cc.total`.
+  //
+  // `closingTotal` returns both, and the difference is `creditsAtClosing`: the
+  // rebates a jurisdiction applies AT the closing table rather than at tax time.
+  // A Toronto first-time buyer collects $8,475 of them (the Ontario land transfer
+  // tax rebate plus Toronto's municipal one), and charging the renter with
+  // investing money the buyer never had to find credited them ~$13,300 of phantom
+  // wealth over ten years at the balanced return — tilting the verdict toward
+  // renting, on the one page whose whole job is to weigh the two.
+  //
+  // It is also the figure this page PRINTS, under a Trace cross-link asserting it
+  // is the Closing Costs page's own answer. That page's hero is `net`, so gross
+  // here made the two disagree by the rebate on a link whose contract is that they
+  // agree to the dollar. One source, both places.
+  //
+  // The CMHC premium is correctly absent from all of this: `financing()` adds it
+  // to the loan, so it is never upfront cash. The provincial sales tax ON the
+  // premium is not financeable and IS in `cc.total`, where it belongs.
+  const upFront = cc.net;
   const rate = fin.insured ? F.rates.insured : F.rates.uninsured;
   const i = Math.pow(1 + rate / 2, 2 / 12) - 1;
   const pay = fin.loan * payFactor(rate, o.amortYears);

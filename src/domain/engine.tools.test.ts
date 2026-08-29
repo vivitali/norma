@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   amortization,
+  closingTotal,
   financing,
   glidePath,
   hbpPlay,
@@ -444,8 +445,12 @@ describe("rentVsBuy", () => {
   it("counts the down payment AND closing costs as the renter's starting capital", () => {
     // The renter does not spend that money; it is invested. Omitting closing
     // costs from it would hand the buyer a free head start.
+    //
+    // Asserted NET of rebates applied at the closing table, not on the gross
+    // bill: this used to read `r.fin.down + r.cc.total`, which handed the RENTER
+    // the head start instead — see the block below.
     const r = rentVsBuy(toronto, federal, base);
-    expect(r.upFront).toBeCloseTo(r.fin.down + r.cc.total, 4);
+    expect(r.upFront).toBeCloseTo(r.fin.down + r.cc.total - r.cc.creditsAtClosing, 4);
   });
 });
 
@@ -520,5 +525,79 @@ describe("scenario", () => {
     const s = scenario(toronto, federal, { ...base, dpPct: 10 });
     const f = financing(federal, { price: base.price, dpPct: 10, amortYears: 25 });
     expect(s.premium).toBeCloseTo(f.premium, 4);
+  });
+});
+
+describe("rentVsBuy — the renter invests what the buyer actually produces", () => {
+  const toronto = jur("toronto");
+
+  const base = (ftb: boolean, dpPct: number) => ({
+    price: toronto.bench.house!,
+    dpPct,
+    amortYears: 30,
+    ftb,
+    ptype: "house" as const,
+    elsewhere: false,
+    residency: "resident" as const,
+    insuranceAnnual: 1500,
+    utilities: 300,
+    condoFee: 0,
+    rent: toronto.rent!,
+    rentInflation: 0.03,
+    years: 10,
+    appreciation: federal.appreciation.shelter,
+    appreciationOn: true,
+    investReturn: federal.investReturn.balanced,
+    investDiff: true,
+  });
+
+  it("tracks the down-payment slider, less the closing costs a bigger down payment avoids", () => {
+    const low = rentVsBuy(toronto, federal, base(true, 10));
+    const high = rentVsBuy(toronto, federal, base(true, 20));
+
+    // A bigger down payment is a bigger sum the renter does not have to find, so the
+    // renter's invested base rises with it.
+    expect(high.upFront).toBeGreaterThan(low.upFront);
+
+    // But it rises by LESS than the down payment did, and that is correct rather than
+    // a rounding artefact: 20% down retires the CMHC premium, and with it the
+    // provincial sales tax charged on that premium — which is a closing cost, and the
+    // one closing cost that moves with the thing being compared. The buyer's total
+    // bill therefore falls by ~$3,458 at the same moment their down payment rises by
+    // $145,520, and the renter's invested base has to reflect both halves.
+    const dDown = high.fin.down - low.fin.down;
+    const dBill = low.cc.total - high.cc.total;
+    expect(dBill).toBeGreaterThan(0);
+    expect(high.upFront - low.upFront).toBeCloseTo(dDown - dBill, 2);
+  });
+
+  it("invests the closing costs too — the buyer needs that cash upfront as well", () => {
+    const r = rentVsBuy(toronto, federal, base(true, 10));
+    expect(r.upFront).toBeGreaterThan(r.fin.down);
+    expect(r.upFront - r.fin.down).toBeCloseTo(r.cc.total - r.cc.creditsAtClosing, 2);
+  });
+
+  it("nets off rebates applied AT the closing table, not the gross bill", () => {
+    const r = rentVsBuy(toronto, federal, base(true, 10));
+    // Toronto's first-time buyer collects the Ontario rebate and the municipal one.
+    expect(r.cc.creditsAtClosing).toBeGreaterThan(0);
+    expect(r.upFront).toBe(r.cc.net);
+    // The defect this pins: investing the GROSS bill hands the renter money the
+    // buyer never had to produce, and compounds it for the whole horizon.
+    const gross = r.fin.down + r.cc.total;
+    expect(gross - r.upFront).toBeCloseTo(r.cc.creditsAtClosing, 2);
+  });
+
+  it("agrees to the dollar with the Closing Costs page's own answer", () => {
+    // page.tsx prints `upFront` under a Trace cross-link asserting it IS that
+    // page's figure, and that page's hero is `closingTotal().net`.
+    const o = base(true, 10);
+    expect(rentVsBuy(toronto, federal, o).upFront).toBe(closingTotal(toronto, federal, o).net);
+  });
+
+  it("leaves a non-first-time buyer's upfront cash unchanged", () => {
+    const r = rentVsBuy(toronto, federal, base(false, 10));
+    expect(r.cc.creditsAtClosing).toBe(0);
+    expect(r.upFront).toBe(r.fin.down + r.cc.total);
   });
 });
