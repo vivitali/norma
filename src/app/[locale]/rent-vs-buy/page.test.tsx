@@ -272,3 +272,82 @@ describe("Rent vs buy — it will not compare against a rent nobody published", 
     expect(screen.getByText(/Typical for Toronto/)).toBeInTheDocument();
   });
 });
+
+describe("Rent vs buy — the money the model spends and never showed", () => {
+  it("prints the selling cost it nets off equity, as a dollar amount", async () => {
+    // `equity = homeValue * (1 - sellingCost) - balance` is the largest single
+    // one-time figure in the model, and it appeared nowhere: `cEquity` said "net
+    // of selling cost" and `wealthWhy` said it again, while the omissions list
+    // one section down claimed selling costs were NOT captured. Two of those
+    // three statements were true and the reader had no way to tell which.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Where you end up/);
+    // A regex, not the exact string: a PanelRow's label span also contains the
+    // provenance mark, so its textContent is "Cost of sellingEstimate".
+    const row = screen.getByText(/^Cost of selling/).parentElement!;
+    expect(row.textContent).toMatch(/\$[\d,]+/);
+  });
+
+  it("prints the two owner costs it charges every year", async () => {
+    // propTax, insurance, utilities and maintenance are on every row of the
+    // schedule and none was rendered. Maintenance is the acute one -- 1% of value
+    // is close to a thousand dollars a month on a $1.2M home, and it showed up
+    // only inside a collapsed caveat about it possibly being too low.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /What each costs each year/);
+    for (const label of [/^Property tax/, /^Maintenance reserve/]) {
+      const row = screen.getByText(label).parentElement!;
+      expect(row.textContent).toMatch(/\$[\d,]+/);
+    }
+  });
+
+  it("does not add a utilities row, which would be mislabelled on a condo", async () => {
+    // engine.ts folds the condo fee into the `utilities` figure, so a row using
+    // the page's own "Utilities and heat" wording would be a wrong label over a
+    // right number wherever a strata fee is set.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /What each costs each year/);
+    // Once, as the field's own label further down the page -- never a second
+    // time as a row in this panel.
+    expect(screen.getAllByText(/Utilities and heat/)).toHaveLength(1);
+  });
+});
+
+describe("Rent vs buy — the assumptions name their own rates", () => {
+  it("shows what each appreciation and return tier selects", () => {
+    // Six rates drive the verdict and not one of them was on the page, while
+    // federal.ts's own note says the three tiers exist "so the reader can see
+    // how much the answer depends on it".
+    renderPage();
+    expect(screen.getByText(/Inflation 2\.1% a year/)).toBeInTheDocument();
+    expect(screen.getByText(/shelter growth 3\.1%/)).toBeInTheDocument();
+    expect(screen.getByText(/Cash 2\.4% a year/)).toBeInTheDocument();
+    expect(screen.getByText(/growth 5\.8%/)).toBeInTheDocument();
+  });
+
+  it("marks them as estimates rather than rules", () => {
+    // They are conf: "assumption" in federal.ts. Showing them IS the disclosure,
+    // but only if the mark says which kind of figure they are.
+    renderPage();
+    const note = screen.getByText(/Inflation 2\.1% a year/);
+    expect(within(note).getByRole("link").getAttribute("href")).toMatch(/\/sources/);
+  });
+});
+
+describe("Rent vs buy — breaking the mortgage early", () => {
+  it("names the prepayment penalty, without pricing it", async () => {
+    // The horizon control opens at three years against a five-year default term
+    // -- precisely the case that breaks a mortgage mid-term -- and nothing in the
+    // product mentioned a penalty, an IRD or a discharge. It stays qualitative:
+    // every lender computes the differential differently, which is the point.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /What is not captured/);
+    const bullet = screen.getByText(/prepayment penalty/);
+    expect(bullet).toBeInTheDocument();
+    expect(bullet.textContent).not.toMatch(/\$|%/);
+  });
+});

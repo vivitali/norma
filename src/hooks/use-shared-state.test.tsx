@@ -100,4 +100,16 @@ describe("useSharedState", () => {
     await waitFor(() => expect(seen.at(-1)).toBe(true));
     expect(seen[0]).toBe(false);
   });
+
+  it("stays hydrated across every later edit, so a gated figure cannot flicker on a keystroke", () => {
+    // Pages gate the hero figure AND the badge beside it on this flag. If it ever went back
+    // to false the gated half would blank out mid-typing — worse than the load flash it
+    // exists to prevent. It reports "storage has been read", never "state is settled".
+    const { result } = renderHook(() => useSharedState(KEYS, DEFAULTS));
+    expect(result.current[2]).toBe(true);
+    act(() => result.current[1]({ price: 600000 }));
+    expect(result.current[2]).toBe(true);
+    act(() => result.current[1]({ jurId: "halifax" }));
+    expect(result.current[2]).toBe(true);
+  });
 });

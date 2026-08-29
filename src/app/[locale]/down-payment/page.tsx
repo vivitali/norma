@@ -18,7 +18,8 @@ import { GlideChart } from "@/components/down-payment/glide-chart";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
-import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { AnswerHead, FigureFooter, InlineAsk, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { NOT_MODELLED } from "./omissions";
 
 /**
  * Each waterfall source, and the stored key holding its balance. Typed against
@@ -51,7 +52,7 @@ export default function DownPaymentPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
+  const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -74,6 +75,10 @@ export default function DownPaymentPage() {
       waterfall(federal, {
         need,
         prov: jurisdiction.prov,
+        // Required, not defaulted: the FHSA and the Home Buyers' Plan are
+        // first-time-buyer programmes in law, and the engine now blocks both rather
+        // than spending money the reader cannot legally use.
+        ftb: resolved.ftb,
         income: resolved.taxIncome,
         fhsa: resolved.fhsa,
         cash: resolved.cashSav,
@@ -130,7 +135,7 @@ export default function DownPaymentPage() {
     );
   };
 
-  const legal = minDown(resolved.price);
+  const legal = minDown(federal, resolved.price);
   // The REQUESTED percentage, deliberately: resolved.dpPct already has the floor
   // applied, so comparing it against the floor could never report a raise.
   const chosen = (resolved.price * resolved.dpPctRequested) / 100;
@@ -146,6 +151,12 @@ export default function DownPaymentPage() {
       */}
       {resolved.priceKnown ? (
         <>
+          {/*
+            One mechanism for "the stored inputs have not landed yet", shared by
+            every tool page — see `PendingFigures` in tool-page.tsx for why it hides
+            rather than omits, and what that trades.
+          */}
+          <PendingFigures pending={!hydrated}>
           <AnswerHead
             eyebrow={t("title")}
             figure={fmt(need)}
@@ -162,6 +173,7 @@ export default function DownPaymentPage() {
               },
             ]}
           />
+          </PendingFigures>
 
           <div className="pt-8 sm:pt-[34px]">
             <SectionsHeader
@@ -208,6 +220,36 @@ export default function DownPaymentPage() {
                   <PanelRow label={t("grpAtClosing")} value={`− ${fmt(closing.creditsAtClosing)}`} />
                 ) : null}
                 <PanelRow label={t("netCash")} value={fmt(need)} strong />
+                {/*
+                  THE ASK, in the section that is actually open when it is made.
+                  The hero's sub-line asks the reader to add their balances, and
+                  every one of the six fields that answers it sits inside the
+                  CLOSED waterfall section — so the page asked a question in a
+                  place where it could not be answered.
+
+                  A link rather than a copy of the fields. Duplicating them would
+                  put two controls on one key (the defect this review found on
+                  /affordability), and a field placed HERE would unmount under the
+                  reader's cursor the moment it took a value: `described` flips,
+                  the default open section moves to `waterfall`, and this panel
+                  closes. The hash is the mechanism the product already has —
+                  `useHashTarget` opens the named section and moves FOCUS to it,
+                  not just the scroll position.
+                */}
+                {!described ? (
+                  <InlineAsk>
+                    {t.rich("askBalances", {
+                      link: (chunks) => (
+                        <a
+                          href="#waterfall"
+                          className="font-medium text-ac underline-offset-2 hover:underline"
+                        >
+                          {chunks}
+                        </a>
+                      ),
+                    })}
+                  </InlineAsk>
+                ) : null}
               </>,
             )}
 
@@ -233,12 +275,53 @@ export default function DownPaymentPage() {
                   <div key={row.key} className="border-b border-hairline pb-2">
                     <PanelRow
                       label={`${t(SOURCE_LABEL[row.key])} · ${t(row.cost === "free" ? "free" : row.cost === "strings" ? "strings" : "costs")}`}
-                      value={row.drawn > 0 ? fmt(row.drawn) : t("untouched")}
+                      // "Not needed" is what an untouched row says, and it is false
+                      // of a blocked one: the money is there and the programme is
+                      // shut. The row stays, at zero, saying which.
+                      value={
+                        row.blocked === "ftb"
+                          ? t("notAvailable")
+                          : row.drawn > 0
+                            ? fmt(row.drawn)
+                            : t("untouched")
+                      }
                       strong={row.drawn > 0}
                     />
+                    {/*
+                      ONE call site for all six Why keys, which is what lets a key
+                      grow an argument without the loop learning about it. `a` and
+                      `l` are the FHSA's annual and lifetime room — `conf: "high"`,
+                      asOf 2026-08-24, CRA "Participating in your FHSAs" — sourced
+                      since #5 landed and read by NO screen until now. They travel
+                      as arguments rather than as typed copy so the catalogue can
+                      never drift from `federal`.
+                    */}
                     <p className="pt-1 text-[12px] leading-[1.55] text-ink3 text-pretty">
-                      {t(`${SOURCE_LABEL[row.key]}Why`, { y: federal.hbp.repayYears })}
+                      {t(`${SOURCE_LABEL[row.key]}Why`, {
+                        y: federal.hbp.repayYears,
+                        a: fmt(federal.fhsa.annual),
+                        l: fmt(federal.fhsa.lifetime),
+                      })}
                     </p>
+                    {row.blocked === "ftb" ? (
+                      <p className="pt-1 text-[12px] leading-[1.55] text-caution text-pretty">
+                        {t("srcBlockedFtb")}
+                      </p>
+                    ) : null}
+                    {/*
+                      Once, on the first of the two gated rows rather than on both.
+                      "First-time" is narrower than it sounds and the trap is
+                      specific to this reader: CRA counts a home owned and lived in
+                      anywhere in the world, so someone who left a flat behind can
+                      arrive here, tick the box and be shown money they may not be
+                      able to use. No period is named — it is not in `src/domain`,
+                      so under the sourcing rule it may not travel.
+                    */}
+                    {row.key === "fhsa" ? (
+                      <p className="pt-1 text-[12px] leading-[1.55] text-ink3 text-pretty">
+                        {t("srcFtbCheck")}
+                      </p>
+                    ) : null}
                     {row.drawn > 0 && row.repayAnnual > 0 ? (
                       <p className="pt-1 text-[12px] text-caution">
                         {t("repayAnnual", { a: fmt(row.repayAnnual), y: federal.hbp.repayYears })}
@@ -256,12 +339,19 @@ export default function DownPaymentPage() {
                         })}
                       </p>
                     ) : null}
-                    <div className="flex gap-4 pt-1 text-[11.5px] text-ink3">
-                      <span>
-                        {t("left")}: {fmt(row.left)}
-                      </span>
-                      {row.exhausted ? <span>{t("exhausted")}</span> : null}
-                    </div>
+                    {/*
+                      A blocked row has `avail: 0`, so "Left in the account: $0"
+                      would report an empty account to a reader looking at their own
+                      balance in the field two lines below.
+                    */}
+                    {row.blocked === undefined ? (
+                      <div className="flex gap-4 pt-1 text-[11.5px] text-ink3">
+                        <span>
+                          {t("left")}: {fmt(row.left)}
+                        </span>
+                        {row.exhausted ? <span>{t("exhausted")}</span> : null}
+                      </div>
+                    ) : null}
                     <div className="mt-2 max-w-[320px]">
                       <NumberField
                         id={`src-${row.key}`}
@@ -402,6 +492,39 @@ export default function DownPaymentPage() {
               </>,
             )}
           </div>
+
+          {/*
+            MOVE 3 — the same omissions inventory Rent vs Buy already ships and
+            Closing Costs now carries: a module-level list whose LENGTH feeds the
+            sentence introducing it, so the count cannot drift from the list.
+
+            Both entries are the reason it exists. Neither can ever carry a figure —
+            seasoning periods are lender policy and unpublished, and the per-person
+            caps question needs a fact about a second buyer this app never asks for
+            — so before this list they were silence, which reads as "does not
+            apply" to exactly the reader who most needs to know it does.
+
+            Not a section: it hides nothing, and DESIGN.md §8 forbids a second way
+            to REVEAL, not a paragraph.
+          */}
+          <section aria-labelledby="dp-omissions" className="mt-10 flex flex-col gap-2">
+            <h2 id="dp-omissions" className="text-[13px] font-semibold">
+              {t("notModelledTitle")}
+            </h2>
+            <p className="max-w-[620px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
+              {t("notModelledLine", { n: NOT_MODELLED.length })}
+            </p>
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {NOT_MODELLED.map((key) => (
+                <li
+                  key={key}
+                  className="max-w-[620px] text-[12.5px] leading-[1.6] text-ink2 text-pretty"
+                >
+                  {t(key)}
+                </li>
+              ))}
+            </ul>
+          </section>
         </>
       ) : (
         <AnswerHead
@@ -426,6 +549,9 @@ export default function DownPaymentPage() {
             ptype={stored.ptype}
             ftb={stored.ftb}
             elsewhere={stored.elsewhere}
+            ftbEffective={resolved.ftb}
+            ptypeEffective={resolved.ptype}
+            residency={stored.residency}
             jurisdiction={jurisdiction}
             onChange={update}
           />
@@ -436,3 +562,12 @@ export default function DownPaymentPage() {
     </ToolMain>
   );
 }
+
+/**
+ * The ask, where the section making it cannot answer it.
+ *
+ * The same treatment /affordability uses, with one difference: its children are a
+ * control, and these are a sentence carrying a link. Nothing on the screen is
+ * gated behind either.
+ */
+

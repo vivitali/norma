@@ -5,17 +5,32 @@ import { Button } from "@/components/ui/button";
 import { NAV, builtEntries, type NavEntry } from "@/lib/routes";
 
 /**
- * The five questions the home page answers, in the order a visitor asks them.
+ * The six questions the home page answers, in the order a visitor asks them.
  *
  * Exported because `page.tsx` builds the FAQPage JSON-LD from the SAME keys it renders. That is
  * the whole point of the constant: schema that describes content which is not on the page is
  * fabricated markup, and the only durable way to prevent it is to make one list feed both.
+ *
+ * `eligibility` sits beside `jurisdiction` because they are the same question — does any of this
+ * apply to me — and before `verified`, which is about the figures rather than the reader. It is
+ * the one answer here that comes BEFORE every number the product computes: the federal Act
+ * restricting purchases of residential property by non-Canadians decides whether there is a
+ * purchase to price at all, and until now the words "permanent", "foreign", "work permit",
+ * "immigrat" and "abroad" appeared in no catalogue in any language.
+ *
+ * Its answer carries NO date and NO figure, and that is a hard constraint rather than a style
+ * choice. These answers are emitted as FAQPage structured data, which exists to be stripped of
+ * its surrounding context by machines; CLAUDE.md admits a qualitative "which rules exist and who
+ * levies them" answer and admits a number only at `conf: "high"` with its `asOf` quoted. The Act
+ * is time-limited and has been extended by regulation, so any date in it would be a figure with
+ * no provenance entry AND a maintenance liability with a silent expiry.
  */
 export const HOME_FAQ_KEYS = [
   "afford",
   "preapproval",
   "stressTest",
   "jurisdiction",
+  "eligibility",
   "verified",
 ] as const;
 

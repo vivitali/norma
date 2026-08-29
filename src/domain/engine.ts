@@ -65,10 +65,63 @@ export function monthsToSave(gap: number | null, save: number | null): number | 
   return Math.ceil(-gap / save);
 }
 
-export function minDown(price: number): number {
-  if (price <= 500000) return price * 0.05;
-  if (price < 1500000) return 25000 + (price - 500000) * 0.1;
-  return price * 0.2;
+/**
+ * The statutory minimum down payment on a purchase price.
+ *
+ * The tiers are NOT written here. They were — `500000`, `1500000`, `0.05`, `0.1`, `0.2` as
+ * literals — and a page component then wrote `MIN_DOWN_TIER = 500000` a second time to
+ * caption them, which is exactly the duplication engine.ts's own header forbids: rule values
+ * live in federal.ts, only mechanics live here. They now come off `F.minDown`, with the
+ * provenance entry that makes them quotable to the reader.
+ *
+ * Marginal below the insured cap, flat at or above it — see `FederalRules.minDown` for why
+ * the 20% is a different kind of thing from the two bands beneath it.
+ */
+export function minDown(F: FederalRules, price: number): number {
+  if (price >= F.cmhc.insuredCap) return price * F.minDown.uninsuredRate;
+  return bracketTax(price, F.minDown.bands).total;
+}
+
+export interface AmortEligibilityInput {
+  dpPct: number;
+  price: number;
+  ftb: boolean;
+  ptype: PropertyType;
+}
+
+/**
+ * The longest amortization this borrower can actually get, in years.
+ *
+ * `financing()` charges `cmhc.longAmortSurcharge` on a 30-year loan without ever asking
+ * whether the borrower may have one, and both `maxAmortFtbInsured` and `maxAmortOther` were
+ * read by nothing outside their own tests. This is the predicate that closes that: a screen
+ * offering a 30-year amortization control calls it and GATES the control, with a caution
+ * naming the condition.
+ *
+ * Thirty years is available on three independent grounds, and all three are needed:
+ *
+ * 1. **20% down or more** — the loan is uninsured, so no insured maximum binds it.
+ * 2. **Price at or above `cmhc.insuredCap`** — insurance is unavailable at all, for the same
+ *    reason: `minDown` already forces 20% there, but the point stands independently, because
+ *    a reader who has typed a larger price has left the insured world entirely.
+ * 3. **First-time buyer OR new build** — CMHC Home Start, whose eligibility is that exact
+ *    "or". Dropping the `newbuild` half would deny a 30-year amortization to a repeat buyer
+ *    of a new home, who is entitled to it.
+ *
+ * **Do not print the 25 as the law.** `maxAmortOther` is `conf: "medium"` and its own note
+ * scopes it to INSURED loans: 30- and even 35-year uninsured amortizations exist at lender
+ * discretion. Since the 25 is only ever returned when the loan IS insured (all three grounds
+ * above having failed), the number is correct where it is returned — but the sentence a UI
+ * writes around it must say "on an insured mortgage", not "in Canada".
+ *
+ * It GATES, it does not clamp. `financing()` and `amortization()` still compute exactly the
+ * amortization the reader set, because silently recomputing someone's input is how a screen
+ * comes to disagree with the figure the reader is looking at.
+ */
+export function maxAmortYears(F: FederalRules, o: AmortEligibilityInput): number {
+  const uninsured = o.dpPct >= 20 || o.price >= F.cmhc.insuredCap;
+  const homeStart = o.ftb || o.ptype === "newbuild";
+  return uninsured || homeStart ? F.maxAmortFtbInsured : F.maxAmortOther;
 }
 
 /**
@@ -104,7 +157,7 @@ export function financing(F: FederalRules, o: FinancingInput) {
     premRate = band[1] + (o.amortYears > 25 ? F.cmhc.longAmortSurcharge : 0);
   }
   const premium = insured ? baseLoan * premRate : 0;
-  return { down, baseLoan, insured, premRate, premium, loan: baseLoan + premium, minDown: minDown(o.price) };
+  return { down, baseLoan, insured, premRate, premium, loan: baseLoan + premium, minDown: minDown(F, o.price) };
 }
 
 export type FinancingResult = ReturnType<typeof financing>;
@@ -138,6 +191,18 @@ export function unmetBy(when: Applicability | undefined, o: ClosingInput): (keyo
   if (!when) return unmet;
   if (when.ftb !== undefined && when.ftb !== o.ftb) unmet.push("ftb");
   if (when.ptype !== undefined && when.ptype !== o.ptype) unmet.push("ptype");
+  // KNOWN OMISSIONS AT THIS SEAM, and this is where the next person will look for them.
+  // `residency` currently reaches exactly one line in the whole dataset — Nova Scotia's 10%
+  // non-resident deed transfer tax on halifax.ts. Two more of the largest charges a
+  // non-resident buyer in Canada faces are NOT modelled anywhere:
+  //   * Ontario's Non-Resident Speculation Tax (25%, province-wide since 2022);
+  //   * British Columbia's additional property transfer tax (20%, specified regions only).
+  // Neither is guessed at here: both need a primary-source read of their own statute and
+  // regulation before a rate could ship at `conf: "high"`, and BC's needs a note scoping it
+  // to the specified taxable regions rather than the province. Note also that `residency` is
+  // one flag carrying two different meanings — halifax.ts records a PROVINCIAL six-month
+  // becoming-resident exemption, while ON and BC turn on citizenship or permanent residence
+  // — so widening the type is a semantics decision, not a mechanical one.
   if (when.residency !== undefined && when.residency !== o.residency) unmet.push("residency");
   if (when.elsewhere !== undefined && when.elsewhere !== o.elsewhere) unmet.push("elsewhere");
   if (when.overPrice !== undefined && !(o.price > when.overPrice)) unmet.push("overPrice");
@@ -202,7 +267,15 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
   if (f.titleIns != null) pro.push({ key: "li_titleIns", amount: f.titleIns });
   pro.push({ key: "li_inspect", amount: f.inspect });
   pro.push({ key: "li_appraisal", amount: f.appraisal });
-  if (o.ptype === "condo" && f.statusCert) pro.push({ key: "li_statusCert", amount: f.statusCert });
+  // `!= null`, not truthiness. Montreal carried `statusCert: 0`, which is falsy, so condo
+  // buyers there silently got no status-certificate line at all while /sources still
+  // disclosed an `assumption`-grade modelling default for it. The zero is gone from that
+  // record — the field is optional, and an ABSENT fee is the honest way to say a record does
+  // not carry one — and this gate is tightened so a future 0 renders as a $0 line rather than
+  // vanishing. Tightening alone would have started charging Montreal a $0 row; both halves.
+  if (o.ptype === "condo" && f.statusCert != null) {
+    pro.push({ key: "li_statusCert", amount: f.statusCert });
+  }
 
   const adj: LineItem[] = [
     { key: "li_taxAdj", ex: "ex_taxAdj", amount: (o.price * j.propTax.effective) / 4 },
@@ -354,20 +427,51 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     if (!applies(c.when, o)) continue;
     later.push({ key: c.key, ex: c.ex, amount: c.amount });
   }
-  if (o.ftb && o.ptype === "newbuild") {
-    const g = F.gstFthb;
-    const gst = o.price * g.rate;
-    const amt =
-      o.price <= g.fullTo
-        ? Math.min(gst, g.cap)
-        : o.price >= g.zeroAt
-          ? 0
-          : (Math.min(gst, g.cap) * (g.zeroAt - o.price)) / (g.zeroAt - g.fullTo);
-    if (amt > 0) later.push({ key: "cr_gstFthb", ex: "ex_gstFthb", amount: amt });
+  /**
+   * The first-time buyers' GST/HST rebate is DELIBERATELY NOT REPORTED AS MONEY.
+   *
+   * `buildLines` has no GST line, so paying the rebate out produced a new build whose closing
+   * bill was byte-identical to a resale's plus a refund of up to `gstFthb.cap` ($50,000) — a
+   * five-figure credit against a tax this app never charged. A repeat buyer, meanwhile, got
+   * neither the charge nor the rebate, so the two property types differed by the rebate alone
+   * and in the wrong direction.
+   *
+   * Charging 5% is NOT the fix and must not be taken as one:
+   *
+   * - Five provinces levy HST, not GST — 13% in Ontario, 15% in the four Atlantic provinces —
+   *   so a flat 5% would understate the tax by up to two thirds while presenting itself as
+   *   *the* tax. Modelling it needs a per-province rate with its own primary-source read.
+   * - `benchmarkPrice()` resolves `newbuild` to the RESALE HOUSE benchmark, because no
+   *   publisher produces a new-build price level in Canada. A resale benchmark is a
+   *   GST-inclusive market price; adding 5% to it invents a tax on a number that already
+   *   contains one. A real charge needs the builder's own price as an input.
+   *
+   * Until both exist, the programme is reported as an OMISSION rather than as a refund: the
+   * key travels so a page can disclose it in words, and no dollar amount travels with it.
+   *
+   * The PRICE TEST is not decoration and must not be dropped as one. The rebate phases to
+   * nil at `gstFthb.zeroAt`, so above that price the programme does not apply at all — and
+   * the page renders this list under "Applies here, and not priced". Without the test the
+   * eyebrow asserted applicability over a paragraph saying the rebate is nil, on DEFAULT
+   * settings in the two most expensive markets: `ftb` defaults true and `benchmarkPrice()`
+   * resolves `newbuild` to the resale house benchmark, which is $1,822,900 in Vancouver and
+   * $1,529,900 in Toronto, both above the $1,500,000 cut-off. The superseded implementation
+   * had this test as `amt > 0`; reporting the programme as an omission rather than as money
+   * changed what travels, not whether it applies.
+   */
+  const omitted: { key: string; ex: string }[] = [];
+  if (o.ftb && o.ptype === "newbuild" && o.price < F.gstFthb.zeroAt) {
+    omitted.push({ key: "cr_gstFthb", ex: "ex_gstFthb" });
   }
   return {
     atClosing: duplicates.size === 0 ? atClosing : atClosing.filter((c) => !duplicates.has(c)),
     later,
+    /**
+     * Programmes that apply to this purchase and that this app deliberately does not price.
+     * Not a zero row and not a silence: a page renders `ex` as a named omission, in the
+     * treatment `omissions.ts` already uses on Rent vs Buy.
+     */
+    omitted,
   };
 }
 
@@ -449,12 +553,34 @@ export function defaultContractRate(F: FederalRules, dpPct: number): number {
  * The premium rate depends only on the down payment and the amortization, never on the
  * price, so the ceiling equations stay linear and solvable.
  *
- * TWO BOUNDARIES ARE NOT MODELLED HERE, both of them pre-existing. Insurance is
- * unavailable at or above `cmhc.insuredCap`, so a sub-20% ceiling that solves above
- * $1.5M is not actually reachable at that down payment; and `minDown` is progressive,
- * so 5% is below the legal minimum on a home over $500,000. The page flags the second
- * against the reader's own target price (`belowMinimum`); neither is enforced against
- * the solved ceiling.
+ * NO FIXED POINT IS NEEDED, and a review asked. The premium band is selected by LTV,
+ * which depends only on `dpPct` — never on the price — so the fraction is closed form
+ * and both ceiling equations stay linear in the unknown. Verified by sweeping `dpPct`
+ * 1 through 40 in Toronto and Winnipeg at both amortizations: no non-monotonic point,
+ * Toronto running $341,019 at 5% up to $526,275 at 40%.
+ *
+ * TWO BOUNDARIES ARE NOT MODELLED HERE, both of them pre-existing, and this is the
+ * record of what they cost so nobody has to re-derive it:
+ *
+ * - `minDown` is progressive, so a flat 5% is below the legal minimum on anything over
+ *   $500,000. Toronto, 30 years, first-time buyer, $150,000 income at 5% solves to a
+ *   $753,250 ceiling, offering $37,663 of deposit against a $50,325 legal minimum.
+ * - Insurance is unavailable at or above `cmhc.insuredCap`, so a sub-20% ceiling that
+ *   solves above $1.5M is unreachable at that deposit — $400,000 income at 10% solves
+ *   to $2,171,714, where the minimum is 20% and the premium this function charged does
+ *   not exist.
+ *
+ * `scenario()` enforces the floor against the reader's TARGET price
+ * (`down = Math.max(requested, floor)` plus `belowMinimum`), and `resolveInputs`
+ * raises `dpPct` there too, so the same product answers this two ways.
+ *
+ * It is left alone DELIBERATELY, not overlooked. Enforcing it means clamping the
+ * solved ceiling to the highest price this deposit percentage can legally buy — for a
+ * 5% buyer, $500,000 at any income — and this codebase's rule is that nothing clamps
+ * silently. A clamp the reader can see is new copy in four locales saying "your 5%
+ * deposit caps you here regardless of income", which is a product decision about the
+ * flagship figure, not a review fix. Whoever takes it: the binding price is where
+ * `dpPct/100` meets `minDown(F, P)/P`, which is closed form off `minDown.bands`.
  */
 export function financedFraction(F: FederalRules, dpPct: number, amortYears: number): number {
   const ltv = 1 - dpPct / 100;
@@ -477,6 +603,10 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
 
   // Solved so property tax scales with price, at the loan this down payment actually
   // produces rather than at a flat 80% — see financedFraction above.
+  //
+  // The flat `0.8` IS GONE. A review reported it still here; it is not, and the check
+  // is one line: `financed` below is `financedFraction(F, o.dpPct, o.amortYears)`, and
+  // `denomLender` multiplies THAT. Nothing in this file multiplies `fq` by a constant.
   const financed = financedFraction(F, o.dpPct, o.amortYears);
   const denomLender = financed * fq + j.propTax.effective / 12;
   /**
@@ -488,7 +618,11 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
     if (qualIncome <= 0) return 0;
     const tds = (qualIncome * (F.tds / 100)) / 12 - monthlyDebts;
     const binds = Math.min(gdsAllow, tds);
-    return Math.max(0, (binds - F.heatAllowance - o.condoFee * 0.5) / denomLender);
+    // HALF the condo fee, because that is what CMHC's GDS/TDS guidance tells a lender to
+    // count — and the full fee two lines below, because that is what the household pays.
+    // Both are correct and they are not the same figure; the screen has to say so, which is
+    // why the share is a named federal rule with provenance rather than a bare 0.5.
+    return Math.max(0, (binds - F.heatAllowance - o.condoFee * F.condoFeeInclusion) / denomLender);
   };
   const ceiling = ceilingCarrying(o.debts);
 
@@ -526,11 +660,11 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   const gdsAtTarget =
     qualIncome <= 0
       ? 0
-      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * 0.5) / (qualIncome / 12)) * 100;
+      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * F.condoFeeInclusion) / (qualIncome / 12)) * 100;
   const tdsAtTarget =
     qualIncome <= 0
       ? 0
-      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * 0.5 + o.debts) / (qualIncome / 12)) * 100;
+      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * F.condoFeeInclusion + o.debts) / (qualIncome / 12)) * 100;
 
   // Marginal cost of debt WHERE TDS BINDS: what one dollar of monthly obligation
   // removes from the ceiling once total debt service is the constraint.
@@ -705,6 +839,40 @@ export function marginalRate(F: FederalRules, prov: string, income: number): num
   return tbl[tbl.length - 1][1];
 }
 
+/**
+ * Tax on the slice of income between `from` and `to`, integrated over the bracket table.
+ *
+ * This exists because a large deduction is not priced at the top marginal rate. The RRSP
+ * screen used to compute its refund as `contribution * marginalRate(income)`, which on the
+ * defaults — $60,000 contributed against $75,000 of Ontario income — priced the whole
+ * $60,000 at 29.65% and printed ~$17,790. The deduction actually walks the taxpayer DOWN
+ * through three brackets to $15,000, and the true saving is ~$13,842: a 29% overstatement,
+ * in the flattering direction, as that page's hero figure.
+ *
+ * The table is `[[ceiling, rate], …]` ascending, the ceiling INCLUSIVE and the final one
+ * null — the same convention `marginalRate` reads, so the two can never drift apart.
+ *
+ * Note what this inherits: `federal.marginal` is `conf: "assumption"`, an unverified
+ * prototype carry-over. Integrating it correctly makes the arithmetic honest, not the
+ * brackets sourced; a figure derived from it still may not travel as a statutory claim.
+ */
+export function taxOnBand(F: FederalRules, prov: string, from: number, to: number): number {
+  const lo = Math.max(0, Math.min(from, to));
+  const hi = Math.max(0, Math.max(from, to));
+  if (hi <= lo) return 0;
+  const tbl = F.marginal[prov] ?? F.marginal.CA;
+  let prev = 0;
+  let tax = 0;
+  for (const [cap, rate] of tbl) {
+    const top = cap === null ? hi : Math.min(hi, cap);
+    const bottom = Math.max(lo, prev);
+    if (top > bottom) tax += (top - bottom) * rate;
+    if (cap === null || hi <= cap) break;
+    prev = cap;
+  }
+  return tax;
+}
+
 export type SourceKey = "fhsa" | "cash" | "hbp" | "tfsa" | "gift" | "nonreg";
 
 /**
@@ -730,11 +898,27 @@ export interface WaterfallRow {
   cost: SourceCost;
   exhausted: boolean;
   untouched: boolean;
+  /**
+   * Why this source is unavailable, when it is. `"ftb"` means the programme is open only to
+   * a first-time home buyer and the reader has said they are not one.
+   *
+   * Shaped as a discriminator on a row that is still PRESENT with `avail: 0`, mirroring
+   * `CreditLine.st === "ftbOnly"` rather than inventing a second convention: dropping the
+   * row would tell a reader who has $40,000 in an FHSA that the app simply forgot it, where
+   * showing it blocked tells them the rule that stops them using it here.
+   */
+  blocked?: "ftb";
 }
 
 export interface WaterfallInput {
   need: number;
   prov: string;
+  /**
+   * First-time home buyer. Required, not optional with a default: an FHSA withdrawal and an
+   * HBP withdrawal are both qualifying-home-buyer programmes in law, and defaulting the flag
+   * either way would silently pick an answer for a reader the caller can simply ask.
+   */
+  ftb: boolean;
   /** Taxable income, for the marginal rate applied to a realised capital gain. */
   income: number;
   fhsa: number;
@@ -752,10 +936,20 @@ export interface WaterfallInput {
  * Funding waterfall.
  *
  * The order is fixed by COST, not by preference, and that is the point of the
- * screen: FHSA and cash first because they are free, HBP and TFSA next because
- * they carry strings, gift, then non-registered last because selling it triggers
- * tax. A user who reorders this is choosing to pay more, and the fixed order is
- * what makes that visible.
+ * screen: FHSA, cash and a gift first because they are free, HBP and TFSA next
+ * because they carry strings, and non-registered last because selling it
+ * triggers tax. A user who reorders this is choosing to pay more, and the fixed
+ * order is what makes that visible.
+ *
+ * `gift` used to sit BELOW `hbp` and `tfsa`, so the page drained fifteen years
+ * of RRSP repayment obligation and a year of TFSA room before touching money
+ * that costs nothing at all — under a heading reading "drawn in this order
+ * because each source costs more than the one above it". Its `cost` field said
+ * `free` the whole time; the array said otherwise, and the array is what renders.
+ *
+ * FHSA and HBP are gated on first-time-buyer status because both are
+ * qualifying-home-buyer programmes in law. A blocked source keeps its row with
+ * `avail: 0` and `blocked: "ftb"` rather than disappearing — see WaterfallRow.
  *
  * Tax on a partial non-registered draw is pro-rated by the fraction of the
  * account sold — selling a third of the account realises a third of the gain.
@@ -763,12 +957,19 @@ export interface WaterfallInput {
 export function waterfall(F: FederalRules, o: WaterfallInput) {
   const rate = marginalRate(F, o.prov, o.income);
   const hbpRoom = Math.min(Math.max(0, o.rrsp), F.hbp.max);
-  const defs: { key: SourceKey; avail: number; cost: SourceCost; gain?: number }[] = [
-    { key: "fhsa", avail: Math.max(0, o.fhsa), cost: "free" },
+  const ftbOnly = o.ftb ? undefined : ("ftb" as const);
+  const defs: {
+    key: SourceKey;
+    avail: number;
+    cost: SourceCost;
+    gain?: number;
+    blocked?: "ftb";
+  }[] = [
+    { key: "fhsa", avail: o.ftb ? Math.max(0, o.fhsa) : 0, cost: "free", blocked: ftbOnly },
     { key: "cash", avail: Math.max(0, o.cash), cost: "free" },
-    { key: "hbp", avail: hbpRoom, cost: "strings" },
-    { key: "tfsa", avail: Math.max(0, o.tfsa), cost: "strings" },
     { key: "gift", avail: Math.max(0, o.gift), cost: "free" },
+    { key: "hbp", avail: o.ftb ? hbpRoom : 0, cost: "strings", blocked: ftbOnly },
+    { key: "tfsa", avail: Math.max(0, o.tfsa), cost: "strings" },
     { key: "nonreg", avail: Math.max(0, o.nonreg), cost: "tax", gain: Math.max(0, o.nonregGain) },
   ];
 
@@ -801,6 +1002,7 @@ export function waterfall(F: FederalRules, o: WaterfallInput) {
       cost: d.cost,
       exhausted: d.avail > 0 && drawn >= d.avail - 0.5,
       untouched: drawn <= 0.5,
+      blocked: d.blocked,
     });
   }
 
@@ -853,8 +1055,14 @@ export type GlidePathResult = ReturnType<typeof glidePath>;
 export interface HbpInput {
   /** What you would contribute to the RRSP before withdrawing. */
   contribution: number;
-  /** Combined marginal rate as a fraction, e.g. 0.3389. */
-  marginalRate: number;
+  /**
+   * Taxable income BEFORE the contribution is deducted. The refund is the tax on the slice
+   * the deduction removes, so the function needs the income and the province rather than a
+   * single rate — see `taxOnBand`. It used to take a pre-computed `marginalRate`, which
+   * priced a $60,000 deduction entirely at the top rate.
+   */
+  income: number;
+  prov: string;
   /** What you intend to withdraw under the HBP. */
   withdrawAmount: number;
 }
@@ -883,8 +1091,32 @@ export interface HbpInput {
  */
 export function hbpPlay(F: FederalRules, o: HbpInput) {
   const contribution = Math.max(0, Math.min(o.contribution, F.hbp.max));
-  const refund = contribution * o.marginalRate;
-  const withdraw = Math.max(0, Math.min(o.withdrawAmount, contribution, F.hbp.max));
+  const income = Math.max(0, o.income);
+  // The rate on the NEXT dollar, which is what the deduction's first dollar saves and what
+  // a missed repayment year costs. Correct for both of those and for neither of the refund.
+  const rate = marginalRate(F, o.prov, income);
+  // The refund is the tax on the band the deduction REMOVES — from the income down to what
+  // is left of it — not the contribution priced at the top rate. On the defaults that is the
+  // difference between ~$13,842 and ~$17,790, on the page's hero figure.
+  const refund = taxOnBand(F, o.prov, Math.max(0, income - contribution), income);
+  const requestedWithdraw = Math.max(0, o.withdrawAmount);
+  const withdraw = Math.min(requestedWithdraw, contribution, F.hbp.max);
+  /**
+   * The model is "contribute, then withdraw what you contributed", so a withdrawal above
+   * the new contribution is cut back to it — and a reader who already holds $60,000 in an
+   * RRSP, contributes nothing further and asks to withdraw it therefore sees the entire
+   * screen collapse to $0 with no explanation.
+   *
+   * The clamp is NOT removed here: whether the page should model a withdrawal against an
+   * existing balance is a product question, and changing the arithmetic underneath the
+   * copy would be worse than the silence. What is fixed is the silence — the page can now
+   * say which of its two inputs bound the answer.
+   */
+  // Equivalent to `requestedWithdraw > withdraw`, and deliberately not written that way: the
+  // contribution is ALWAYS the binding cap when a withdrawal is cut back, because it is
+  // itself already capped at F.hbp.max two lines above. Naming the reason keeps the next
+  // reader from "simplifying" it into a flag that also fires on the federal maximum.
+  const clampedByContribution = requestedWithdraw > contribution;
   const repayAnnual = withdraw / F.hbp.repayYears;
 
   const schedule: { year: number; repay: number; balance: number }[] = [];
@@ -911,7 +1143,16 @@ export function hbpPlay(F: FederalRules, o: HbpInput) {
      * out by a factor of the marginal rate. Renamed so the next reader cannot
      * make the same substitution.
      */
-    taxIfMissed: repayAnnual * o.marginalRate,
+    taxIfMissed: repayAnnual * rate,
+    /**
+     * The marginal rate the screen displays. Still returned, and still correct for what it
+     * labels — the next dollar — even though the refund above is no longer computed from it.
+     */
+    marginalRate: rate,
+    /** True when `withdrawAmount` was cut back to the contribution. */
+    clampedByContribution,
+    /** What the reader actually asked to withdraw, for the sentence explaining the clamp. */
+    withdrawRequested: requestedWithdraw,
     /**
      * WITHDRAWAL room left under the federal maximum — not contribution room.
      * `F.hbp.max` caps what you may take out, so measuring it against the
@@ -931,14 +1172,6 @@ export type HbpResult = ReturnType<typeof hbpPlay>;
 /* ================================================================= *
  * Rent vs buy
  * ================================================================= */
-
-/**
- * Insurance, utilities and condo fees are grown at a general inflation rate
- * rather than at shelter appreciation — they track the cost of services, not the
- * price of the house. An unverified placeholder of exactly the same class as
- * every other figure in this directory.
- */
-const NON_SHELTER_INFLATION = 0.03;
 
 export interface RentVsBuyInput extends ClosingInput {
   insuranceAnnual: number;
@@ -982,6 +1215,16 @@ export interface RentVsBuyRow {
   /** Buyer's side portfolio, funded in the years renting costs more. */
   bp: number;
   homeValue: number;
+  /**
+   * What selling this home in this year costs — the exact amount `equity` nets off,
+   * returned rather than left for a screen to re-derive.
+   *
+   * The page printed `homeValue * federal.sellingCost` beside the equity row it
+   * explains. The two agreed only by construction: change the selling-cost model here
+   * — a floor, a per-jurisdiction commission, a land transfer tax on the sale — and the
+   * row silently stops describing the figure directly beneath it.
+   */
+  sellingCost: number;
   equity: number;
   /** Terminal wealth if you bought. */
   buyW: number;
@@ -1035,7 +1278,12 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
       bal = 0;
       payoffYear ??= t;
     }
-    const infl = Math.pow(1 + NON_SHELTER_INFLATION, t - 1);
+    // Insurance, utilities and condo fees grow at the cost of SERVICES, not at the price of
+    // the house — so this is deliberately not `o.appreciation`. The rate itself moved to
+    // federal.ts with a provenance entry: as a module-local constant here it compounded for
+    // up to forty years while being structurally unreachable by /sources, which builds its
+    // inventory from federal.provenance and the jurisdiction maps.
+    const infl = Math.pow(1 + F.nonShelterInflation, t - 1);
     const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax.effective;
     const insurance = o.insuranceAnnual * infl;
     const utilities = (o.utilities + o.condoFee) * 12 * infl;
@@ -1052,7 +1300,8 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
     }
 
     const homeValue = o.price * Math.pow(1 + g, t);
-    const equity = homeValue * (1 - F.sellingCost) - bal;
+    const sellingCost = homeValue * F.sellingCost;
+    const equity = homeValue - sellingCost - bal;
     const buyW = equity + (o.investDiff ? bp : 0);
     const rentW = upFront * Math.pow(1 + ret, t) + (o.investDiff ? rp : 0);
 
@@ -1061,7 +1310,7 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
-      homeValue, equity, buyW, rentW, adv: buyW - rentW,
+      homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
     });
   }
 
@@ -1120,7 +1369,7 @@ export interface ScenarioInput extends ClosingInput {
  *    cost that varies with the thing being compared.
  */
 export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
-  const floor = minDown(o.price);
+  const floor = minDown(F, o.price);
   const requested = (o.price * o.dpPct) / 100;
   const down = Math.max(requested, floor);
   const dpPctEff = o.price > 0 ? (down / o.price) * 100 : 0;
@@ -1160,7 +1409,7 @@ export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
 
   const qualRate = Math.max(F.stressTest.floor / 100, contractRate + F.stressTest.buffer / 100);
   const stressPay = totalMortgage * payFactor(qualRate, o.amortYears);
-  const housing = stressPay + propTax + F.heatAllowance + o.condoFee * 0.5;
+  const housing = stressPay + propTax + F.heatAllowance + o.condoFee * F.condoFeeInclusion;
   const gds = o.qualIncome > 0 ? ((housing * 12) / o.qualIncome) * 100 : 0;
   const tds = o.qualIncome > 0 ? (((housing + o.debts) * 12) / o.qualIncome) * 100 : 0;
 

@@ -325,10 +325,34 @@ export interface FederalRules {
     longAmortSurcharge: number;
     insuredCap: number;
   };
+  /**
+   * The statutory minimum down payment, as a marginal schedule over the purchase price
+   * plus the flat rate that replaces it where mortgage insurance is unavailable.
+   *
+   * A rule value, so it lives here rather than inside `minDown()` — engine.ts's own header
+   * forbids rule values living in mechanics, and the tiers were additionally hardcoded a
+   * second time inside a page component, where nothing could keep the two in step.
+   */
+  minDown: {
+    /** `[ceiling, rate]`, marginal, applied below `cmhc.insuredCap`. Final ceiling is null. */
+    bands: BracketTable;
+    /**
+     * The flat rate at or above `cmhc.insuredCap`. Not a third band: above the cap no
+     * insurer will write the loan at all, so the 20% is the point at which insurance stops
+     * being needed rather than a continuation of the schedule.
+     */
+    uninsuredRate: number;
+  };
   stressTest: { floor: number; buffer: number };
   gds: number;
   tds: number;
   heatAllowance: number;
+  /**
+   * The share of a condominium fee a lender counts in GDS and TDS. A rule value with a
+   * publisher, so it does not belong in the arithmetic: it was `* 0.5` at four call sites,
+   * against the full fee used in the comfort budget on the same screen.
+   */
+  condoFeeInclusion: number;
   rates: { insured: number; uninsured: number; variable: number; prime: number };
   maxAmortFtbInsured: number;
   maxAmortOther: number;
@@ -340,6 +364,18 @@ export interface FederalRules {
   sellingCost: number;
   maintenanceReserve: number;
   appreciation: { inflation: number; shelter: number; flat: number };
+  /**
+   * Growth rate for insurance, utilities and condo fees in the long-horizon models — the
+   * cost of SERVICES, which is not the price of a house, so it is deliberately not
+   * `appreciation.shelter`.
+   *
+   * It was a module-local constant in engine.ts, which meant it compounded for up to forty
+   * years on Rent vs Buy while being structurally invisible to /sources — that page builds
+   * its inventory from `federal.provenance` and the jurisdiction maps, so a figure outside
+   * both could never be disclosed. Whether it should instead equal `appreciation.inflation`
+   * is a live product question; see its provenance note.
+   */
+  nonShelterInflation: number;
   investReturn: { cash: number; balanced: number; growth: number };
   savingsReturn: number;
   gstFthb: { rate: number; fullTo: number; zeroAt: number; cap: number };

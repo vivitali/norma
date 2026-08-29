@@ -17,4 +17,14 @@
 export const OMISSIONS_NAMESPACE = "RentVsBuy";
 
 export const FAVOURS_BUYING = ["fb1", "fb2", "fb3", "fb4"] as const;
-export const FAVOURS_RENTING = ["fr1", "fr2", "fr3"] as const;
+/**
+ * `fr4` is the prepayment penalty, and it is qualitative on purpose.
+ *
+ * Nothing user-facing in the product mentioned a penalty, an interest-rate
+ * differential or a discharge, while `HOLD_CHOICES` on this page opens with a
+ * three-year horizon against a five-year default term — precisely the case that
+ * breaks a mortgage mid-term. It carries no figure because every lender computes
+ * the differential differently, which is the point the bullet is making; a
+ * number here would need a publisher and there is none.
+ */
+export const FAVOURS_RENTING = ["fr1", "fr2", "fr3", "fr4"] as const;

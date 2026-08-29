@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { minDown, scenario } from "@/domain/engine";
+import { minDown, scenario, type ScenarioResult } from "@/domain/engine";
 import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useSections } from "@/hooks/use-sections";
@@ -17,14 +17,7 @@ import { SectionRow } from "@/components/affordability/section-row";
 import { CompareGrid, type MetricRow } from "@/components/scenarios/compare-grid";
 import { NumberField } from "@/components/number-field";
 import { PurchaseInputs } from "@/components/purchase-inputs";
-import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
-
-/**
- * The price at which the minimum down payment steps from 5% to a blended rate.
- * Named here because the sentence explaining the rule has to agree with
- * minDown(), and a literal in copy cannot be made to.
- */
-const MIN_DOWN_TIER = 500000;
+import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 
 export default function ScenariosPage() {
   const t = useTranslations("Scenarios");
@@ -34,7 +27,7 @@ export default function ScenariosPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
+  const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -42,6 +35,21 @@ export default function ScenariosPage() {
     () => resolveInputs(stored, jurisdiction, federal),
     [stored, jurisdiction],
   );
+
+  /**
+   * The income a lender would qualify — every income key the household has
+   * entered, anywhere in the product, after the recognition haircut.
+   *
+   * Hoisted out of the `scenario()` literal because this page has to PRINT it.
+   * The field below writes `income1` alone and the field beside it writes
+   * `otherDebt` alone, while both ratios are computed on all three income keys
+   * and all four debt keys — so a reader who had already entered a co-buyer's
+   * income or a car payment on /affordability typed a figure here and watched
+   * the verdict move by more than they had typed, with nothing on screen to
+   * reconcile it. The two totals are now rows in the qualification table.
+   */
+  const qualIncome =
+    (resolved.income1 + resolved.income2 + resolved.otherIncome) * (1 - resolved.haircut / 100);
 
   const columns = useMemo(
     () =>
@@ -59,15 +67,13 @@ export default function ScenariosPage() {
           condoFee: resolved.condoFee,
           comfortCeiling: resolved.comfortCeiling,
           // The haircut-adjusted income a lender would qualify, matching Affordability.
-          qualIncome:
-            (resolved.income1 + resolved.income2 + resolved.otherIncome) *
-            (1 - resolved.haircut / 100),
+          qualIncome,
           debts: resolved.debts,
           funds: resolved.funds,
           save: resolved.save,
         }),
       ),
-    [jurisdiction, resolved],
+    [jurisdiction, resolved, qualIncome],
   );
 
   const rec = recommend(columns);
@@ -181,6 +187,29 @@ export default function ScenariosPage() {
     { label: t("rPi"), value: (c) => fmt(c.monthly.pi) },
     { label: t("rPropTax"), value: (c) => fmt(c.monthly.propTax), mark: "estimate" },
     { label: t("rMaint"), value: (c) => fmt(c.monthly.maintenance), mark: "estimate" },
+    /*
+     * The other three components of the bold total below, which the table stated
+     * and then did not show. `monthly.total` is pi + propTax + insurance +
+     * utilities + condoFee + maintenance; the table listed three of the six, so in
+     * Toronto at $600,000 the visible rows summed to $3,386.67 under a "True
+     * all-in monthly" of $3,811.67 — $425 of insurance and utilities unaccounted
+     * for, plus the entire strata fee on a condo.
+     *
+     * Column-invariant, all three: the four scenarios differ only in down payment.
+     * They are here anyway, because a total nobody can add up is not a total. Zero
+     * rows are omitted on the same convention `buildLines` uses — a household with
+     * no condo fee should not be shown one — and the arithmetic still reconciles,
+     * because an omitted row is contributing nothing to the sum either.
+     */
+    ...(columns.some((c) => c.monthly.insurance > 0)
+      ? [{ label: t("rInsurance"), value: (c: ScenarioResult) => fmt(c.monthly.insurance), mark: "estimate" as const }]
+      : []),
+    ...(columns.some((c) => c.monthly.utilities > 0)
+      ? [{ label: t("rUtilities"), value: (c: ScenarioResult) => fmt(c.monthly.utilities), mark: "estimate" as const }]
+      : []),
+    ...(columns.some((c) => c.monthly.condoFee > 0)
+      ? [{ label: t("rCondoFee"), value: (c: ScenarioResult) => fmt(c.monthly.condoFee) }]
+      : []),
     { label: t("rAllIn"), value: (c) => fmt(c.monthly.total), strong: true, best: lowestBy((c) => c.monthly.total) },
     // money() already puts the sign outside the symbol. Re-implementing that here
     // is how two screens end up formatting the same negative figure differently.
@@ -208,6 +237,17 @@ export default function ScenariosPage() {
   ];
 
   const qualRows: MetricRow[] = [
+    /*
+     * The denominators, printed. Both are column-invariant — the four scenarios
+     * differ only in down payment — so they repeat across the row, which is
+     * itself the finding: nothing you do to the down payment moves either of them.
+     *
+     * They are here because the two fields below write ONE key each while these
+     * ratios are computed on seven, so the arithmetic and the inputs on screen
+     * did not reconcile. Both figures are already on `resolved`; no engine change.
+     */
+    { label: t("rQualIncome"), value: () => fmt(qualIncome), mark: "estimate" },
+    { label: t("rDebtsTotal"), value: () => fmt(resolved.debts) },
     { label: t("rQualRate"), value: (c) => pct(c.qualRate, 2), mark: "rule" },
     { label: t("rStressPay"), value: (c) => fmt(c.stressPay) },
     { label: t("rGds"), value: (c) => pct(c.gds, 1), mark: "rule" },
@@ -237,6 +277,36 @@ export default function ScenariosPage() {
     },
   ];
 
+  /*
+   * The minimum-down sentence, branched, and its tiers read off the rules table.
+   *
+   * It rendered unconditionally as "5% on the first $500,000 and 10% on the
+   * portion above it", which is simply false at or above `cmhc.insuredCap`: no
+   * insurer writes the loan there, so the minimum is the flat uninsured rate and
+   * the marginal schedule does not apply at all. And the tier it named came from
+   * a `const MIN_DOWN_TIER = 500000` in this file — a federal rule value living
+   * in a page component, with nothing able to keep it in step with `minDown()`
+   * three modules away. Both halves now come off `federal`.
+   */
+  const bands = federal.minDown.bands;
+  // `tierCeiling === null` is not a defensive flourish: a one-band schedule is a
+  // FLAT schedule, and the tiered sentence would then name a threshold that does
+  // not exist. It falls through to the same branch the insured cap does.
+  const tierCeiling = bands[0][0];
+  const minDownLine =
+    resolved.price >= federal.cmhc.insuredCap || tierCeiling === null || bands.length < 2
+      ? t("minDownNoteFlat", {
+          cap: fmt(federal.cmhc.insuredCap),
+          p: pct(federal.minDown.uninsuredRate * 100),
+          b: fmt(minDown(federal, resolved.price)),
+        })
+      : t("minDownNote", {
+          lo: pct(bands[0][1] * 100),
+          a: fmt(tierCeiling),
+          hi: pct(bands[1][1] * 100),
+          b: fmt(minDown(federal, resolved.price)),
+        });
+
   const note = (title: string, body: string) => (
     <div className="border-b border-hairline py-3">
       <p className="text-[13px] font-semibold">{title}</p>
@@ -255,6 +325,7 @@ export default function ScenariosPage() {
       */}
       {resolved.priceKnown ? (
         <>
+          <PendingFigures pending={!hydrated}>
           <AnswerHead
             eyebrow={t("title")}
             figure={fmt(headline.monthly.total)}
@@ -268,6 +339,7 @@ export default function ScenariosPage() {
               { label: t("rBorrowCost"), value: fmt(headline.costOfBorrowing), mark: "rule" },
             ]}
           />
+          </PendingFigures>
 
           <div className="pt-8 sm:pt-[34px]">
             <SectionsHeader
@@ -287,9 +359,7 @@ export default function ScenariosPage() {
                   yoursPct={stored.dpPct}
                   caption={`${t("gMortgage")} · ${t("gMonthly")}`}
                 />
-                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">
-                  {t("minDownNote", { a: fmt(MIN_DOWN_TIER), b: fmt(minDown(resolved.price)) })}
-                </p>
+                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{minDownLine}</p>
                 <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyPremium")}</p>
                 <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyContract")}</p>
                 <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyVsCeiling")}</p>
@@ -353,10 +423,17 @@ export default function ScenariosPage() {
                     min={0}
                     onCommit={(income1) => update({ income1 })}
                   />
+                  {/*
+                    Placeholder added: this was the one field on the page with
+                    none, so an empty box read as "no debts" while the TDS ratio
+                    beside it was computed on four debt keys — three of which are
+                    only reachable from /affordability. Typing here ADDS to those.
+                  */}
                   <NumberField
                     id="otherDebt"
                     label={t("fDebts")}
                     value={stored.otherDebt}
+                    placeholder={resolved.otherDebt}
                     min={0}
                     onCommit={(otherDebt) => update({ otherDebt })}
                   />
@@ -369,6 +446,21 @@ export default function ScenariosPage() {
                     onCommit={(comfortCeiling) => update({ comfortCeiling })}
                   />
                 </div>
+                {/*
+                  "the two totals at the top of the table above" is correct as it
+                  stands, and a review read it as pointing at a collapsed section. It
+                  does not: the note and the table it names are both in THIS section's
+                  body, so the table is on screen exactly when the note is. The default
+                  open section is `monthly` only when the reader qualifies, and either
+                  way this note is unreadable until `approval` is opened, at which point
+                  `rQualIncome` and `rDebtsTotal` are the first two rows above it.
+
+                  What WAS wrong was "These two fields" over three of them. The third,
+                  the comfort ceiling, is not one of the note's subjects and feeds no row
+                  in this table — it drives `rVsCeiling` in the monthly one. The note now
+                  names its two subjects instead of counting the grid.
+                */}
+                <NoteLine>{t("qualNote")}</NoteLine>
               </>,
             )}
 
@@ -417,6 +509,9 @@ export default function ScenariosPage() {
             ptype={stored.ptype}
             ftb={stored.ftb}
             elsewhere={stored.elsewhere}
+            ftbEffective={resolved.ftb}
+            ptypeEffective={resolved.ptype}
+            residency={stored.residency}
             jurisdiction={jurisdiction}
             onChange={update}
           />

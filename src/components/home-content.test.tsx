@@ -258,6 +258,33 @@ describe("FAQ", () => {
     }
   });
 
+  it("answers whether a non-Canadian may buy at all, before any question about price", () => {
+    // Purchase eligibility sits before every number the product computes, and the words
+    // "permanent", "foreign", "work permit", "immigrat" and "abroad" appeared in no
+    // catalogue in any language. It belongs on the home page because the residency control
+    // that carries the same sentence only renders where the dataset has a residency-gated
+    // charge — Halifax alone — and this question is federal.
+    renderWithIntl(<HomeContent />);
+    const home = en.Home as Record<string, string>;
+    expect(document.body.textContent).toContain(home.faqQ_eligibility);
+    expect(document.body.textContent).toContain(home.faqA_eligibility);
+  });
+
+  it("keeps the eligibility answer qualitative, in every locale", () => {
+    // These answers are emitted as FAQPage structured data, whose whole function is to make
+    // a claim extractable by machines that strip the surrounding context. CLAUDE.md admits a
+    // qualitative "which rules exist and who levies them" answer, and admits a NUMBER only
+    // at conf "high" with its asOf quoted. The federal Act is time-limited and has been
+    // extended by regulation, so a date here is both an unsourced figure and a maintenance
+    // liability that expires silently. A translator has no more licence than a writer.
+    for (const [locale, messages] of Object.entries(CATALOGUES)) {
+      const home = (messages as unknown as { Home: Record<string, string> }).Home;
+      expect(home.faqA_eligibility, `${locale} faqA_eligibility`).toBeTruthy();
+      expect(home.faqA_eligibility, `${locale} names a date or a figure`).not.toMatch(/\d/);
+      expect(home.faqQ_eligibility, `${locale} faqQ_eligibility`).not.toMatch(/\d/);
+    }
+  });
+
   it("answers the query the page is written for", () => {
     renderWithIntl(<HomeContent />);
     expect(document.body.textContent).toContain("How much house can I afford in Canada?");

@@ -2,6 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { closingTotal } from "@/domain/engine";
+import { federal } from "@/domain/federal";
+import { jurisdictions } from "@/domain/jurisdictions";
+import { resolveInputs } from "@/lib/resolve-inputs";
+import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
 import type { Locale } from "@/lib/locales";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import ClosingCostsPage from "./page";
@@ -97,6 +102,89 @@ describe("Closing costs — the answer comes first", () => {
     await user.click(expandAll);
     expect(screen.getByRole("button", { name: "Collapse all" })).toBeInTheDocument();
     expect(screen.getAllByText("Subtotal").length).toBeGreaterThan(0);
+  });
+});
+
+describe("Closing costs — the hero is the same figure as everything under it", () => {
+  /**
+   * C5. The hero was `total.cash` — down payment plus costs, BEFORE the credits
+   * that land on closing day — while its own three stats, the cash-check panel and
+   * that section's verdict were all measured against `total.net`. On a Toronto
+   * first-time purchase that is $207,777 over $199,302: the largest figure on the
+   * page was the only one on the page that disagreed with the page.
+   *
+   * Asserted on the digits rather than a formatted string, so the same test holds
+   * in a locale that writes the currency mark on the other side.
+   */
+  const digits = (value: string | null | undefined) => (value ?? "").replace(/[^\d]/g, "");
+
+  it("leads with net cash at closing, not the bill before credits", () => {
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "toronto", ftb: true }),
+    );
+    const toronto = jurisdictions.find((j) => j.id === "toronto")!;
+    const expected = closingTotal(
+      toronto,
+      federal,
+      resolveInputs({ ...TOOL_DEFAULTS, ftb: true }, toronto, federal),
+    );
+    // The test is only meaningful where the two differ, so the difference is
+    // asserted rather than assumed: a jurisdiction with no closing-day credit
+    // would make gross and net the same number and pass either way.
+    expect(expected.creditsAtClosing).toBeGreaterThan(0);
+
+    renderPage();
+    const hero = document.querySelector('[data-slot="answer-figure"]')?.textContent;
+    expect(digits(hero)).toBe(String(Math.round(expected.net)));
+    expect(digits(hero)).not.toBe(String(Math.round(expected.cash)));
+  });
+});
+
+describe("Closing costs — what the bill does not price", () => {
+  it("names its omissions rather than staying silent about them", () => {
+    renderPage();
+    expect(screen.getByText("Not in this bill")).toBeInTheDocument();
+    // The deposit: three reviewers found it independently, and the whole point is
+    // that it carries no figure.
+    expect(screen.getByText(/held in trust/)).toBeInTheDocument();
+  });
+
+  it("adds the builder's extras only for a new build", () => {
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "toronto", ptype: "newbuild" }),
+    );
+    renderPage();
+    expect(screen.getByText(/Development levies/)).toBeInTheDocument();
+    expect(screen.getByText(/resale house benchmark/)).toBeInTheDocument();
+  });
+
+  it("says nothing about builders to a resale buyer", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "toronto" }));
+    renderPage();
+    expect(screen.queryByText(/Development levies/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/resale house benchmark/)).not.toBeInTheDocument();
+  });
+
+  it("reports the GST rebate as an omission, in words and with no amount", async () => {
+    // C2. `credits()` used to pay this out as money against a tax `buildLines`
+    // never charges, so a new build showed a resale's bill plus a five-figure
+    // refund. It now arrives on `omitted`, and what must never come back is a
+    // figure beside it.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "toronto", ptype: "newbuild", ftb: true }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Credits back/);
+
+    expect(screen.getByText("Applies here, and not priced")).toBeInTheDocument();
+    const rebate = screen.getByText("First-time home buyers’ GST/HST rebate");
+    expect(rebate).toBeInTheDocument();
+    // Its own row carries no currency at all — the label and the explanation only.
+    expect(rebate.textContent).not.toMatch(/\$/);
   });
 });
 
@@ -246,5 +334,47 @@ describe("Closing costs — French", () => {
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(screen.getByText("Comptant requis le jour de la clôture")).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/ClosingCosts\./);
+  });
+});
+
+/**
+ * The control has to be REACHED, not merely to work.
+ *
+ * `purchase-inputs.test.tsx` proves the switch renders, writes both directions and
+ * hides itself where no transfer line is gated on residency — and it proved all of
+ * that while every page in the product omitted the prop, so the switch existed on no
+ * screen in any locale. A component test cannot see that: it supplies the prop the
+ * product was missing. This is the assertion that can, and it belongs on the page
+ * whose bill the answer changes by $55,000 on the Halifax benchmark.
+ */
+describe("Closing costs — the residency question is on the page", () => {
+  it("asks it in Halifax, where a transfer line is gated on it", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "halifax" }));
+    renderPage();
+    expect(await screen.findByLabelText(/Resident of this province/)).toBeInTheDocument();
+  });
+
+  it("moves the bill when it is answered", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "halifax", price: 550000, dpPct: 10, ftb: true }),
+    );
+    const { container } = renderPage();
+    const hero = () => container.querySelector('[data-slot="answer-figure"]')?.textContent;
+    // Nova Scotia's Provincial Deed Transfer Tax for a non-resident buyer is 10% of
+    // the price — the largest single charge in the dataset, and $55,000 on this one.
+    const resident = hero();
+    await user.click(await screen.findByLabelText(/Resident of this province/));
+    expect(hero()).not.toEqual(resident);
+  });
+
+  it("does not ask it where residency changes no charge", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "toronto" }));
+    renderPage();
+    // Not because Ontario has no non-resident speculation tax — the NRST is real —
+    // but because it is not in the dataset, and asking a question no figure consumes
+    // teaches the reader that this app's answers do not depend on its questions.
+    expect(screen.queryByLabelText(/Resident of this province/)).not.toBeInTheDocument();
   });
 });

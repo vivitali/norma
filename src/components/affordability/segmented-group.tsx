@@ -6,6 +6,21 @@ import { cn } from "@/lib/utils";
 export interface SegmentedOption<T> {
   value: T;
   label: string;
+  /**
+   * An option this purchase cannot have — a 30-year amortization on an insured
+   * loan outside CMHC Home Start, today's only case.
+   *
+   * `aria-disabled`, never the `disabled` attribute. A disabled button is removed
+   * from the tab order, and the checked option is this radiogroup's ONLY tab stop
+   * (roving tabindex below), so disabling it properly would take the whole control
+   * out of the tab order in exactly the state where the reader most needs to reach
+   * it — they may already be sitting on the ineligible option, because the engine
+   * GATES rather than clamping and their stored choice is left alone.
+   *
+   * The caller renders the reason. A greyed option with nothing saying why is a
+   * dead end, and this component cannot know the rule.
+   */
+  disabled?: boolean;
 }
 
 /**
@@ -30,10 +45,20 @@ export function SegmentedGroup<T extends string | number>({
   // several ids that do not exist, leaving the group with no accessible name.
   const labelId = useId();
 
-  const move = (to: number) => {
-    if (to < 0 || to >= options.length) return;
-    onChange(options[to].value);
-    refs.current[to]?.focus();
+  /**
+   * Arrow-key movement, skipping over anything the caller marked unavailable.
+   *
+   * A loop rather than a single step because two adjacent options could both be
+   * disabled; it walks in `step`'s direction until it finds one that is not, or
+   * runs off the end and leaves the selection where it was.
+   */
+  const move = (from: number, step: 1 | -1) => {
+    for (let to = from + step; to >= 0 && to < options.length; to += step) {
+      if (options[to].disabled) continue;
+      onChange(options[to].value);
+      refs.current[to]?.focus();
+      return;
+    }
   };
 
   return (
@@ -55,16 +80,20 @@ export function SegmentedGroup<T extends string | number>({
             type="button"
             role="radio"
             aria-checked={value === option.value}
+            aria-disabled={option.disabled || undefined}
             tabIndex={value === option.value ? 0 : -1}
-            onClick={() => onChange(option.value)}
+            onClick={() => {
+              if (option.disabled) return;
+              onChange(option.value);
+            }}
             onKeyDown={(e) => {
               if (e.key === "ArrowRight" || e.key === "ArrowDown") {
                 e.preventDefault();
-                move(i + 1);
+                move(i, 1);
               }
               if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
                 e.preventDefault();
-                move(i - 1);
+                move(i, -1);
               }
             }}
             className={cn(
@@ -89,6 +118,13 @@ export function SegmentedGroup<T extends string | number>({
               // both do here.
               "flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-md px-2.5 text-center text-[12px] sm:min-h-9",
               value === option.value ? "bg-card font-semibold text-primary" : "text-muted-foreground",
+              // Struck through, not merely faded: an unavailable option can still be
+              // the CHECKED one — the engine gates without clamping, so a stored
+              // choice survives becoming ineligible — and a lower-opacity version of
+              // the selected style is indistinguishable from the unselected style
+              // beside it. `line-through` says "not on offer" in the one state where
+              // colour alone cannot.
+              option.disabled && "cursor-not-allowed line-through opacity-55",
             )}
           >
             {option.label}

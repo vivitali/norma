@@ -247,15 +247,42 @@ pattern that resembles one. The same applies to any future assertion over render
    cannot export `generateMetadata`.
 
 **Shared page chrome** lives in `src/components/tool-page.tsx` (`ToolMain`, `AnswerHead`,
-`SectionsHeader`, `FigureFooter`), `src/hooks/use-sections.ts` (the one disclosure gesture, incl.
-moving FOCUS on a hash arrival, not just scroll), and `src/components/purchase-inputs.tsx`. This
-markup IS the Affordability screen's markup — extracted from it, not designed ahead of it.
+`SectionsHeader`, `FigureFooter`, `NoteLine`, `InlineAsk`, `PendingFigures`),
+`src/hooks/use-sections.ts` (the one disclosure gesture, incl. moving FOCUS on a hash arrival, not
+just scroll), and `src/components/purchase-inputs.tsx`. This markup IS the Affordability screen's
+markup — extracted from it, not designed ahead of it.
 
 `AnswerHead`'s `figure` is optional, and that is the **ask state**: a page with nothing honest to
 compute renders its eyebrow, the ask in the hero slot and the sub-line, with no figure and no
 em-dash placeholder (DESIGN.md §5.3, and a bare em-dash at figure size reads as a rendering fault).
 It is a state of the existing gesture, not a second one. `FigureFooter` takes a `children` slot for
 per-page provenance rather than each page growing its own footer.
+
+**"The stored inputs have not landed yet" has exactly one mechanism, `PendingFigures`, and it is
+not `figure={undefined}`.** `useSharedState`'s third value asks pages to hold a derived figure
+until localStorage has been read, and four pages each answered it differently in one branch. The
+one that had to go substituted `"\u00A0"` for every figure: `hydrated` is false in the PRERENDERED
+html, so that shipped a blank hero into the static document on two `INDEXABLE_ROUTES` in four
+locales each — and a non-breaking space is truthy, so `tag` rendered as an empty bordered pill.
+`visibility: hidden` keeps the box (nothing moves at hydration) AND the text (the prerendered
+answer is still in the document). The real fix is upstream — reading storage in a layout effect
+inside `useSharedState` would land the value before first paint — and until then this trade is
+made once, in one place.
+
+**`PurchaseInputs` splits what the reader can EDIT here from what the app is MODELLING.** `ftb` /
+`ptype` are optional and render controls; `ftbEffective` / `ptypeEffective` are required and feed
+the amortization-eligibility rule, exactly as `dpPct` / `dpPctEffective` already did. Reading a
+rule off the optional props is not a shortcut, it is a bug: they fall to `false` on the two pages
+that ask neither question, so one stored state produced two different answers to one federal rule
+across six pages. `residency` is optional for a different reason — the four pages that price a
+purchase bind it, /amortization does not, because nothing it computes reads the key.
+
+**A control that is built and tested but bound by no page is not shipped, and a component test
+cannot tell you.** The residency switch had a component test proving it renders, writes both
+directions and hides itself correctly — green while every page omitted the prop, so the switch
+existed on no screen in any locale and Halifax's 10% non-resident deed transfer tax could not
+fire. A component test supplies the prop the product is missing. When a control's whole purpose is
+to reach a figure, the assertion that it is REACHED belongs on the page.
 
 **Copy that names a source is domain data and is English.** `Provenance.src` and `.note` have no
 i18n mechanism, so they render untranslated on **three of the four** locales — the cost of this
@@ -352,19 +379,15 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
   bare quoted string, so a section id and a message key spelling the same word cover for each other.
 
 **Raised by the uk/es translation pass, not yet filed:**
-- **`Inputs.elsewhereIn` is a dangling fragment at one of its two call sites.** In
-  `input-groups.tsx` it renders as `{t("elsewhereIn")} {tProv(...)}` → "Somewhere else in Ontario",
-  which is fine; in `purchase-inputs.tsx` it renders **alone**, as a switch label reading
-  "Somewhere else in" with nothing after it. Already wrong in English and French; the new locales
-  only inherit it. It needs a second key, or the province appended in both places. Ukrainian is
-  safe from a case-agreement problem here *only* because the toggle is gated to `prov === "ON"`
-  and «Онтаріо» is indeclinable — the moment a second province qualifies, the concatenation needs
-  the locative and breaks.
-- **`RentVsBuy.years` is a bare noun concatenated in JSX**, not a message with an argument:
-  `` `${year} ${t("years")}` `` against 3, 5, 10, 15, 25, 40. Ukrainian needs «роки» at 3 and
-  «років» at 5+, and a concatenated string cannot see the number. Worked around with the
-  abbreviation «р.», which is correct at every value. Change it to `t("years", { n })` and it can
-  become a real ICU plural like `Amortization.yearsWord`.
+- ~~**`Inputs.elsewhereIn` is a dangling fragment at one of its two call sites**~~ — **fixed.**
+  `purchase-inputs.tsx` now appends the province exactly as `input-groups.tsx` always did. The
+  bare concatenation stays safe only while the toggle is gated to `prov === "ON"`: «Онтаріо» is
+  indeclinable in Ukrainian, and the moment a second province qualifies this needs
+  `t("elsewhereIn", { prov })` with a per-locale locative — the split `Jurisdictions.at.<id>`
+  already exists to carry.
+- ~~**`RentVsBuy.years` is a bare noun concatenated in JSX**~~ — **fixed.** Both call sites pass
+  `t("years", { n })` and Ukrainian is a real ICU plural: «роки» at 3, «років» at 5, 10, 15, 25
+  and 40. The abbreviation «р.» that worked around it is gone.
 - **`Home.rulesUnverified` and `Home.faqA_verified` say the same thing twice** — the same
   three-way disclosure in slightly different words on one page. Not wrong, but it doubles the
   translation surface for every future locale.

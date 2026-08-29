@@ -25,9 +25,24 @@ export type SharedInputs = {
   ptype: PropertyType;
   elsewhere: boolean;
   /**
-   * Whether the buyer lives in Canada. Drives NS's non-resident Provincial Deed Transfer
-   * Tax, which is a closing cost — so the control belongs to the Closing Costs page, and
-   * until it ships this flows through at its default like any other key.
+   * Whether the buyer lives in the province they are buying in.
+   *
+   * Drives Nova Scotia's non-resident Provincial Deed Transfer Tax — the single largest
+   * charge in the dataset, 10% on top of everything else. `PurchaseInputs` writes it, gated
+   * on whether the jurisdiction actually has a transfer line keyed to residency, so the
+   * question is asked exactly where it changes an answer.
+   *
+   * The comment here used to say "whether the buyer lives in Canada" and that the control
+   * "belongs to the Closing Costs page, and until it ships this flows through at its
+   * default". Closing Costs shipped; the control did not, and the key sat persisted,
+   * schema-checked, resolved and read by `applies()` with nothing anywhere writing it. Both
+   * halves of that sentence were also wrong: NS tests PROVINCIAL residency, not presence in
+   * Canada, and a charge this size belongs on every page that prices the purchase.
+   *
+   * It still means one thing, not two. Ontario's NRST and BC's additional property transfer
+   * tax turn on citizenship or permanent residence rather than on where you live, so
+   * modelling them needs that semantic split decided first — see CLAUDE.md's open items.
+   * Do not widen this type on the way past.
    */
   residency: Residency;
   /** null = derive from dpPct against the federal insured/uninsured spread. */

@@ -9,9 +9,11 @@ import {
   defaultContractRate,
   financedFraction,
   financing,
+  maxAmortYears,
   minDown,
   money,
   payFactor,
+  scenario,
   unmetBy,
   type ClosingInput,
 } from "./engine";
@@ -81,16 +83,73 @@ describe("payFactor", () => {
 
 describe("minDown", () => {
   it("requires 5% under $500,000", () => {
-    expect(minDown(400000)).toBeCloseTo(20000, 5);
+    expect(minDown(federal, 400000)).toBeCloseTo(20000, 5);
   });
 
   it("requires 5% on the first $500,000 plus 10% above it, between $500,000 and $1,500,000", () => {
-    expect(minDown(600000)).toBeCloseTo(25000 + 10000, 5);
+    expect(minDown(federal, 600000)).toBeCloseTo(25000 + 10000, 5);
   });
 
   it("requires a flat 20% at or above $1,500,000", () => {
-    expect(minDown(1500000)).toBeCloseTo(300000, 5);
-    expect(minDown(2000000)).toBeCloseTo(400000, 5);
+    expect(minDown(federal, 1500000)).toBeCloseTo(300000, 5);
+    expect(minDown(federal, 2000000)).toBeCloseTo(400000, 5);
+  });
+
+  it("reads its tiers off federal.minDown rather than literals in the function", () => {
+    // The point of the move: a page component captioned the rule with its own copy of
+    // 500000, and nothing could keep the two in step. Feeding a different table has to
+    // change the answer, or the literals are still in here somewhere.
+    const shifted = { ...federal, minDown: { bands: [[400000, 0.05], [null, 0.1]] as const, uninsuredRate: 0.2 } };
+    expect(minDown(shifted, 500000)).toBeCloseTo(20000 + 10000, 5);
+  });
+
+  it("steps to the flat rate exactly where mortgage insurance stops being available", () => {
+    // Not a coincidence and not two independent constants: 20% is required at the insured
+    // cap BECAUSE no insurer writes the loan there.
+    const at = federal.cmhc.insuredCap;
+    expect(minDown(federal, at)).toBeCloseTo(at * federal.minDown.uninsuredRate, 5);
+    expect(minDown(federal, at - 1)).toBeLessThan(minDown(federal, at));
+  });
+});
+
+describe("maxAmortYears", () => {
+  const base = { dpPct: 10, price: 600000, ftb: false, ptype: "house" as const };
+
+  it("holds an insured repeat buyer of a resale home to the shorter maximum", () => {
+    expect(maxAmortYears(federal, base)).toBe(federal.maxAmortOther);
+  });
+
+  it("allows 30 years to a first-time buyer", () => {
+    expect(maxAmortYears(federal, { ...base, ftb: true })).toBe(federal.maxAmortFtbInsured);
+  });
+
+  it("allows 30 years on a new build even to a repeat buyer", () => {
+    // CMHC Home Start is first-time buyer OR new build. Dropping the second half would deny
+    // a 30-year amortization to someone entitled to it.
+    expect(maxAmortYears(federal, { ...base, ptype: "newbuild" })).toBe(federal.maxAmortFtbInsured);
+  });
+
+  it("allows 30 years at 20% down, where no insured maximum binds", () => {
+    expect(maxAmortYears(federal, { ...base, dpPct: 20 })).toBe(federal.maxAmortFtbInsured);
+  });
+
+  it("allows 30 years at or above the insured cap, where insurance is unavailable", () => {
+    expect(maxAmortYears(federal, { ...base, price: federal.cmhc.insuredCap })).toBe(
+      federal.maxAmortFtbInsured,
+    );
+  });
+
+  it("only ever returns the shorter maximum on a loan that is actually insured", () => {
+    // maxAmortOther is conf "medium" and its own note scopes it to INSURED loans, so the
+    // copy around it must not say "in Canada". This pins that the 25 is unreachable for an
+    // uninsured borrower, which is what makes the scoped sentence true.
+    for (const price of [300000, 900000, 1_499_999]) {
+      for (const dpPct of [5, 10, 19]) {
+        expect(maxAmortYears(federal, { dpPct, price, ftb: false, ptype: "house" })).toBe(
+          federal.maxAmortOther,
+        );
+      }
+    }
   });
 });
 
@@ -997,5 +1056,150 @@ describe("affordability — a bigger down payment must buy a bigger house", () =
 
   it("charges the long-amortization surcharge on a 30-year insured loan", () => {
     expect(financedFraction(federal, 5, 30)).toBeGreaterThan(financedFraction(federal, 5, 25));
+  });
+});
+
+describe("the lender's condo-fee convention is a rule, not a literal", () => {
+  const j = getJurisdiction("toronto")!;
+  const base = {
+    income1: 100000, income2: 0, otherIncome: 0, haircut: 0, debts: 0,
+    amortYears: 25, comfortCeiling: 3000, insuranceAnnual: 1500, utilities: 300,
+    condoFee: 600, contractRate: 4.24, price: 700000, dpPct: 20, ftb: true,
+    ptype: "condo" as const, elsewhere: false, residency: "resident" as const,
+  };
+
+  it("counts the federal share of the fee in GDS at the target price", () => {
+    // Half in the lender's ratios, the whole fee in the household's budget: two correct
+    // answers to two different questions, on the same screen, which is exactly why the
+    // share is now a named rule with a CMHC citation rather than a `* 0.5` in the maths.
+    const withFee = affordability(j, federal, base);
+    const without = affordability(j, federal, { ...base, condoFee: 0 });
+    const gdsDelta = ((withFee.gdsAtTarget - without.gdsAtTarget) / 100) * (base.income1 / 12);
+    expect(gdsDelta).toBeCloseTo(base.condoFee * federal.condoFeeInclusion, 6);
+  });
+
+  it("moves the lender ceiling when the published share changes", () => {
+    const whole = { ...federal, condoFeeInclusion: 1 };
+    expect(affordability(j, whole, base).ceiling).toBeLessThan(
+      affordability(j, federal, base).ceiling,
+    );
+  });
+
+  it("still charges the household the WHOLE fee in the monthly total", () => {
+    expect(affordability(j, federal, base).monthly.condoFee).toBe(base.condoFee);
+  });
+});
+
+describe("affordability and scenario finance the same mortgage", () => {
+  /**
+   * The two screens answer different questions — one solves for a price, the other prices a
+   * fixed one — but they must not disagree about what a down payment buys. C1's defect was
+   * exactly a divergence of this kind: the ceiling was solved on a flat 80% LTV while the
+   * GDS gauge one row below used the real loan, so the verdict dot and the bar beneath it
+   * contradicted each other in the default state.
+   */
+  const j = getJurisdiction("toronto")!;
+  const LADDER = [5, 10, 15, 20, 25, 35] as const;
+  const price = 800000;
+
+  it("gives financedFraction the same answer financing() reaches with a real price", () => {
+    for (const dpPct of LADDER) {
+      const fin = financing(federal, { price, dpPct, amortYears: 25 });
+      expect(financedFraction(federal, dpPct, 25), `${dpPct}%`).toBeCloseTo(fin.loan / price, 9);
+    }
+  });
+
+  it("shrinks the scenario mortgage at every step up the ladder", () => {
+    const loans = LADDER.map(
+      (dpPct) =>
+        scenario(j, federal, {
+          price, dpPct, amortYears: 25, ftb: true, ptype: "house" as const,
+          elsewhere: false, residency: "resident" as const,
+          insuranceAnnual: 1500, utilities: 300, condoFee: 0, comfortCeiling: 3200,
+          qualIncome: 150000, debts: 0, funds: null, save: null,
+        }).totalMortgage,
+    );
+    for (let i = 1; i < loans.length; i++) {
+      expect(loans[i], `${LADDER[i]}% must borrow less than ${LADDER[i - 1]}%`).toBeLessThan(
+        loans[i - 1],
+      );
+    }
+  });
+});
+
+describe("the GST rebate no longer refunds a tax this app never charges", () => {
+  const j = getJurisdiction("calgary")!;
+  const o: ClosingInput = {
+    price: 700000, dpPct: 20, amortYears: 25, ftb: true,
+    ptype: "newbuild", elsewhere: false, residency: "resident",
+  };
+
+  it("pays no cr_gstFthb into the later credits", () => {
+    const lines = buildLines(j, federal, o);
+    const c = credits(j, federal, o, lines.gov);
+    expect(c.later.some((l) => l.key === "cr_gstFthb")).toBe(false);
+  });
+
+  it("reports it as a named omission instead, so the page can say so in words", () => {
+    const lines = buildLines(j, federal, o);
+    const c = credits(j, federal, o, lines.gov);
+    expect(c.omitted.map((x) => x.key)).toContain("cr_gstFthb");
+    expect(c.omitted.find((x) => x.key === "cr_gstFthb")!.ex).toBe("ex_gstFthb");
+  });
+
+  it("says nothing about a purchase the programme does not reach", () => {
+    const resale = { ...o, ptype: "house" as const };
+    const lines = buildLines(j, federal, resale);
+    expect(credits(j, federal, resale, lines.gov).omitted).toHaveLength(0);
+    const repeat = { ...o, ftb: false };
+    const lines2 = buildLines(j, federal, repeat);
+    expect(credits(j, federal, repeat, lines2.gov).omitted).toHaveLength(0);
+  });
+
+  it("stops at the phase-out, because above it the programme does not apply", () => {
+    // The page renders this list under "Applies here, and not priced". Above
+    // `gstFthb.zeroAt` the rebate is nil, so the eyebrow asserted applicability over
+    // a paragraph saying the opposite — and it did so on DEFAULT settings in the two
+    // most expensive markets, where `benchmarkPrice()` resolves a new build to the
+    // resale house benchmark: Vancouver $1,822,900 and Toronto $1,455,200 against a
+    // $1,500,000 cut-off. The superseded money implementation had this test as
+    // `amt > 0`; reporting an omission changed what travels, not whether it applies.
+    const above = { ...o, price: federal.gstFthb.zeroAt };
+    expect(credits(j, federal, above, buildLines(j, federal, above).gov).omitted).toHaveLength(0);
+    const below = { ...o, price: federal.gstFthb.zeroAt - 1 };
+    expect(credits(j, federal, below, buildLines(j, federal, below).gov).omitted).toHaveLength(1);
+  });
+
+  it("is reachable at the Vancouver benchmark only below that price", () => {
+    const vancouver = getJurisdiction("vancouver")!;
+    expect(vancouver.bench.house!).toBeGreaterThan(federal.gstFthb.zeroAt);
+    const benchmark = { ...o, price: vancouver.bench.house! };
+    expect(
+      credits(vancouver, federal, benchmark, buildLines(vancouver, federal, benchmark).gov).omitted,
+    ).toHaveLength(0);
+  });
+});
+
+describe("Montreal's condo status certificate", () => {
+  const montreal = getJurisdiction("montreal")!;
+  const condo: ClosingInput = {
+    price: 500000, dpPct: 20, amortYears: 25, ftb: true,
+    ptype: "condo", elsewhere: false, residency: "resident",
+  };
+
+  it("carries no statusCert figure at all, rather than a falsy zero", () => {
+    expect(montreal.fees.statusCert).toBeUndefined();
+  });
+
+  it("emits no dead provenance entry for a fee the record does not carry", () => {
+    expect(montreal.provenance["fees.statusCert"]).toBeUndefined();
+  });
+
+  it("would render a genuine zero rather than dropping the line", () => {
+    // The half that makes the gate a fix and not a swap: `!= null` means a record that
+    // really does charge nothing shows a $0 line instead of vanishing.
+    const zeroed = { ...montreal, fees: { ...montreal.fees, statusCert: 0 } };
+    const lines = buildLines(zeroed, federal, condo);
+    expect(lines.pro.find((l) => l.key === "li_statusCert")?.amount).toBe(0);
   });
 });

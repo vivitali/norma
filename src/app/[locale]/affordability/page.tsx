@@ -29,7 +29,7 @@ import { MathColumns } from "@/components/affordability/math-columns";
 import { InputGroups } from "@/components/affordability/input-groups";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
-import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { AnswerHead, FigureFooter, InlineAsk, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 
 /** A check state maps onto a dot tone; the derivation has no state at all. */
 const TONE: Record<CheckState, Tone> = {
@@ -44,7 +44,7 @@ export default function AffordabilityPage() {
   // The reader-facing place name; `jurisdiction.city` is the lowercase record key.
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
+  const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
 
@@ -96,14 +96,31 @@ export default function AffordabilityPage() {
   const comfort = comfortState(result);
   const cash = cashState(result);
 
+  /**
+   * The sentence under the hero, and in all four states it now CAPTIONS the hero.
+   *
+   * It did not. `comfortable` and `over` both describe the comfort price — which is
+   * what the figure above them is — but `declined` and `shortCash` were about the
+   * TARGET price and the cash gap, leaving the largest number on the page with no
+   * sentence attached to it in half of its states. The reader was left to assume the
+   * figure was whatever the sentence was about, which is the one thing it is not.
+   *
+   * Fixed in the copy, not in the arithmetic. Putting `result.ceiling` in the hero
+   * for those two states — the other obvious repair — would reverse the decision
+   * pinned by page.test.tsx's "the headline is the comfort price, never the lower
+   * ceiling": the comfort price answers "what can I carry", the lender ceiling is
+   * shown beside it, and the home page's claim that the lower one wins was removed
+   * in all four locales. So both branches now open by naming the figure and then say
+   * what is wrong with the target.
+   */
   const head =
     verdict === "comfortable"
       ? `${t("vComfort")} ${fmt(result.comfort)}.`
       : verdict === "over"
         ? t("vOver")
         : verdict === "declined"
-          ? t("vDeclined")
-          : t("vShortCash");
+          ? t("vDeclined", { a: fmt(result.comfort) })
+          : t("vShortCash", { a: fmt(result.comfort) });
   const sub =
     verdict === "declined"
       ? result.tdsBinds
@@ -128,6 +145,50 @@ export default function AffordabilityPage() {
     const gap = result.cashGap ?? 0;
     return gap >= 0 ? `${fmt(gap)} ${t("headroom")}` : `${fmt(-gap)} ${t("short")}`;
   };
+
+  /**
+   * The two fields that used to exist TWICE on this screen.
+   *
+   * `funds` shipped as "Funds available" in the input grid and again as "Funds
+   * available for this purchase" in the cash panel's ask; `condoFee` shipped under
+   * the same key in both places. Each ask fires on exactly the condition that leaves
+   * its grid twin empty, so one press of Expand all put two fields for one value on
+   * screen, under two different labels in the `funds` case. They always agreed —
+   * both write the same key — so the defect was redundancy and a split label, not a
+   * contradiction.
+   *
+   * The in-place ask is the endorsed placement (DESIGN.md §5.3: the field asks where
+   * the sentence that needs it is), so the grid copies are gone and these are the
+   * survivors. What the audit's "remove the two from the flat grid" misses is that
+   * both asks are gated on the value being ABSENT — removing the grid field alone
+   * would have made each of them write-once, with no way to correct a typo. So each
+   * renders in both states: boxed with its prompt while the panel cannot finish its
+   * sentence without it, and as a plain field once it can.
+   */
+  const fundsField = (
+    <NumberField
+      id="funds-inline"
+      // The SAME key the read-only row four lines above it uses. `Affordability.available`
+      // — "Funds available for this purchase" — was the second half of the split label the
+      // comment above says was closed: the duplicate FIELD went, and the panel was still
+      // naming one figure two ways, `cFunds` on the row and `available` on the field
+      // directly under it. The key is deleted rather than left orphaned.
+      label={t("cFunds")}
+      value={stored.funds}
+      min={0}
+      onCommit={(funds) => update({ funds })}
+    />
+  );
+  const condoFeeField = (
+    <NumberField
+      id="condoFee-inline"
+      label={t("cCondoFee")}
+      value={stored.condoFee}
+      placeholder={resolved.condoFee}
+      min={0}
+      onCommit={(condoFee) => update({ condoFee })}
+    />
+  );
 
   const section = (
     id: AffordabilitySectionId,
@@ -167,17 +228,62 @@ export default function AffordabilityPage() {
         product exists not to make, so the sub-line says so and asks for a price
         instead. The inputs below are where it is answered.
       */}
+      {/*
+        One mechanism for "the stored inputs have not landed yet", shared by every tool
+        page — see `PendingFigures` in tool-page.tsx.
+
+        This page argued its way out of gating and the argument was structurally sound
+        against the mechanism it had. Both of its objections were about `figure={undefined}`:
+        that would blank the answer in the PRERENDERED html, and it flips `AnswerHead` into
+        DESIGN.md §5.3's ask state, resizing the head and shifting ~70px of layout at
+        hydration. `visibility: hidden` answers both — the figure keeps its text, so the
+        static document still carries the answer, and it keeps its box, so nothing moves.
+        The remaining reason to differ was a preference, and a preference is not worth a
+        fifth way of doing one thing.
+
+        The pulse is untouched and orthogonal: it ACKNOWLEDGES the recomputation at the
+        moment the reader's own saved numbers land (DESIGN.md §6), which is a different
+        job from not showing a figure that is about to change.
+      */}
+      <PendingFigures pending={!hydrated}>
       <AnswerHead
         eyebrow={t("aTitle")}
         figure={fmt(result.comfort)}
-        pulseKey={jurisdiction.id}
+        pulseKey={hydrated && isPersonalised(stored) ? `${jurisdiction.id}:yours` : jurisdiction.id}
         head={resolved.priceKnown ? head : `${t("vComfort")} ${fmt(result.comfort)}.`}
         sub={
           resolved.priceKnown
             ? sub
             : t("noPriceSub", { place: tJur(`at.${jurisdiction.id}`) })
         }
-        tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+        /*
+          "Typical for your city" was false twice over on a fresh visit. The hero is
+          driven by DEFAULT_COMFORT_CEILING, DEFAULT_INSURANCE_ANNUAL and
+          DEFAULT_UTILITIES (resolve-inputs.ts:18-20) — national prototype carry-overs
+          that no city derived and no publisher produced — so the tag claimed a
+          provenance the figure does not have AND named a place that had nothing to do
+          with it. The tag now NAMES the two assumptions the reader can act on
+          instead, which is the disclosure the figures could always have carried.
+
+          Both arguments read off the RESOLVED inputs rather than being written into
+          the copy, so a translator cannot pin a stale figure into a sentence. They
+          are safe as `income1` and `comfortCeiling` alone because this branch only
+          renders while `isPersonalised` is false — i.e. while every PERSONAL_KEY,
+          `income2` and `otherIncome` among them, is untouched.
+
+          `comfortCeiling` deliberately stays a flat constant rather than becoming an
+          UNKNOWN the page asks for: resolve-inputs.ts:5-13 records that deriving it
+          would mean inventing an affordability heuristic with no source. Disclosing
+          the assumption is the fix; removing the answer is not.
+        */
+        tag={
+          isPersonalised(stored)
+            ? t("tagYours")
+            : t("tagTypical", {
+                income: fmt(resolved.income1),
+                budget: fmt(resolved.comfortCeiling),
+              })
+        }
         stats={
           resolved.priceKnown
             ? [
@@ -191,6 +297,7 @@ export default function AffordabilityPage() {
               [{ label: t("stCeiling"), value: fmt(result.ceiling), note: t("stCeilingNote"), mark: "rule" as const }]
         }
       />
+      </PendingFigures>
 
       {resolved.priceKnown ? (
         <div className="pt-8 sm:pt-[34px]">
@@ -221,9 +328,54 @@ export default function AffordabilityPage() {
               <PanelRow label={`${t("mTdsAllow")} · TDS ${pct(federal.tds)}`} value={fmt(result.tdsAllow)} provenance={<Provenance kind="rule" />} />
               <PanelRow label={t("mBinding")} value={`${fmt(result.binding)} · ${result.tdsBinds ? "TDS" : "GDS"}`} strong />
               <PanelRow label={t("mMaxPrice")} value={fmt(result.ceiling)} strong />
+              {/*
+                WHICH LIMIT PRODUCED THE NUMBER ABOVE.
+
+                PRODUCT.md's fourth principle is that the binding constraint is the
+                insight, and the page acted on that structurally — `decidingSectionId`
+                opens the section that decided — without ever saying it in words on the
+                row where the ceiling is derived. `mBinding` prints "GDS" or "TDS",
+                which is the fact in the reader's vocabulary only if they already have
+                the vocabulary.
+
+                It introduces no figure. Each branch prints a DIFFERENCE the engine
+                already computes and the page already renders elsewhere: `gap` in the
+                gap band, `debtCapacity` in ImpactRow, `qualRate` two rows up. That is
+                what makes a consequence line cheap in a product where every number
+                needs a source — it is arithmetic over numbers that already have one.
+
+                Deliberately NOT a second ImpactRow: DESIGN.md:115 records one 3px
+                accent, singular, and replicating it spends the signal. This is the
+                quiet form, in the same note treatment as `heatNote` below.
+
+                Silent at a zero ceiling, for ImpactRow's own reason (impact-row.tsx):
+                when nothing is approvable, nothing binds, and every sentence about
+                which limit did the binding is false rather than merely unhelpful.
+              */}
+              {result.ceiling > 0 ? (
+                <p className="mt-[18px] max-w-[700px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
+                  {result.gap > 0
+                    ? t("boundComfort", { a: fmt(result.gap) })
+                    : result.tdsBinds
+                      ? t("boundDebts", { a: fmt(result.debtCapacity) })
+                      : t("boundIncome", { r: pct(result.qualRate, 2) })}
+                </p>
+              ) : null}
               <Gauges result={result} />
               <p className="mt-[18px] max-w-[700px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
                 {t("heatNote", { h: fmt(federal.heatAllowance) })}
+                {/*
+                  The other thing this panel does on the reader's behalf and never
+                  said: a condo fee is counted at `federal.condoFeeInclusion` in the
+                  ratios above and at 100% in the monthly total below, and both are
+                  correct. It rides on `heatNote` rather than taking a paragraph of
+                  its own because it is the same disclosure — what a LENDER counts,
+                  as against what the household pays — and the clause renders only
+                  when there is a fee to disclose.
+                */}
+                {result.monthly.condoFee > 0
+                  ? ` ${t("condoLenderNote", { share: pct(federal.condoFeeInclusion * 100) })}`
+                  : null}
               </p>
               {/*
                 VERDICT. Declined only, and suppressed when the cash panel is
@@ -290,17 +442,18 @@ export default function AffordabilityPage() {
               <PanelRow label={t("mMaint")} value={fmt(result.monthly.maintenance)} provenance={<Provenance kind="estimate" />} />
               <PanelRow label={t("mTotal")} value={fmt(result.monthly.total)} strong />
               <PanelRow label={t("mStated")} value={fmt(resolved.comfortCeiling)} strong />
+              {/*
+                Reachable wherever a strata fee can exist, not only where we ask for
+                one. The prompt is still gated to an unanswered CONDO — "You picked a
+                condo" is false of a new build and of a house — but the field itself
+                survives the answer, and a new-build condo can reach it at all.
+                A house keeps it only if a fee was somehow stored, so there is
+                something to clear.
+              */}
               {resolved.ptype === "condo" && stored.condoFee === null ? (
-                <InlineAsk prompt={t("condoFeePrompt")}>
-                  <NumberField
-                    id="condoFee-inline"
-                    label={t("cCondoFee")}
-                    value={stored.condoFee}
-                    placeholder={resolved.condoFee}
-                    min={0}
-                    onCommit={(condoFee) => update({ condoFee })}
-                  />
-                </InlineAsk>
+                <InlineAsk prompt={t("condoFeePrompt")}>{condoFeeField}</InlineAsk>
+              ) : resolved.ptype !== "house" || stored.condoFee !== null ? (
+                <div className="mt-4 max-w-[420px]">{condoFeeField}</div>
               ) : null}
             </>,
           )}
@@ -350,16 +503,13 @@ export default function AffordabilityPage() {
                 />
               ) : null}
               {cash === "unanswered" ? (
-                <InlineAsk prompt={t("cashUnanswered")}>
-                  <NumberField
-                    id="funds-inline"
-                    label={t("available")}
-                    value={stored.funds}
-                    min={0}
-                    onCommit={(funds) => update({ funds })}
-                  />
-                </InlineAsk>
-              ) : null}
+                <InlineAsk prompt={t("cashUnanswered")}>{fundsField}</InlineAsk>
+              ) : (
+                // Answered, and still editable. The prompt goes — it asks a question
+                // the reader has already answered — but the field stays, because the
+                // grid copy that used to be the only way back is gone.
+                <div className="mt-4 max-w-[420px]">{fundsField}</div>
+              )}
             </>,
           )}
 
@@ -418,11 +568,4 @@ export default function AffordabilityPage() {
  * An input the owning section asks for in place, because that section cannot
  * finish its sentence without it. Nothing on the screen is gated behind it.
  */
-function InlineAsk({ prompt, children }: { prompt: string; children: ReactNode }) {
-  return (
-    <div className="mt-4 flex max-w-[420px] flex-col gap-2 rounded-lg border border-acbr bg-acbg p-3">
-      <p className="text-[13px] leading-[1.5] text-ink2 text-pretty">{prompt}</p>
-      {children}
-    </div>
-  );
-}
+

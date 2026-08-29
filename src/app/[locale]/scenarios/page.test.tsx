@@ -116,7 +116,7 @@ describe("Scenarios — the recommendation", () => {
     // Approval first: no deposit fixes an income problem, so the recommendation
     // stays silent until a lender would say yes.
     await open(user, /Qualification/);
-    const income = screen.getByLabelText("Household income");
+    const income = screen.getByLabelText("Your annual income");
     await user.clear(income);
     await user.type(income, "180000");
     await user.tab();
@@ -135,7 +135,7 @@ describe("Scenarios — the recommendation", () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /Qualification/);
-    const income = screen.getByLabelText("Household income");
+    const income = screen.getByLabelText("Your annual income");
     await user.clear(income);
     await user.type(income, "180000");
     await user.tab();
@@ -149,18 +149,18 @@ describe("Scenarios — the recommendation", () => {
     // with nothing connecting them, the reader has two magnitudes and no way to
     // relate them. Asserting the phrase alone passed either way, because both
     // the head and the old second branch carried "over the life of the mortgage".
-    const sub = screen.getAllByText(/back per dollar of extra deposit/)[0];
+    const sub = screen.getAllByText(/back per dollar of extra down payment/)[0];
     expect(sub).toBeInTheDocument();
     expect(sub.textContent).toMatch(/\$[\d,]+ of interest/);
     expect(sub.textContent).toMatch(/\$[\d,]+ more at closing/);
     expect(sub.textContent).toMatch(/\d\.\d\d×/);
   });
 
-  it("says a deposit cannot fix an income problem", async () => {
+  it("says a bigger down payment cannot fix an income problem", async () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /Qualification/);
-    const income = screen.getByLabelText("Household income");
+    const income = screen.getByLabelText("Your annual income");
     await user.clear(income);
     await user.type(income, "20000");
     await user.tab();
@@ -359,5 +359,146 @@ describe("Scenarios — four columns of nothing is not a comparison", () => {
     await user.tab();
     expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
     expect(screen.getAllByRole("table").length).toBeGreaterThan(0);
+  });
+});
+
+describe("Scenarios — the ratios reconcile with the fields beside them", () => {
+  // "Household income" wrote income1 alone and "Monthly debts" wrote otherDebt
+  // alone, while GDS and TDS were computed on all three income keys and all four
+  // debt keys. A reader who had entered a car payment on /affordability typed a
+  // figure here and watched approve flip to decline by more than they had typed,
+  // with nothing on screen to reconcile it.
+  it("prints the qualifying income and the debt total the ratios were computed on", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Qualification/);
+    const table = screen.getAllByRole("table")[0];
+    for (const label of [/Qualifying income/, /Monthly debts, all sources/]) {
+      const row = within(table).getByRole("row", { name: label });
+      for (const cell of within(row).getAllByRole("cell")) {
+        expect(cell.textContent).toMatch(/\$[\d,]+/);
+      }
+    }
+  });
+
+  it("names the two fields after the single key each of them writes", async () => {
+    // The labels claimed the household total and the debt total; each field
+    // writes exactly one of the seven keys behind those totals.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Qualification/);
+    expect(screen.getByLabelText("Your annual income")).toBeInTheDocument();
+    expect(screen.getByLabelText("Your other monthly debts")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Household income")).not.toBeInTheDocument();
+  });
+
+  it("adds to what was entered elsewhere rather than replacing it", async () => {
+    // The behaviour the relabel and the two rows exist to make visible.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "winnipeg", car: 400 }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Qualification/);
+    const debts = screen.getByLabelText("Your other monthly debts");
+    await user.clear(debts);
+    await user.type(debts, "100");
+    await user.tab();
+
+    const table = screen.getAllByRole("table")[0];
+    const row = within(table).getByRole("row", { name: /Monthly debts, all sources/ });
+    expect(within(row).getAllByRole("cell")[0].textContent).toContain("$500");
+  });
+});
+
+describe("Scenarios — the minimum down payment rule, above and below the insured cap", () => {
+  it("names the tiers below the cap", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    expect(screen.getByText(/5% on the first \$500,000 and 10% on the portion above it/)).toBeInTheDocument();
+  });
+
+  it("stops claiming a tiered minimum at or above the insured cap", async () => {
+    // At $1.5M and up no insurer will cover the mortgage, so the minimum is a
+    // flat 20% and the tiered sentence is simply false. It rendered
+    // unconditionally.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    const price = screen.getByLabelText("Purchase price");
+    await user.clear(price);
+    await user.type(price, "1600000");
+    await user.tab();
+
+    expect(screen.queryByText(/on the portion above it/)).not.toBeInTheDocument();
+    // Scoped to the sentence, not the page: 20% of $1.6M is also the down payment
+    // the reader is putting down, so $320,000 legitimately appears in all four
+    // columns and in the raised-to-minimum note. The invariant is that the flat-20%
+    // sentence names the figure ITSELF, which a page-wide match would not catch.
+    const flat = screen.getByText(/no insurer will cover the mortgage/);
+    expect(flat).toHaveTextContent("$320,000");
+  });
+});
+
+describe("Scenarios — the all-in monthly total is one the reader can add up", () => {
+  /**
+   * The figure in a metric row's first data column, as a number.
+   *
+   * Matched on the row HEADER, not on `getByRole("row", { name })`: a row's
+   * accessible name concatenates every cell in it, so a label matches rows it does
+   * not head as soon as one of the four columns happens to contain the same text.
+   */
+  function cell(table: HTMLElement, label: string) {
+    const headers = within(table).getAllByRole("rowheader");
+    const header = headers.find((th) => th.textContent!.startsWith(label));
+    if (!header) throw new Error(`no row "${label}" among: ${headers.map((h) => h.textContent).join(" | ")}`);
+    const row = header.closest("tr")!;
+    return Number(within(row).getAllByRole("cell")[0].textContent!.replace(/[^0-9.]/g, ""));
+  }
+
+  it("shows every component of it, not three of six", async () => {
+    // The table listed P&I, property tax and maintenance and then a bold "True
+    // all-in monthly" that also contains insurance, utilities and the whole strata
+    // fee. In Toronto at $600,000 the visible rows summed to $3,386.67 under a total
+    // of $3,811.67 — $425 unexplained, plus the condo fee on a condo.
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({
+        jurId: "toronto", price: 600000, dpPct: 10, amortYears: 30, ptype: "condo", condoFee: 550,
+      }),
+    );
+    renderPage();
+    await open(user, /Monthly cost/);
+    const table = screen.getAllByRole("table")[0];
+
+    const parts = [
+      "Principal and interest",
+      "Property tax",
+      "Maintenance reserve",
+      "Home insurance",
+      "Utilities",
+      "Condo fee",
+    ].map((label) => cell(table, label));
+
+    const total = cell(table, "True all-in monthly");
+    // Rounded to the dollar in each cell, so six roundings can drift by at most $3.
+    expect(Math.abs(parts.reduce((a, b) => a + b, 0) - total)).toBeLessThanOrEqual(3);
+  });
+
+  it("omits a component the household does not pay, rather than showing it as zero", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "toronto", price: 600000, ptype: "house", condoFee: 0 }),
+    );
+    renderPage();
+    await open(user, /Monthly cost/);
+    const table = screen.getAllByRole("table")[0];
+    expect(
+      within(table).getAllByRole("rowheader").some((th) => th.textContent!.startsWith("Condo fee")),
+    ).toBe(false);
   });
 });

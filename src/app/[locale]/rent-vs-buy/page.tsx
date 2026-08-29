@@ -20,7 +20,7 @@ import { WealthChart } from "@/components/rent-vs-buy/wealth-chart";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
-import { AnswerHead, FigureFooter, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 import { FAVOURS_BUYING, FAVOURS_RENTING } from "./omissions";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -31,14 +31,13 @@ const HOLD_CHOICES = [3, 5, 10, 25] as const;
 /** The rows of the by-holding-period table. The reader's own horizon is marked among them. */
 const HOLDING_PERIODS = [3, 5, 10, 15, 25, 40] as const;
 
-
 export default function RentVsBuyPage() {
   const t = useTranslations("RentVsBuy");
   const tJur = useTranslations("Jurisdictions");
   // The ask that replaces the answer where nobody publishes a price.
   const tInputs = useTranslations("Inputs");
   const [jurisdiction] = useJurisdiction();
-  const [stored, update] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
+  const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     RENT_VS_BUY_SECTIONS,
     // Always the verdict: this page has exactly one question, and the break-even
@@ -150,6 +149,7 @@ export default function RentVsBuyPage() {
       */}
       {resolved.priceKnown && resolved.rentKnown ? (
         <>
+          <PendingFigures pending={!hydrated}>
           <AnswerHead
             eyebrow={t("title")}
             figure={fmt(Math.abs(atHorizon.adv))}
@@ -178,6 +178,7 @@ export default function RentVsBuyPage() {
               { label: t("rentWealth"), value: fmt(atHorizon.rentW), mark: "estimate" },
             ]}
           />
+          </PendingFigures>
 
           <div className="pt-8 sm:pt-[34px]">
             <SectionsHeader
@@ -246,7 +247,7 @@ export default function RentVsBuyPage() {
                                   : "py-1.5 pr-3 text-left font-normal text-ink2"
                               }
                             >
-                              {`${year} ${t("years")}`}
+                              {t("years", { n: year })}
                               {mine ? <span className="sr-only"> · {t("horizonLabel", { n: hold })}</span> : null}
                             </th>
                             {/*
@@ -310,6 +311,25 @@ export default function RentVsBuyPage() {
                   reach its derivation.
                 */}
                 <CrossLink namespace="RentVsBuy" id="xClosing" href="/closing-costs" placement="row" />
+                {/*
+                  The two owner costs the model charges every year and never
+                  printed. Property tax and the maintenance reserve are both
+                  price-driven and both compound with appreciation, and the
+                  reserve in particular is the acute one — at 1% of value it is
+                  close to a thousand dollars a month on a $1.2M home, and it
+                  appeared nowhere outside a collapsed caveat about it possibly
+                  being too LOW.
+
+                  Insurance and utilities are deliberately not here: both already
+                  have their own fields further down this page, and the utilities
+                  row would be mislabelled anyway — `rentVsBuy()` folds the condo
+                  fee into it, so on a condo the figure is not utilities.
+
+                  These are this year's figures, like `cOwner` directly below
+                  them, which is why they carry no year of their own.
+                */}
+                <PanelRow label={t("cPropTax")} value={fmt(atHorizon.propTax)} provenance={<Provenance kind="estimate" />} />
+                <PanelRow label={t("cMaint")} value={fmt(atHorizon.maintenance)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cOwner")} value={fmt(atHorizon.ownerOutlay)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cRenter")} value={fmt(atHorizon.renterOutlay)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cBalance")} value={fmt(atHorizon.balance)} />
@@ -333,6 +353,20 @@ export default function RentVsBuyPage() {
               fmt(Math.abs(atHorizon.adv)),
               t("wealthWhy"),
               <>
+                {/*
+                  The largest single one-time figure in the whole model, and it
+                  was never printed. It is `rentVsBuy()`'s own `sellingCost`, not
+                  `homeValue * federal.sellingCost` recomputed here: the engine
+                  nets exactly this amount off the equity row directly below, and a
+                  page that re-derives it agrees only until the engine's model
+                  changes. It needs no provenance entry of its own beyond the
+                  estimate mark `sellingCost` already carries in federal.ts.
+                */}
+                <PanelRow
+                  label={t("cSelling")}
+                  value={fmt(atHorizon.sellingCost)}
+                  provenance={<Provenance kind="estimate" />}
+                />
                 <PanelRow label={t("cEquity")} value={fmt(atHorizon.equity)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cBuyW")} value={fmt(atHorizon.buyW)} strong />
                 <PanelRow label={t("cRentW")} value={fmt(atHorizon.rentW)} strong />
@@ -422,6 +456,9 @@ export default function RentVsBuyPage() {
             belowMinimum={resolved.belowMinimum}
             amortYears={stored.amortYears}
             ptype={stored.ptype}
+            ftbEffective={resolved.ftb}
+            ptypeEffective={resolved.ptype}
+            residency={stored.residency}
             jurisdiction={jurisdiction}
             onChange={update}
           />
@@ -467,8 +504,27 @@ export default function RentVsBuyPage() {
               label={t("dHolding")}
               value={stored.holding}
               onChange={(holding) => update({ holding })}
-              options={HOLD_CHOICES.map((v) => ({ value: v, label: `${v} ${t("years")}` }))}
+              options={HOLD_CHOICES.map((v) => ({ value: v, label: t("years", { n: v }) }))}
             />
+            {/*
+              The two controls with the largest effect on the verdict, and until
+              now the reader could not see what either of them selected: six
+              rates, none of them anywhere on the page, while federal.ts's own
+              note says the three tiers exist "so the reader can see how much the
+              answer depends on it".
+
+              A note line under the group, NOT the rate appended to each segment
+              label, for two reasons. `SegmentedGroup`'s label is a `string`, so a
+              `Provenance` mark cannot live inside one — and these figures are
+              `conf: "assumption"`, so the mark is the disclosure and is not
+              optional. And these are the exact two controls DESIGN.md §5 records
+              as having blown the 256px budget at 320px in Ukrainian, fixed by
+              SHORTENING their labels; lengthening all six again is the change
+              that was already reverted once.
+
+              Zero new figures reach the reader that the model was not already
+              applying.
+            */}
             <SegmentedGroup
               label={t("dAppr")}
               value={stored.apprKey}
@@ -479,6 +535,14 @@ export default function RentVsBuyPage() {
                 { value: "flat" as const, label: t("apprFlat") },
               ]}
             />
+            <NoteLine tight>
+              {t("apprRates", {
+                a: pct(federal.appreciation.inflation * 100),
+                b: pct(federal.appreciation.shelter * 100),
+                c: pct(federal.appreciation.flat * 100),
+              })}
+              <Provenance kind="estimate" />
+            </NoteLine>
             <SegmentedGroup
               label={t("dRet")}
               value={stored.retKey}
@@ -489,6 +553,14 @@ export default function RentVsBuyPage() {
                 { value: "growth" as const, label: t("retGrowth") },
               ]}
             />
+            <NoteLine tight>
+              {t("retRates", {
+                a: pct(federal.investReturn.cash * 100),
+                b: pct(federal.investReturn.balanced * 100),
+                c: pct(federal.investReturn.growth * 100),
+              })}
+              <Provenance kind="estimate" />
+            </NoteLine>
             {/*
               The carrying costs this page's own model applies to the owner side.
               They moved the answer and had no control on the screen that used
@@ -523,7 +595,7 @@ export default function RentVsBuyPage() {
               min={0}
               onCommit={(condoFee) => update({ condoFee })}
             />
-            <p className="text-[11.5px] leading-[1.5] text-ink3 text-pretty">{t("leverNote")}</p>
+            <NoteLine>{t("leverNote")}</NoteLine>
           </fieldset>
         </div>
       </section>
