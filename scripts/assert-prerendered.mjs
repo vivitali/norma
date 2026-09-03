@@ -39,21 +39,32 @@ const prerender = read(PRERENDER, "routes");
 // `locale` is currently the only declared dimension. Any future dynamic param —
 // a fixed province list, say — must be added here too, or it falls back to being
 // unchecked across pages.
+//
+// Imports src/i18n/countries.ts directly rather than src/i18n/routing.ts. Both declare
+// the same locale list (routing.locales is `allLocales()` from this same registry) —
+// but routing.ts itself imports countries.ts with a bare relative specifier
+// ("./countries"), which the Next/webpack bundler resolves fine and which tsc accepts
+// under "moduleResolution": "bundler", yet Node's own ESM resolver — used here via
+// Node's native type stripping, with no bundler in front of it — requires an explicit
+// extension on a relative specifier and fails to resolve it. countries.ts has no
+// imports of its own (see its file header), so going straight to it sidesteps that
+// resolution gap entirely instead of asking routing.ts to write its imports for two
+// different resolvers.
 let declaredParams = {};
 try {
-  const { routing } = await import("../src/i18n/routing.ts");
-  const locales = routing?.locales;
+  const { allLocales } = await import("../src/i18n/countries.ts");
+  const locales = allLocales();
   // An empty or malformed list is not "nothing to check" — it silently restores
   // exactly the blind spot this exists to close, and stays green while doing it.
   if (!Array.isArray(locales) || locales.length === 0) {
-    console.error("prerender guard: src/i18n/routing.ts declares no locales");
+    console.error("prerender guard: src/i18n/countries.ts declares no locales");
     console.error(`  got: ${JSON.stringify(locales)}`);
     console.error("  Without them the guard cannot tell that a whole locale went missing.");
     process.exit(1);
   }
   declaredParams = { locale: locales };
 } catch (error) {
-  console.error("prerender guard: cannot read locales from src/i18n/routing.ts");
+  console.error("prerender guard: cannot read locales from src/i18n/countries.ts");
   console.error(`  ${error.message}`);
   console.error("  Without them the guard cannot tell that a whole locale went missing.");
   process.exit(1);

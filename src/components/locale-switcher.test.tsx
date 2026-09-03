@@ -9,7 +9,7 @@ import { LocaleSwitcher } from "./locale-switcher";
 const replace = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useParams: () => ({ locale: "en" }),
+  useParams: () => ({ locale: "en-CA" }),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -44,7 +44,7 @@ describe("LocaleSwitcher", () => {
     // The one label that is not its own ISO code, and the reason is legibility to the
     // reader it is for: every other entry on the list is a two-letter Latin code, so
     // "UK" beside "EN" and "FR" reads as the United Kingdom.
-    expect(LOCALES.uk.label).toBe("УКР");
+    expect(LOCALES["uk-CA"].label).toBe("УКР");
   });
 
   it("marks the active locale as selected", async () => {
@@ -60,6 +60,6 @@ describe("LocaleSwitcher", () => {
     renderWithIntl(<LocaleSwitcher />);
     await user.click(screen.getByRole("combobox"));
     await user.click(screen.getByRole("option", { name: "FR" }));
-    expect(replace).toHaveBeenCalledWith("/", { locale: "fr" });
+    expect(replace).toHaveBeenCalledWith("/", { locale: "fr-CA" });
   });
 });

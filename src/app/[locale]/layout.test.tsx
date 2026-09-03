@@ -41,10 +41,10 @@ describe("LocaleLayout", () => {
   it("marks the request locale so the whole segment is prerendered", async () => {
     await LocaleLayout({
       children: null,
-      params: Promise.resolve({ locale: "fr" }),
+      params: Promise.resolve({ locale: "fr-CA" }),
     });
 
-    expect(setRequestLocale).toHaveBeenCalledWith("fr");
+    expect(setRequestLocale).toHaveBeenCalledWith("fr-CA");
   });
 
   it("404s an unknown locale instead of marking it", async () => {

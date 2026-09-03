@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
-import type { Locale } from "@/lib/locales";
+import { routing } from "@/i18n/routing";
 
 import { HomeContent } from "@/components/home-content";
 import { AppHeader } from "@/components/app-header";
@@ -43,7 +43,11 @@ const PAGES = [
   ["Sources", SourcesContent],
 ] as const;
 
-const LOCALES = Object.keys(CATALOGUES) as Locale[];
+// A per-ROUTE check (this renders every page route) iterates the actual `Locale`
+// pairs from routing.ts, not the language-keyed CATALOGUES registry: rendering
+// "es" would ask renderWithIntl for a locale that does not exist since the CA
+// route migration. See src/i18n/countries.ts and src/test/catalogues.ts.
+const LOCALES = routing.locales;
 
 /**
  * The namespaces every page reads, whatever page it is: the chrome, the shared input

@@ -295,13 +295,13 @@ describe("French", () => {
   afterEach(() => cleanup());
 
   it("leaks no raw message key", () => {
-    const { container } = renderWithIntl(<HomeContent />, { locale: "fr" });
+    const { container } = renderWithIntl(<HomeContent />, { locale: "fr-CA" });
     expect(container.textContent).not.toMatch(/\bHome\.[a-zA-Z_]+/);
     expect(container.textContent).not.toMatch(/\bNav\.[a-zA-Z_]+/);
   });
 
   it("translates the tool descriptions rather than falling back to English", () => {
-    renderWithIntl(<HomeContent />, { locale: "fr" });
+    renderWithIntl(<HomeContent />, { locale: "fr-CA" });
     expect(document.body.textContent).toContain(fr.Home.toolsHeading);
     expect(document.body.textContent).toContain(fr.Home.tool_closingCosts);
   });

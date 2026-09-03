@@ -10,7 +10,7 @@ import AffordabilityPage from "./page";
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
-const renderPage = (locale: Locale = "en") =>
+const renderPage = (locale: Locale = "en-CA") =>
   renderWithIntl(
     <JurisdictionProvider>
       <AffordabilityPage />
@@ -513,7 +513,7 @@ describe("Affordability — property tax provenance", () => {
 
 describe("Affordability — number formatting end to end", () => {
   it("never renders a sign inside the currency symbol in French", () => {
-    renderPage("fr");
+    renderPage("fr-CA");
     expect(document.body.textContent).not.toMatch(/\$\s?-\d/);
   });
 });

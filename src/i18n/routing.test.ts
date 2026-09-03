@@ -1,11 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { getPathname } from "@/i18n/navigation";
+import { allLocales, localePrefixes } from "./countries";
 import { routing } from "./routing";
 
 describe("routing", () => {
-  it("supports four locales with English as default", () => {
-    expect(routing.locales).toEqual(["en", "fr", "uk", "es"]);
-    expect(routing.defaultLocale).toBe("en");
+  it("supports four Canadian locales with en-CA as default", () => {
+    expect(routing.locales).toEqual(["en-CA", "fr-CA", "uk-CA", "es-CA"]);
+    expect(routing.defaultLocale).toBe("en-CA");
+  });
+
+  it("derives its locale list from the country registry, not a literal array", () => {
+    expect(routing.locales).toEqual(allLocales());
+  });
+
+  it("mounts each locale at its country-qualified prefix", () => {
+    expect(routing.localePrefix).toEqual({
+      mode: "always",
+      prefixes: localePrefixes(),
+    });
+    expect(localePrefixes()).toEqual({
+      "en-CA": "/ca/en",
+      "fr-CA": "/ca/fr",
+      "uk-CA": "/ca/uk",
+      "es-CA": "/ca/es",
+    });
   });
 });
 
@@ -27,7 +45,7 @@ describe("routing.pathnames", () => {
   it("gives every non-root route a French slug", () => {
     for (const [key, value] of Object.entries(routing.pathnames)) {
       if (key === "/") continue;
-      expect(value, `${key} has no localized map`).toHaveProperty("fr");
+      expect(value, `${key} has no localized map`).toHaveProperty("fr-CA");
     }
   });
 
@@ -36,9 +54,9 @@ describe("routing.pathnames", () => {
     // own Canadian bank and tax paperwork, so a Spanish slug would name nothing.
     for (const [key, value] of Object.entries(routing.pathnames)) {
       if (key === "/" || key === "/rrsp-hbp") continue;
-      expect(value, `${key} has no Spanish slug`).toHaveProperty("es");
+      expect(value, `${key} has no Spanish slug`).toHaveProperty("es-CA");
     }
-    expect(routing.pathnames["/rrsp-hbp"]).not.toHaveProperty("es");
+    expect(routing.pathnames["/rrsp-hbp"]).not.toHaveProperty("es-CA");
   });
 
   it("gives Ukrainian no slugs at all, so every route falls back to the English one", () => {
@@ -47,18 +65,20 @@ describe("routing.pathnames", () => {
     // test when Cyrillic slugs earn their percent-encoding — do not quietly add one slug.
     for (const value of Object.values(routing.pathnames)) {
       if (typeof value === "string") continue;
-      expect(value).not.toHaveProperty("uk");
+      expect(value).not.toHaveProperty("uk-CA");
     }
-    expect(getPathname({ href: "/affordability", locale: "uk" })).toBe("/uk/affordability");
+    expect(getPathname({ href: "/affordability", locale: "uk-CA" })).toBe(
+      "/ca/uk/affordability",
+    );
   });
 
-  it("omits en, because a missing locale falls back to the canonical key", () => {
+  it("omits en-CA, because a missing locale falls back to the canonical key", () => {
     // Verified in next-intl 4.13.7: getLocalizedTemplate is
     //   pathnameConfig[locale] || internalTemplate
-    // Writing en explicitly would be redundant and would drift when a key is renamed.
+    // Writing en-CA explicitly would be redundant and would drift when a key is renamed.
     for (const value of Object.values(routing.pathnames)) {
       if (typeof value === "string") continue;
-      expect(value).not.toHaveProperty("en");
+      expect(value).not.toHaveProperty("en-CA");
     }
   });
 
@@ -72,9 +92,11 @@ describe("routing.pathnames", () => {
   });
 
   it("falls a locale with no pathnames entry for a route back to the canonical slug", () => {
-    // en is deliberately absent from every entry above; getLocalizedTemplate is
+    // en-CA is deliberately absent from every entry above; getLocalizedTemplate is
     // `pathnameConfig[locale] || internalTemplate`, so this must resolve to the canonical key.
-    expect(getPathname({ href: "/affordability", locale: "en" })).toBe("/en/affordability");
+    expect(getPathname({ href: "/affordability", locale: "en-CA" })).toBe(
+      "/ca/en/affordability",
+    );
   });
 
   it.each([
@@ -87,9 +109,9 @@ describe("routing.pathnames", () => {
     ["/scenarios", "/escenarios"],
     ["/sources", "/fuentes"],
   ] satisfies Array<[keyof typeof routing.pathnames, string]>)(
-    "resolves %s to the Spanish path /es%s",
+    "resolves %s to the Spanish path /ca/es%s",
     (href, esSlug) => {
-      expect(getPathname({ href, locale: "es" })).toBe(`/es${esSlug}`);
+      expect(getPathname({ href, locale: "es-CA" })).toBe(`/ca/es${esSlug}`);
     },
   );
 
@@ -103,9 +125,22 @@ describe("routing.pathnames", () => {
     ["/scenarios", "/scenarios"],
     ["/sources", "/sources"],
   ] satisfies Array<[keyof typeof routing.pathnames, string]>)(
-    "resolves %s to the French path /fr%s",
+    "resolves %s to the French path /ca/fr%s",
     (href, frSlug) => {
-      expect(getPathname({ href, locale: "fr" })).toBe(`/fr${frSlug}`);
+      expect(getPathname({ href, locale: "fr-CA" })).toBe(`/ca/fr${frSlug}`);
     },
   );
+});
+
+describe("two-segment locale prefixes", () => {
+  // The load-bearing check for Decision 1 of the US-market spec: next-intl's
+  // `localePrefix.prefixes` accepts an arbitrary string per locale, and a prefix
+  // spanning two URL segments ("/ca/en") works identically to a one-segment prefix
+  // in both directions next-intl exposes — middleware rewriting, and `Link`/
+  // `getPathname` resolving a route to its localized URL and back.
+  it("getPathname produces a two-segment prefix for every route shape", () => {
+    expect(getPathname({ href: "/", locale: "en-CA" })).toBe("/ca/en");
+    expect(getPathname({ href: "/", locale: "fr-CA" })).toBe("/ca/fr");
+    expect(getPathname({ href: "/sources", locale: "uk-CA" })).toBe("/ca/uk/sources");
+  });
 });

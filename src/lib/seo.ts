@@ -55,6 +55,19 @@ function prefixMode(): LocalePrefixMode {
  * `routing.pathnames`, so the French slugs planned for phase 1.5 propagate to
  * canonicals, hreflang and the sitemap without an edit here.
  */
+function localePrefixOf(locale: string): string {
+  const configured = (
+    routing as { localePrefix?: LocalePrefixMode | { mode: LocalePrefixMode; prefixes?: Record<string, string> } }
+  ).localePrefix;
+  const prefixes = typeof configured === "object" ? configured.prefixes : undefined;
+  // A country-qualified locale ("en-CA") spans two URL segments ("/ca/en"): the
+  // `prefixes` map in routing.ts is the one place that mapping is written, so this
+  // reads it rather than reconstructing "/en-CA" from the locale tag. Falling back to
+  // "/<locale>" only covers a locale genuinely missing from the map, which would be a
+  // routing.ts bug this function has no business papering over silently.
+  return prefixes?.[locale] ?? `/${locale}`;
+}
+
 function localizedPathname(locale: string, href: string): string {
   const pathnames = (
     routing as { pathnames?: Record<string, string | Record<string, string>> }
@@ -70,7 +83,7 @@ function localizedPathname(locale: string, href: string): string {
   const mode = prefixMode();
   const unprefixed =
     mode === "never" || (mode === "as-needed" && locale === routing.defaultLocale);
-  const prefix = unprefixed ? "" : `/${locale}`;
+  const prefix = unprefixed ? "" : localePrefixOf(locale);
   const tail = path === "/" ? "" : path;
 
   return `${prefix}${tail}` || "/";

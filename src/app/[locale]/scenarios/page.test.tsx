@@ -9,7 +9,7 @@ import ScenariosPage from "./page";
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
-const renderPage = (locale: Locale = "en") =>
+const renderPage = (locale: Locale = "en-CA") =>
   renderWithIntl(
     <JurisdictionProvider>
       <ScenariosPage />
@@ -224,7 +224,7 @@ describe("Scenarios — French", () => {
     // render the raw key, and a collapsed page hides every section where that
     // can happen -- which is exactly where Amortization.altText was hiding.
     const user = userEvent.setup();
-    renderPage("fr");
+    renderPage("fr-CA");
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(document.body.textContent).not.toMatch(/Scenarios\./);
   });

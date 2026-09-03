@@ -14,7 +14,7 @@ Shows Canadians what they can genuinely afford to buy or rent — computed from 
 
 ## Stack
 
-Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui (Radix base, Nova preset) · next-intl (locales: en, fr, uk, es — every route locale-prefixed) · Vitest + Testing Library
+Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui (Radix base, Nova preset) · next-intl (locales: en-CA, fr-CA, uk-CA, es-CA, mounted under `/ca/<language>` — every route locale-prefixed) · Vitest + Testing Library
 
 ## Commands (scripts contract — always use these, never raw stack commands)
 
@@ -39,36 +39,62 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
   hard-refuses a Node-runtime proxy (`process.exit(1)`, no flag), so `proxy.ts` cannot be deployed
   to our host at all. Don't "fix" this back to `proxy.ts` — it breaks `scripts/ship`. Revisit when
   the adapter supports Node middleware.
+- **A locale is a country and a language, and the two are named types.** `src/i18n/countries.ts`
+  defines `Language` (`en | fr | uk | es` — selects a catalogue, `Jurisdictions.at`, plural rules),
+  `Country` (`ca` only today, but a total `Record<Country, CountryProfile>` registry so a second
+  country is additive) and `Locale` (the BCP-47 pair, `en-CA`, the only thing next-intl's routing
+  sees). `routing.locales` and every URL prefix in `routing.ts`'s `localePrefix.prefixes` are
+  DERIVED from `COUNTRIES` — `allLocales()` and `localePrefixes()` — not written out twice.
+  Message catalogues stay one file per LANGUAGE (`messages/en.json`, never `messages/en-CA.json`);
+  `src/i18n/request.ts` loads by `languageOf(locale)`. A per-language check (parity, ICU plurals)
+  iterates `src/test/catalogues.ts`; a per-ROUTE check (prerendering, the sitemap, hreflang,
+  rendering every page) iterates `routing.locales` instead — see the comment at the top of
+  `src/i18n/countries.ts` for why that file has zero imports of its own: `scripts/smoke` and
+  `scripts/assert-prerendered.mjs` both import it directly, with Node's type stripping, to learn
+  the locale list and each locale's URL prefix without needing `node_modules` installed.
+- **Every Canadian route lives under `/ca/<language>`, not at the root.** `affordmath.com/en/…`
+  301s to `affordmath.com/ca/en/…` via `next.config.ts`'s `redirects()`, sourced from
+  `src/lib/redirects.ts` (unit-tested in `redirects.test.ts` for coverage and no `/ca/…` loop) —
+  the one-time migration this repo made so a country segment could exist at all. This is what a
+  two-segment `localePrefix` costs: `en-CA` maps to `/ca/en`, not `/en-CA`, and every place that
+  used to build a URL as `/${locale}` now has to resolve the real prefix (`src/lib/seo.ts`'s
+  `localePrefixOf`, not a bare template literal).
 - **Adding a page is two entries and a boolean.** Route keys and their localized slugs live in
   `src/i18n/routing.ts` (`pathnames`); the navigation IA lives in `src/lib/routes.ts` (`NAV`). Add
   the route to both, then flip `built: true` when the page exists. Tests enforce the pair in both
   directions, so forgetting either fails the suite. **Never write a route string anywhere else** —
   the folder name stays the canonical English key and the localized slug is a middleware rewrite.
 - **A locale is absent from a `pathnames` entry when its slug IS the canonical key.** next-intl
-  resolves a missing locale as `pathnameConfig[locale] || internalTemplate`, which is why `en`
+  resolves a missing locale as `pathnameConfig[locale] || internalTemplate`, which is why `en-CA`
   appears nowhere — and it is the seam that makes a locale additive: it can ship with English
   slugs and get them translated later, one line at a time.
-  - `fr` and `es` carry slugs. `uk` carries **none**, deliberately: slugs are ASCII (below), there
-    is no ASCII spelling of a Ukrainian word, and a transliteration is a string nobody searches
-    for or reads. `/uk/affordability` is at least recognisable from the English page.
+  - `fr-CA` and `es-CA` carry slugs. `uk-CA` carries **none**, deliberately: slugs are ASCII
+    (below), there is no ASCII spelling of a Ukrainian word, and a transliteration is a string
+    nobody searches for or reads. `/ca/uk/affordability` is at least recognisable from the English
+    page.
   - `/rrsp-hbp` has no Spanish slug either. RRSP and HBP are the names on the reader's own
     Canadian bank and tax paperwork; there is nothing to translate them into.
 - Slugs are ASCII, no accents (`/abordabilite`, not `/abordabilité`; `/amortizacion`, not
   `/amortización`) — an accented path percent-encodes the moment it is copied, pasted or logged.
-- **Adding a locale is four edits and a translation**, and three of them are one line:
-  `routing.locales` in `src/i18n/routing.ts`; the presentation facts in **`src/lib/locales.ts`**;
-  the catalogue in `src/test/catalogues.ts`; then `messages/<locale>.json` itself. `LOCALES` is a
-  `Record<Locale, LocaleProfile>`, so omitting it is a compile error rather than a silent fallback
-  to English conventions. **Every cross-locale test iterates those registries** — parity, ICU
-  placeholders, metadata length caps, section labels, Nav keys, cross-link rules, the engine's
-  dynamic line-item keys — so nothing else needs touching.
+- **Adding a Canadian locale is four edits and a translation**, and three of them are one line:
+  the language in `COUNTRIES.ca.languages` in `src/i18n/countries.ts` (`routing.locales` is
+  derived from it, so nothing in `routing.ts` itself needs touching); the presentation facts in
+  **`src/lib/locales.ts`**; the catalogue in `src/test/catalogues.ts`; then `messages/<language>.json`
+  itself. `LOCALES` is a `Record<Locale, LocaleProfile>`, so omitting it is a compile error rather
+  than a silent fallback to English conventions. **Every cross-locale test iterates those
+  registries** — parity, ICU placeholders, metadata length caps, section labels, Nav keys,
+  cross-link rules, the engine's dynamic line-item keys — so nothing else needs touching. Adding a
+  second COUNTRY is a larger job — see
+  `docs/superpowers/specs/2026-08-29-us-market-design.md`.
   - The rule that used to live in three files as `locale !== "en"` was never a rule. It was a
     two-locale coincidence, and Spanish breaks it: Latin American Spanish leads with the dollar
     sign exactly as English does. Currency placement and percent spacing are per-locale facts and
     live in the table.
-  - `es` formats through **`es-MX`**, not `es-ES`. The reader is a Spanish speaker in Canada
+  - `es-CA` formats through **`es-MX`**, not `es-ES`. The reader is a Spanish speaker in Canada
     holding Canadian paperwork; peninsular grouping would render the same figure as `1.234.567`
-    where `en-CA` renders `1,234,567`, on the same screen, depending on the language toggle.
+    where `en-CA` renders `1,234,567`, on the same screen, depending on the language toggle. The
+    comment on that table entry says this is a fact about the READER, not the URL's country
+    segment — `es-US`, when it ships, gets its own judgement call, not an inherited one.
 - **Allowlists passed to `useSharedState` MUST be module-level constants** from
   `src/lib/shared-inputs.ts`. The hook keys an effect on the array's identity; an inline literal is
   an infinite render loop, not a type error. This has bitten twice.
@@ -389,6 +415,15 @@ values. Go to the primary source before complying.
 Two consequences of the old placeholders are now resolved by real data rather than by argument:
 Rent vs Buy's default verdict is no longer driven by an invented benchmark, and every market figure
 says which metric it is. `capacityPer100` is still zero at every income for debt-free households.
+
+**Every Canadian route now lives under `/ca/`** — implementation order step 1 of
+`docs/superpowers/specs/2026-08-29-us-market-design.md`, landed with **no US code and no
+calculation change**. `affordmath.com/en/affordability` 301s to `affordmath.com/ca/en/affordability`;
+`Language`, `Country` and `Locale` are now three named types in `src/i18n/countries.ts` (see the
+"Conventions" section above), and every page, in every language, is still prerendered — `scripts/verify-prerender`
+covers all eleven routes across all four locales under their new prefix. This is the seam the rest
+of the US-market spec builds on; no `rules/us.ts`, no second country in `COUNTRIES`, and no US
+jurisdiction data exist yet.
 
 **Open issues:**
 - ~~[#1](https://github.com/vivitali/norma/issues/1)~~ — **closed by this branch.** Ukrainian and

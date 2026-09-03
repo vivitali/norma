@@ -41,16 +41,16 @@ describe("Home page", () => {
 
   it("marks the request locale so the route is prerendered", async () => {
     await HomePage({
-      params: Promise.resolve({ locale: "fr" }),
+      params: Promise.resolve({ locale: "fr-CA" }),
       searchParams: Promise.resolve({}),
     });
 
-    expect(setRequestLocale).toHaveBeenCalledWith("fr");
+    expect(setRequestLocale).toHaveBeenCalledWith("fr-CA");
   });
 
   it("emits WebApplication structured data", async () => {
     const tree = await HomePage({
-      params: Promise.resolve({ locale: "en" }),
+      params: Promise.resolve({ locale: "en-CA" }),
       searchParams: Promise.resolve({}),
     });
 
@@ -70,7 +70,7 @@ describe("Home page", () => {
     // adding a hardcoded question to page.tsx left every test green, which is
     // the exact failure the "impossible by construction" comment denies.
     const tree = await HomePage({
-      params: Promise.resolve({ locale: "en" }),
+      params: Promise.resolve({ locale: "en-CA" }),
       searchParams: Promise.resolve({}),
     });
     const { container } = renderWithIntl(tree);

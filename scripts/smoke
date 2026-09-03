@@ -12,60 +12,74 @@ BASE="${1:?usage: scripts/smoke <base-url>}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FAILED=0
 
-# The locales come from the app's own routing config, never from a list written here.
-# This script used to name /en and /fr and claim in its own comment that it checked
-# "both locales"; the day a third shipped it would have kept passing while covering
-# half the product — a green check that checks less than it says is the failure mode
-# this repo spends the most effort on.
+# The locales — and now each locale's URL PREFIX, since the CA route migration made a
+# prefix span two segments ("/ca/en") rather than being the locale itself — come from
+# the app's own registry, never from a list written here. This script used to name /en
+# and /fr and claim in its own comment that it checked "both locales"; the day a third
+# shipped it would have kept passing while covering half the product — a green check
+# that checks less than it says is the failure mode this repo spends the most effort on.
 #
-# Read TEXTUALLY rather than imported. `scripts/assert-prerendered.mjs` imports the
-# same file through Node's type stripping, but it runs after a build, inside an
-# installed tree. This runs against a deployed URL and wants to work from anywhere —
-# importing routing.ts pulls in next-intl, so a checkout without node_modules would
-# fail here for a reason that has nothing to do with the deploy it is testing.
+# Imported DIRECTLY rather than regex-parsed. `src/i18n/countries.ts` exists precisely
+# so this can: it has no imports of its own — no `@/` aliases, no next-intl, no JSON,
+# no env vars — so Node's type stripping can load it with nothing installed, exactly
+# the property that lets scripts/assert-prerendered.mjs import `routing.ts` (which DOES
+# need node_modules) after a build, while this script runs against a deployed URL from
+# anywhere. Regex-parsing `locales: [...]` worked while routing.ts wrote that array as
+# a literal; the CA migration made it `allLocales()`, a real function call a regex
+# cannot evaluate — importing the registry instead of scraping its output is what keeps
+# this script from silently narrowing the moment routing.ts's shape changes again.
 #
 # The parse is deliberately strict: no match is a hard failure, never an empty list
 # quietly checked. That is the same rule assert-prerendered states — go red rather
 # than silently stop checking.
 #
 # The expected copy comes from the catalogues for the same reason: `Home.heading` is
-# distinct in every locale, so a page that 200s in English under /uk is caught.
-# Punctuation is stripped because "¿" and the narrow no-break space before French "?"
-# survive into the HTML but make a brittle grep.
+# distinct in every locale, so a page that 200s in English under /ca/uk is caught.
+# Punctuation is stripped because accented punctuation and the narrow no-break space
+# before French "?" survive into the HTML but make a brittle grep. Catalogues stay one
+# file per LANGUAGE (messages/en.json), not per locale pair, so the probe reads
+# languageOf(locale).
 read -r -d '' PROBE_SCRIPT <<'JS' || true
 import { readFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 const root = process.argv[1];
-const source = readFileSync(`${root}/src/i18n/routing.ts`, "utf8");
-const declaration = /\blocales:\s*\[([^\]]*)\]/.exec(source);
-if (!declaration) throw new Error("no `locales: [...]` declaration in src/i18n/routing.ts");
-const locales = [...declaration[1].matchAll(/["'`]([a-z]{2}(?:-[A-Za-z0-9]+)?)["'`]/g)].map((m) => m[1]);
-if (locales.length === 0) throw new Error("src/i18n/routing.ts declares an empty locale list");
+const countriesUrl = pathToFileURL(`${root}/src/i18n/countries.ts`).href;
+const { allLocales, localePrefixes, languageOf } = await import(countriesUrl);
+const locales = allLocales();
+if (!Array.isArray(locales) || locales.length === 0) {
+  throw new Error("src/i18n/countries.ts: allLocales() returned no locales");
+}
+const prefixes = localePrefixes();
+const STRIP_PUNCT = new RegExp("[&<>\"'‘’“”¿¡]", "g");
+const STRIP_TRAILING = new RegExp("[?!.\\s\\u00a0\\u202f]+$", "u");
 for (const locale of locales) {
-  const messages = JSON.parse(readFileSync(`${root}/messages/${locale}.json`, "utf8"));
+  const prefix = prefixes[locale];
+  if (!prefix) throw new Error(`${locale}: no prefix in localePrefixes()`);
+  const messages = JSON.parse(readFileSync(`${root}/messages/${languageOf(locale)}.json`, "utf8"));
   const probe = String(messages.Home.heading)
-    .replace(/[&<>"'‘’“”¿¡]/g, "")
-    .replace(/[?!.\s\u00a0\u202f]+$/u, "")
+    .replace(STRIP_PUNCT, "")
+    .replace(STRIP_TRAILING, "")
     .trim();
   if (probe.length < 12) throw new Error(`${locale}: probe too short to be distinctive: "${probe}"`);
-  console.log(`${locale}\t${probe}`);
+  console.log(`${locale}\t${prefix}\t${probe}`);
 }
 JS
 
 if ! PROBES=$(node --input-type=module -e "$PROBE_SCRIPT" "$ROOT"); then
-  echo "FAIL  cannot read the locale list from src/i18n/routing.ts"
+  echo "FAIL  cannot read the locale registry from src/i18n/countries.ts"
   echo "      Without it this script silently narrows to whatever it can reach."
   exit 1
 fi
 
 if [ -z "$PROBES" ]; then
-  echo "FAIL  src/i18n/routing.ts declared no locales"
+  echo "FAIL  src/i18n/countries.ts declared no locales"
   exit 1
 fi
 
 # The edge and DNS can lag a fresh deploy; retry rather than flake.
 #
-# -L follows redirects on purpose: route slugs are localized (/fr/affordability
-# redirects to /fr/abordabilite), so asserting "this path returns 200 without
+# -L follows redirects on purpose: route slugs are localized (/ca/fr/affordability
+# redirects to /ca/fr/abordabilite), so asserting "this path returns 200 without
 # redirecting" would break every time a slug is translated. What matters is that the
 # URL ultimately serves the app.
 fetch_status() {
@@ -84,31 +98,45 @@ check_status() {
   fi
 }
 
-while IFS=$'\t' read -r locale probe; do
+FR_PREFIX=""
+while IFS=$'\t' read -r locale prefix probe; do
   [ -n "$locale" ] || continue
-  check_status "/$locale"
+  check_status "$prefix"
   # The canonical key doubles as the English slug and redirects to the localized one,
   # so this exercises the rewrite for every locale, including those with no slug of
   # their own.
-  check_status "/$locale/affordability"
+  check_status "$prefix/affordability"
 
   # A 200 that renders the wrong language would pass every check above.
-  if curl -s -L --max-redirs 5 --max-time 30 "$BASE/$locale" | grep -qF "$probe"; then
-    echo "ok    /$locale renders its own copy"
+  if curl -s -L --max-redirs 5 --max-time 30 "$BASE$prefix" | grep -qF "$probe"; then
+    echo "ok    $prefix renders its own copy"
   else
-    echo "FAIL  /$locale did not render its own copy (looked for: $probe)"
+    echo "FAIL  $prefix did not render its own copy (looked for: $probe)"
     FAILED=1
+  fi
+
+  # French is the one guaranteed to carry a slug (uk carries none; es omits rrsp-hbp's).
+  # Scoped to "fr-CA" specifically rather than "any French locale" because this repo
+  # serves exactly one country today; a second country with its own French locale would
+  # need this generalized alongside the rest of this script.
+  if [ "$locale" = "fr-CA" ]; then
+    FR_PREFIX="$prefix"
   fi
 done <<< "$PROBES"
 
-# The locale redirect is the only dynamic surface; if the middleware did not survive
-# the adapter, this is where it shows. One non-default locale is enough to prove
-# negotiation works at all, and French is the one guaranteed to have a slug.
-redirect=$(curl -s -o /dev/null -w '%{redirect_url}' -H 'Accept-Language: fr-CA,fr;q=0.9' \
-  --retry 5 --retry-delay 3 --retry-all-errors --max-time 30 "$BASE/")
-case "$redirect" in
-  */fr) echo "ok    / (Accept-Language: fr) -> $redirect" ;;
-  *)    echo "FAIL  / (Accept-Language: fr) -> ${redirect:-<none>}"; FAILED=1 ;;
-esac
+if [ -z "$FR_PREFIX" ]; then
+  echo "FAIL  fr-CA is not in the locale registry; cannot verify Accept-Language negotiation"
+  FAILED=1
+else
+  # The locale redirect is the only dynamic surface; if the middleware did not survive
+  # the adapter, this is where it shows. One non-default locale is enough to prove
+  # negotiation works at all.
+  redirect=$(curl -s -o /dev/null -w '%{redirect_url}' -H 'Accept-Language: fr-CA,fr;q=0.9' \
+    --retry 5 --retry-delay 3 --retry-all-errors --max-time 30 "$BASE/")
+  case "$redirect" in
+    *"$FR_PREFIX") echo "ok    / (Accept-Language: fr) -> $redirect" ;;
+    *)             echo "FAIL  / (Accept-Language: fr) -> ${redirect:-<none>}"; FAILED=1 ;;
+  esac
+fi
 
 exit "$FAILED"

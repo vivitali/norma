@@ -45,7 +45,7 @@ function seedVancouverNewBuild() {
   );
 }
 
-const renderPage = (locale: Locale = "en") =>
+const renderPage = (locale: Locale = "en-CA") =>
   renderWithIntl(
     <JurisdictionProvider>
       <ClosingCostsPage />
@@ -283,7 +283,7 @@ describe("Closing costs — a rebate that pays nothing still says why", () => {
   it("says the same thing in French", async () => {
     seedVancouverNewBuild();
     const user = userEvent.setup();
-    renderPage("fr");
+    renderPage("fr-CA");
     await open(user, /Crédits/);
     expect(screen.getByText(/un autre remboursement offert ici vaut davantage/)).toBeInTheDocument();
     expect(screen.queryByText("Aucun remboursement ici")).not.toBeInTheDocument();
@@ -335,7 +335,7 @@ describe("Closing costs — French", () => {
     // render the raw key, and a collapsed page hides every section where that
     // can happen -- which is exactly where Amortization.altText was hiding.
     const user = userEvent.setup();
-    renderPage("fr");
+    renderPage("fr-CA");
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(screen.getAllByText("Comptant requis le jour de la clôture").length).toBeGreaterThan(0);
     expect(document.body.textContent).not.toMatch(/ClosingCosts\./);

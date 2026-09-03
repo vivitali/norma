@@ -16,12 +16,12 @@ const TRIGGER = enMessages.Nav.menu;
 const TRIGGER_FR = frMessages.Nav.menu;
 
 // Real `@/i18n/navigation` now runs unmocked: only `next/navigation` (its dependency) is
-// replaced, with the RAW browser pathname next-intl expects — `/en/...` or `/fr/...`, always
+// replaced, with the RAW browser pathname next-intl expects — `/ca/en/...` or `/ca/fr/...`, always
 // prefixed (routing.ts's default `localePrefix` mode is "always"). next-intl's own `usePathname`
 // then reverse-maps that raw, possibly-localized pathname back to the canonical route key, and its
 // `Link` resolves `href` forward into the localized slug from `routing.pathnames` — so both
 // directions of the real localization logic are exercised, not a hand-written stand-in.
-let mockPathname = "/en";
+let mockPathname = "/ca/en";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname,
@@ -45,7 +45,7 @@ async function openMenu() {
 
 describe("AppNav", () => {
   beforeEach(() => {
-    mockPathname = "/en";
+    mockPathname = "/ca/en";
   });
 
   afterEach(() => {
@@ -69,13 +69,13 @@ describe("AppNav", () => {
   });
 
   it("points the link at the localized slug", async () => {
-    mockPathname = "/fr";
-    renderWithIntl(<AppNav />, { locale: "fr" });
+    mockPathname = "/ca/fr";
+    renderWithIntl(<AppNav />, { locale: "fr-CA" });
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: TRIGGER_FR }));
     expect(screen.getByRole("link", { name: "Capacité d'achat" })).toHaveAttribute(
       "href",
-      "/fr/abordabilite",
+      "/ca/fr/abordabilite",
     );
   });
 
@@ -94,7 +94,7 @@ describe("AppNav", () => {
   });
 
   it("marks the current route as the active page", async () => {
-    mockPathname = "/en/affordability";
+    mockPathname = "/ca/en/affordability";
     renderWithIntl(<AppNav />);
     await openMenu();
     expect(screen.getByRole("link", { name: "Affordability" })).toHaveAttribute(
@@ -104,8 +104,8 @@ describe("AppNav", () => {
   });
 
   it("marks the current route as active from a localized pathname, proving next-intl reverse-maps the French slug to the canonical route key", async () => {
-    mockPathname = "/fr/abordabilite";
-    renderWithIntl(<AppNav />, { locale: "fr" });
+    mockPathname = "/ca/fr/abordabilite";
+    renderWithIntl(<AppNav />, { locale: "fr-CA" });
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: TRIGGER_FR }));
     expect(screen.getByRole("link", { name: "Capacité d'achat" })).toHaveAttribute(

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   CATALOGUES,
-  SOURCE_LOCALE,
+  SOURCE_LANGUAGE,
   TRANSLATED_ENTRIES,
   leafPaths,
   leaves,
   type Tree,
 } from "@/test/catalogues";
 
-const source = CATALOGUES[SOURCE_LOCALE] as Tree;
+const source = CATALOGUES[SOURCE_LANGUAGE] as Tree;
 const sourcePaths = leafPaths(source);
 
 /**

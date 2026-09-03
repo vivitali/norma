@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { ImageResponse } from "next/dist/server/og/image-response.js";
 import { routing } from "../src/i18n/routing.ts";
+import { languageOf } from "../src/i18n/countries.ts";
 import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY } from "../src/lib/og-manifest.ts";
 
 /**
@@ -89,11 +90,18 @@ function card({ title, fonts }) {
   );
 }
 
+// Catalogues stay one file per LANGUAGE (messages/en.json, not messages/en-CA.json) —
+// see src/i18n/countries.ts — so this reads by languageOf(locale), not by the locale
+// pair itself.
 const messages = Object.fromEntries(
   await Promise.all(
     routing.locales.map(async (locale) => [
       locale,
-      JSON.parse(await import("node:fs").then((fs) => fs.readFileSync(`messages/${locale}.json`, "utf8"))),
+      JSON.parse(
+        await import("node:fs").then((fs) =>
+          fs.readFileSync(`messages/${languageOf(locale)}.json`, "utf8"),
+        ),
+      ),
     ]),
   ),
 );

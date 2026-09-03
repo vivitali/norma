@@ -119,7 +119,7 @@ describe("NumberField", () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();
     renderWithIntl(<NumberField id="price" label="Prix" value={350000} onCommit={onCommit} />, {
-      locale: "fr",
+      locale: "fr-CA",
     });
     const input = screen.getByLabelText("Prix");
     const shown = (input as HTMLInputElement).value;

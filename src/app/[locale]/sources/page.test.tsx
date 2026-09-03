@@ -25,7 +25,7 @@ describe("/sources route", () => {
   });
 });
 
-const render = (locale: Locale = "en") =>
+const render = (locale: Locale = "en-CA") =>
   renderWithIntl(
     <JurisdictionProvider>
       <SourcesContent />
@@ -161,7 +161,7 @@ describe("SourcesContent", () => {
   it("says the notes are kept in English, rather than pretending otherwise", () => {
     // The notes come out of src/domain verbatim. Left unexplained, a French
     // reader reads an English paragraph as a translation that failed.
-    render("fr");
+    render("fr-CA");
     expect(screen.getByText(/conservées en anglais/)).toBeVisible();
   });
 
@@ -171,7 +171,7 @@ describe("SourcesContent", () => {
     // spelling, so it is data: Jurisdictions.at.<id> is the name as it appears after
     // a preposition, and every "for {place}" surface reads that and not the bare name.
     window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "yt" }));
-    render("fr");
+    render("fr-CA");
     expect(screen.getByText("Pour le Yukon")).toBeVisible();
     expect(screen.queryByText("Pour Yukon")).not.toBeInTheDocument();
   });
@@ -181,17 +181,17 @@ describe("SourcesContent", () => {
     // still ship "pour Nouveau-Brunswick" — and because the eight city records
     // must NOT gain an article they do not take.
     window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nb" }));
-    render("fr");
+    render("fr-CA");
     expect(screen.getByText("Pour le Nouveau-Brunswick")).toBeVisible();
     cleanup();
     window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "winnipeg" }));
-    render("fr");
+    render("fr-CA");
     expect(screen.getByText("Pour Winnipeg")).toBeVisible();
   });
 
   it("renders no raw message key in French, with every group open", async () => {
     const user = userEvent.setup();
-    render("fr");
+    render("fr-CA");
     await openEverySection(user);
     expect(document.body.textContent).not.toMatch(/Sources\.[a-zA-Z]/);
     expect(document.body.textContent).not.toMatch(/\bundefined\b|NaN/);
