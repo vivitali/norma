@@ -416,11 +416,16 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
   and 40. The abbreviation «р.» that worked around it is gone.
 - ~~**`Home.rulesUnverified` and `Home.faqA_verified` say the same thing twice**~~ — **fixed.**
   `rulesUnverified` stays the general disclosure (how provenance works, linking to `/sources`);
-  `faqA_verified` now answers the FAQ question directly ("Yes, and the app tells you which
-  figures reach that bar…") and adds what the disclosure does not — "treat it as a calculator,
-  not advice." It still carries no number, per the `## Don't` rule on what an FAQ answer feeding
-  `FAQPage` structured data may claim: neither version ever did, so nothing there needed to
-  change.
+  `faqA_verified` now answers the FAQ question directly, restoring the three-way split — most
+  figures are read off a publisher, the rest are either assumed-and-disclosed or asked-for — in
+  a shortened form that leads with "Most of them" rather than a flat "Yes" the taxonomy does not
+  support, and adds what the disclosure does not — "treat it as a calculator, not advice." It
+  still carries no number, per the `## Don't` rule on what an FAQ answer feeding `FAQPage`
+  structured data may claim: neither version ever did, so nothing there needed to change. A flat
+  "Yes" briefly shipped in this branch and was caught in review: it collapsed "assumed and
+  disclosed" (Vancouver's `fees.lawyer`/`fees.moving`, no fee input on any page) and "asked for"
+  (`none`-conf market prices, via `priceKnown`/`InlineAsk`) into one claim that was false for the
+  former.
 - ~~**`Affordability.propTaxSource` does not disclose that the citation it introduces is English.**~~
   — **decided, not a defect.** The asymmetry is correct: fr/uk/es say "cited in English" because
   their surrounding sentence is in their own language and the citation is not; English's own
