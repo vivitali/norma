@@ -61,10 +61,18 @@ describe("legal copy", () => {
     // en.json and fr.json can silently diverge — and the s. 3.1 officer address is the one field
     // in this change that must not. It lives in src/lib/legal.ts instead. A name is a name in
     // every locale.
+    //
+    // Checked across Legal, Privacy AND Terms, not just Legal: an address could just as easily
+    // have been hand-typed into a Privacy.bodyOfficer or Terms.bodyContact sentence instead of
+    // left to LegalContact's props, and the placeholder gate above already treats all three
+    // namespaces as one surface for exactly that reason.
     for (const [locale, messages] of CATALOGUE_ENTRIES) {
-      const json = JSON.stringify((messages as unknown as Record<string, unknown>).Legal);
-      expect(json, `${locale} re-introduced an address into the catalogue`).not.toMatch(/@/);
-      expect(json, locale).not.toContain(OPERATOR.name);
+      const tree = messages as unknown as Record<string, unknown>;
+      for (const namespace of ["Legal", "Privacy", "Terms"]) {
+        const json = JSON.stringify(tree[namespace]);
+        expect(json, `${locale}/${namespace} re-introduced an address into the catalogue`).not.toMatch(/@/);
+        expect(json, `${locale}/${namespace}`).not.toContain(OPERATOR.name);
+      }
     }
   });
 
