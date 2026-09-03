@@ -407,6 +407,14 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     if (best.amount <= 0) continue;
     for (const c of bucket) {
       if (c === best) continue;
+      // A row worth nothing already carries the status that explains its own zero —
+      // `ftbOnly`, `phasedOut`, `overCeiling`, `none` — same reasoning as the
+      // `best.amount <= 0` guard above, just per-row instead of per-bucket. Relabelling it
+      // `superseded` (or `tied`) on top of that used to tell a non-first-time buyer "You
+      // qualify for this" for a programme whose OWN test they failed, because a paying
+      // sibling elsewhere in the group made `best.amount` positive. Only a row that is
+      // itself worth money and lost can be superseded or tied.
+      if (c.amount <= 0) continue;
       // Nothing supersedes an equal either. `superseded` renders as "another rebate here is
       // worth more — only one can be claimed, so that one is applied instead", and on an
       // exact tie the first half of that sentence is false. It is an ordinary band, not a

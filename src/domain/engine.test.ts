@@ -558,6 +558,24 @@ describe("credits — mutually exclusive rebate groups", () => {
     expect(rows.filter((c) => c.amount > 0)).toHaveLength(1);
     expect(rows.some((c) => c.st === "tied")).toBe(true);
   });
+
+  it("does not relabel a zero-amount ftbOnly row when a sibling in the group pays", () => {
+    // A non-first-time buyer of a $600,000 Vancouver new build: cr_pttNewBuild applies in
+    // full (no ftb test), cr_pttExempt fails ONLY the ftb test and is emitted at $0 with
+    // st "ftbOnly". `best.amount > 0` here — cr_pttNewBuild pays — so the old code walked
+    // into the per-row relabelling loop and overwrote cr_pttExempt's "ftbOnly" with
+    // "superseded", which renders as "You qualify for this" against a programme the buyer
+    // failed on its own terms.
+    const vancouver = getJurisdiction("vancouver")!;
+    const o = { ...base, price: 600000, ftb: false, ptype: "newbuild" as const };
+    const C = credits(vancouver, federal, o, buildLines(vancouver, federal, o).gov);
+    const exempt = C.atClosing.find((c) => c.key === "cr_pttExempt")!;
+    const newBuild = C.atClosing.find((c) => c.key === "cr_pttNewBuild")!;
+    expect(exempt.st).toBe("ftbOnly");
+    expect(exempt.amount).toBe(0);
+    expect(newBuild.st).toBe("applied");
+    expect(newBuild.amount).toBeGreaterThan(0);
+  });
 });
 
 describe("closingTotal", () => {
