@@ -6,7 +6,7 @@ import { FOOTER } from "@/lib/routes";
  * The site-wide footer, and the only place the "not advice" disclosure is guaranteed to appear.
  *
  * A server component with no client JavaScript at all. Every page route in this app must stay
- * prerendered (CLAUDE.md), and chrome that renders on all eleven of them is the last place to
+ * prerendered (CLAUDE.md), and chrome that renders on all thirteen of them is the last place to
  * spend a client bundle — `getTranslations` resolves at build time, so this costs a string.
  *
  * Why it exists at all: a disclaimer only does legal work if the reader actually meets it.
