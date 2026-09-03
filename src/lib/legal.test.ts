@@ -2,10 +2,24 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import en from "../../messages/en.json";
 import fr from "../../messages/fr.json";
+import { CATALOGUE_ENTRIES } from "@/test/catalogues";
 import { FOOTER } from "./routes";
 import { absoluteUrl } from "./seo";
 import { OPERATOR, PRIVACY_OFFICER, LEGAL_UPDATED } from "./legal";
 
+/**
+ * The mechanical checks below (the placeholder gate, the identity-leak check, the date-consistency
+ * check) are locale-agnostic — they test JSON structure and digit strings, not language — so they
+ * run over every shipped catalogue via `CATALOGUE_ENTRIES`, not a hardcoded pair. Uk and es shipped
+ * legal copy in the same commit that widened this from `{ en, fr }`, and a placeholder gate that
+ * only watches two of four locales is exactly the "hardcoded locale pair" mistake CLAUDE.md already
+ * names as a repeat offender elsewhere in this repo.
+ *
+ * The substance checks further down (`the footer disclaimer denies advice…`, `never claims a
+ * licensed title`) stay scoped to `en`/`fr` directly: their regexes assert specific English and
+ * French phrasing, so they are deep content tests in the `home-content.test.tsx` mould, not a
+ * registry sweep.
+ */
 const LOCALES = { en, fr } as const;
 
 /**
@@ -30,7 +44,7 @@ describe("legal copy", () => {
     expect(JSON.stringify({ officerName: "{{TODO: officer name}}" })).toMatch(PLACEHOLDER);
   });
 
-  for (const [locale, messages] of Object.entries(LOCALES)) {
+  for (const [locale, messages] of CATALOGUE_ENTRIES) {
     it(`${locale}: no unfilled placeholder survives in Legal, Privacy or Terms`, () => {
       const tree = messages as unknown as Record<string, unknown>;
       for (const namespace of ["Legal", "Privacy", "Terms"]) {
@@ -47,7 +61,7 @@ describe("legal copy", () => {
     // en.json and fr.json can silently diverge — and the s. 3.1 officer address is the one field
     // in this change that must not. It lives in src/lib/legal.ts instead. A name is a name in
     // every locale.
-    for (const [locale, messages] of Object.entries(LOCALES)) {
+    for (const [locale, messages] of CATALOGUE_ENTRIES) {
       const json = JSON.stringify((messages as unknown as Record<string, unknown>).Legal);
       expect(json, `${locale} re-introduced an address into the catalogue`).not.toMatch(/@/);
       expect(json, locale).not.toContain(OPERATOR.name);
@@ -59,7 +73,7 @@ describe("legal copy", () => {
     // translated literal rather than a formatted Date. They can drift, and a policy whose visible
     // date disagrees with its markup is a bad look on the one page about being trustworthy.
     const [year, , day] = LEGAL_UPDATED.split("-");
-    for (const [locale, messages] of Object.entries(LOCALES)) {
+    for (const [locale, messages] of CATALOGUE_ENTRIES) {
       const long = (messages as unknown as { Legal: { updatedLong: string } }).Legal.updatedLong;
       expect(long, `${locale} day`).toContain(String(Number(day)));
       expect(long, `${locale} year`).toContain(year);
