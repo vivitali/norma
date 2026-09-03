@@ -91,7 +91,7 @@
     "faqQ_eligibility": "¿Puedo comprar una vivienda en Canadá si no soy ciudadano ni residente permanente?",
     "faqA_eligibility": "A veces, y esa pregunta va antes que cualquier cifra de este sitio. Una ley federal limita qué personas no canadienses pueden comprar vivienda en Canadá, con excepciones que dependen de la situación migratoria y del lugar donde está el inmueble. Tiene una vigencia limitada y se ha prorrogado por reglamento, así que consulte la regla vigente y no un resumen de ella. Aparte, algunas provincias cobran un impuesto de transferencia más alto a los compradores no residentes: el de Nueva Escocia se aplica aquí, y los de Ontario y Columbia Británica no están modelados en absoluto.",
     "faqQ_verified": "¿Están verificadas las cifras?",
-    "faqA_verified": "La mayoría, y cada cifra dice cuál es su caso. La mayoría se leen directamente del documento de la autoridad que las emite; unas pocas —honorarios legales, costos de mudanza— no tienen publicador del que partir, así que la app asume un valor por defecto razonable y lo declara; y donde tampoco hay nada que asumir, te lo pregunta en vez de inventarlo. Trátalo como una calculadora, no como asesoría, y confirma todo aquello sobre lo que vayas a actuar."
+    "faqA_verified": "La mayoría, y cada cifra dice cuál es su caso. La mayoría se leen directamente del documento de la autoridad que las emite; unas pocas —honorarios legales, costos de mudanza— no tienen publicador del que partir, así que la aplicación asume un valor por defecto razonable y lo declara; y donde tampoco hay nada que asumir, se lo pregunta en lugar de inventarlo. Trátelo como una calculadora, no como asesoría, y confirme todo aquello sobre lo que vaya a actuar."
   },
   "AppHeader": {
     "theme": "Tema",
