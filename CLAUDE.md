@@ -53,7 +53,8 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
   `scripts/assert-prerendered.mjs` both import it directly, with Node's type stripping, to learn
   the locale list and each locale's URL prefix without needing `node_modules` installed.
 - **Every Canadian route lives under `/ca/<language>`, not at the root.** `affordmath.com/en/…`
-  301s to `affordmath.com/ca/en/…` via `next.config.ts`'s `redirects()`, sourced from
+  redirects permanently (308) to `affordmath.com/ca/en/…` via `next.config.ts`'s `redirects()`,
+  sourced from
   `src/lib/redirects.ts` (unit-tested in `redirects.test.ts` for coverage and no `/ca/…` loop) —
   the one-time migration this repo made so a country segment could exist at all. This is what a
   two-segment `localePrefix` costs: `en-CA` maps to `/ca/en`, not `/en-CA`, and every place that
@@ -418,7 +419,8 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
 
 **Every Canadian route now lives under `/ca/`** — implementation order step 1 of
 `docs/superpowers/specs/2026-08-29-us-market-design.md`, landed with **no US code and no
-calculation change**. `affordmath.com/en/affordability` 301s to `affordmath.com/ca/en/affordability`;
+calculation change**. `affordmath.com/en/affordability` redirects permanently (308) to
+`affordmath.com/ca/en/affordability`;
 `Language`, `Country` and `Locale` are now three named types in `src/i18n/countries.ts` (see the
 "Conventions" section above), and every page, in every language, is still prerendered — `scripts/verify-prerender`
 covers all eleven routes across all four locales under their new prefix. This is the seam the rest
