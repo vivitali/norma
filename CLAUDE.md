@@ -414,9 +414,13 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
 - ~~**`RentVsBuy.years` is a bare noun concatenated in JSX**~~ — **fixed.** Both call sites pass
   `t("years", { n })` and Ukrainian is a real ICU plural: «роки» at 3, «років» at 5, 10, 15, 25
   and 40. The abbreviation «р.» that worked around it is gone.
-- **`Home.rulesUnverified` and `Home.faqA_verified` say the same thing twice** — the same
-  three-way disclosure in slightly different words on one page. Not wrong, but it doubles the
-  translation surface for every future locale.
+- ~~**`Home.rulesUnverified` and `Home.faqA_verified` say the same thing twice**~~ — **fixed.**
+  `rulesUnverified` stays the general disclosure (how provenance works, linking to `/sources`);
+  `faqA_verified` now answers the FAQ question directly ("Yes, and the app tells you which
+  figures reach that bar…") and adds what the disclosure does not — "treat it as a calculator,
+  not advice." It still carries no number, per the `## Don't` rule on what an FAQ answer feeding
+  `FAQPage` structured data may claim: neither version ever did, so nothing there needed to
+  change.
 - **`Affordability.propTaxSource` does not disclose that the citation it introduces is English.**
   French already extends the label to say so and English does not. The uk and es catalogues follow
   the French, so English is now the odd one out.
