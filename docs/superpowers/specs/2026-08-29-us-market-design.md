@@ -83,12 +83,12 @@ order of weight:
    unchanged.
 
 **Subdomains remain available as a courtesy layer.** A Worker can hold many custom domains, so
-`us.affordmath.com` can be added later as a second custom domain that **301s to
+`us.affordmath.com` can be added later as a second custom domain that **redirects permanently to
 `affordmath.com/us/`**. Memorable entry point, one canonical host, reversible.
 
 ### Route migration
 
-Canada moves from `/[locale]/…` to `/ca/[locale]/…`, and `/[locale]/…` 301s to it at the edge.
+Canada moves from `/[locale]/…` to `/ca/[locale]/…`, and `/[locale]/…` redirects permanently (308) to it.
 
 The alternative — leaving Canada at the root and mounting only the US under `/us/` — preserves every
 indexed URL and needs no redirect. It is rejected because the asymmetry would have to be encoded in
@@ -215,7 +215,7 @@ Rejected: `src/app/[country]/[locale]/…`. next-intl's middleware reads the fir
 locale, so a leading country segment needs a hand-written wrapper that strips and re-adds it on
 every request, rewrite and `Link` — a second routing layer to keep in step with the first.
 
-Old URLs 301 in `next.config.ts` `redirects()`: `/:lang(en|fr|uk|es)/:path*` → `/ca/:lang/:path*`,
+Old URLs redirect permanently in `next.config.ts` `redirects()` — Next emits **308** for `permanent: true`, which Google and Bing treat exactly as a 301 —: `/:lang(en|fr|uk|es)/:path*` → `/ca/:lang/:path*`,
 and `/` continues to land on the default locale through next-intl. `next.config` redirects run
 before middleware and `@opennextjs/cloudflare` honours them; a zone-level Cloudflare redirect
 rule may duplicate them later so the hop never reaches the Worker, but the in-repo rule is the
