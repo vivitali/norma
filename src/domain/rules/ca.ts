@@ -83,6 +83,7 @@ export const ca: CaRules = {
   hbp: { max: 60000, repayYears: 15, graceYears: 2, ruleDays: 90 },
   rrspCap: 33810,
   capGainsInclusion: 0.5,
+  gains: { kind: "inclusion", rate: 0.5 },
   marginal: {
     MB: [[47564, 0.248], [58522, 0.2675], [101200, 0.3325], [117000, 0.379], [181400, 0.434], [258500, 0.464], [null, 0.504]],
     ON: [[52886, 0.2005], [58522, 0.2415], [105775, 0.2965], [117000, 0.3389], [181400, 0.4341], [253414, 0.4841], [null, 0.5353]],
