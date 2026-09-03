@@ -264,10 +264,21 @@ pattern that resembles one. The same applies to any future assertion over render
 1. `src/i18n/routing.ts` — the route key and its localized slugs. **French and Spanish are
    both required** and a test enforces each; Ukrainian deliberately takes none (see the
    conventions above). A route added with only a French slug fails the suite.
-2. `src/lib/routes.ts` — the nav entry and its `built` flag
+2. `src/lib/routes.ts` — the nav entry and its `built` flag. Most pages go in `NAV`; a page that
+   answers a legal obligation rather than a question the reader arrived with — `/privacy` and
+   `/terms` are the only two so far — goes in the separate `FOOTER` registry instead, with its own
+   `FooterEntry` type and its own `Legal`-namespace `label` (`NAV`'s labels are `Nav` keys).
+   `routes.test.ts` checks `routing.pathnames` against `NAV ∪ FOOTER` in both directions, so a
+   route left off either one still fails the suite.
 3. `src/lib/sections.ts` — the page's section registry, added to `SECTION_REGISTRIES` so the
    message-key test covers it. **Add it when the page ships, not before**: a registry naming a
    namespace that does not exist yet cannot be checked, and a test that skips it is not a test.
+   **`/privacy` and `/terms` are the deliberate exception — they have no entry, ever**: legal copy
+   renders flat with no disclosure gesture at all (see `DESIGN.md` §8 and the note in
+   `src/components/legal-page.tsx` for why), so there is nothing to register. Because that would
+   otherwise leave their `Legal`/`Privacy`/`Terms` namespaces outside every orphan-key guard,
+   `messages-coverage.test.ts` names them in an explicit allowlist instead of silently skipping
+   them — the same pattern to reach for the next namespace that has no sections of its own.
 4. `src/lib/seo.ts` — `INDEXABLE_ROUTES`, plus `Metadata.<page>` copy and the page's entry in
    `seo-copy.test.ts`'s `PAGES`
 5. `src/app/[locale]/<route>/layout.tsx` — metadata only. `page.tsx` is a client component and
