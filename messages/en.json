@@ -91,7 +91,7 @@
     "faqQ_eligibility": "Can I buy a home in Canada if I am not a citizen or permanent resident?",
     "faqA_eligibility": "Sometimes, and that question comes before every number on this site. A federal Act limits which non-Canadians may purchase residential property in Canada, with exceptions that turn on immigration status and on where the property is. It is time-limited and has been extended by regulation, so check the current rule rather than a summary of it. Separately, some provinces charge a higher land transfer tax to buyers who are not residents: Nova Scotia’s is applied here, and Ontario’s and British Columbia’s are not modelled at all.",
     "faqQ_verified": "Are the numbers verified?",
-    "faqA_verified": "Yes, and the app tells you which figures reach that bar. Every one ships with its own confidence level and, at the highest one, the exact document and date it was checked against. Where nothing published exists — a legal fee, a moving cost — the app says so and asks rather than assumes. Treat it as a calculator, not advice, and confirm anything you are about to act on."
+    "faqA_verified": "Most of them, and every figure says which. Most are read straight off the issuing authority's own document; a few — legal fees, moving costs — have no publisher to read from, so the app assumes a reasonable default and discloses it; and where nothing exists to assume either, it asks you instead of inventing one. Treat it as a calculator, not advice, and confirm anything you are about to act on."
   },
   "AppHeader": {
     "theme": "Theme",
