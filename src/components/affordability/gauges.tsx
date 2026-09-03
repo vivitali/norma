@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { useRules } from "@/hooks/use-country";
 import { gaugeBar } from "@/lib/scale";
 import { usePercent } from "@/lib/format";
 import { figureClass } from "@/lib/tone";
@@ -12,10 +12,11 @@ import { cn } from "@/lib/utils";
 export function Gauges({ result }: { result: AffordabilityResult }) {
   const t = useTranslations("Affordability");
   const pct = usePercent();
+  const rules = useRules();
 
   const rows = [
-    { code: "GDS", short: t("gdsShort"), value: result.gdsAtTarget, limit: federal.gds },
-    { code: "TDS", short: t("tdsShort"), value: result.tdsAtTarget, limit: federal.tds },
+    { code: "GDS", short: t("gdsShort"), value: result.gdsAtTarget, limit: rules.gds },
+    { code: "TDS", short: t("tdsShort"), value: result.tdsAtTarget, limit: rules.tds },
   ];
 
   return (

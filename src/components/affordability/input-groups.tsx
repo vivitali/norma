@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
 import { maxAmortYears } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { useRules } from "@/hooks/use-country";
 import type { Jurisdiction } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
@@ -58,6 +58,7 @@ export function InputGroups({
   const tJur = useTranslations("Jurisdictions");
   const fmt = useMoney();
   const pct = usePercent();
+  const rules = useRules();
 
   /**
    * The longest amortization this purchase can actually be written at.
@@ -66,7 +67,7 @@ export function InputGroups({
    * already raised a request below the legal floor, and eligibility is a fact about
    * the loan the app is modelling rather than about the button the reader pressed.
    */
-  const maxAmort = maxAmortYears(federal, {
+  const maxAmort = maxAmortYears(rules, {
     dpPct: resolved.dpPct,
     price: resolved.price,
     ftb: resolved.ftb,
@@ -283,7 +284,7 @@ export function InputGroups({
             deliberately and by inspection rather than by extraction — the two
             components render this control in different layouts, but a reader who
             crosses between /affordability and /closing-costs must not find the same
-            rule stated two ways. `federal.maxAmortFtbInsured` rather than the reader's
+            rule stated two ways. `rules.maxAmortFtbInsured` rather than the reader's
             own choice, because the sentence is about the option that is on offer or
             not, and it fires whether or not they are sitting on it.
           */}
@@ -297,11 +298,11 @@ export function InputGroups({
               disabled: v > maxAmort,
             }))}
           />
-          {maxAmort < federal.maxAmortFtbInsured ? (
+          {maxAmort < rules.maxAmortFtbInsured ? (
             <NoteLine tone="caution">
               {tInputs("amortCapped", {
-                n: federal.maxAmortFtbInsured,
-                p: pct(federal.minDown.uninsuredRate * 100),
+                n: rules.maxAmortFtbInsured,
+                p: pct(rules.minDown.uninsuredRate * 100),
               })}
             </NoteLine>
           ) : null}

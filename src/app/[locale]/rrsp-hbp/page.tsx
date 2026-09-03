@@ -3,9 +3,9 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { hbpPlay } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -28,6 +28,7 @@ import {
 export default function RrspHbpPage() {
   const t = useTranslations("RrspHbp");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     RRSP_HBP_SECTIONS,
@@ -39,8 +40,8 @@ export default function RrspHbpPage() {
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
   /*
    * Income and province, not a pre-computed rate.
@@ -54,13 +55,13 @@ export default function RrspHbpPage() {
    */
   const play = useMemo(
     () =>
-      hbpPlay(federal, {
+      hbpPlay(rules, {
         contribution: resolved.hbpContribution,
         income: resolved.taxIncome,
         prov: jurisdiction.prov,
         withdrawAmount: resolved.hbpWithdraw,
       }),
-    [resolved.hbpContribution, resolved.hbpWithdraw, resolved.taxIncome, jurisdiction.prov],
+    [rules, resolved.hbpContribution, resolved.hbpWithdraw, resolved.taxIncome, jurisdiction.prov],
   );
   const rate = play.marginalRate;
 
@@ -176,7 +177,7 @@ export default function RrspHbpPage() {
             */}
             <PanelRow
               label={t("rrspCap")}
-              value={fmt(federal.rrspCap)}
+              value={fmt(rules.rrspCap)}
               provenance={<Provenance kind="rule" />}
             />
             <NoteLine>{t("rrspRoomNote")}</NoteLine>
@@ -360,7 +361,7 @@ export default function RrspHbpPage() {
                 note: t("refundWhy"),
               },
               { label: t("withdraw"), value: fmt(play.withdraw), rule: true },
-              { label: t("calcRepayYears"), value: String(federal.hbp.repayYears), op: "divide" },
+              { label: t("calcRepayYears"), value: String(rules.hbp.repayYears), op: "divide" },
               { label: t("calcRepay"), value: fmt(play.repayAnnual), op: "equals" },
             ]}
           />,

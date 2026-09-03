@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import { jurisdictions, getJurisdiction } from "@/domain/jurisdictions";
 import type { Provenance } from "@/domain/types";
 import {
@@ -162,7 +162,7 @@ describe("weakestGroupId", () => {
 describe("coverageOf", () => {
   const coverage = coverageOf(
     jurisdictions.map((j) => j.provenance),
-    federal.provenance,
+    ca.provenance,
   );
 
   it("agrees with the per-group totals a reader can add up", () => {
@@ -175,7 +175,7 @@ describe("coverageOf", () => {
       jurisdictions.reduce(
         (n, j) => n + groupProvenance(j.provenance).groups.reduce((g, grp) => g + grp.total, 0),
         0,
-      ) + federalGroup(federal.provenance).total;
+      ) + federalGroup(ca.provenance).total;
     expect(rows).toBe(coverage.total);
   });
 
@@ -198,7 +198,7 @@ describe("coverageOf", () => {
       jurisdictions.reduce(
         (n, j) => n + Object.keys(j.provenance).filter((p) => isFigure(j.provenance, p)).length,
         0,
-      ) + Object.keys(federal.provenance).filter((p) => isFigure(federal.provenance, p)).length;
+      ) + Object.keys(ca.provenance).filter((p) => isFigure(ca.provenance, p)).length;
 
     expect(coverage.total).toBe(expected);
     expect(coverage.jurisdictions).toBe(14);
@@ -209,7 +209,7 @@ describe("coverageOf", () => {
     // would still pass while silently measuring nothing.
     const rawEntries =
       jurisdictions.reduce((n, j) => n + Object.keys(j.provenance).length, 0) +
-      Object.keys(federal.provenance).length;
+      Object.keys(ca.provenance).length;
     expect(coverage.total).toBeLessThan(rawEntries);
   });
 
@@ -251,7 +251,7 @@ describe("coverageOf", () => {
 describe("the sourcing record backs the sentence rendered over it", () => {
   const records: [string, Record<string, Provenance | undefined>][] = [
     ...jurisdictions.map((j) => [j.id, j.provenance] as [string, Record<string, Provenance | undefined>]),
-    ["federal", federal.provenance],
+    ["federal", ca.provenance],
   ];
   const entries = records.flatMap(([id, map]) =>
     Object.entries(map)
@@ -299,9 +299,9 @@ describe("the sourcing record backs the sentence rendered over it", () => {
 
 describe("federalGroup", () => {
   it("is one group, because federal rules are a layer and not a kind of figure", () => {
-    const group = federalGroup(federal.provenance);
+    const group = federalGroup(ca.provenance);
     expect(group.id).toBe("federal");
-    expect(group.total).toBe(Object.keys(federal.provenance).length);
+    expect(group.total).toBe(Object.keys(ca.provenance).length);
     expect(group.entries.length).toBeGreaterThan(0);
   });
 });

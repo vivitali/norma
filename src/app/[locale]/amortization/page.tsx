@@ -3,9 +3,9 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { amortization, rowAt } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -22,8 +22,6 @@ import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 
-const TERM_CHOICES = [1, 3, 5, 10] as const;
-
 export default function AmortizationPage() {
   const t = useTranslations("Amortization");
   // The ask that replaces the answer where nobody publishes a price, and the
@@ -32,6 +30,7 @@ export default function AmortizationPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     AMORTIZATION_SECTIONS,
@@ -57,8 +56,8 @@ export default function AmortizationPage() {
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
 
   const input = useMemo(
@@ -73,14 +72,14 @@ export default function AmortizationPage() {
     [resolved],
   );
 
-  const result = useMemo(() => amortization(federal, input), [input]);
+  const result = useMemo(() => amortization(rules, input), [rules, input]);
   /**
    * The same loan renewed at today's rate. Without it "extra interest" has no
    * referent — the reader would be comparing a renewal scenario against nothing.
    */
   const baseline = useMemo(
-    () => amortization(federal, { ...input, renewalRate: null }),
-    [input],
+    () => amortization(rules, { ...input, renewalRate: null }),
+    [rules, input],
   );
   const extraInterest = result.totalInterest - baseline.totalInterest;
 
@@ -104,7 +103,7 @@ export default function AmortizationPage() {
 
   const presets = [
     { key: "presetToday", value: null },
-    { key: "presetFloor", value: federal.stressTest.floor },
+    { key: "presetFloor", value: rules.stressTest.floor },
     { key: "presetPlus2", value: Math.round((resolved.contractRate + 2) * 100) / 100 },
     { key: "presetPlus4", value: Math.round((resolved.contractRate + 4) * 100) / 100 },
   ] as const;
@@ -281,7 +280,9 @@ export default function AmortizationPage() {
                     label={t("termYears")}
                     value={stored.termYears}
                     onChange={(termYears) => update({ termYears })}
-                    options={TERM_CHOICES.map((v) => ({ value: v, label: t("yearsWord", { n: v }) }))}
+                    options={(rules.mortgage.kind === "term" ? rules.mortgage.termYears : []).map(
+                      (v) => ({ value: v, label: t("yearsWord", { n: v }) }),
+                    )}
                   />
                 </div>
               </>,

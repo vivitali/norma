@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { affordability } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import { getJurisdiction } from "@/domain/jurisdictions";
 import { resolveInputs } from "@/lib/resolve-inputs";
 import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
@@ -12,8 +12,8 @@ import type { ToolFormState } from "@/lib/shared-inputs";
 const winnipeg = getJurisdiction("winnipeg")!;
 
 function render(over: Partial<ToolFormState>) {
-  const resolved = resolveInputs({ ...TOOL_DEFAULTS, ...over }, winnipeg, federal);
-  const result = affordability(winnipeg, federal, resolved);
+  const resolved = resolveInputs({ ...TOOL_DEFAULTS, ...over }, winnipeg, ca);
+  const result = affordability(winnipeg, ca, resolved);
   renderWithIntl(<ImpactRow result={result} debts={resolved.debts} />);
   return result;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { scenario } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import { getJurisdiction } from "@/domain/jurisdictions";
 import { recommend, SCENARIO_PERCENTS } from "./scenarios-view";
 
@@ -11,7 +11,7 @@ const base: Omit<Parameters<typeof scenario>[2], "dpPct"> = {
   qualIncome: 160000, debts: 400, funds: 250000, save: 1000,
 };
 const columns = (over: Partial<typeof base> = {}) =>
-  SCENARIO_PERCENTS.map((dpPct) => scenario(toronto, federal, { ...base, ...over, dpPct }));
+  SCENARIO_PERCENTS.map((dpPct) => scenario(toronto, ca, { ...base, ...over, dpPct }));
 
 describe("recommend", () => {
   it("says nothing about deposits when no column would be approved", () => {

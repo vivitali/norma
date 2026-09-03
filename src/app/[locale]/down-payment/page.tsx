@@ -3,9 +3,9 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { closingTotal, glidePath, minDown, waterfall, type SourceKey } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS, type ToolFormState } from "@/lib/shared-inputs";
@@ -53,17 +53,18 @@ export default function DownPaymentPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
   const closing = useMemo(
-    () => closingTotal(jurisdiction, federal, resolved),
-    [jurisdiction, resolved],
+    () => closingTotal(jurisdiction, rules, resolved),
+    [jurisdiction, rules, resolved],
   );
 
   // The target is net cash at closing, not the down payment alone: closing costs
@@ -73,7 +74,7 @@ export default function DownPaymentPage() {
 
   const flow = useMemo(
     () =>
-      waterfall(federal, {
+      waterfall(rules, {
         need,
         prov: jurisdiction.prov,
         // Required, not defaulted: the FHSA and the Home Buyers' Plan are
@@ -89,12 +90,12 @@ export default function DownPaymentPage() {
         nonreg: resolved.nonreg,
         nonregGain: resolved.nonregGain,
       }),
-    [need, jurisdiction.prov, resolved],
+    [rules, need, jurisdiction.prov, resolved],
   );
 
   const glide = useMemo(
-    () => glidePath(federal, flow.shortfall, resolved.save ?? 0),
-    [flow.shortfall, resolved.save],
+    () => glidePath(rules, flow.shortfall, resolved.save ?? 0),
+    [rules, flow.shortfall, resolved.save],
   );
 
   const described = anySourceGiven(stored);
@@ -136,7 +137,7 @@ export default function DownPaymentPage() {
     );
   };
 
-  const legal = minDown(federal, resolved.price);
+  const legal = minDown(rules, resolved.price);
   // The REQUESTED percentage, deliberately: resolved.dpPct already has the floor
   // applied, so comparing it against the floor could never report a raise.
   const chosen = (resolved.price * resolved.dpPctRequested) / 100;
@@ -295,13 +296,13 @@ export default function DownPaymentPage() {
                       asOf 2026-08-24, CRA "Participating in your FHSAs" — sourced
                       since #5 landed and read by NO screen until now. They travel
                       as arguments rather than as typed copy so the catalogue can
-                      never drift from `federal`.
+                      never drift from the rules record.
                     */}
                     <p className="pt-1 text-[12px] leading-[1.55] text-ink3 text-pretty">
                       {t(`${SOURCE_LABEL[row.key]}Why`, {
-                        y: federal.hbp.repayYears,
-                        a: fmt(federal.fhsa.annual),
-                        l: fmt(federal.fhsa.lifetime),
+                        y: rules.hbp.repayYears,
+                        a: fmt(rules.fhsa.annual),
+                        l: fmt(rules.fhsa.lifetime),
                       })}
                     </p>
                     {row.blocked === "ftb" ? (
@@ -325,7 +326,7 @@ export default function DownPaymentPage() {
                     ) : null}
                     {row.drawn > 0 && row.repayAnnual > 0 ? (
                       <p className="pt-1 text-[12px] text-caution">
-                        {t("repayAnnual", { a: fmt(row.repayAnnual), y: federal.hbp.repayYears })}
+                        {t("repayAnnual", { a: fmt(row.repayAnnual), y: rules.hbp.repayYears })}
                       </p>
                     ) : null}
                     {row.key === "tfsa" && row.drawn > 0 ? (
@@ -335,7 +336,7 @@ export default function DownPaymentPage() {
                       <p className="pt-1 text-[12px] text-caution">
                         {t("gainRealised", {
                           g: fmt(row.gainRealised),
-                          i: pct(federal.capGainsInclusion * 100),
+                          i: pct(rules.capGainsInclusion * 100),
                           r: pct(flow.rate * 100, 1),
                         })}
                       </p>
@@ -400,7 +401,7 @@ export default function DownPaymentPage() {
               flow.taxTotal > 0
                 ? `${t("marginal")} ${pct(flow.rate * 100, 1)}`
                 : obligations > 0
-                  ? t("repayAnnual", { a: fmt(obligations), y: federal.hbp.repayYears })
+                  ? t("repayAnnual", { a: fmt(obligations), y: rules.hbp.repayYears })
                   : t("noCostAtAll"),
               // No tax is an absence, not a value: "$0" would assert a tax bill
               // exists and happens to be nil, and an em-dash reads as a figure that
@@ -421,7 +422,7 @@ export default function DownPaymentPage() {
                 />
                 <PanelRow label={t("taxCost")} value={fmt(flow.taxTotal)} strong />
                 {obligations > 0 ? (
-                  <PanelRow label={t("obligationsLabel")} value={t("repayAnnual", { a: fmt(obligations), y: federal.hbp.repayYears })} strong />
+                  <PanelRow label={t("obligationsLabel")} value={t("repayAnnual", { a: fmt(obligations), y: rules.hbp.repayYears })} strong />
                 ) : null}
                 <div className="mt-4 max-w-[320px]">
                   <NumberField
@@ -473,7 +474,7 @@ export default function DownPaymentPage() {
                       <p className="pt-2 text-[12.5px] text-ink3">{t("noSaveRate")}</p>
                     ) : null}
                     <p className="pt-2 text-[12px] text-ink3">
-                      {t("glideNote", { r: pct(federal.savingsReturn * 100, 1) })}
+                      {t("glideNote", { r: pct(rules.savingsReturn * 100, 1) })}
                     </p>
                   </>
                 ) : (

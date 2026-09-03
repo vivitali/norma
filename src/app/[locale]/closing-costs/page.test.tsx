@@ -3,7 +3,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { closingTotal } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import { jurisdictions } from "@/domain/jurisdictions";
 import { resolveInputs } from "@/lib/resolve-inputs";
 import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
@@ -131,8 +131,8 @@ describe("Closing costs — the hero is the same figure as everything under it",
     const toronto = jurisdictions.find((j) => j.id === "toronto")!;
     const expected = closingTotal(
       toronto,
-      federal,
-      resolveInputs({ ...TOOL_DEFAULTS, ftb: true }, toronto, federal),
+      ca,
+      resolveInputs({ ...TOOL_DEFAULTS, ftb: true }, toronto, ca),
     );
     // The test is only meaningful where the two differ, so the difference is
     // asserted rather than assumed: a jurisdiction with no closing-day credit
