@@ -130,6 +130,33 @@ while IFS=$'\t' read -r locale prefix probe; do
     FAILED=1
   fi
 
+  # The PRE-migration URL shape, checked WITHOUT following the redirect (unlike every
+  # check above, which uses -L and only proves where a request eventually lands). This
+  # is the one check in this script aimed squarely at next.config's redirects() itself:
+  # CLAUDE.md records that this repo's actual failure mode is a build and every test
+  # passing while a deployed origin silently drops an edge-only behavior — "verify
+  # against a deployed response, not the build output." Following -L here would make
+  # this indistinguishable from the /affordability check two lines up.
+  lang="${prefix##*/}"
+  IFS=$'\t' read -r status location < <(redirect_probe "$BASE/$lang/affordability")
+  case "$status" in
+    3??)
+      case "$location" in
+        "$prefix"*)
+          echo "ok    /$lang/affordability -> $status $location"
+          ;;
+        *)
+          echo "FAIL  /$lang/affordability -> $status $location (expected Location starting with $prefix)"
+          FAILED=1
+          ;;
+      esac
+      ;;
+    *)
+      echo "FAIL  /$lang/affordability -> $status ${location:-<no redirect>} (expected a 3xx)"
+      FAILED=1
+      ;;
+  esac
+
   # French is the one guaranteed to carry a slug (uk carries none; es omits rrsp-hbp's).
   # Scoped to "fr-CA" specifically rather than "any French locale" because this repo
   # serves exactly one country today; a second country with its own French locale would
