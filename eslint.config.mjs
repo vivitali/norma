@@ -20,6 +20,10 @@ const eslintConfig = defineConfig([
     // emitting 304 warnings on an otherwise clean tree, which destroys the
     // signal scripts/check exists to give.
     ".claude/skills/**",
+    // Agent worktrees are nested INSIDE the checkout (.claude/worktrees/<id>/), so
+    // `eslint .` from the root would lint every parallel branch's stale copy and
+    // report its failures as this tree's. tsconfig and vitest exclude it too.
+    ".claude/**",
     ".github/skills/**",
     ".github/agents/**",
   ]),
