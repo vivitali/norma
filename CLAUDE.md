@@ -435,10 +435,11 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
 calculation change**. `affordmath.com/en/affordability` redirects permanently (308) to
 `affordmath.com/ca/en/affordability`;
 `Language`, `Country` and `Locale` are now three named types in `src/i18n/countries.ts` (see the
-"Conventions" section above), and every page, in every language, is still prerendered — `scripts/verify-prerender`
-covers all eleven routes across all four locales under their new prefix. This is the seam the rest
-of the US-market spec builds on; no `rules/us.ts`, no second country in `COUNTRIES`, and no US
-jurisdiction data exist yet.
+"Conventions" section above), and every page, in every language, is still prerendered —
+`scripts/verify-prerender` covers all thirteen page routes (the original nine tool pages plus
+`/privacy` and `/terms`, merged in afterward) across all four locales under their new prefix. This
+is the seam the rest of the US-market spec builds on; no `rules/us.ts`, no second country in
+`COUNTRIES`, and no US jurisdiction data exist yet.
 
 **The country seam landed in the domain layer next** — implementation order step 2, a pure
 refactor with **no behaviour change** (`src/domain/golden.test.ts` freezes engine output across

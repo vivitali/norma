@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { OPERATOR, PRIVACY_OFFICER, LEGAL_UPDATED } from "@/lib/legal";
 import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
+import { languageOf } from "@/i18n/countries";
+import { routing } from "@/i18n/routing";
 import type { Locale } from "@/lib/locales";
 import fr from "../../messages/fr.json";
 
@@ -19,16 +21,25 @@ vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")
  * client components under `renderWithIntl`), and the `home-content.test.tsx` precedent of staying
  * en/fr-only does not apply here — Home IS in that sweep and gets swept in all four locales there.
  * Without this, nothing in the suite ever executed a single `t()` call for uk or es on these pages.
+ *
+ * `CATALOGUES` is keyed by LANGUAGE ("en"/"fr"/"uk"/"es"), not by the full `Locale` pair
+ * ("en-CA") these pages actually receive as `params.locale` — see `src/i18n/countries.ts`. The
+ * mock's `locale` argument is whatever `getTranslations({ locale, ... })` was called with, i.e.
+ * the real `Locale`, so it has to go through `languageOf` to find the right catalogue, exactly as
+ * `src/i18n/request.ts` does for a real request.
  */
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   const { CATALOGUES } = await import("@/test/catalogues");
+  const { languageOf } = await import("@/i18n/countries");
   return {
     setRequestLocale: vi.fn(),
-    getTranslations: async ({ locale, namespace }: { locale: string; namespace: string }) =>
+    getTranslations: async ({ locale, namespace }: { locale: Locale; namespace: string }) =>
       createTranslator({
         locale,
-        messages: (CATALOGUES as unknown as Record<string, Record<string, unknown>>)[locale],
+        messages: (CATALOGUES as unknown as Record<string, Record<string, unknown>>)[
+          languageOf(locale)
+        ],
         namespace,
       }),
   };
@@ -37,7 +48,13 @@ vi.mock("next-intl/server", async () => {
 import PrivacyPage from "./[locale]/privacy/page";
 import TermsPage from "./[locale]/terms/page";
 
-const LOCALES = Object.keys(CATALOGUES) as Locale[];
+/**
+ * A per-ROUTE check (this renders both pages) iterates the actual `Locale` pairs from
+ * routing.ts, not the language-keyed `CATALOGUES` registry — rendering with a bare "es" would ask
+ * these pages for a locale that does not exist since the /ca/ migration. See
+ * `src/app/locale-render.test.tsx`, which does the same for the same reason.
+ */
+const LOCALES = routing.locales;
 
 /**
  * Nothing rendered these two pages before this file existed.
@@ -104,7 +121,7 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
       // Every `sec*` key in the namespace must appear as a real heading. Derived from the
       // catalogue rather than listed here, so adding a clause to the page without adding its
       // heading — or misspelling either — fails without anyone remembering to update this test.
-      const ns = (CATALOGUES[locale] as unknown as Record<string, Record<string, string>>)[namespace];
+      const ns = (CATALOGUES[languageOf(locale)] as unknown as Record<string, Record<string, string>>)[namespace];
       const headings = Object.entries(ns).filter(([key]) => key.startsWith("sec"));
       expect(headings.length).toBeGreaterThan(0);
       for (const [key, headingText] of headings) {
@@ -127,7 +144,7 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
       const h1s = screen.getAllByRole("heading", { level: 1 });
       expect(h1s).toHaveLength(1);
       expect(h1s[0].textContent).toBe(
-        (CATALOGUES[locale] as unknown as Record<string, Record<string, string>>)[namespace].eyebrow,
+        (CATALOGUES[languageOf(locale)] as unknown as Record<string, Record<string, string>>)[namespace].eyebrow,
       );
       unmount();
     });
@@ -138,7 +155,7 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
       expect(time?.getAttribute("dateTime")).toBe(LEGAL_UPDATED);
       // The human half is a translated literal and the machine half a constant; they can drift.
       expect(time?.textContent).toContain(
-        (CATALOGUES[locale] as { Legal: { updatedLong: string } }).Legal.updatedLong,
+        (CATALOGUES[languageOf(locale)] as { Legal: { updatedLong: string } }).Legal.updatedLong,
       );
       unmount();
     });
@@ -147,7 +164,7 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
 
 describe("the named parties", () => {
   it("publishes the privacy officer's title, name and address — Private Sector Act s. 3.1", async () => {
-    const { container, unmount } = await renderPage(PrivacyPage, "fr");
+    const { container, unmount } = await renderPage(PrivacyPage, "fr-CA");
     const list = container.querySelector("dl");
     expect(list).toBeTruthy();
     // The title is a translated role; the name and address are data from src/lib/legal.ts.
@@ -159,7 +176,7 @@ describe("the named parties", () => {
   });
 
   it("names who operates the site on /terms", async () => {
-    const { container, unmount } = await renderPage(TermsPage, "en");
+    const { container, unmount } = await renderPage(TermsPage, "en-CA");
     const list = container.querySelector("dl");
     expect(within(list!).getByText(OPERATOR.name)).toBeTruthy();
     expect(within(list!).getByRole("link", { name: OPERATOR.email })).toBeTruthy();
@@ -170,7 +187,7 @@ describe("the named parties", () => {
     // The <dt>s are "Role"/"Name"/"Email", not the values repeated. The first version put the
     // role in both halves, so a screen reader announced it twice and the <dl> had no working
     // term/description relationship at all.
-    const { container, unmount } = await renderPage(PrivacyPage, "fr");
+    const { container, unmount } = await renderPage(PrivacyPage, "fr-CA");
     const terms = [...container.querySelectorAll("dt")].map((node) => node.textContent);
     expect(terms).toEqual([fr.Legal.roleLabel, fr.Legal.nameLabel, fr.Legal.emailLabel]);
     expect(terms).not.toContain(fr.Legal.officerTitle);

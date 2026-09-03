@@ -75,7 +75,7 @@ describe("LocaleLayout", () => {
   it("puts the footer in every page's tree, so no page can ship without the disclosure", async () => {
     const tree = await LocaleLayout({
       children: null,
-      params: Promise.resolve({ locale: "fr" }),
+      params: Promise.resolve({ locale: "fr-CA" }),
     });
 
     expect(walk(tree).some((node) => isValidElement(node) && node.type === AppFooter)).toBe(true);

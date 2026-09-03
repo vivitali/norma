@@ -4,6 +4,8 @@ import { render, screen, within } from "@testing-library/react";
 import { AppFooter } from "./app-footer";
 import { FOOTER } from "@/lib/routes";
 import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
+import { languageOf } from "@/i18n/countries";
+import { routing } from "@/i18n/routing";
 import type { Locale } from "@/lib/locales";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
@@ -19,22 +21,32 @@ vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")
  *
  * Built from `CATALOGUES` rather than a hardcoded `{ en, fr }` map, so the footer — chrome on
  * every one of the thirteen routes — actually renders in uk and es here too, not just in the
- * catalogue-level parity/ICU checks.
+ * catalogue-level parity/ICU checks. `CATALOGUES` is keyed by LANGUAGE, not by the full `Locale`
+ * pair `AppFooter` actually receives (`en-CA`), so the mock goes through `languageOf` to find the
+ * right catalogue — see the same note in `src/app/legal-pages.test.tsx`.
  */
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   const { CATALOGUES } = await import("@/test/catalogues");
+  const { languageOf } = await import("@/i18n/countries");
   return {
-    getTranslations: async ({ locale, namespace }: { locale: string; namespace: string }) =>
+    getTranslations: async ({ locale, namespace }: { locale: Locale; namespace: string }) =>
       createTranslator({
         locale,
-        messages: (CATALOGUES as unknown as Record<string, Record<string, unknown>>)[locale],
+        messages: (CATALOGUES as unknown as Record<string, Record<string, unknown>>)[
+          languageOf(locale)
+        ],
         namespace,
       }),
   };
 });
 
-const LOCALES = Object.keys(CATALOGUES) as Locale[];
+/**
+ * A per-ROUTE check (this renders the footer) iterates the actual `Locale` pairs from
+ * routing.ts, not the language-keyed `CATALOGUES` registry — see the same note in
+ * `src/app/legal-pages.test.tsx` and `src/app/locale-render.test.tsx`.
+ */
+const LOCALES = routing.locales;
 
 /** Awaited to a plain element before rendering — the shape the App Router uses for an async RSC. */
 async function renderFooter(locale: Locale) {
@@ -48,14 +60,17 @@ describe("AppFooter", () => {
       // Asserted on the whole string, not a fragment. A disclaimer silently shortened to
       // something weaker is the failure worth catching, and it would pass a substring check.
       expect(
-        screen.getByText((CATALOGUES[locale] as { Legal: { footerDisclaimer: string } }).Legal.footerDisclaimer),
+        screen.getByText(
+          (CATALOGUES[languageOf(locale)] as { Legal: { footerDisclaimer: string } }).Legal
+            .footerDisclaimer,
+        ),
       ).toBeTruthy();
       unmount();
     });
 
     it(`links to every legal page in ${locale}`, async () => {
       const { unmount } = await renderFooter(locale);
-      const legalTree = (CATALOGUES[locale] as { Legal: Record<string, string> }).Legal;
+      const legalTree = (CATALOGUES[languageOf(locale)] as { Legal: Record<string, string> }).Legal;
       const nav = screen.getByRole("navigation", { name: legalTree.legal });
       const links = within(nav).getAllByRole("link");
       expect(links).toHaveLength(FOOTER.length);
