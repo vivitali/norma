@@ -98,6 +98,21 @@ check_status() {
   fi
 }
 
+# Prints "<status>\t<location>" for the FIRST hop only, reading the raw `Location`
+# header the server actually sent -- not curl's %{redirect_url}, which resolves a
+# relative Location against the request URL and hands back an absolute one (so
+# "/ca/en/affordability" becomes "http://host/ca/en/affordability", which then fails
+# any "starts with /ca/en" comparison even on a correct redirect). Next emits a
+# relative Location, so this is what a same-prefix check needs to compare against.
+redirect_probe() {
+  local url="$1" headers status location
+  headers=$(curl -s -o /dev/null -D - \
+    --retry 5 --retry-delay 3 --retry-all-errors --max-time 30 "$url")
+  status=$(printf '%s' "$headers" | head -1 | awk '{print $2}')
+  location=$(printf '%s\n' "$headers" | tr -d '\r' | awk 'tolower($1) == "location:" {print $2; exit}')
+  printf '%s\t%s\n' "$status" "$location"
+}
+
 FR_PREFIX=""
 while IFS=$'\t' read -r locale prefix probe; do
   [ -n "$locale" ] || continue
@@ -123,6 +138,56 @@ while IFS=$'\t' read -r locale prefix probe; do
     FR_PREFIX="$prefix"
   fi
 done <<< "$PROBES"
+
+# Bare country segments ("/ca") name no language yet. Without a redirect they fall
+# through to next-intl's own locale negotiation, which treats "ca" as an unrecognized
+# PATH under the negotiated locale — the recorded defect this line exists to catch:
+# /ca -> 307 -> /ca/en/ca -> 404. One rule per COUNTRIES entry sends it to that
+# country's own default-language prefix instead (src/lib/redirects.ts), read off the
+# registry here rather than hardcoding "/ca" so a second country is covered for free.
+read -r -d '' COUNTRY_SCRIPT <<'JS' || true
+import { pathToFileURL } from "node:url";
+const root = process.argv[1];
+const countriesUrl = pathToFileURL(`${root}/src/i18n/countries.ts`).href;
+const { COUNTRIES, defaultPrefixes } = await import(countriesUrl);
+const defaults = defaultPrefixes();
+for (const country of Object.keys(COUNTRIES)) {
+  console.log(`${COUNTRIES[country].segment}\t${defaults[country]}`);
+}
+JS
+
+if ! COUNTRY_PROBES=$(node --input-type=module -e "$COUNTRY_SCRIPT" "$ROOT"); then
+  echo "FAIL  cannot read the country registry from src/i18n/countries.ts"
+  exit 1
+fi
+
+while IFS=$'\t' read -r segment default_prefix; do
+  [ -n "$segment" ] || continue
+  # Must ultimately resolve, through its own redirect and then next-intl's, to a real
+  # prerendered page -- not 404 through an unrecognized-path redirect.
+  check_status "$segment"
+
+  # And it must resolve there directly: the Location on the FIRST hop has to be the
+  # country's own default-language prefix, not merely "some page 200s eventually."
+  IFS=$'\t' read -r status location < <(redirect_probe "$BASE$segment")
+  case "$status" in
+    3??)
+      case "$location" in
+        "$default_prefix"*)
+          echo "ok    $segment -> $status $location"
+          ;;
+        *)
+          echo "FAIL  $segment -> $status $location (expected Location starting with $default_prefix)"
+          FAILED=1
+          ;;
+      esac
+      ;;
+    *)
+      echo "FAIL  $segment -> $status ${location:-<no redirect>} (expected a 3xx)"
+      FAILED=1
+      ;;
+  esac
+done <<< "$COUNTRY_PROBES"
 
 if [ -z "$FR_PREFIX" ]; then
   echo "FAIL  fr-CA is not in the locale registry; cannot verify Accept-Language negotiation"

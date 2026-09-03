@@ -104,3 +104,22 @@ export function localesForCountry(locale: Locale): Locale[] {
   const country = countryOf(locale);
   return COUNTRIES[country].languages.map((language) => localeFor(language, country));
 }
+
+/**
+ * Each country's own default-language prefix, e.g. `ca` -> `/ca/en` (the first entry in
+ * `languages`, the same ordering `routing.defaultLocale` already relies on for `ca`).
+ *
+ * This is the destination for a redirect on the BARE country segment (`/ca`, which names
+ * no language yet): `src/lib/redirects.ts` generates one such rule per registry entry
+ * from this, rather than writing `/ca` -> `/ca/en` by hand, so a second country gets the
+ * same redirect for free.
+ */
+export function defaultPrefixes(): Record<Country, string> {
+  const prefixes = localePrefixes();
+  const result = {} as Record<Country, string>;
+  for (const country of Object.keys(COUNTRIES) as Country[]) {
+    const [defaultLanguage] = COUNTRIES[country].languages;
+    result[country] = prefixes[localeFor(defaultLanguage, country)];
+  }
+  return result;
+}
