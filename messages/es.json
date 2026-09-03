@@ -41,6 +41,14 @@
     "scenarios": {
       "title": "Escenarios de pago inicial — 5, 10, 20 o 25 %",
       "description": "Cuatro pagos iniciales al mismo precio, comparados en cuota mensual, efectivo al cierre, aprobación e intereses totales. La más baja rara vez gana."
+    },
+    "privacy": {
+      "title": "Privacidad — AffordMath",
+      "description": "Qué se recopila y qué no. Los datos de su calculadora permanecen en el navegador y nunca se envían a un servidor."
+    },
+    "terms": {
+      "title": "Términos de uso — AffordMath",
+      "description": "AffordMath es una calculadora, no un consejo. Qué es el servicio, qué no es, y los límites de sus estimaciones."
     }
   },
   "Home": {
@@ -961,5 +969,62 @@
     "QC": "Quebec",
     "SK": "Saskatchewan",
     "YT": "Yukón"
+  },
+  "Legal": {
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "updated": "Última actualización: {date}",
+    "officerTitle": "Persona responsable de la protección de la información personal",
+    "footerDisclaimer": "AffordMath es una herramienta informativa. No constituye asesoría financiera, hipotecaria, fiscal ni legal, y no es una oferta de crédito. Cada resultado es una estimación calculada a partir de las cifras que usted ingresa y de reglas publicadas, cada una fechada en la página Fuentes. Su prestamista, notario o contador establece sus cifras reales. Verifique cualquier información antes de basarse en ella.",
+    "legal": "Aviso legal",
+    "operatorRole": "Operador",
+    "roleLabel": "Rol",
+    "nameLabel": "Nombre",
+    "emailLabel": "Correo electrónico",
+    "updatedLong": "25 de agosto de 2026"
+  },
+  "Privacy": {
+    "eyebrow": "Privacidad",
+    "head": "Casi nada sobre usted llega hasta nosotros, y esta página dice exactamente qué sí llega.",
+    "sub": "AffordMath se ejecuta en su navegador. Lo que usted escribe en una calculadora permanece en su dispositivo. El resto de esta página son los detalles que las leyes de privacidad de Quebec y federales nos exigen publicar.",
+    "secCollect": "Qué se recopila",
+    "bodyCollect": "Solo dos cosas. Estadísticas agregadas de las páginas — qué páginas se visitan, desde qué país, en qué tipo de dispositivo — mediante Cloudflare Web Analytics, que no coloca cookies ni lo sigue entre sitios. Y la información de solicitud habitual que recibe cualquier servidor web, incluida su dirección IP, que Cloudflare utiliza para entregar la página y bloquear abusos.",
+    "secNotCollect": "Qué no se recopila",
+    "bodyNotCollect": "Sus ingresos, sus deudas, sus ahorros, el precio de la vivienda que está considerando y cualquier otra cifra que usted ingrese. Esos datos se guardan en el almacenamiento local de su propio navegador, los lee únicamente este sitio ejecutándose en su propio dispositivo, y nunca se transmiten a ningún lugar. No hay cuenta, ni inicio de sesión, ni dirección de correo electrónico, ni registro en un servidor sobre usted. Borrar los datos de su navegador los elimina de forma permanente, y nadie —ni siquiera nosotros— conserva una copia.",
+    "secPurpose": "Para qué, y por qué medios",
+    "bodyPurpose": "Las estadísticas existen para mostrar qué herramientas se usan y cuáles se ignoran, de modo que el trabajo se dedique a las páginas que la gente realmente visita. Se recopilan automáticamente al cargar una página, mediante un script servido por Cloudflare. No se recopila nada con fines publicitarios. No se vende nada ni se comparte con ningún intermediario de datos.",
+    "secThirdParty": "Quién la recibe",
+    "bodyThirdParty": "Cloudflare, Inc., que aloja este sitio y provee sus estadísticas. Nadie más. No hay red publicitaria, ni gestor de etiquetas, ni píxel de redes sociales, ni ningún script de terceros aparte de la baliza de análisis de Cloudflare.",
+    "secOutside": "Se procesa fuera de Quebec",
+    "bodyOutside": "Cloudflare tiene su sede en Estados Unidos y opera una red global, por lo que la información de solicitud descrita arriba se procesa fuera de Quebec y puede procesarse fuera de Canadá, donde puede quedar sujeta a las leyes de otra jurisdicción. Esto se divulga porque la ley de Quebec lo exige. Es cierto para las estadísticas; no lo es para nada de lo que usted escriba en una calculadora, que nunca sale de su dispositivo.",
+    "secRights": "Sus derechos",
+    "bodyRights": "Puede preguntar qué información personal conservamos sobre usted, pedir que se corrija, pedir que se elimine, y retirar su consentimiento a su recopilación. En la práctica no conservamos nada que lo identifique, así que la respuesta honesta a la mayoría de esas solicitudes es que no hay nada que entregar — pero pregunte, y tendrá esa respuesta por escrito dentro de 30 días. Para desactivar por completo las estadísticas, cualquier bloqueador de contenido del navegador basta, y el sitio funciona igual sin ellas.",
+    "secOfficer": "Quién es responsable",
+    "bodyOfficer": "Las preguntas sobre esta política, y cualquier solicitud para ejercer un derecho de los anteriores, deben dirigirse a la persona responsable de la protección de la información personal:",
+    "secRetention": "Cuánto tiempo se conserva",
+    "bodyRetention": "Las estadísticas de Cloudflare se agregan y se conservan según su propio calendario; nosotros no guardamos ningún registro sin procesar de su visita. Los datos que ingresa en la calculadora permanecen en su navegador hasta que usted los borre. Cualquier información personal que lleguemos a tener se destruye o se anonimiza en cuanto se cumple el propósito para el que fue recopilada.",
+    "secBreach": "Si algo sale mal",
+    "bodyBreach": "Mantenemos un registro de incidentes de confidencialidad. Cuando un incidente presenta un riesgo de perjuicio grave, notificaremos a la Commission d’accès à l’information du Québec y a las personas afectadas, y cuando se alcance el umbral federal de un riesgo real de daño significativo, a la Oficina del Comisionado de Privacidad de Canadá.",
+    "secChanges": "Cambios",
+    "bodyChanges": "La fecha de arriba es la de la última modificación de esta página. Los cambios importantes se describirán aquí en lugar de aplicarse en silencio."
+  },
+  "Terms": {
+    "eyebrow": "Términos de uso",
+    "head": "Una calculadora gratuita, y un relato honesto de lo que puede y no puede decirle.",
+    "sub": "Si no lee nada más, lea las dos primeras secciones. Son las que importan.",
+    "secWhat": "Qué es esto",
+    "bodyWhat": "AffordMath es un conjunto de calculadoras. Usted ingresa cifras; el sitio aplica las reglas federales publicadas y las de la provincia, territorio o ciudad que seleccione; muestra la aritmética y nombra de dónde proviene cada regla. Eso es todo el servicio.",
+    "secNot": "Qué no es esto",
+    "bodyNot": "No es asesoría financiera, hipotecaria, fiscal, contable ni legal. No es una preaprobación, ni una cotización de tasa, ni una oferta de crédito, ni la promesa de que algún prestamista le prestará algo. No somos un corredor hipotecario, ni un prestamista, ni un planificador financiero, ni un asesor financiero; no tenemos licencia como ninguno de ellos; y no actuamos en su nombre. Ningún resultado aquí ha sido revisado por alguien que conozca su situación. Antes de basarse en una cifra, verifíquela con su prestamista, su notario o abogado, y su contador.",
+    "secAccuracy": "Exactitud, y sus límites",
+    "bodyAccuracy": "Cada regla se verifica contra un documento publicado y nombrado, fechado en la página Fuentes, e indica hasta qué punto se puede confiar en ella — medida, derivada, un supuesto que divulgamos, o ausente porque nadie la publica. Ese trabajo es la razón de ser del producto y lo tomamos en serio. Aun así no hace que un resultado sea correcto para usted: las reglas y las tasas cambian, una cifra verificada en una fecha puede quedar desactualizada en otra, los indicadores de mercado son estimaciones, y ninguna calculadora sabe de usted más que lo que usted mismo escribió. Los resultados son estimaciones.",
+    "secLiability": "Responsabilidad",
+    "bodyLiability": "El sitio se ofrece tal cual, sin garantía de disponibilidad, de estar libre de errores o de idoneidad para un fin particular. En la medida que lo permita la ley, no somos responsables de las pérdidas derivadas del uso que usted haga del sitio ni de una decisión que tome basándose en una cifra que este produjo. Nada aquí excluye ni limita una responsabilidad que no pueda excluirse legalmente — incluida la responsabilidad por lesión corporal o moral y por falta grave o intencional. Cuando una limitación no pueda aplicársele legalmente, no se le aplicará, y el resto de estos términos seguirá vigente.",
+    "secLaw": "Ley aplicable, y dónde se dirime una disputa",
+    "bodyLaw": "Estos términos se rigen por el derecho de la provincia o territorio donde usted reside, junto con las leyes aplicables de Canadá. Si usted es un consumidor que reside en Quebec, puede iniciar un proceso ante los tribunales de Quebec, y nada aquí se lo impide. No hay cláusula de arbitraje obligatorio, ni renuncia a su derecho a participar en una acción colectiva.",
+    "secIp": "A quién pertenece qué",
+    "bodyIp": "El motor de cálculo, la interfaz y los textos son nuestros. Las leyes, tasas y cifras publicadas que aplica el motor no lo son — pertenecen a los gobiernos y organizaciones que las publican, y cada una se acredita en la página Fuentes. Las cifras que usted ingresa son suyas, y nunca llegan a nosotros.",
+    "secContact": "Quién opera este sitio",
+    "bodyContact": "Este sitio es operado por:"
   }
 }
