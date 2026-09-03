@@ -1,9 +1,15 @@
-import type { FederalRules } from "./types";
+import type { CaRules } from "../types";
 
 /**
- * The date every `high`-confidence federal figure below was read off its issuing authority.
- * Not a guess and not a file mtime: on this date CMHC, OSFI, CRA, the Bank of Canada and
- * FP Canada were each opened and the figure compared line for line.
+ * Canada's country rules. Formerly `src/domain/federal.ts`'s `federal` singleton — renamed and
+ * moved for `docs/superpowers/specs/2026-08-29-us-market-design.md`'s country seam
+ * (implementation order item 2): `federal` read as "the federal rules" when there was only one
+ * set, and there are about to be two. Values and provenance are byte-for-byte unchanged from
+ * `federal.ts`; `src/domain/golden.test.ts` is the regression net that proves it.
+ *
+ * The date every `high`-confidence figure below was read off its issuing authority. Not a
+ * guess and not a file mtime: on this date CMHC, OSFI, CRA, the Bank of Canada and FP Canada
+ * were each opened and the figure compared line for line.
  */
 const VERIFIED_AT = "2026-08-24";
 
@@ -44,7 +50,14 @@ const INVEST_RETURN_NOTE =
 const APPRECIATION_NOTE =
   "A forward-looking house price growth assumption, not a forecast anyone is accountable for. The value is taken from FP Canada's 2026 Projection Assumption Guidelines, which is the Canadian standard for long-term projections — but a projection assumption is still an assumption, so it is disclosed as one rather than presented as a rate that will happen.";
 
-export const federal: FederalRules = {
+/**
+ * The mortgage term lengths Amortization's `SegmentedGroup` used to hardcode as
+ * `TERM_CHOICES = [1, 3, 5, 10]`. Moved here so the UI reads its options off the rules record
+ * rather than a component-local literal — see `Mortgage` in types.ts.
+ */
+export const ca: CaRules = {
+  country: "ca",
+  mortgage: { kind: "term", termYears: [1, 3, 5, 10], renews: true },
   cmhc: {
     bands: [
       [0.65, 0.006],
@@ -245,5 +258,5 @@ export const federal: FederalRules = {
       conf: "assumption",
       note: "Every bracket and combined rate here is an unverified prototype carry-over. Out of scope for the 2026-08-24 pass, which covered federal parameters only; the tables need their own per-jurisdiction sourcing against CRA and each provincial finance authority before marginalRate() is ported. Recorded as an assumption rather than `none` because the field holds a value; the gap is tracked on #3.",
     },
-  }
+  },
 };

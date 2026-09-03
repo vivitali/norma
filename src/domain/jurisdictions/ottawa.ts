@@ -21,6 +21,7 @@ const fees: JurisdictionFees = { lawyer: 1900, titleIns: 375, inspect: 550, appr
 
 export const ottawa: Jurisdiction = {
   id: "ottawa",
+  country: "ca",
   prov: "ON",
   city: "ottawa",
   cityData: true,

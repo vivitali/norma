@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { federal } from "./federal";
+import { ca } from "./rules/ca";
 import { getJurisdiction } from "./jurisdictions";
 import {
   affordability,
@@ -14,7 +14,7 @@ import {
  * The regression net for the country seam (docs/superpowers/specs/2026-08-29-us-market-design.md,
  * implementation order item 2). This file exists to make that step reviewable: it freezes a
  * handful of engine outputs, computed on FIXED inputs across three jurisdictions, before
- * `federal.ts` becomes `rules/ca.ts` and every engine function is retyped to take `CountryRulesBase`
+ * `ca.ts` becomes `rules/ca.ts` and every engine function is retyped to take `CountryRulesBase`
  * or `CaRules` instead of importing the `federal` singleton implicitly. If the country seam ever
  * changes a computed figure, this file fails — and it must not, because the seam is supposed to be
  * a pure refactor, not a behaviour change.
@@ -41,7 +41,7 @@ describe("golden: closingTotal", () => {
     ["toronto", toronto, { ftb: true, ptype: "condo" as const, residency: "resident" as const, elsewhere: false }],
     ["halifax", halifax, { ftb: false, ptype: "house" as const, residency: "nonResident" as const, elsewhere: false }],
   ])("%s", (_name, j, shape) => {
-    const result = closingTotal(j, federal, {
+    const result = closingTotal(j, ca, {
       price: 650000,
       dpPct: 10,
       amortYears: 25,
@@ -57,7 +57,7 @@ describe("golden: affordability", () => {
     ["toronto", toronto],
     ["halifax", halifax],
   ])("%s", (_name, j) => {
-    const result = affordability(j, federal, {
+    const result = affordability(j, ca, {
       income1: 95000,
       income2: 45000,
       otherIncome: 0,
@@ -89,7 +89,7 @@ describe("golden: amortization", () => {
     ["halifax", halifax],
   ])("%s", (_name, _j) => {
     // amortization() takes no jurisdiction parameter (see engine.ts's own note on why).
-    const result = amortization(federal, {
+    const result = amortization(ca, {
       price: 650000,
       dpPct: 10,
       amortYears: 25,
@@ -107,7 +107,7 @@ describe("golden: hbpPlay", () => {
     ["toronto", "ON"],
     ["halifax", "NS"],
   ])("%s", (_name, prov) => {
-    const result = hbpPlay(federal, {
+    const result = hbpPlay(ca, {
       contribution: 40000,
       income: 85000,
       prov,
@@ -123,7 +123,7 @@ describe("golden: rentVsBuy", () => {
     ["toronto", toronto],
     ["halifax", halifax],
   ])("%s", (_name, j) => {
-    const result = rentVsBuy(j, federal, {
+    const result = rentVsBuy(j, ca, {
       price: 650000,
       dpPct: 10,
       amortYears: 25,
@@ -154,7 +154,7 @@ describe("golden: scenario", () => {
     ["toronto", toronto],
     ["halifax", halifax],
   ])("%s", (_name, j) => {
-    const result = scenario(j, federal, {
+    const result = scenario(j, ca, {
       price: 650000,
       dpPct: 10,
       amortYears: 25,
