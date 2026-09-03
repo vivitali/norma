@@ -440,9 +440,15 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
   They are not interchangeable, each record's provenance says which it is, and tests fail if that
   disclosure is edited away. Picking one across the dataset is a **product** decision and was
   deliberately not taken.
-- **`hbp.ruleDays` is 90 and CRA says 89.** Not changed, because the RRSP-HBP metadata hardcodes
-  "wait 90 days" in both locale files and a value/copy split is worse than a consistent rounding.
-  Needs one edit to each locale file and then the constant, together.
+- ~~**`hbp.ruleDays` is 90 and CRA says 89.**~~ — **fixed.** CRA's own wording, confirmed against
+  canada.ca: "If you made contributions to your RRSPs during the 89-day period before you
+  withdrew the amount for your HBP withdrawal, your RRSP contribution may not be deductible." 89,
+  not 90, and it restricts the DEDUCTIBILITY of a contribution made in the window, not the
+  withdrawal itself. `federal.hbp.ruleDays` is now `89`, its provenance is `conf: "high"` quoting
+  the line above, and `Metadata.rrspHbp.description` reads "wait 89 days" in all four locale
+  files. The RRSP-HBP page copy (`RrspHbp.step3`, `.step3Body`, `.ruleDaysNote`) never hardcoded
+  the number — it interpolates `{d}` from `play.ruleDays`, itself read off the constant — so the
+  value and the copy cannot disagree again.
 - **`cmhc.bands` cannot express the 4.50% band** that applies at 90.01–95% LTV when the down
   payment is borrowed — about $2,500 under-charged on a $500k loan. The shape change belongs with
   the input that would tell us where the down payment came from.

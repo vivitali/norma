@@ -66,9 +66,9 @@ const SHARED = ["AppHeader", "Nav", "Jurisdictions", "Provinces", "Inputs", "Dis
  *
  * Still scoped to the namespaces the page under test renders, for a reason the pattern
  * shares: `/sources` prints the verification notes out of `src/domain` verbatim, and one
- * of them (federal.ts, on why the HBP's 90 days cannot be corrected to CRA's 89) names
- * `Metadata.rrspHbp.description` in prose. That is English text, not a leaked key, and
- * `Metadata` is not a namespace any page body renders.
+ * of them (federal.ts, on the HBP's 89-day period and why the fix touched
+ * `Metadata.rrspHbp.description` alongside the constant) names that key in prose. That is
+ * English text, not a leaked key, and `Metadata` is not a namespace any page body renders.
  */
 function leakableKeys(namespace: string): string[] {
   const tree = CATALOGUES.en as Tree;
