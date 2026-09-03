@@ -60,12 +60,21 @@ function localePrefixOf(locale: string): string {
     routing as { localePrefix?: LocalePrefixMode | { mode: LocalePrefixMode; prefixes?: Record<string, string> } }
   ).localePrefix;
   const prefixes = typeof configured === "object" ? configured.prefixes : undefined;
+  const prefix = prefixes?.[locale];
   // A country-qualified locale ("en-CA") spans two URL segments ("/ca/en"): the
   // `prefixes` map in routing.ts is the one place that mapping is written, so this
-  // reads it rather than reconstructing "/en-CA" from the locale tag. Falling back to
-  // "/<locale>" only covers a locale genuinely missing from the map, which would be a
-  // routing.ts bug this function has no business papering over silently.
-  return prefixes?.[locale] ?? `/${locale}`;
+  // reads it rather than reconstructing a prefix from the locale tag. There is no
+  // honest fallback for a locale missing from that map — "/<locale>" would silently
+  // emit "/en-CA/..." into a canonical or a sitemap entry, exactly the old, pre-/ca/
+  // URL shape this migration exists to retire, and it would do it invisibly, in
+  // output nothing in this module's own tests would catch (they iterate
+  // `routing.locales`, which is itself derived from the same registry `prefixes`
+  // comes from — so this can only diverge from an actual routing.ts bug, never from a
+  // locale this app doesn't serve). Throw rather than paper over it.
+  if (!prefix) {
+    throw new Error(`localePrefixOf: no URL prefix configured for locale "${locale}"`);
+  }
+  return prefix;
 }
 
 function localizedPathname(locale: string, href: string): string {

@@ -118,6 +118,17 @@ describe("locale prefixing", () => {
   it("maps the root to a bare country/language path with no trailing slash", () => {
     expect(absoluteUrl("en-CA", "/")).toBe(`${SITE_URL}/ca/en`);
   });
+
+  it("throws for a locale with no configured URL prefix, rather than guessing one", () => {
+    // The old, pre-/ca/ URL shape ("/en-CA/...") is exactly what a silent
+    // `/${locale}` fallback would have reconstructed here — invisibly, since every
+    // caller in this suite passes a locale from `routing.locales`, itself derived
+    // from the same registry `localePrefix.prefixes` comes from. Only a genuine
+    // routing.ts bug can reach this path, and it must fail loudly.
+    expect(() => absoluteUrl("xx-YY", "/affordability")).toThrow(
+      /no URL prefix configured for locale "xx-YY"/,
+    );
+  });
 });
 
 describe("social card metadata", () => {
