@@ -3,10 +3,13 @@
  * social-card path rule. Deliberately import-free.
  *
  * `scripts/generate-og.mjs` imports this with Node's type stripping, exactly as
- * `scripts/assert-prerendered.mjs` imports `src/i18n/routing.ts`. So: no `@/`
- * path aliases here (Node does not read tsconfig `paths`), no JSON imports, no
- * env vars. `src/lib/seo.ts` re-exports all of it, so application code carries
- * on importing from there.
+ * `scripts/assert-prerendered.mjs` and `scripts/smoke` import `src/i18n/countries.ts`
+ * directly (not `src/i18n/routing.ts` — that file imports `next-intl/routing`, and its
+ * own relative import of `./countries` is extensionless, which the Next/webpack
+ * bundler resolves fine but which Node's own ESM resolver rejects with no bundler in
+ * front of it). So: no `@/` path aliases here (Node does not read tsconfig `paths`),
+ * no JSON imports, no env vars. `src/lib/seo.ts` re-exports all of it, so application
+ * code carries on importing from there.
  */
 
 /** Routes that belong in the sitemap. Extend as pages ship. */

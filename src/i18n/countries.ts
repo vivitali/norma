@@ -1,14 +1,19 @@
 /**
  * The country seam: what a URL's locale segment splits into.
  *
- * `scripts/assert-prerendered.mjs` imports `./routing`, which imports this file, with
- * Node's type stripping — so this module has to stay trivially evaluable outside the
- * Next build too: no `@/` path aliases (Node does not read tsconfig `paths`), no JSON
- * imports, no env vars, and no dependency on `next-intl` itself. That last one is what
- * lets `scripts/smoke` import this file directly to learn each locale's URL prefix
- * without needing `node_modules` installed — smoke runs against a deployed URL from
- * wherever, and `routing.ts`'s own `next-intl/routing` import is exactly why smoke has
- * never imported THAT file.
+ * `scripts/smoke`, `scripts/assert-prerendered.mjs` and `scripts/generate-og.mjs` all
+ * import THIS file directly, with Node's type stripping — not `./routing`. `routing.ts`
+ * imports `next-intl/routing` (so it needs `node_modules` installed) AND imports this
+ * file with a bare relative specifier (`"./countries"`), which the Next/webpack bundler
+ * and tsc both resolve but which Node's own ESM resolver rejects outright with no
+ * bundler in front of it — an extensionless relative specifier is not something Node
+ * will resolve on its own. So this module has to stay trivially evaluable outside the
+ * Next build: no `@/` path aliases (Node does not read tsconfig `paths`), no JSON
+ * imports, no env vars, and no dependency on `next-intl` itself. That is what lets the
+ * three scripts above import this file directly to learn each locale's URL prefix
+ * without needing `node_modules` installed — `scripts/smoke` in particular runs against
+ * a deployed URL from wherever, and going through `routing.ts` would fail there for a
+ * reason that has nothing to do with the deploy it is testing.
  *
  * Three named types carry the split (docs/superpowers/specs/2026-08-29-us-market-design.md,
  * "Routing mechanics for Decision 1"):

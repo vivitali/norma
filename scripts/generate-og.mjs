@@ -1,9 +1,18 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { ImageResponse } from "next/dist/server/og/image-response.js";
-import { routing } from "../src/i18n/routing.ts";
-import { languageOf } from "../src/i18n/countries.ts";
+import { allLocales, languageOf } from "../src/i18n/countries.ts";
 import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY } from "../src/lib/og-manifest.ts";
+
+// Imports src/i18n/countries.ts directly rather than src/i18n/routing.ts. routing.ts
+// itself imports countries.ts with a bare relative specifier ("./countries"), which
+// the Next/webpack bundler and tsc both resolve fine but which Node's own ESM
+// resolver — used here via Node's native type stripping, with no bundler in front of
+// it — rejects outright (it requires an explicit extension on a relative specifier).
+// countries.ts has no imports of its own, so going straight to it sidesteps that
+// resolution gap; see scripts/assert-prerendered.mjs and scripts/smoke, which do the
+// same for the same reason.
+const LOCALES = allLocales();
 
 /**
  * Renders one social card per route per locale into public/og/<locale>/<slug>.png.
@@ -95,7 +104,7 @@ function card({ title, fonts }) {
 // pair itself.
 const messages = Object.fromEntries(
   await Promise.all(
-    routing.locales.map(async (locale) => [
+    LOCALES.map(async (locale) => [
       locale,
       JSON.parse(
         await import("node:fs").then((fs) =>
@@ -121,7 +130,7 @@ for (const weight of [400, 600]) {
 }
 
 let written = 0;
-for (const locale of routing.locales) {
+for (const locale of LOCALES) {
   for (const href of INDEXABLE_ROUTES) {
     const key = ROUTE_METADATA_KEY[href];
     const title = messages[locale].Metadata[key]?.title;
