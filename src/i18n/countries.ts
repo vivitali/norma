@@ -21,19 +21,24 @@
  * - `Country` — which market's rules apply. Selects the rules/data registry (future work).
  * - `Locale` — the pair, e.g. `en-CA`. The only thing next-intl's routing sees.
  *
- * `COUNTRIES` is a total `Record<Country, CountryProfile>`, so a country missing an
- * entry is a compile error rather than a silent fallback to Canadian conventions —
- * exactly the discipline `LOCALES` in `src/lib/locales.ts` already applies to locales.
- * Adding a second country (the US market spec's own next step) means adding one entry
- * here; `routing.locales` and every URL prefix are derived from it, not typed twice.
+ * `Country` is `keyof typeof COUNTRIES`, DERIVED from the registry rather than declared
+ * separately — so the two can never disagree, which a hand-written `Country = "ca"` union
+ * checked only one-way (`COUNTRIES` had to satisfy `Record<Country, CountryProfile>`, but
+ * nothing stopped `Country` itself from naming a key `COUNTRIES` lacked). Adding a second
+ * country means adding one entry to `COUNTRIES`; `routing.locales`, every URL prefix, and
+ * `Country` itself are all derived from it, not typed twice.
+ *
+ * `Locale` is likewise derived, as the registry's own (country, language) PAIRS — not the
+ * full cross product of every `Language` against every `Country`. `us: { languages: ["en",
+ * "es"] }` must NOT make `"fr-US"` or `"uk-US"` valid `Locale` values just because `fr` and
+ * `uk` exist as `Language`s somewhere else in the registry: a `Record<Locale, …>` like
+ * `LOCALES` in `src/lib/locales.ts` would then accept — and silently under-constrain — a
+ * locale no country actually declares. See `LocalePairsOf` below, and
+ * `countries.types.test.ts`, which proves this against a registry shape unrelated to
+ * `COUNTRIES` so the property is asserted rather than merely true of today's one country.
  */
 
 export type Language = "en" | "fr" | "uk" | "es";
-
-export type Country = "ca";
-
-/** A BCP-47 language-region tag: the pair a URL prefix and next-intl both resolve. */
-export type Locale = `${Language}-${Uppercase<Country>}`;
 
 export interface CountryProfile {
   /** The path segment every one of this country's locales is nested under, e.g. "/ca". */
@@ -42,9 +47,24 @@ export interface CountryProfile {
   readonly languages: readonly Language[];
 }
 
-export const COUNTRIES: Record<Country, CountryProfile> = {
+export const COUNTRIES = {
   ca: { segment: "/ca", languages: ["en", "fr", "uk", "es"] },
-};
+} as const satisfies Record<string, CountryProfile>;
+
+export type Country = keyof typeof COUNTRIES;
+
+/**
+ * The exact (country, language) pairs a registry declares, as a union of template-literal
+ * locale tags. Generic — not written directly against `COUNTRIES` — purely so its
+ * correctness can be pinned by a type-level test against a registry `COUNTRIES` does not
+ * itself define; see the module doc comment above and `countries.types.test.ts`.
+ */
+export type LocalePairsOf<Registry extends Record<string, CountryProfile>> = {
+  [C in keyof Registry & string]: `${Registry[C]["languages"][number]}-${Uppercase<C>}`;
+}[keyof Registry & string];
+
+/** A BCP-47 language-region tag: the pair a URL prefix and next-intl both resolve. */
+export type Locale = LocalePairsOf<typeof COUNTRIES>;
 
 /** The language half of a locale pair: "fr-CA" -> "fr". */
 export function languageOf(locale: Locale): Language {
