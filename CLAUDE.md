@@ -421,9 +421,11 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
   not advice." It still carries no number, per the `## Don't` rule on what an FAQ answer feeding
   `FAQPage` structured data may claim: neither version ever did, so nothing there needed to
   change.
-- **`Affordability.propTaxSource` does not disclose that the citation it introduces is English.**
-  French already extends the label to say so and English does not. The uk and es catalogues follow
-  the French, so English is now the odd one out.
+- ~~**`Affordability.propTaxSource` does not disclose that the citation it introduces is English.**~~
+  — **decided, not a defect.** The asymmetry is correct: fr/uk/es say "cited in English" because
+  their surrounding sentence is in their own language and the citation is not; English's own
+  sentence IS the citation's language, so there is nothing to disclose. Parity across locales is
+  not the goal here — accuracy in each one is, and English was already accurate.
 - ~~**Segmented controls could be widened past the viewport by a long label**~~ — **fixed in this
   branch, structurally.** Their options sit in one row, so a control's minimum width was the sum of
   the longest single WORD in each label; a word cannot break, and a flex item defaults to
