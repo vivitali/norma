@@ -427,7 +427,11 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
       // zeroed like ftbOnly's and superseded's zero rows are; `best` alone carries the
       // dollar figure that actually reduces the bill, and which member of the tie is `best`
       // is arbitrary (the first one built), not a claim that it pays more.
-      if (c.amount === best.amount) {
+      // Cent precision, not `===`: both amounts are the product of tax-bracket arithmetic on
+      // a price, and two derivations that agree to the dollar can still differ in the last
+      // bit of a float. `bracketTax` sums per-band multiplications, so an exact tie is not
+      // guaranteed to survive floating point even when the underlying math is identical.
+      if (Math.round(c.amount * 100) === Math.round(best.amount * 100)) {
         c.amount = 0;
         c.st = "tied";
         continue;

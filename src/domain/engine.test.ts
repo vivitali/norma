@@ -546,6 +546,28 @@ describe("credits — mutually exclusive rebate groups", () => {
     expect(a.amount + b.amount).toBe(a.amount);
   });
 
+  it("still calls it a tie when the two amounts agree to the cent but not in the last float bit", () => {
+    // `0.1 + 0.2 !== 0.3` in IEEE 754. Nothing in this dataset currently produces two rebate
+    // amounts that are mathematically equal but bit-different — every member of a group reads
+    // the same target line's `raw` and clips it — but the comparison should not silently start
+    // calling a same-to-the-cent pair "superseded" the day a rebate shape does. Caps set to
+    // 0.1 + 0.2 and 0.3 dollars, both below `raw`, force `Math.min` to pick the cap itself
+    // rather than the shared `raw`, reproducing the drift directly.
+    const tiedGroup: Jurisdiction = {
+      ...getJurisdiction("vancouver")!,
+      rebates: [
+        { key: "cr_a", kind: "cap", cap: 0.1 + 0.2, on: "li_ptt", timing: "closing", group: "bcPtt" },
+        { key: "cr_b", kind: "cap", cap: 0.3, on: "li_ptt", timing: "closing", group: "bcPtt" },
+      ],
+    };
+    const o = { ...base, price: 900000 };
+    const C = credits(tiedGroup, federal, o, buildLines(tiedGroup, federal, o).gov);
+    const a = C.atClosing.find((c) => c.key === "cr_a")!;
+    const b = C.atClosing.find((c) => c.key === "cr_b")!;
+    expect([a.st, b.st].sort()).toEqual(["capped", "tied"]);
+    expect([a.st, b.st]).not.toContain("superseded");
+  });
+
   it("ties BC's first-time-buyer and newly-built PTT exemptions at $500,000, as documented in credits()", () => {
     // Both fully exempt the tax on a first-time buyer's new build at or under $500,000: the
     // first-time-buyer exemption is computed on the first $500,000 of the same tax, so there
