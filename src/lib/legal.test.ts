@@ -128,11 +128,12 @@ describe("legal routes", () => {
   it("serves both pages on their French slugs", () => {
     // Nothing else covers these. @/test/navigation-mock's Link deliberately does not localize a
     // slug, so every render test asserts labels and never touches the French URLs — and a page
-    // reachable only at /fr/privacy would defeat the point of translating it.
-    expect(absoluteUrl("fr", "/privacy")).toBe("https://affordmath.com/fr/confidentialite");
-    expect(absoluteUrl("fr", "/terms")).toBe("https://affordmath.com/fr/conditions");
-    expect(absoluteUrl("en", "/privacy")).toBe("https://affordmath.com/en/privacy");
-    expect(absoluteUrl("en", "/terms")).toBe("https://affordmath.com/en/terms");
+    // reachable only at /ca/fr/privacy would defeat the point of translating it. Every Canadian
+    // route lives under /ca/<language> (CLAUDE.md), so the expectation is the full prefixed path.
+    expect(absoluteUrl("fr-CA", "/privacy")).toBe("https://affordmath.com/ca/fr/confidentialite");
+    expect(absoluteUrl("fr-CA", "/terms")).toBe("https://affordmath.com/ca/fr/conditions");
+    expect(absoluteUrl("en-CA", "/privacy")).toBe("https://affordmath.com/ca/en/privacy");
+    expect(absoluteUrl("en-CA", "/terms")).toBe("https://affordmath.com/ca/en/terms");
   });
 
   it("renders every legal page flat, with no disclosure gesture", () => {
