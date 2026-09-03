@@ -729,3 +729,37 @@ spec's "Implementation order," step 4, "Houston (Harris County), with provenance
 should treat every `medium`/`assumption`/unresolved item above as a blocker for shipping that
 specific figure at anything better than the confidence recorded here — exactly the discipline
 `CLAUDE.md`'s "A figure may leave the app only if..." rule already enforces for the Canadian data.
+
+---
+
+## Addendum (2026-09-03, second pass) — corrections to C1 and C2
+
+**C2 is corrected: HUD DOES publish a metro-wide FY2026 FMR for the Houston HMFA.** The earlier
+"Small Area FMR only" conclusion was an access artefact — HUD's FMR Documentation System returns an
+empty 202 without a browser-like `Referer`. With it, the page resolves:
+
+- URL: https://www.huduser.gov/portal/datasets/fmr/fmrs/FY2026_code/2026summary.odn?cbsasub=METRO26420M26420&selection_type=hmfa&year=2026&fmrtype=Final
+- Area as printed: "Houston-The Woodlands-Sugar Land, TX HUD Metro FMR Area" (Chambers, Fort Bend,
+  Galveston, Harris, Liberty, Montgomery, Waller counties).
+- Final FY 2026 FMRs: 0BR $1,280 · 1BR $1,323 · **2BR $1,573** · 3BR $2,116 · 4BR $2,639
+  (FY 2025: $1,226 / $1,279 / $1,529 / $2,038 / $2,568). Effective 2025-10-01.
+- The page's own wording: "A Public Housing Agency (PHA) or agencies representing a majority of
+  Housing Choice Vouchers in the Houston-The Woodlands-Sugar Land, TX HUD Metro FMR Area has opted to
+  use Small Area Fair Market Rents. Therefore, this page also displays the SAFMRs by ZIP Code …
+  Other PHAs may refer to [this page] for the methodology for the metropolitan-level FMRs … shown
+  above." — i.e. the metro FMR is published; only voucher payment standards are keyed to ZIP.
+- conf: **high** (publisher's own page, "Final"). Caveat for the record's note: an FMR is the
+  40th percentile of gross rent for standard-quality units, all dwelling types, not an apartment
+  average — hence a distinct `RentBasis` value.
+
+**C1 is upgraded: HAR's own July 2026 release was read.** har.com blocks direct fetches
+(PerimeterX 403); the same URL rendered through a text-extraction proxy returned HAR's own page,
+"Houston Buyers Gain More Choices as Inventory Hits Record High", published 2026-08-31, citing the
+"July 2026 Housing Market Update":
+
+- URL: https://www.har.com/blog_148340_houston-buyers-gain-more-choices-as-inventory-hits-record-high
+- Single-family: median **$340,000** (+0.6% YoY), average $440,816 (+1.9%); existing-home median
+  $345,000; 8,340 sold; 40,750 active listings, 5.5 months of supply.
+- Townhome/condo: median **$211,000** (−3.7% YoY), average $260,987; 425 sold; 9.1 months.
+- conf: **high** for the figures (HAR's own page content); record the access method in the note.
+  Corroborated by The Real Deal, 2026-08-13 (median $340,000, average "$441,000") — medium.
