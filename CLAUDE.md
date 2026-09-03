@@ -458,8 +458,13 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
   withdrawal itself. `federal.hbp.ruleDays` is now `89`, its provenance is `conf: "high"` quoting
   the line above, and `Metadata.rrspHbp.description` reads "wait 89 days" in all four locale
   files. The RRSP-HBP page copy (`RrspHbp.step3`, `.step3Body`, `.ruleDaysNote`) never hardcoded
-  the number — it interpolates `{d}` from `play.ruleDays`, itself read off the constant — so the
-  value and the copy cannot disagree again.
+  the number — it interpolates `{d}` from `play.ruleDays`, itself read off the constant — but
+  `Metadata.rrspHbp.description` is plain prose with nothing binding it to the constant the way
+  the page copy is bound. `federal.test.ts`'s `"Metadata.rrspHbp.description names
+  federal.hbp.ruleDays"` is what actually enforces the two cannot disagree: it asserts, per
+  locale, that the description contains `String(federal.hbp.ruleDays)`, alongside a direct
+  `federal.hbp.ruleDays === 89` assertion. A prose string can drift from the value it names;
+  only a test that reads both and compares them closes that gap.
 - **`cmhc.bands` cannot express the 4.50% band** that applies at 90.01–95% LTV when the down
   payment is borrowed — about $2,500 under-charged on a $500k loan. The shape change belongs with
   the input that would tell us where the down payment came from.

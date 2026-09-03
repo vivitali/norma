@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { federal } from "./federal";
+import { CATALOGUE_ENTRIES } from "@/test/catalogues";
 
 describe("federal rules data", () => {
   it("has GDS stricter than TDS, as Canadian lending rules require", () => {
@@ -117,6 +118,14 @@ describe("federal rules — verified 2026 figures", () => {
     expect(federal.capGainsInclusion).toBe(0.5);
   });
 
+  it("uses CRA's actual 89-day HBP contribution-deductibility window, not the industry's 90-day rounding", () => {
+    // CRA, confirmed against canada.ca: "If you made contributions to your RRSPs during the
+    // 89-day period before you withdrew the amount for your HBP withdrawal, your RRSP
+    // contribution may not be deductible." See the provenance note on "hbp.ruleDays" for the
+    // full quote and what the rule actually restricts (deductibility, not withdrawal).
+    expect(federal.hbp.ruleDays).toBe(89);
+  });
+
   it("uses the First-Time Home Buyers' GST rebate as legislated", () => {
     expect(federal.gstFthb).toEqual({
       rate: 0.05,
@@ -202,5 +211,20 @@ describe("federal provenance — the 2026 pass", () => {
       expect(federal.provenance[path]?.conf, path).toBe("medium");
       expect(federal.provenance[path]?.note, path).toBeTruthy();
     }
+  });
+});
+
+/**
+ * `Metadata.rrspHbp.description` hardcodes "wait {N} days" as prose, once per locale — there is
+ * no interpolation binding it to `federal.hbp.ruleDays` the way the RRSP-HBP page's own copy
+ * does (`RrspHbp.step3` etc. read `{d}` from `play.ruleDays`). This is what actually keeps the
+ * two from disagreeing again: not the metadata string's shape, but this test, which fails the
+ * day either one moves without the other.
+ */
+describe("Metadata.rrspHbp.description names federal.hbp.ruleDays", () => {
+  it.each(CATALOGUE_ENTRIES)("in %s", (_locale, catalogue) => {
+    const description = (catalogue as { Metadata: { rrspHbp: { description: string } } }).Metadata
+      .rrspHbp.description;
+    expect(description).toContain(String(federal.hbp.ruleDays));
   });
 });
