@@ -1,7 +1,7 @@
 # US market: the country seam — design spec
 
 Date: 2026-08-29
-Status: proposed, pending approval
+Status: approved 2026-09-02 — the owner delegated the three open questions; decisions recorded below
 
 ## Context
 
@@ -194,19 +194,52 @@ catalogue — the same way `Jurisdictions.at.<id>` solves per-record wording tod
   be absent from the US navigation rather than reworked into an IRA page.
 - Monetization, still explicitly undecided.
 
-## Open questions for the owner
+## Routing mechanics for Decision 1
 
-1. **RRSP-HBP has no US equivalent.** The nearest are the IRA first-time-homebuyer exception
-   ($10,000 lifetime) and a 401(k) loan, which are different enough to be a different page. Absent
-   from US nav for now, or a stub?
-2. **Does `/ca/` go in now or with the first US release?** Doing it now is a small isolated PR with
-   its own redirect and sitemap change; doing it later means the US work carries a route migration.
-   Recommendation: **now, separately.**
-3. **Data sources need a decision before Houston can be written.** Canadian records lean on CREA
-   HPI and CMHC — both single authoritative publishers. The US has no equivalent single source:
-   Zillow ZHVI/ZORI, Redfin, FHFA and NAR all publish different quantities. Whichever is chosen
-   becomes the `bench`/`rent` basis for every future state, and `rentBasis` already exists to
-   record which quantity a figure is.
+A country-qualified locale, not a second dynamic segment.
+
+next-intl's `localePrefix.prefixes` maps a locale to an arbitrary URL prefix, and a prefix may
+span more than one segment. So the routing locales become real BCP-47 tags — `en-CA`, `fr-CA`,
+`uk-CA`, `es-CA`, later `en-US`, `es-US` — and each maps to `/ca/en`, `/ca/fr`, …, `/us/en`,
+`/us/es`. The filesystem stays `src/app/[locale]/…`; `generateStaticParams` enumerates the
+registry's country × language **pairs**; `hreflang` emits the tag as-is and is exact for the
+first time. Three named types carry the split:
+
+- `Language` — `en | fr | uk | es`. Catalogues, `Jurisdictions.at`, plural rules, `LOCALES`
+  presentation facts (a language in a country: `es-CA` formats through `es-MX`, `es-US` through
+  `es-US`).
+- `Country` — `ca | us`. Rules registry, jurisdiction dataset, nav visibility, `hreflang` region.
+- `Locale` — the pair, and the only thing next-intl sees.
+
+Rejected: `src/app/[country]/[locale]/…`. next-intl's middleware reads the first segment as the
+locale, so a leading country segment needs a hand-written wrapper that strips and re-adds it on
+every request, rewrite and `Link` — a second routing layer to keep in step with the first.
+
+Old URLs 301 in `next.config.ts` `redirects()`: `/:lang(en|fr|uk|es)/:path*` → `/ca/:lang/:path*`,
+and `/` continues to land on the default locale through next-intl. `next.config` redirects run
+before middleware and `@opennextjs/cloudflare` honours them; a zone-level Cloudflare redirect
+rule may duplicate them later so the hop never reaches the Worker, but the in-repo rule is the
+one a test can see. **Verify against the deployed response, not the build output** — the rule
+this repo already records for everything edge-flavoured.
+
+## Decisions on the three open questions
+
+Taken by the implementer on 2026-09-02 under a general delegation from the owner; each is
+reversible and says what would reverse it.
+
+1. **RRSP-HBP is absent from the US navigation.** `NAV` entries carry the countries they apply
+   to, the sitemap and `INDEXABLE_ROUTES` iterate that, and `/us/en/rrsp-hbp` does not exist
+   rather than 404-ing with a stub. An IRA/401(k) page is its own future spec.
+2. **`/ca/` goes in now, as its own PR, before any US code.** A route migration that ships with
+   the first state would make a redirect bug and a rules bug indistinguishable on the same day.
+3. **US market data.** Prices: the metro REALTOR® association's published median (HAR for
+   Houston) — the direct analogue of the Canadian boards, public, monthly, dated. Zillow ZHVI is
+   the fallback only where a board publishes nothing, and `metric` discloses which. Rents: HUD
+   Fair Market Rent, two-bedroom, for the metro FMR area — an official publisher with an
+   effective date, county-resolved. It is a 40th-percentile of all two-bedroom units rather than
+   an apartment average, so it is a **new** `RentBasis` value, not `apartment2br` relabelled;
+   for comparability it prices a condo, as `apartment2br` does. Every figure carries provenance
+   under the existing five-value `conf` rule, and nothing ships at `none` with a number.
 
 ## Implementation order
 
