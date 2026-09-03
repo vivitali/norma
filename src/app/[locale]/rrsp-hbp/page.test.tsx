@@ -144,11 +144,17 @@ describe("RRSP → HBP — the room the reader may not have", () => {
 });
 
 describe("RRSP → HBP — the rules", () => {
-  it("states the waiting rule as absolute, because it is", async () => {
+  it("states the rule with CRA's own \"part or all\" wording, not as a no-exception absolute", async () => {
+    // CRA's rule restricts the DEDUCTIBILITY of a contribution made in the window — "may not be
+    // able to deduct part or all" of it — never the withdrawal. "This rule is absolute. There is
+    // no exception" overstated that, so this test now asserts the softened, CRA-accurate wording
+    // is present and the old overstatement is gone.
     const user = userEvent.setup();
     renderPage();
     await open(user, /The five steps/);
-    expect(screen.getByText(/no exception and no appeal/)).toBeInTheDocument();
+    expect(screen.getByText(/never blocked/)).toBeInTheDocument();
+    expect(screen.getByText(/may not be able to deduct part or all/)).toBeInTheDocument();
+    expect(screen.queryByText(/no exception and no appeal/)).not.toBeInTheDocument();
   });
 
   it("discloses the 2022-2025 cohort's extra three years beside the grace note", async () => {
