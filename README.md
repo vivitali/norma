@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-App runs at `http://localhost:3000`, redirecting to `/en`. Also `/fr`, `/uk` and `/es`.
+App runs at `http://localhost:3000`, redirecting to `/ca/en`. Also `/ca/fr`, `/ca/uk` and `/ca/es`.
 
 ## Stack
 
