@@ -458,9 +458,14 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
 - **`cmhc.bands` cannot express the 4.50% band** that applies at 90.01–95% LTV when the down
   payment is borrowed — about $2,500 under-charged on a $500k loan. The shape change belongs with
   the input that would tell us where the down payment came from.
-- **An exact-tie rebate is dropped rather than labelled.** No `CreditLine.st` is true of a tie, so
-  the group reports the relief once. If both rows should stay visible, it needs a new status plus a
-  reworded `rebSuperseded` (drop "is worth more").
+- ~~**An exact-tie rebate is dropped rather than labelled.**~~ — **fixed.** `CreditLine.st` gained
+  `"tied"`: on an exact tie, one member keeps its real amount and status, the rest are zeroed
+  (so the relief is still reported once, never doubled) but marked `tied` and stay in the array
+  instead of being filtered out. `rebSuperseded` no longer says a rival rebate "is worth more" —
+  a claim that was always false on a tie — and a new `rebTied` message explains the real reason:
+  worth exactly the same, so only one applies. BC's first-time-buyer and newly-built PTT
+  exemptions still tie at $500,000, per `src/domain/engine.test.ts` and
+  `src/domain/jurisdictions/bc.test.ts`, and the closing-costs page renders both rows.
 - ~~[#2](https://github.com/vivitali/norma/issues/2)~~ — **closed, before this branch, not by it.**
   `credits()` already looked its rebate target up by key in both `gov` and `j.transfer`
   (`engine.ts:182`, `engine.ts:200`), so the phantom-rebate defect was gone: `elsewhere` is safe to

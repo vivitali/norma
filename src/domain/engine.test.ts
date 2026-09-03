@@ -521,6 +521,43 @@ describe("credits — mutually exclusive rebate groups", () => {
     const nonZero = C.atClosing.filter((c) => c.amount > 0);
     expect(nonZero.length).toBeGreaterThan(1);
   });
+
+  it("keeps an exact-tie rebate visible, zeroed and marked tied, rather than dropping it", () => {
+    // Both members of the group genuinely tie: same cap, same target line, so the same raw
+    // amount is capped to the same figure. Dropping the loser used to tell the buyer only one
+    // programme applied; the fix keeps the row so the buyer can see both they qualified for.
+    const tiedGroup: Jurisdiction = {
+      ...getJurisdiction("vancouver")!,
+      rebates: [
+        { key: "cr_a", kind: "cap", cap: 5000, on: "li_ptt", timing: "closing", group: "bcPtt" },
+        { key: "cr_b", kind: "cap", cap: 5000, on: "li_ptt", timing: "closing", group: "bcPtt" },
+      ],
+    };
+    const o = { ...base, price: 900000 };
+    const C = credits(tiedGroup, federal, o, buildLines(tiedGroup, federal, o).gov);
+    const a = C.atClosing.find((c) => c.key === "cr_a")!;
+    const b = C.atClosing.find((c) => c.key === "cr_b")!;
+    expect(a).toBeDefined();
+    expect(b).toBeDefined();
+    expect(a.amount).toBeGreaterThan(0);
+    expect(b.amount).toBe(0);
+    expect(b.st).toBe("tied");
+    // Not double-counted: the group's relief is worth exactly what one member pays.
+    expect(a.amount + b.amount).toBe(a.amount);
+  });
+
+  it("ties BC's first-time-buyer and newly-built PTT exemptions at $500,000, as documented in credits()", () => {
+    // Both fully exempt the tax on a first-time buyer's new build at or under $500,000: the
+    // first-time-buyer exemption is computed on the first $500,000 of the same tax, so there
+    // is nothing above it left to differ.
+    const vancouver = getJurisdiction("vancouver")!;
+    const o = { ...base, price: 500000, ptype: "newbuild" as const };
+    const C = credits(vancouver, federal, o, buildLines(vancouver, federal, o).gov);
+    const rows = C.atClosing.filter((c) => c.group === "bcPtt");
+    expect(rows).toHaveLength(2);
+    expect(rows.filter((c) => c.amount > 0)).toHaveLength(1);
+    expect(rows.some((c) => c.st === "tied")).toBe(true);
+  });
 });
 
 describe("closingTotal", () => {

@@ -55,17 +55,18 @@ describe("BC newly-built-home exemption", () => {
     // outright, the first-time-buyer one because it is computed on the first $500,000 and
     // there is nothing above that to leave behind. `bracketTax(480000)` either way.
     //
-    // "You qualify for this, but another rebate here is worth more" is then simply false, and
-    // there is no choice to explain either — whichever the buyer claims, the money is the
-    // same to the dollar. The group reports the relief once.
+    // "You qualify for this, but another rebate here is worth more" is then simply false. But
+    // it is not a silent choice either — the buyer qualified for two programmes, and dropping
+    // the second row used to say they qualified for only one. Both stay visible: one carries
+    // the dollar figure, the other is zeroed and marked `tied` rather than `superseded`.
     const o = { ...base, price: 480000, ftb: true, ptype: "newbuild" as const };
     const j = van();
     const C = credits(j, federal, o, buildLines(j, federal, o).gov);
     const bcPtt = C.atClosing.filter((c) => c.group === "bcPtt");
-    expect(bcPtt).toHaveLength(1);
-    expect(bcPtt[0].st).toBe("applied");
-    // 1% on the first $200,000, 2% above it: $2,000 + $5,600.
-    expect(bcPtt[0].amount).toBeCloseTo(7600, 2);
+    expect(bcPtt).toHaveLength(2);
+    expect(bcPtt.map((c) => c.st).sort()).toEqual(["applied", "tied"]);
+    // 1% on the first $200,000, 2% above it: $2,000 + $5,600, carried by one row only.
+    expect(bcPtt.reduce((sum, c) => sum + c.amount, 0)).toBeCloseTo(7600, 2);
     expect(C.atClosing.map((c) => c.st)).not.toContain("superseded");
   });
 
