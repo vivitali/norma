@@ -21,13 +21,22 @@ FAILED=0
 #
 # Imported DIRECTLY rather than regex-parsed. `src/i18n/countries.ts` exists precisely
 # so this can: it has no imports of its own — no `@/` aliases, no next-intl, no JSON,
-# no env vars — so Node's type stripping can load it with nothing installed, exactly
-# the property that lets scripts/assert-prerendered.mjs import `routing.ts` (which DOES
-# need node_modules) after a build, while this script runs against a deployed URL from
-# anywhere. Regex-parsing `locales: [...]` worked while routing.ts wrote that array as
-# a literal; the CA migration made it `allLocales()`, a real function call a regex
-# cannot evaluate — importing the registry instead of scraping its output is what keeps
-# this script from silently narrowing the moment routing.ts's shape changes again.
+# no env vars — so Node's type stripping can load it with nothing installed. That is
+# also why scripts/assert-prerendered.mjs and scripts/generate-og.mjs import
+# `countries.ts` directly rather than `routing.ts`: `routing.ts` needs node_modules
+# installed (it imports `next-intl/routing`) AND its own relative import of
+# `./countries` is extensionless, which Node's ESM resolver rejects with no bundler in
+# front of it — this script in particular runs against a deployed URL from anywhere, so
+# neither constraint can hold here. Regex-parsing `locales: [...]` worked while
+# routing.ts wrote that array as a literal; the CA migration made it `allLocales()`, a
+# real function call a regex cannot evaluate — importing the registry instead of
+# scraping its output is what keeps this script from silently narrowing the moment
+# routing.ts's shape changes again.
+#
+# Native type stripping needs Node >= 22.18 or >= 23.6 (no `--experimental-strip-types`
+# flag below that, and none is passed here) — it does NOT "run anywhere". CI pins Node
+# 24 via `.nvmrc`; run this against an older Node locally and it fails at this
+# `import`, not at some later step that would make the real cause hard to find.
 #
 # The parse is deliberately strict: no match is a hard failure, never an empty list
 # quietly checked. That is the same rule assert-prerendered states — go red rather
