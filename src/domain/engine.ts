@@ -2000,6 +2000,11 @@ export function scenario(j: Jurisdiction, F: CountryRules, o: ScenarioInput) {
     pi,
     propTax,
     insurance: o.insuranceAnnual / 12,
+    // Always 0 on this (Canadian) branch — CMHC's premium is financed into the loan, not
+    // billed monthly. See `monthly.pmi` on `scenarioToMaturity` below for the US figure;
+    // both use the SAME key so a Scenarios column can render one PMI row for either
+    // country without branching on which shape `monthly` is.
+    pmi: 0,
     utilities: o.utilities,
     condoFee: o.condoFee,
     maintenance,
@@ -2085,6 +2090,9 @@ function scenarioToMaturity(j: Jurisdiction, F: UsRules, o: ScenarioInput) {
     pi,
     propTax,
     insurance: o.insuranceAnnual / 12,
+    // PMI — see `monthly.pmi`'s comment on the Canadian branch above for why this is the
+    // same key rather than a US-only field.
+    pmi: fin.monthlyInsurance,
     utilities: o.utilities,
     condoFee: o.condoFee,
     maintenance,
