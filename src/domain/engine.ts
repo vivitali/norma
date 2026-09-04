@@ -766,19 +766,31 @@ export function defaultContractRate(F: CountryRulesBase, dpPct: number): number 
  * flagship figure, not a review fix. Whoever takes it: the binding price is where
  * `dpPct/100` meets `minDown(F, P)/P`, which is closed form off `minDown.bands`.
  */
-export function financedFraction(F: CaRules, dpPct: number, amortYears: number): number {
+export function financedFraction(F: CountryRules, dpPct: number, amortYears: number): number {
   const ltv = 1 - dpPct / 100;
+  // US PMI is never financed into the loan — see `financing()`'s own doc comment. The
+  // financed fraction is simply the LTV, no premium term added.
+  if (F.country === "us") return ltv;
   if (dpPct >= 20) return ltv;
   const band = F.cmhc.bands.find((b) => ltv <= b[0]) ?? F.cmhc.bands[F.cmhc.bands.length - 1];
   return ltv * (1 + band[1] + (amortYears > 25 ? F.cmhc.longAmortSurcharge : 0));
 }
 
-export function affordability(j: Jurisdiction, F: CaRules, o: AffordabilityInput) {
+export function affordability(j: Jurisdiction, F: CountryRules, o: AffordabilityInput) {
   const gross = o.income1 + o.income2 + o.otherIncome;
   const qualIncome = gross * (1 - o.haircut / 100);
-  const qualRate = Math.max(F.stressTest.floor, o.contractRate + F.stressTest.buffer) / 100;
-  const fq = payFactor(qualRate, o.amortYears);
-  const fc = payFactor(o.contractRate / 100, o.amortYears);
+  // US: no B-20-style stress test exists — qualify at the bare contract rate (design spec,
+  // "stressTest null -> qualify at the contract rate"). Canadian arithmetic below is
+  // untouched: F.stressTest is never null on that branch.
+  const qualRate = F.stressTest
+    ? Math.max(F.stressTest.floor, o.contractRate + F.stressTest.buffer) / 100
+    : o.contractRate / 100;
+  // US mortgages compound MONTHLY, not semi-annually — payFactor() is the Canadian formula
+  // (see its own doc comment). Every payment-factor call in this function goes through this
+  // one switch so a US branch cannot accidentally keep using the Canadian compounding.
+  const factorFn = F.country === "us" ? payFactorMonthly : payFactor;
+  const fq = factorFn(qualRate, o.amortYears);
+  const fc = factorFn(o.contractRate / 100, o.amortYears);
 
   const gdsAllow = (qualIncome * (F.gds / 100)) / 12;
   const tdsAllow = (qualIncome * (F.tds / 100)) / 12 - o.debts;
@@ -793,6 +805,14 @@ export function affordability(j: Jurisdiction, F: CaRules, o: AffordabilityInput
   // `denomLender` multiplies THAT. Nothing in this file multiplies `fq` by a constant.
   const financed = financedFraction(F, o.dpPct, o.amortYears);
   const denomLender = financed * fq + j.propTax.effective / 12;
+  // No heat allowance concept exists on a US mortgage qualification — CMHC's GDS/TDS
+  // guidance is what invented this line for Canada. Zero, not omitted, so the arithmetic
+  // below stays one formula for both countries.
+  const heatAllowance = F.country === "ca" ? F.heatAllowance : 0;
+  // A US homestead exemption is a constant dollar credit against the property-tax RATE term
+  // above — see propertyTaxCredit()'s own comment for the algebra. Zero on every Canadian
+  // record (no jurisdiction here carries `propTax.exemptions`).
+  const propTaxCreditMonthly = propertyTaxCredit(j) / 12;
   /**
    * The ceiling this household would reach carrying `debts` of monthly obligation.
    * Parameterised because the debt-impact figures below are the DIFFERENCE between
@@ -806,11 +826,11 @@ export function affordability(j: Jurisdiction, F: CaRules, o: AffordabilityInput
     // count — and the full fee two lines below, because that is what the household pays.
     // Both are correct and they are not the same figure; the screen has to say so, which is
     // why the share is a named federal rule with provenance rather than a bare 0.5.
-    return Math.max(0, (binds - F.heatAllowance - o.condoFee * F.condoFeeInclusion) / denomLender);
+    return Math.max(0, (binds - heatAllowance - o.condoFee * F.condoFeeInclusion + propTaxCreditMonthly) / denomLender);
   };
   const ceiling = ceilingCarrying(o.debts);
 
-  const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee;
+  const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee + propTaxCreditMonthly;
   const denomComfort = financed * fc + j.propTax.effective / 12 + F.maintenanceReserve / 12;
   const comfort = Math.max(0, budget) / denomComfort;
 
@@ -827,28 +847,34 @@ export function affordability(j: Jurisdiction, F: CaRules, o: AffordabilityInput
   // Priced off the entered contract rate — the same rate that drives the comfort ceiling above
   // — so the "what fits your budget" card and the monthly P&I row can never disagree, and the
   // rate input actually moves every figure on the screen.
-  const pi = cc.fin.loan * payFactor(o.contractRate / 100, o.amortYears);
+  const pi = cc.fin.loan * factorFn(o.contractRate / 100, o.amortYears);
   const monthly = {
     pi,
-    propTax: (o.price * j.propTax.effective) / 12,
+    propTax: propertyTaxAnnual(j, o.price) / 12,
     insurance: o.insuranceAnnual / 12,
+    // PMI — zero on every Canadian record, since CA's `financing()` branch always returns
+    // `monthlyInsurance: 0`. Included in `total` below, so a US comfort ceiling that ignores
+    // it cannot ship.
+    pmi: cc.fin.monthlyInsurance,
     utilities: o.utilities,
     condoFee: o.condoFee,
     maintenance: (o.price * F.maintenanceReserve) / 12,
     total: 0,
   };
   monthly.total =
-    monthly.pi + monthly.propTax + monthly.insurance + monthly.utilities + monthly.condoFee + monthly.maintenance;
+    monthly.pi + monthly.propTax + monthly.insurance + monthly.pmi + monthly.utilities + monthly.condoFee + monthly.maintenance;
 
-  // What a lender counts at the target price: a fixed heating allowance, not real utilities.
+  // What a lender counts at the target price: a fixed heating allowance, not real utilities
+  // (zero on the US branch — see heatAllowance above). PMI is added to the numerator on the
+  // US branch too, exactly as a lender's own DTI calculation would.
   const gdsAtTarget =
     qualIncome <= 0
       ? 0
-      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * F.condoFeeInclusion) / (qualIncome / 12)) * 100;
+      : ((cc.fin.loan * fq + cc.fin.monthlyInsurance + monthly.propTax + heatAllowance + o.condoFee * F.condoFeeInclusion) / (qualIncome / 12)) * 100;
   const tdsAtTarget =
     qualIncome <= 0
       ? 0
-      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * F.condoFeeInclusion + o.debts) / (qualIncome / 12)) * 100;
+      : ((cc.fin.loan * fq + cc.fin.monthlyInsurance + monthly.propTax + heatAllowance + o.condoFee * F.condoFeeInclusion + o.debts) / (qualIncome / 12)) * 100;
 
   // Marginal cost of debt WHERE TDS BINDS: what one dollar of monthly obligation
   // removes from the ceiling once total debt service is the constraint.
