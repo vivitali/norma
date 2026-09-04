@@ -55,6 +55,15 @@ export const LOCALES: Record<Locale, LocaleProfile> = {
    * inherited assumption.
    */
   "es-CA": { label: "ES", intl: "es-MX", moneyTrailing: false, percentSpaced: true },
+  "en-US": { label: "EN", intl: "en-US", moneyTrailing: false, percentSpaced: false },
+  /**
+   * `es-US`, not `es-MX`: the note on `es-CA` above says this fact is about the READER,
+   * not the URL's country segment, and this reader holds US paperwork. `en-US` already
+   * groups and punctuates identically to `en-CA`, so the only real per-locale judgement
+   * left is the percent space, which follows the RAE convention `es-CA` already applies
+   * regardless of which side of a border the Spanish speaker is on.
+   */
+  "es-US": { label: "ES", intl: "es-US", moneyTrailing: false, percentSpaced: true },
 };
 
 /** The profile for a locale, falling back to the default rather than throwing. */
