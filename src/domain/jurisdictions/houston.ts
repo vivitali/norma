@@ -110,11 +110,10 @@ export const houston: Jurisdiction = {
       note: "The title company's settlement/closing fee, the direct Texas analogue of a lawyer's conveyancing fee elsewhere in this dataset — priced within the dossier's $250-800 escrow/settlement fee range (dossier B6), no publisher.",
     },
     "fees.titleIns": {
-      conf: "high",
-      asOf: "2026-03-01",
+      conf: "assumption",
       src: TDI_TITLE,
       url: TDI_TITLE_URL,
-      note: "The $100 simultaneous-issue lender's-policy rate, Texas/Harris County custom: the seller customarily pays the owner's policy (priced off TX_TITLE_INSURANCE_BRACKETS, exported separately — see that constant's own comment), and the buyer pays only this flat lender's-policy add-on (dossier B3/B6).",
+      note: "$100 is a MODELLING DEFAULT for the simultaneous-issue lender's policy, not a TDI-published figure — the dossier's own B6 row grades \"who customarily pays it\" at medium and prints no dollar amount for the rate itself; only the OWNER'S full-value policy schedule (TX_TITLE_INSURANCE_BRACKETS, exported separately) is TDI-promulgated and high-confidence. Texas/Harris County custom has the seller pay the owner's policy and the buyer pay only this flat lender's-policy add-on (dossier B3/B6); the amount is disclosed as an estimate pending a primary-source read of TDI's rate manual (the simultaneous-issue rule is commonly cited as a low flat fee, often near $100, but this figure has not been independently verified against the manual's printed rule).",
     },
     "fees.survey": {
       conf: "assumption",
