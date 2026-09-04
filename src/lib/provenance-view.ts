@@ -47,6 +47,9 @@ const GROUP_OF_PREFIX: Record<string, FigureGroupId> = {
   rent: "market",
   yoy: "market",
   fees: "fees",
+  // US only — a jurisdiction-level annual insurance estimate (`Jurisdiction.insurance`,
+  // e.g. Houston's TDI statewide average). A cost estimate, same category as `fees.*`.
+  insurance: "fees",
 };
 
 /** `orgs.*` resolves on its SECOND segment — the bodies are per subject. */

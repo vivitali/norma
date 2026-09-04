@@ -179,6 +179,7 @@ export const houston: Jurisdiction = {
       url: HAR_URL,
       note: "HAR single-family +0.6% YoY (dossier C1 addendum).",
     },
-    orgs: { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
+    "orgs.muni": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
+    "orgs.market": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
   },
 };
