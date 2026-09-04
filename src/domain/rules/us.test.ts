@@ -175,6 +175,60 @@ describe("us amortization — no renewal, monthly compounding", () => {
   });
 });
 
+/**
+ * Guards the seam, not the symptom: `RentVsBuyInput.contractRate` is a FRACTION,
+ * `FinancingInput.contractRate` (what `financing()` — and its `pmiTerminationMonth()` call —
+ * actually reads) is a PERCENTAGE. Passing an explicit fractional rate straight through used to
+ * feed `financing()` a percentage two orders of magnitude too small, moving PMI's
+ * auto-termination month from 111 to 49 on $350k/10%-down/30y at 6.66%. This is the second time
+ * this codebase has shipped a fraction-vs-percentage confusion (see `defaultContractRate`'s own
+ * history) — the assertion below compares `rentVsBuy()`'s own `fin.insuranceMonths` against
+ * `financing()` called directly at the equivalent PERCENTAGE, so a future regression that
+ * reintroduces the unit bug fails here rather than only in a snapshot nobody re-derives by hand.
+ */
+describe("us rentVsBuy — contractRate unit (fraction in, percentage where financing() needs it)", () => {
+  it("computes the same PMI termination month rentVsBuy() and financing() would, given an explicit fractional rate", () => {
+    const contractRateFraction = 0.0666;
+    const price = 350000;
+    const dpPct = 10;
+    const amortYears = 30;
+
+    const result = rentVsBuy(houston, us, {
+      price,
+      dpPct,
+      amortYears,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      insuranceAnnual: 3506,
+      utilities: 180,
+      condoFee: 0,
+      rent: 1573,
+      rentInflation: 0.03,
+      appreciation: 0.04,
+      appreciationOn: true,
+      investReturn: 0.046,
+      termYears: 5,
+      renewalRate: null,
+      investDiff: true,
+      years: 10,
+      contractRate: contractRateFraction,
+    });
+
+    const expectedFin = financing(us, {
+      price,
+      dpPct,
+      amortYears,
+      contractRate: contractRateFraction * 100,
+    });
+
+    expect(result.fin.insuranceMonths).toBe(expectedFin.insuranceMonths);
+    expect(result.fin.insuranceMonths).toBe(111);
+    expect(result.fin.monthlyInsurance).toBeCloseTo(expectedFin.monthlyInsurance, 6);
+  });
+});
+
 describe("us rentVsBuy — itemised-vs-standard deduction benefit", () => {
   it("beats the standard deduction for a large loan (high mortgage interest)", () => {
     const result = rentVsBuy(houston, us, {
