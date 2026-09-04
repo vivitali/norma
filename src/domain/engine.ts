@@ -957,8 +957,12 @@ export interface AmortizationRow {
   payment: number;
   /** Percentage. */
   rate: number;
-  /** True for the first year of a new term. */
+  /** True for the first year of a new term. Always false on a US (toMaturity) schedule — there
+   * are no terms to renew. */
   renewed: boolean;
+  /** US only: PMI paid during this year (0 once it has terminated, or on every Canadian row —
+   * the CMHC premium is a one-time amount financed into the loan, not a recurring line here). */
+  insurance?: number;
 }
 
 /**
@@ -977,8 +981,14 @@ export interface AmortizationRow {
  *
  * Note there is no jurisdiction parameter. The reference took one and never read
  * it — nothing in an amortization schedule is provincial.
+ *
+ * `F.mortgage.kind === "toMaturity"` (the US) takes a wholly separate path below: no
+ * re-pricing at ANY boundary — `termYears`/`renewalRate` are ignored entirely, matching the
+ * design spec's "no term, no renewal, no re-pricing" — monthly, not semi-annual, compounding,
+ * and PMI charged into each row while `fin.insuranceMonths` says it applies.
  */
-export function amortization(F: CaRules, o: AmortizationInput) {
+export function amortization(F: CountryRules, o: AmortizationInput) {
+  if (F.country === "us") return amortizationToMaturity(F, o);
   const fin = financing(F, o);
   const term = Math.max(1, o.termYears);
   const startRate = o.contractRate / 100;
@@ -1032,6 +1042,66 @@ export function amortization(F: CaRules, o: AmortizationInput) {
     /** What renewal adds to the monthly payment. Zero when no renewal rate was given. */
     shock: afterRenewal - firstPayment,
     term,
+    payoffYear: rows.length,
+  };
+}
+
+/**
+ * The US (toMaturity) amortization path — a 30-year fixed compounds MONTHLY (`payFactorMonthly`,
+ * not the Canadian `payFactor`) at ONE rate for the whole life of the loan. `termYears` and
+ * `renewalRate` are ignored entirely: there is no term to renew. `paymentAfterRenewal` equals
+ * `firstPayment` and `shock` is always zero — the same values the Canadian branch already
+ * returns when no renewal is modelled, so a caller reading either field sees the honest "no
+ * shock" answer rather than a second sentinel.
+ *
+ * PMI is charged into each row while `fin.insuranceMonths` says it still applies, and reflected
+ * in `totalPaid` (`fin.monthlyInsurance` is NOT part of the mortgage payment `pay` itself — it
+ * is billed alongside it, not amortized).
+ */
+function amortizationToMaturity(F: UsRules, o: AmortizationInput) {
+  const fin = financing(F, o);
+  const rate = o.contractRate / 100;
+  const i = rate / 12;
+  const pay = fin.loan * payFactorMonthly(rate, o.amortYears);
+  const firstPayment = pay;
+
+  let bal = fin.loan;
+  const rows: AmortizationRow[] = [];
+  let totalInterest = 0;
+  let totalPaid = 0;
+
+  for (let t = 1; t <= o.amortYears && bal > 0.005; t++) {
+    const opening = bal;
+    let interest = 0;
+    let principal = 0;
+    let insurance = 0;
+    for (let m = 0; m < 12 && bal > 0.005; m++) {
+      const monthIndex = (t - 1) * 12 + m + 1;
+      const int = bal * i;
+      const prin = Math.min(pay - int, bal);
+      bal -= prin;
+      interest += int;
+      principal += prin;
+      if (fin.insuranceMonths !== null && monthIndex <= fin.insuranceMonths) {
+        insurance += fin.monthlyInsurance;
+      }
+    }
+    if (bal < 0.005) bal = 0;
+    totalInterest += interest;
+    totalPaid += interest + principal + insurance;
+    rows.push({ t, opening, interest, principal, closing: bal, payment: pay, rate: rate * 100, renewed: false, insurance });
+  }
+
+  return {
+    fin,
+    rows,
+    totalInterest,
+    totalPaid,
+    firstPayment,
+    peakPayment: firstPayment,
+    paymentAfterRenewal: firstPayment,
+    shock: 0,
+    term: o.amortYears,
     payoffYear: rows.length,
   };
 }
