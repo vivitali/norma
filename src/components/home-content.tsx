@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { NAV, builtEntries, type NavEntry } from "@/lib/routes";
+import { useCountry } from "@/hooks/use-country";
+import type { Country } from "@/i18n/countries";
 
 /**
  * The six questions the home page answers, in the order a visitor asks them.
@@ -42,12 +44,17 @@ export const HOME_FAQ_KEYS = [
  * a menu. A directory is not a menu: two cards pointing at one page reads as a bug, and two
  * identical anchors to one URL is a worse internal-linking signal than one. So the route registry
  * stays the single source of truth and this collapses the repeat, first appearance winning.
+ *
+ * Also filtered by `entry.countries`: RRSP-HBP has no US analogue (US-market spec, "absent
+ * from the US navigation"), so a US reader would otherwise be offered a card whose page
+ * 404s the moment they follow it.
  */
-function toolGroups() {
+function toolGroups(country: Country) {
   const seen = new Set<string>();
   return NAV.map((group) => ({
     heading: group.heading,
     entries: builtEntries(group).filter((entry) => {
+      if (!entry.countries.includes(country)) return false;
       if (seen.has(entry.route)) return false;
       seen.add(entry.route);
       return true;
@@ -103,6 +110,7 @@ function Section({
 export function HomeContent() {
   const t = useTranslations("Home");
   const tNav = useTranslations("Nav");
+  const country = useCountry();
 
   const sourcesLink = (chunks: ReactNode) => (
     <Link href="/sources" className="text-ac underline underline-offset-2">
@@ -180,7 +188,7 @@ export function HomeContent() {
 
       <Section id="tools" heading={t("toolsHeading")} intro={t("toolsIntro")}>
         <div className="mt-8 flex flex-col gap-9">
-          {toolGroups().map((group) => (
+          {toolGroups(country).map((group) => (
             <section key={group.heading} aria-labelledby={`tools-${group.heading}`}>
               <h3 id={`tools-${group.heading}`} className="eyebrow text-ink3">
                 {tNav(group.heading)}

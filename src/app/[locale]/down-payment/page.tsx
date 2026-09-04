@@ -432,9 +432,14 @@ export default function DownPaymentPage() {
                   TRACE. The waterfall draws on the Home Buyers' Plan and states the
                   15-year obligation in one clause; the mechanism — the refund, the
                   90-day rule, what a missed year costs — is that page's whole
-                  subject.
+                  subject. RRSP-HBP has no US analogue (US-market spec, "absent from
+                  the US navigation") and `visibleRows` already drops the hbp row
+                  itself for a US reader — this link would otherwise point at a
+                  route that 404s for them.
                 */}
-                <CrossLink namespace="DownPayment" id="xRrspHbp" href="/rrsp-hbp" />
+                {rules.country === "ca" ? (
+                  <CrossLink namespace="DownPayment" id="xRrspHbp" href="/rrsp-hbp" />
+                ) : null}
                 <PanelRow label={t("totalDrawn")} value={fmt(flow.drawnTotal)} strong />
                 {flow.shortfall > 0.5 ? (
                   <PanelRow label={t("shortfallLabel")} value={fmt(flow.shortfall)} strong />

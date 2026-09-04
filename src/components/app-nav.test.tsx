@@ -68,6 +68,26 @@ describe("AppNav", () => {
     }
   });
 
+  it("hides RRSP-HBP for a country with no page for it", async () => {
+    // Built and every other route lists both countries — RRSP-HBP is the one entry
+    // ROUTE_COUNTRIES restricts to Canada (US-market spec, "absent from the US
+    // navigation"). A US reader offered this link would follow it to a 404.
+    mockPathname = "/us/en";
+    renderWithIntl(<AppNav />, { locale: "en-US" });
+    await openMenu();
+    expect(screen.queryAllByRole("link", { name: label("rrspHbp") })).toHaveLength(0);
+    // Nothing else lost: every other built entry still renders.
+    for (const group of NAV) {
+      for (const entry of group.entries) {
+        if (entry.route === "/rrsp-hbp") continue;
+        expect(
+          screen.queryAllByRole("link", { name: label(entry.label) }).length,
+          entry.route,
+        ).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it("points the link at the localized slug", async () => {
     mockPathname = "/ca/fr";
     renderWithIntl(<AppNav />, { locale: "fr-CA" });

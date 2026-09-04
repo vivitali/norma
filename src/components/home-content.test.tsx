@@ -83,6 +83,19 @@ describe("internal linking", () => {
     ).toHaveLength(1);
   });
 
+  it("omits RRSP-HBP from the tool directory for a country with no page for it", () => {
+    // RRSP-HBP is the one route ROUTE_COUNTRIES restricts to Canada (US-market spec,
+    // "absent from the US navigation"). A US card pointing at it would 404.
+    renderWithIntl(<HomeContent />, { locale: "en-US" });
+    const tools = screen.getByRole("region", { name: "What each tool answers" });
+    expect(tools.querySelector('a[href="/rrsp-hbp"]')).toBeNull();
+    // Every other built route is unaffected.
+    for (const route of BUILT_ROUTES) {
+      if (route === "/rrsp-hbp") continue;
+      expect(tools.querySelector(`a[href="${route}"]`), route).not.toBeNull();
+    }
+  });
+
   it("writes no route string of its own", async () => {
     // Routes come from src/lib/routes.ts. A literal here is how a slug rename silently 404s.
     const source = await import("node:fs").then((fs) =>
