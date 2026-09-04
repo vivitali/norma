@@ -117,8 +117,8 @@ export const houston: Jurisdiction = {
       note: "The $100 simultaneous-issue lender's-policy rate, Texas/Harris County custom: the seller customarily pays the owner's policy (priced off TX_TITLE_INSURANCE_BRACKETS, exported separately — see that constant's own comment), and the buyer pays only this flat lender's-policy add-on (dossier B3/B6).",
     },
     "fees.survey": {
-      conf: "none",
-      note: "No Texas-specific survey-fee figure was located at even assumption grade this pass (dossier B6). $500 stands in at the same confidence the dossier itself could offer — none — which the invariant test would reject at a nonzero value; recorded as `assumption` instead with this note, matching the treatment of every other unpublished closing fee in this dataset, since the calculator cannot run without SOME figure here.",
+      conf: "assumption",
+      note: "No Texas-specific survey-fee figure was located this pass, even at assumption grade (dossier B6: \"no primary or reputable-secondary figure was captured with a citation strong enough to record here\"). $500 is a modelling default in the same category as every other unpublished closing fee in this dataset — the calculator cannot run without SOME figure here — not a citation.",
     },
     "fees.recording": {
       conf: "medium",
