@@ -8,6 +8,7 @@ import type {
   Residency,
   UsRules,
 } from "./types";
+import { regionOf } from "./types";
 
 export interface BracketPart {
   from: number;
@@ -1535,6 +1536,13 @@ export interface RentVsBuyInput extends ClosingInput {
    */
   investDiff: boolean;
   years: number;
+  /**
+   * US only: taxable income, filing single (the assumption per the design spec), for the
+   * itemised-vs-standard deduction benefit's marginal rate. Optional and defaults to $0 (the
+   * lowest bracket) — no page wires a real income input to Rent vs Buy today; ignored entirely
+   * on the Canadian branch.
+   */
+  taxableIncome?: number;
 }
 
 export interface RentVsBuyRow {
@@ -1581,6 +1589,17 @@ export interface RentVsBuyRow {
   rentW: number;
   /** buyW − rentW. Positive means buying is ahead by this year. */
   adv: number;
+  /**
+   * US only: this year's itemised-deduction benefit over the standard deduction — mortgage
+   * interest (capped at the acquisition-debt cap's SHARE of the loan) plus property tax
+   * (capped at the SALT cap), less the standard deduction, times the marginal rate; zero when
+   * the standard deduction would have been larger. Invested alongside everything else rather
+   * than subtracted from `ownerOutlay` directly — see `rentVsBuyToMaturity`'s own comment.
+   */
+  deductionBenefit?: number;
+  /** US only: whether itemising beat the standard deduction THIS year — most buyers, per the
+   * design spec's own framing, get nothing from the deduction. */
+  itemizedBeatsStandard?: boolean;
 }
 
 /**
@@ -1594,8 +1613,14 @@ export interface RentVsBuyRow {
  *
  * Equity is net of selling cost, because wealth you cannot realise without
  * paying an agent is not wealth you have.
+ *
+ * `F.country === "us"` branches to `rentVsBuyToMaturity()` below — a separate function rather
+ * than more `if`s threaded through this one, because the US path changes FOUR things at once
+ * (compounding, no renewal, PMI, and the tax treatment of both the sale gain and the invested
+ * difference) and interleaving them here would make neither branch legible.
  */
-export function rentVsBuy(j: Jurisdiction, F: CaRules, o: RentVsBuyInput) {
+export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
+  if (F.country === "us") return rentVsBuyToMaturity(j, F, o);
   const years = Math.max(1, o.years);
   const fin = financing(F, o);
   const cc = closingTotal(j, F, o);
@@ -1750,6 +1775,155 @@ export function rentVsBuy(j: Jurisdiction, F: CaRules, o: RentVsBuyInput) {
     renewedAt,
     rows,
     /** First year buying is ahead. null means never, inside the horizon modelled. */
+    breakEven: rows.find((r) => r.adv > 0)?.t ?? null,
+    payoffYear,
+    years,
+  };
+}
+
+/**
+ * The US (toMaturity) Rent vs Buy path.
+ *
+ * Four things differ from the Canadian function above, all per the design spec:
+ *
+ * 1. **Compounding and renewal.** Monthly compounding (`payFactorMonthly`) at ONE contract
+ *    rate for the whole horizon — no term, no renewal, ever. `o.termYears`/`o.renewalRate` are
+ *    ignored entirely, the same choice `amortizationToMaturity()` makes.
+ * 2. **PMI** is added to `ownerOutlay` for as long as `fin.insuranceMonths` says it applies —
+ *    a real recurring cost a Canadian CMHC premium (financed once, up front) never is.
+ * 3. **The itemised-vs-standard tax benefit.** Per the spec's own formula:
+ *    `max(0, min(interest, interest * min(1, midCap/loan)) + min(propertyTax, saltCap) -
+ *    standardDeduction.single) * marginalRate`. `min(interest, interest * min(1, midCap/loan))`
+ *    collapses to `interest * min(1, midCap/loan)` (interest is never negative), reproduced
+ *    literally rather than simplified so the formula stays checkable against the spec text.
+ *    **Filing single is the assumption**, per the spec — `RentVsBuyInput.taxableIncome` is
+ *    optional and defaults to $0 (the lowest bracket) when the caller does not supply it; this
+ *    is a real gap the UI half must close by wiring an actual income input onto the page,
+ *    flagged in the PR report rather than guessed at here. The benefit is invested into its
+ *    own growing portfolio (`tbp`, mirroring `rp`/`bp`) rather than subtracted from
+ *    `ownerOutlay` directly, because it is realised at tax-filing time, not at the moment the
+ *    cost is incurred — the same reasoning `taxTimeCredits` already applies on the Canadian
+ *    side, generalised to a benefit that recurs every year instead of arriving once.
+ * 4. **Capital gains at "sale."** The owner's home-sale gain is excluded up to §121
+ *    (`sec121.single`); the excess is taxed at the flat rate `F.gains.rate` (the US branch's
+ *    `gains.kind` is always `"flat"`). The renter's and buyer's invested-difference portfolios
+ *    (`rp`, `bp`, `tbp` — all just money in the market, regardless of which side funded them)
+ *    face the SAME flat rate on their accumulated gain when "sold" for the wealth comparison —
+ *    tracked via a running CONTRIBUTED total per portfolio (`afterGainsTax()` below), a FIFO-
+ *    blind approximation rather than a lot-by-lot cost-basis simulation, disclosed here as a
+ *    simplification rather than left silent.
+ */
+function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
+  const years = Math.max(1, o.years);
+  const fin = financing(F, o);
+  const cc = closingTotal(j, F, o);
+  const upFront = cc.net;
+  const rate0 = o.contractRate ?? defaultContractRate(F, o.dpPct) / 100;
+  const g = o.appreciationOn ? o.appreciation : 0;
+  const ret = o.investReturn;
+  const region = regionOf(j);
+  const marginalIncome = o.taxableIncome ?? 0;
+  const marginal = marginalRate(F, region, marginalIncome);
+  const loanShare = fin.loan > 0 ? Math.min(1, F.tax.midCap / fin.loan) : 1;
+
+  const flatGainsRate = F.gains.kind === "flat" ? F.gains.rate : 0;
+  /** Value minus tax on its accumulated gain over `contributed`, at the flat LTCG rate — see
+   * this function's own doc comment, point 4, for the FIFO-blind simplification. */
+  const afterGainsTax = (value: number, contributed: number) =>
+    value - Math.max(0, value - contributed) * flatGainsRate;
+
+  const i = rate0 / 12;
+  const pay = fin.loan * payFactorMonthly(rate0, o.amortYears);
+
+  let bal = fin.loan;
+  let rp = 0;
+  let rpContrib = 0;
+  let bp = 0;
+  let bpContrib = 0;
+  let tbp = 0;
+  let tbpContrib = 0;
+  let payoffYear: number | null = null;
+  const rows: RentVsBuyRow[] = [];
+
+  for (let t = 1; t <= years; t++) {
+    const opening = bal;
+    let interest = 0;
+    let paid = 0;
+    let insuranceThisYear = 0;
+    for (let m = 0; m < 12 && bal > 0.005; m++) {
+      const monthIndex = (t - 1) * 12 + m + 1;
+      const int = bal * i;
+      const prin = Math.min(pay - int, bal);
+      bal -= prin;
+      interest += int;
+      paid += int + prin;
+      if (fin.insuranceMonths !== null && monthIndex <= fin.insuranceMonths) {
+        insuranceThisYear += fin.monthlyInsurance;
+      }
+    }
+    if (bal < 0.005) {
+      bal = 0;
+      payoffYear ??= t;
+    }
+    const infl = Math.pow(1 + F.nonShelterInflation, t - 1);
+    const price = o.price * Math.pow(1 + g, t - 1);
+    const propTax = propertyTaxAnnual(j, price);
+    const insurance = o.insuranceAnnual * infl;
+    const services = o.utilities * 12 * infl;
+    const strata = o.condoFee * 12 * infl;
+    const utilities = services + strata;
+    const maintenance = o.price * F.maintenanceReserve * infl;
+    const pmi = insuranceThisYear;
+    const ownerOutlay = paid + propTax + insurance + pmi + utilities + maintenance;
+    const renterOutlay = o.rent * 12 * Math.pow(1 + o.rentInflation, t - 1) + services;
+    const diff = ownerOutlay - renterOutlay;
+
+    if (o.investDiff) {
+      const rpDraw = Math.max(0, diff);
+      const bpDraw = Math.max(0, -diff);
+      rp = rp * (1 + ret) + rpDraw;
+      rpContrib += rpDraw;
+      bp = bp * (1 + ret) + bpDraw;
+      bpContrib += bpDraw;
+    }
+
+    const itemizedInterest = interest * loanShare;
+    const itemizedTax = Math.min(propTax, F.tax.saltCap);
+    const itemized = itemizedInterest + itemizedTax;
+    const itemizedBeatsStandard = itemized > F.tax.standardDeduction.single;
+    const deductionBenefit = Math.max(0, itemized - F.tax.standardDeduction.single) * marginal;
+    tbp = tbp * (1 + ret) + deductionBenefit;
+    tbpContrib += deductionBenefit;
+
+    const homeValue = o.price * Math.pow(1 + g, t);
+    const sellingCost = homeValue * F.sellingCost;
+    const homeGain = Math.max(0, homeValue - o.price);
+    const taxableHomeGain = Math.max(0, homeGain - F.sec121.single);
+    const homeGainTax = taxableHomeGain * flatGainsRate;
+    const equity = homeValue - sellingCost - bal - homeGainTax;
+
+    const buyW = equity + afterGainsTax(tbp, tbpContrib) + (o.investDiff ? afterGainsTax(bp, bpContrib) : 0);
+    const rentW = afterGainsTax(upFront * Math.pow(1 + ret, t), upFront) + (o.investDiff ? afterGainsTax(rp, rpContrib) : 0);
+
+    rows.push({
+      t, opening, interest, paid, balance: bal, propTax, insurance, utilities, maintenance,
+      services, strata, rate: rate0, taxTimeCredits: deductionBenefit,
+      ownerOutlay, renterOutlay, diff,
+      rp: o.investDiff ? rp : 0,
+      bp: o.investDiff ? bp : 0,
+      homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
+      deductionBenefit, itemizedBeatsStandard,
+    });
+  }
+
+  return {
+    fin, cc, upFront,
+    pay,
+    rate: rate0 * 100,
+    /** Always null — a toMaturity mortgage never renews. */
+    renewalRate: null,
+    renewedAt: null,
+    rows,
     breakEven: rows.find((r) => r.adv > 0)?.t ?? null,
     payoffYear,
     years,
