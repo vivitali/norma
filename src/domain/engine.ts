@@ -1186,8 +1186,13 @@ export interface WaterfallRow {
    * `CreditLine.st === "ftbOnly"` rather than inventing a second convention: dropping the
    * row would tell a reader who has $40,000 in an FHSA that the app simply forgot it, where
    * showing it blocked tells them the rule that stops them using it here.
+   *
+   * `"noProgram"` is the US case: FHSA, HBP and TFSA are Canadian registered-account
+   * programmes with no US analogue at all (not merely gated by first-time-buyer status), so
+   * a US call ignores whatever the caller passed for those three inputs and reports why —
+   * the same "keep the row, explain the zero" treatment as `"ftb"`, for a different reason.
    */
-  blocked?: "ftb";
+  blocked?: "ftb" | "noProgram";
 }
 
 export interface WaterfallInput {
@@ -1233,23 +1238,31 @@ export interface WaterfallInput {
  *
  * Tax on a partial non-registered draw is pro-rated by the fraction of the
  * account sold — selling a third of the account realises a third of the gain.
+ *
+ * US sources are `cash`, `gift` and `nonreg` only — no FHSA, HBP or TFSA analogue exists.
+ * `fhsa`/`hbp`/`tfsa` on `WaterfallInput` are IGNORED on that branch, whatever the caller
+ * passed: each row's `avail` is forced to zero and `blocked: "noProgram"` names why, rather
+ * than silently drawing on a Canadian registered-account balance a US reader would not have
+ * anyway. The IRA first-time-buyer $10,000 penalty exception (dossier A15) is NOT modelled —
+ * flagged here as a follow-up rather than added ahead of a page that would surface it.
  */
-export function waterfall(F: CaRules, o: WaterfallInput) {
+export function waterfall(F: CountryRules, o: WaterfallInput) {
   const rate = marginalRate(F, o.prov, o.income);
-  const hbpRoom = Math.min(Math.max(0, o.rrsp), F.hbp.max);
+  const hbpRoom = F.country === "ca" ? Math.min(Math.max(0, o.rrsp), F.hbp.max) : 0;
   const ftbOnly = o.ftb ? undefined : ("ftb" as const);
+  const noProgram = F.country === "us" ? ("noProgram" as const) : undefined;
   const defs: {
     key: SourceKey;
     avail: number;
     cost: SourceCost;
     gain?: number;
-    blocked?: "ftb";
+    blocked?: "ftb" | "noProgram";
   }[] = [
-    { key: "fhsa", avail: o.ftb ? Math.max(0, o.fhsa) : 0, cost: "free", blocked: ftbOnly },
+    { key: "fhsa", avail: noProgram ? 0 : o.ftb ? Math.max(0, o.fhsa) : 0, cost: "free", blocked: noProgram ?? ftbOnly },
     { key: "cash", avail: Math.max(0, o.cash), cost: "free" },
     { key: "gift", avail: Math.max(0, o.gift), cost: "free" },
-    { key: "hbp", avail: o.ftb ? hbpRoom : 0, cost: "strings", blocked: ftbOnly },
-    { key: "tfsa", avail: Math.max(0, o.tfsa), cost: "strings" },
+    { key: "hbp", avail: noProgram ? 0 : o.ftb ? hbpRoom : 0, cost: "strings", blocked: noProgram ?? ftbOnly },
+    { key: "tfsa", avail: noProgram ? 0 : Math.max(0, o.tfsa), cost: "strings", blocked: noProgram },
     { key: "nonreg", avail: Math.max(0, o.nonreg), cost: "tax", gain: Math.max(0, o.nonregGain) },
   ];
 
@@ -1267,9 +1280,12 @@ export function waterfall(F: CaRules, o: WaterfallInput) {
     let repayAnnual = 0;
     if (d.cost === "tax" && d.avail > 0 && drawn > 0) {
       gainRealised = (d.gain ?? 0) * (drawn / d.avail);
-      tax = gainRealised * F.capGainsInclusion * rate;
+      // Canada includes a FRACTION of the gain in ordinary income, taxed at the marginal rate
+      // (`kind: "inclusion"`); the US taxes a realised long-term gain at its OWN flat rate,
+      // unrelated to ordinary-income brackets (`kind: "flat"`) — see CountryRulesBase.gains.
+      tax = F.gains.kind === "inclusion" ? gainRealised * F.gains.rate * rate : gainRealised * F.gains.rate;
     }
-    if (d.key === "hbp" && drawn > 0) repayAnnual = drawn / F.hbp.repayYears;
+    if (d.key === "hbp" && drawn > 0 && F.country === "ca") repayAnnual = drawn / F.hbp.repayYears;
     taxTotal += tax;
     rows.push({
       key: d.key,
