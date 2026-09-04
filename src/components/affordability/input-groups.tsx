@@ -67,13 +67,20 @@ export function InputGroups({
    * Read off the RESOLVED down payment, not the requested one: `resolveInputs` has
    * already raised a request below the legal floor, and eligibility is a fact about
    * the loan the app is modelling rather than about the button the reader pressed.
+   *
+   * `maxAmortYears` is CA-only — see `purchase-inputs.tsx`'s identical branch and its
+   * doc comment. A US mortgage is a single 30-year fixed product with no first-time-
+   * buyer amortization extension to be eligible for.
    */
-  const maxAmort = maxAmortYears(rules, {
-    dpPct: resolved.dpPct,
-    price: resolved.price,
-    ftb: resolved.ftb,
-    ptype: resolved.ptype,
-  });
+  const maxAmort =
+    rules.country === "ca"
+      ? maxAmortYears(rules, {
+          dpPct: resolved.dpPct,
+          price: resolved.price,
+          ftb: resolved.ftb,
+          ptype: resolved.ptype,
+        })
+      : rules.maxAmortOther;
 
   /**
    * v2 has one disclosure gesture and it belongs to the sections above, so the
@@ -299,7 +306,7 @@ export function InputGroups({
               disabled: v > maxAmort,
             }))}
           />
-          {maxAmort < rules.maxAmortFtbInsured ? (
+          {rules.country === "ca" && maxAmort < rules.maxAmortFtbInsured ? (
             <NoteLine tone="caution">
               {tInputs("amortCapped", {
                 n: rules.maxAmortFtbInsured,
