@@ -489,6 +489,16 @@ export interface CountryRulesBase {
    */
   marginal: Record<string, MarginalTable>;
   /**
+   * The key into `marginal` a region with no table of its own falls back to —
+   * `marginalRate()`/`taxOnBand()` read `marginal[region] ?? marginal[marginalFallbackKey]`.
+   * `"CA"` for Canada (a combined-rate placeholder table, `conf: "assumption"`); `"US"` for the
+   * US, whose fallback IS the real federal-only table (not a placeholder) — a second state with
+   * no income tax of its own degrades correctly to federal-only, and one WITH its own tax adds
+   * its own key without touching this one. A per-country field rather than a hardcoded `"CA"`
+   * literal in the engine, because `UsRules` has no `marginal.CA` entry to fall back to.
+   */
+  marginalFallbackKey: string;
+  /**
    * OSFI's B-20 minimum qualifying rate, Canada only. `null` for the US: there is no federal
    * stress test on a US mortgage, so `null` is not a missing value, it is the fact that no
    * buffer applies. Every reader must handle both — `affordability()` and `scenario()` qualify

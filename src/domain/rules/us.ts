@@ -1,4 +1,4 @@
-import type { UsRules } from "../types";
+import type { MarginalTable, UsRules } from "../types";
 
 /**
  * The United States' country rules — `docs/superpowers/specs/2026-08-29-us-market-design.md`,
@@ -27,6 +27,25 @@ const PMMS = "Freddie Mac, Primary Mortgage Market Survey (PMMS), week of 2026-0
 const FHFA_HPI = "FHFA House Price Index Quarterly Report, 2026Q2 & June 2026 (2026-08-25)";
 const BLS_CPI = "BLS, Consumer Price Index Summary, release 2026-08-12 (data through July 2026)";
 const OBBBA_70108 = "One Big Beautiful Bill Act §70108 (Public Law 119-21), restoring the PMI/MIP deduction for TY2026";
+
+/**
+ * 2026 FEDERAL single-filer brackets (dossier A2, corrected: MFJ's 22% threshold is $100,800,
+ * not the $105,700 the raw extraction mis-transcribed — see the dossier's own correction note).
+ * Shared by `marginal.TX` (Texas has no state income tax, dossier B1, so this table IS the
+ * complete Texas schedule) and `marginal.US` (the fallback every region-less state degrades to
+ * — see `CountryRulesBase.marginalFallbackKey`'s own comment). The two keys hold the SAME data
+ * today because Texas adds nothing to it; a state with its own income tax gets its own key with
+ * its own table, leaving this one as the pure-federal fallback it is named for.
+ */
+const US_FEDERAL_SINGLE_2026: MarginalTable = [
+  [12400, 0.1],
+  [50400, 0.12],
+  [105700, 0.22],
+  [201775, 0.24],
+  [256225, 0.32],
+  [640600, 0.35],
+  [null, 0.37],
+];
 
 const PMI_RATE_NOTE =
   "Nobody publishes one true \"typical\" PMI rate: private mortgage insurers (MGIC, Radian, Arch, Essent, National MI) each run their own risk-based pricing grid by credit score and LTV, and the widely-cited range is roughly 0.3%-1.5%/year of the loan balance (dossier A10). 0.75% is the midpoint of that range, disclosed as a modelling default rather than a citation — the same category as the Canadian file's $150 heat allowance or $500 inspection fee.";
@@ -94,28 +113,22 @@ export const us: UsRules = {
   savingsReturn: 0.035,
   condoFeeInclusion: 1,
   marginal: {
-    // 2026 FEDERAL single-filer brackets only (dossier A2, corrected: MFJ's 22% threshold is
-    // $100,800, not the $105,700 the raw extraction mis-transcribed — see the dossier's own
-    // correction note). Texas has no state income tax (dossier B1), so this table is the
-    // COMPLETE marginal schedule, not a federal-only stand-in for a missing state table. Every
-    // US jurisdiction's `regionOf(j)` resolves to its state code, so a second state with its
-    // own income tax adds its own key here rather than widening this one.
+    // Texas has no state income tax (dossier B1), so its table IS the federal one — every US
+    // jurisdiction's `regionOf(j)` resolves to its state code, and a second state with its own
+    // income tax adds its own key here rather than widening this one.
     //
     // MFJ figures are NOT modelled: rentVsBuy()'s deduction-benefit line and waterfall()'s
     // capital-gains marginal-rate lookup both assume a single filer, per the design spec ("filing
     // single is the assumption; note it"). The MFJ table is documented in the research dossier
     // (A2) for whoever adds a joint-filing mode later, rather than carried here unread — the
     // same choice this file makes for the FHA programme data above.
-    TX: [
-      [12400, 0.1],
-      [50400, 0.12],
-      [105700, 0.22],
-      [201775, 0.24],
-      [256225, 0.32],
-      [640600, 0.35],
-      [null, 0.37],
-    ],
+    TX: US_FEDERAL_SINGLE_2026,
+    // The fallback every region-less US state degrades to (marginalFallbackKey below) — see
+    // US_FEDERAL_SINGLE_2026's own comment for why this is the real federal table, not a
+    // placeholder.
+    US: US_FEDERAL_SINGLE_2026,
   },
+  marginalFallbackKey: "US",
   // No B-20-style stress test exists in the US. `null`, not a Canadian-shaped floor/buffer
   // pair with a zero buffer — see CountryRulesBase.stressTest's own doc comment for why every
   // reader must branch on this rather than treat zero as "no effect".

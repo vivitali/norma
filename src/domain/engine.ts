@@ -1115,7 +1115,7 @@ export type AmortizationResult = ReturnType<typeof amortization>;
 
 /** Combined federal + provincial marginal rate on the next dollar of taxable income. */
 export function marginalRate(F: CountryRulesBase, prov: string, income: number): number {
-  const tbl = F.marginal[prov] ?? F.marginal.CA;
+  const tbl = F.marginal[prov] ?? F.marginal[F.marginalFallbackKey];
   for (const [cap, rate] of tbl) if (cap === null || income <= cap) return rate;
   return tbl[tbl.length - 1][1];
 }
@@ -1141,7 +1141,7 @@ export function taxOnBand(F: CountryRulesBase, prov: string, from: number, to: n
   const lo = Math.max(0, Math.min(from, to));
   const hi = Math.max(0, Math.max(from, to));
   if (hi <= lo) return 0;
-  const tbl = F.marginal[prov] ?? F.marginal.CA;
+  const tbl = F.marginal[prov] ?? F.marginal[F.marginalFallbackKey];
   let prev = 0;
   let tax = 0;
   for (const [cap, rate] of tbl) {

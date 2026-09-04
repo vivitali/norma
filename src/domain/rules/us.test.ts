@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { ca } from "./ca";
 import { us } from "./us";
 import { getJurisdiction } from "../jurisdictions";
 import {
   affordability,
   amortization,
   financing,
+  marginalRate,
   rentVsBuy,
+  taxOnBand,
 } from "../engine";
 
 const houston = getJurisdiction("houston")!;
@@ -61,6 +64,35 @@ describe("us rules data", () => {
     expect(caps[caps.length - 1]).toBeNull();
     const closed = caps.filter((c): c is number => c !== null);
     for (let i = 1; i < closed.length; i++) expect(closed[i]).toBeGreaterThan(closed[i - 1]);
+  });
+
+  it("names its own fallback key, and that key resolves to a real table", () => {
+    expect(us.marginalFallbackKey).toBe("US");
+    expect(us.marginal[us.marginalFallbackKey]).toBeDefined();
+    expect(us.marginal[us.marginalFallbackKey]).toEqual(us.marginal.TX);
+  });
+});
+
+/**
+ * `marginal[region] ?? marginal[marginalFallbackKey]` — a second state with no income-tax
+ * table of its own must degrade to the US's real federal-only table, not throw on a bare
+ * `.CA` lookup that only exists on `CaRules` (the bug this pair of tests guards). Exercised
+ * through the public `marginalRate()`/`taxOnBand()` seam, not by reaching into the rules
+ * object directly, since that seam is what every engine caller actually goes through.
+ */
+describe("marginalFallbackKey — an unknown region degrades to the country's own fallback", () => {
+  it("us: an unmodelled state resolves to the same rate the federal (US) table gives", () => {
+    const known = marginalRate(us, "TX", 90000);
+    const unknown = marginalRate(us, "FL", 90000);
+    expect(unknown).toBe(known);
+    expect(taxOnBand(us, "FL", 0, 90000)).toBeCloseTo(taxOnBand(us, "TX", 0, 90000), 6);
+  });
+
+  it("ca: an unmodelled province still resolves via marginal.CA, unchanged by the US addition", () => {
+    const known = marginalRate(ca, "ON", 90000);
+    const unknown = marginalRate(ca, "NB", 90000);
+    expect(unknown).toBe(marginalRate(ca, "CA", 90000));
+    expect(unknown).not.toBe(known);
   });
 });
 
