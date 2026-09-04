@@ -3,6 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { closingTotal, glidePath, minDown, waterfall, type SourceKey } from "@/domain/engine";
+import { regionOf } from "@/domain/types";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useRules } from "@/hooks/use-country";
@@ -76,7 +77,7 @@ export default function DownPaymentPage() {
     () =>
       waterfall(rules, {
         need,
-        prov: jurisdiction.prov,
+        prov: regionOf(jurisdiction),
         // Required, not defaulted: the FHSA and the Home Buyers' Plan are
         // first-time-buyer programmes in law, and the engine now blocks both rather
         // than spending money the reader cannot legally use.
@@ -90,7 +91,7 @@ export default function DownPaymentPage() {
         nonreg: resolved.nonreg,
         nonregGain: resolved.nonregGain,
       }),
-    [rules, need, jurisdiction.prov, resolved],
+    [rules, need, jurisdiction, resolved],
   );
 
   const glide = useMemo(
