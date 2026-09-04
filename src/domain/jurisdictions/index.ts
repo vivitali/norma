@@ -13,10 +13,12 @@ import { pe } from "./pe";
 import { yt } from "./yt";
 import { nt } from "./nt";
 import { nu } from "./nu";
+import { houston } from "./houston";
 
 export const jurisdictions: readonly Jurisdiction[] = [
   toronto, ottawa, vancouver, halifax, winnipeg, montreal, calgary, saskatoon,
   nb, nl, pe, yt, nt, nu,
+  houston,
 ];
 
 export function getJurisdiction(id: string): Jurisdiction | undefined {
@@ -37,6 +39,7 @@ export function jurisdictionsOf(country: Country): Jurisdiction[] {
  */
 const DEFAULT_JURISDICTION_ID: Record<Country, string> = {
   ca: "winnipeg",
+  us: "houston",
 };
 
 /**
