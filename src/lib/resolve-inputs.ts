@@ -1,4 +1,4 @@
-import type { CaRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
+import type { CountryRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
 import { defaultContractRate, minDown, rentComparable } from "@/domain/engine";
 import type { ToolFormState } from "./shared-inputs";
 
@@ -178,7 +178,7 @@ export interface ResolvedInputs {
 export function resolveInputs(
   stored: ToolFormState,
   j: Jurisdiction,
-  F: CaRules,
+  F: CountryRules,
 ): ResolvedInputs {
   const income1 = stored.income1 ?? DEFAULT_INCOME_1;
   const income2 = stored.income2 ?? 0;
@@ -282,9 +282,14 @@ export function resolveInputs(
     taxIncome: stored.taxIncome ?? income1 + income2 + otherIncome,
 
     // Contributing the federal maximum is the only non-arbitrary starting point:
-    // any smaller figure would be a recommendation about how much to put in.
-    hbpContribution: stored.hbpContribution ?? F.hbp.max,
-    hbpWithdraw: stored.hbpWithdraw ?? stored.hbpContribution ?? F.hbp.max,
+    // any smaller figure would be a recommendation about how much to put in. The HBP
+    // has no US analogue — RRSP-HBP is a Canada-only route (US-market spec) — so a
+    // US call has no honest maximum to fall back to; these two fields simply go
+    // unread on that branch rather than crash resolving inputs for every OTHER page,
+    // every one of which calls this same function.
+    hbpContribution: stored.hbpContribution ?? (F.country === "ca" ? F.hbp.max : 0),
+    hbpWithdraw:
+      stored.hbpWithdraw ?? stored.hbpContribution ?? (F.country === "ca" ? F.hbp.max : 0),
 
     termYears: stored.termYears,
     renewalRate: stored.renewalRate,
