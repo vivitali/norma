@@ -156,6 +156,12 @@ export default function ClosingCostsPage() {
    * spent on inventory.
    */
   const groupLine = (group: readonly LineItem[]) => {
+    // Houston's `transfer: []` degrades `lines.gov` to an empty group with no crash and
+    // no phantom row (see the comment on `buildLines` in src/domain/engine.ts) — Texas
+    // levies no real estate transfer tax and no mortgage recording tax at all. `.reduce`
+    // with no initial value throws on an empty array, so the closed section's own line
+    // needs its own words for "there is nothing here", not a largest-of-zero.
+    if (group.length === 0) return t("groupLineNone");
     const largest = group.reduce((a, b) => (b.amount > a.amount ? b : a));
     return t("groupLine", { name: t(largest.key), a: fmt(largest.amount), n: group.length });
   };

@@ -97,7 +97,12 @@
     "theme": "Tema",
     "changeLanguage": "Cambiar idioma",
     "brand": "AffordMath",
-    "changeLocation": "Cambiar ubicación"
+    "changeLocation": "Cambiar ubicación",
+    "changeCountry": "Cambiar país"
+  },
+  "Countries": {
+    "ca": "Canadá",
+    "us": "Estados Unidos"
   },
   "Nav": {
     "menu": "Herramientas",
@@ -408,6 +413,7 @@
     "tagYours": "Sus cifras",
     "tagTypical": "Cifras típicas",
     "groupLine": "{name} {a} — la mayor de {n, plural, one {# línea} other {# líneas}}",
+    "groupLineNone": "Aquí no existe impuesto de transferencia",
     "xDownPayment": "<link>La página del pago inicial</link> ordena sus cuentas frente a esta cuenta, el dinero más barato primero.",
     "xDownPaymentAsk": "<link>La página del pago inicial</link> puede ordenar sus cuentas frente a esta cuenta, el dinero más barato primero, en cuanto diga qué hay en cada una.",
     "ex_pttFurther": "Columbia Británica aplica un 2 % adicional sobre el valor residencial de una propiedad por encima de $3 millones, además del impuesto general de transferencia de propiedad.",

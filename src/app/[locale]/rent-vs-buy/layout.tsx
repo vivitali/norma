@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { buildMetadata } from "@/lib/seo";
+import { assertRouteAvailable } from "@/lib/route-guard";
 
 /** Metadata only — page.tsx is a client component and cannot export generateMetadata. */
 export async function generateMetadata({
@@ -16,6 +17,17 @@ export async function generateMetadata({
   });
 }
 
-export default function RentVsBuyLayout({ children }: LayoutProps<"/[locale]/rent-vs-buy">) {
+/**
+ * `assertRouteAvailable` 404s this route for a locale whose country does not
+ * carry it — a no-op today (/rent-vs-buy lists every registered country), and the
+ * one-line guard every route's layout carries so a route later restricted to
+ * fewer countries (as `/rrsp-hbp` already is) gets it for free.
+ */
+export default async function RentVsBuyLayout({
+  children,
+  params,
+}: LayoutProps<"/[locale]/rent-vs-buy">) {
+  const { locale } = await params;
+  assertRouteAvailable(locale, "/rent-vs-buy");
   return children;
 }

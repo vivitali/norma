@@ -97,7 +97,12 @@
     "theme": "Thème",
     "changeLanguage": "Changer de langue",
     "brand": "AffordMath",
-    "changeLocation": "Changer de lieu"
+    "changeLocation": "Changer de lieu",
+    "changeCountry": "Changer de pays"
+  },
+  "Countries": {
+    "ca": "Canada",
+    "us": "États-Unis"
   },
   "Nav": {
     "menu": "Outils",
@@ -408,6 +413,7 @@
     "tagYours": "Vos chiffres",
     "tagTypical": "Chiffres typiques",
     "groupLine": "{name} {a} — le plus élevé de {n, plural, one {# ligne} other {# lignes}}",
+    "groupLineNone": "Aucune taxe de mutation ici",
     "xDownPayment": "<link>La page de la mise de fonds</link> classe vos comptes face à cette facture, l’argent le moins cher d’abord.",
     "xDownPaymentAsk": "<link>La page de la mise de fonds</link> peut classer vos comptes face à cette facture, l’argent le moins cher d’abord, dès que vous indiquez ce que contient chacun.",
     "ex_pttFurther": "La Colombie-Britannique perçoit 2 % supplémentaires sur la valeur résidentielle d'une propriété au-delà de 3 millions de dollars, en sus de la taxe générale sur les mutations immobilières.",

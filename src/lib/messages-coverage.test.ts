@@ -152,7 +152,14 @@ describe("message coverage", () => {
           !DYNAMIC_PREFIXES.some((prefix) => key.startsWith(prefix)) &&
           !(namespace === "Home" && derivedHomeKeys().includes(key)) &&
           !source.includes(`"${key}"`) &&
-          !source.includes(`'${key}'`),
+          !source.includes(`'${key}'`) &&
+          // Country-forked key, reached as `t(countryKey(base, rules.country))`
+          // (src/lib/country-key.ts) rather than a literal `t("${base}_us")` —
+          // `countryKey` builds "${base}_us" at RUNTIME, so the literal string
+          // this scan looks for never appears in source. Covered if the BASE key
+          // (the literal first argument countryKey is actually called with) has
+          // its own call site, which is what makes the fork reachable at all.
+          !(key.endsWith("_us") && (source.includes(`"${key.slice(0, -3)}"`) || source.includes(`'${key.slice(0, -3)}'`))),
       );
       const allowed = KNOWN_ORPHANS[namespace] ?? [];
       // Named, not counted. A count lets one orphan be deleted and another added

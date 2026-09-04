@@ -97,7 +97,12 @@
     "theme": "Theme",
     "changeLanguage": "Change language",
     "brand": "AffordMath",
-    "changeLocation": "Change location"
+    "changeLocation": "Change location",
+    "changeCountry": "Change country"
+  },
+  "Countries": {
+    "ca": "Canada",
+    "us": "United States"
   },
   "Nav": {
     "menu": "Tools",
@@ -408,6 +413,7 @@
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
     "groupLine": "{name} {a} — largest of {n, plural, one {# line} other {# lines}}",
+    "groupLineNone": "No transfer tax here",
     "xDownPayment": "<link>The down-payment page</link> orders your accounts against this bill, cheapest money first.",
     "xDownPaymentAsk": "<link>The down-payment page</link> can order your accounts against this bill, cheapest money first, once you say what is in each.",
     "ex_pttFurther": "British Columbia levies a further 2% on the residential value of a property above $3 million, on top of the general property transfer tax.",
