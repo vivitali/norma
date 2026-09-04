@@ -166,13 +166,22 @@ export function PurchaseInputs({
    * the payment above is built on; the control marks the option they cannot have and
    * the note says what it would take to get it — the same gesture, in the same words,
    * as the Affordability screen's own amortization control.
+   *
+   * `maxAmortYears` is CA-only: it reads the CMHC long-amortization surcharge
+   * eligibility rule, which has no US counterpart — a US mortgage is a single 30-year
+   * fixed product (`rules.maxAmortOther`) with no first-time-buyer amortization
+   * extension to be eligible for. Branched on `rules.country`, never on which page
+   * is rendering, so the same component answers correctly wherever it's mounted.
    */
-  const amortCap = maxAmortYears(rules, {
-    dpPct: dpPctEffective,
-    price: effectivePrice ?? 0,
-    ftb: ftbEffective,
-    ptype: ptypeEffective,
-  });
+  const amortCap =
+    rules.country === "ca"
+      ? maxAmortYears(rules, {
+          dpPct: dpPctEffective,
+          price: effectivePrice ?? 0,
+          ftb: ftbEffective,
+          ptype: ptypeEffective,
+        })
+      : rules.maxAmortOther;
 
   /**
    * Data-driven, not a province check: the control exists wherever a transfer
@@ -258,7 +267,9 @@ export function PurchaseInputs({
         out of the sentence; the condition is stated qualitatively instead, and every
         term in it is one the reader can check.
       */}
-      {amortYears !== undefined && amortCap < rules.maxAmortFtbInsured ? (
+      {amortYears !== undefined &&
+      rules.country === "ca" &&
+      amortCap < rules.maxAmortFtbInsured ? (
         <NoteLine tone="caution" tight>
           {t("amortCapped", {
             n: rules.maxAmortFtbInsured,
