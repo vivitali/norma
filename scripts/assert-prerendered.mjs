@@ -53,6 +53,7 @@ const prerender = read(PRERENDER, "routes");
 let declaredParams = {};
 try {
   const { allLocales } = await import("../src/i18n/countries.ts");
+  const { routeLocales } = await import("../src/lib/og-manifest.ts");
   const locales = allLocales();
   // An empty or malformed list is not "nothing to check" — it silently restores
   // exactly the blind spot this exists to close, and stays green while doing it.
@@ -62,7 +63,22 @@ try {
     console.error("  Without them the guard cannot tell that a whole locale went missing.");
     process.exit(1);
   }
-  declaredParams = { locale: locales };
+  // A FUNCTION of the page pattern, not a flat list: most routes want every
+  // registered locale, but RRSP-HBP is Canada-only (US-market spec — no US
+  // analogue), so its own requirement is four locales, not six. Extracted the same
+  // way sitemap.ts and og-manifest.ts's own consumers do: strip the "/[locale]"
+  // prefix and the trailing "/page" to recover the indexable route key ("/", "/rrsp-
+  // hbp", ...), then look up ROUTE_COUNTRIES through routeLocales(). A page pattern
+  // that maps to no known indexable route (there is none today) gets every locale,
+  // which is the conservative direction — it would fail LOUDLY as a "partial"
+  // problem below rather than silently stop checking.
+  declaredParams = {
+    locale: (page) => {
+      const stripped = page.replace(/^\/\[locale\]/, "").replace(/\/page$/, "");
+      const route = stripped === "" ? "/" : stripped;
+      return routeLocales(route, locales);
+    },
+  };
 } catch (error) {
   console.error("prerender guard: cannot read locales from src/i18n/countries.ts");
   console.error(`  ${error.message}`);

@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { routing } from "@/i18n/routing";
 import { localeProfile } from "@/lib/locales";
+import type { Locale } from "@/i18n/countries";
 import {
   INDEXABLE_ROUTES,
   OG_IMAGE_HEIGHT,
   OG_IMAGE_WIDTH,
   ROUTE_METADATA_KEY,
+  ROUTE_COUNTRIES,
   ogImagePath,
+  routeLocales,
   type IndexableRoute,
 } from "./og-manifest";
 
@@ -15,9 +18,22 @@ export {
   OG_IMAGE_HEIGHT,
   OG_IMAGE_WIDTH,
   ROUTE_METADATA_KEY,
+  ROUTE_COUNTRIES,
   ogImagePath,
   type IndexableRoute,
 };
+
+/**
+ * Every locale this route actually exists in — the ROUTE half of `routing.locales`.
+ * RRSP-HBP is Canada-only (US-market spec), so its hreflang set and its sitemap
+ * entries are four locales, not six; every other indexable route lists all six. Used
+ * by `languageAlternates` (hreflang, and the OG `alternateLocale` list) and by
+ * `sitemap.ts`, so a route that does not exist in a country can never claim an
+ * alternate URL there.
+ */
+export function localesForRoute(href: IndexableRoute): Locale[] {
+  return routeLocales(href, routing.locales as Locale[]);
+}
 
 /**
  * The canonical host. One host, always absolute: a relative canonical resolves
@@ -108,9 +124,19 @@ export function absoluteUrl(locale: string, href: string): string {
 
 export function languageAlternates(href: string): Record<string, string> {
   const languages: Record<string, string> = {};
-  for (const locale of routing.locales) {
+  // `href` is typed `string` for callers outside the indexable set (none exist today,
+  // but the signature predates ROUTE_COUNTRIES); IndexableRoute-shaped hrefs get the
+  // route's real availability, everything else keeps the old six-locale behaviour.
+  const locales = (
+    (INDEXABLE_ROUTES as readonly string[]).includes(href)
+      ? localesForRoute(href as IndexableRoute)
+      : routing.locales
+  ) as Locale[];
+  for (const locale of locales) {
     languages[locale] = absoluteUrl(locale, href);
   }
+  // x-default always resolves to Canada's English page (US-market spec, Decision 1) —
+  // even on a Canada-only route, where it is also simply the correct default.
   languages["x-default"] = absoluteUrl(routing.defaultLocale, href);
   return languages;
 }
@@ -155,8 +181,14 @@ export function buildMetadata({
       locale: localeProfile(locale).intl.replace("-", "_"),
       // Declaring the other locales lets a crawler that lands on one language
       // know the others exist. Distinct from hreflang, which search engines
-      // read; this is what social scrapers read.
-      alternateLocale: routing.locales
+      // read; this is what social scrapers read. Scoped to this route's own
+      // availability for the same reason hreflang is — RRSP-HBP has no es-US
+      // alternate to declare because it has no es-US page.
+      alternateLocale: (
+        (INDEXABLE_ROUTES as readonly string[]).includes(href)
+          ? localesForRoute(href as IndexableRoute)
+          : routing.locales
+      )
         .filter((other) => other !== locale)
         .map((other) => localeProfile(other).intl.replace("-", "_")),
       images: [image],

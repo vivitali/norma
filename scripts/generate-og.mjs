@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { ImageResponse } from "next/dist/server/og/image-response.js";
 import { allLocales, languageOf } from "../src/i18n/countries.ts";
-import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY } from "../src/lib/og-manifest.ts";
+import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY, routeLocales } from "../src/lib/og-manifest.ts";
 
 // Imports src/i18n/countries.ts directly rather than src/i18n/routing.ts. routing.ts
 // itself imports countries.ts with a bare relative specifier ("./countries"), which
@@ -130,8 +130,11 @@ for (const weight of [400, 600]) {
 }
 
 let written = 0;
-for (const locale of LOCALES) {
-  for (const href of INDEXABLE_ROUTES) {
+for (const href of INDEXABLE_ROUTES) {
+  // Scoped to the route's own availability: RRSP-HBP has no en-US or es-US card to
+  // write, because it has no en-US or es-US page — see ROUTE_COUNTRIES in
+  // og-manifest.ts.
+  for (const locale of routeLocales(href, LOCALES)) {
     const key = ROUTE_METADATA_KEY[href];
     const title = messages[locale].Metadata[key]?.title;
     if (!title) throw new Error(`missing Metadata.${key}.title for ${locale}`);
