@@ -21,7 +21,7 @@ import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, InlineAsk, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
-import { NOT_MODELLED } from "./omissions";
+import { NOT_MODELLED, NOT_MODELLED_US } from "./omissions";
 
 /**
  * Each waterfall source, and the stored key holding its balance. Typed against
@@ -110,6 +110,26 @@ export default function DownPaymentPage() {
   );
   const funded = described && flow.shortfall <= 0.5;
   const obligations = flow.rows.reduce((sum, row) => sum + row.repayAnnual, 0);
+  /**
+   * `waterfall()` keeps the FHSA/HBP/TFSA rows on a US call, `avail: 0` and
+   * `blocked: "noProgram"`, on the same "keep the row, explain the zero"
+   * convention `"ftb"` uses (WaterfallRow's own doc comment). That convention
+   * is right for `"ftb"` — the reader might BECOME a first-time buyer, or the
+   * balance might belong to someone who is — but wrong for `"noProgram"`: no
+   * US account by these names exists at all, so a control to fund one is not a
+   * gated feature, it is a dead one. `PurchaseInputs`'s own lesson (CLAUDE.md,
+   * "A control that is built and tested but bound by no page is not shipped")
+   * applies to a control bound to nothing modelled, not only to one bound to
+   * nothing rendered — so these three rows are filtered out entirely rather
+   * than shown blocked.
+   */
+  const visibleRows = flow.rows.filter((row) => row.blocked !== "noProgram");
+  const notModelled = rules.country === "ca" ? NOT_MODELLED : NOT_MODELLED_US;
+  // `obligations` is provably 0 on a US call — repayAnnual is non-zero only for an
+  // hbp draw, and hbp is always blocked "noProgram" there — but TypeScript cannot
+  // see that through `flow.rows.reduce`, so `rules.hbp.repayYears` (CA-only) is
+  // guarded rather than read unconditionally at both call sites below.
+  const hbpRepayYears = rules.country === "ca" ? rules.hbp.repayYears : 0;
 
   const head = !described
     ? t("assembled")
@@ -138,7 +158,10 @@ export default function DownPaymentPage() {
     );
   };
 
-  const legal = minDown(rules, resolved.price);
+  // resolved.ftb, not stored.ftb: this page has no first-time-buyer control of its
+  // own (see PurchaseInputs below), so the effective, resolved value is the only
+  // one in scope — matching resolveInputs()'s own minDown() calls.
+  const legal = minDown(rules, resolved.price, resolved.ftb);
   // The REQUESTED percentage, deliberately: resolved.dpPct already has the floor
   // applied, so comparing it against the floor could never report a raise.
   const chosen = (resolved.price * resolved.dpPctRequested) / 100;
@@ -224,6 +247,24 @@ export default function DownPaymentPage() {
                 ) : null}
                 <PanelRow label={t("netCash")} value={fmt(need)} strong />
                 {/*
+                  PMI is not cash needed AT closing — unlike CMHC's premium (financed
+                  into the loan, and therefore already inside `closing.total` above),
+                  PMI is billed MONTHLY starting after closing, so it plays no part in
+                  `need`. Named here rather than left silent, because a US reader
+                  reading a page titled "what to assemble" might otherwise expect it
+                  to be one more line to save for.
+                */}
+                {closing.fin.monthlyInsurance > 0 ? (
+                  <p className="pt-1 text-[12px] leading-[1.55] text-ink3 text-pretty">
+                    {closing.fin.insuranceMonths !== null
+                      ? t("pmiNotUpfront", {
+                          a: fmt(closing.fin.monthlyInsurance),
+                          n: closing.fin.insuranceMonths,
+                        })
+                      : t("pmiNotUpfrontNoEnd", { a: fmt(closing.fin.monthlyInsurance) })}
+                  </p>
+                ) : null}
+                {/*
                   THE ASK, in the section that is actually open when it is made.
                   The hero's sub-line asks the reader to add their balances, and
                   every one of the six fields that answers it sits inside the
@@ -274,7 +315,7 @@ export default function DownPaymentPage() {
               described ? fmt(flow.drawnTotal) : "",
               t("waterfallWhy"),
               <>
-                {flow.rows.map((row) => (
+                {visibleRows.map((row) => (
                   <div key={row.key} className="border-b border-hairline pb-2">
                     <PanelRow
                       label={`${t(SOURCE_LABEL[row.key])} · ${t(row.cost === "free" ? "free" : row.cost === "strings" ? "strings" : "costs")}`}
@@ -299,11 +340,19 @@ export default function DownPaymentPage() {
                       as arguments rather than as typed copy so the catalogue can
                       never drift from the rules record.
                     */}
+                    {/*
+                      `rules.hbp`/`rules.fhsa` are CA-only fields, read here only
+                      because ONE call site serves all six Why keys and TS cannot see
+                      that `visibleRows` (row.key filtered to never be fhsa/hbp/tfsa
+                      on a US call) makes the CA branch the only one that ever reads
+                      these values. Guarded rather than asserted, so a future call
+                      site cannot read an unguarded CA-only field off this pattern.
+                    */}
                     <p className="pt-1 text-[12px] leading-[1.55] text-ink3 text-pretty">
                       {t(`${SOURCE_LABEL[row.key]}Why`, {
-                        y: rules.hbp.repayYears,
-                        a: fmt(rules.fhsa.annual),
-                        l: fmt(rules.fhsa.lifetime),
+                        y: rules.country === "ca" ? rules.hbp.repayYears : 0,
+                        a: rules.country === "ca" ? fmt(rules.fhsa.annual) : "",
+                        l: rules.country === "ca" ? fmt(rules.fhsa.lifetime) : "",
                       })}
                     </p>
                     {row.blocked === "ftb" ? (
@@ -325,9 +374,11 @@ export default function DownPaymentPage() {
                         {t("srcFtbCheck")}
                       </p>
                     ) : null}
-                    {row.drawn > 0 && row.repayAnnual > 0 ? (
+                    {/* repayAnnual is non-zero only for an hbp draw, and hbp is filtered
+                        out of visibleRows on a US call — see rules.country guard below. */}
+                    {row.drawn > 0 && row.repayAnnual > 0 && rules.country === "ca" ? (
                       <p className="pt-1 text-[12px] text-caution">
-                        {t("repayAnnual", { a: fmt(row.repayAnnual), y: rules.hbp.repayYears })}
+                        {t("repayAnnual", { a: fmt(row.repayAnnual), y: hbpRepayYears })}
                       </p>
                     ) : null}
                     {row.key === "tfsa" && row.drawn > 0 ? (
@@ -402,7 +453,7 @@ export default function DownPaymentPage() {
               flow.taxTotal > 0
                 ? `${t("marginal")} ${pct(flow.rate * 100, 1)}`
                 : obligations > 0
-                  ? t("repayAnnual", { a: fmt(obligations), y: rules.hbp.repayYears })
+                  ? t("repayAnnual", { a: fmt(obligations), y: hbpRepayYears })
                   : t("noCostAtAll"),
               // No tax is an absence, not a value: "$0" would assert a tax bill
               // exists and happens to be nil, and an em-dash reads as a figure that
@@ -423,7 +474,7 @@ export default function DownPaymentPage() {
                 />
                 <PanelRow label={t("taxCost")} value={fmt(flow.taxTotal)} strong />
                 {obligations > 0 ? (
-                  <PanelRow label={t("obligationsLabel")} value={t("repayAnnual", { a: fmt(obligations), y: rules.hbp.repayYears })} strong />
+                  <PanelRow label={t("obligationsLabel")} value={t("repayAnnual", { a: fmt(obligations), y: hbpRepayYears })} strong />
                 ) : null}
                 <div className="mt-4 max-w-[320px]">
                   <NumberField
@@ -557,10 +608,10 @@ export default function DownPaymentPage() {
               {t("notModelledTitle")}
             </h2>
             <p className="max-w-[620px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
-              {t("notModelledLine", { n: NOT_MODELLED.length })}
+              {t("notModelledLine", { n: notModelled.length })}
             </p>
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
-              {NOT_MODELLED.map((key) => (
+              {notModelled.map((key) => (
                 <li
                   key={key}
                   className="max-w-[620px] text-[12.5px] leading-[1.6] text-ink2 text-pretty"
