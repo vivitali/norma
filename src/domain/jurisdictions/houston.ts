@@ -156,7 +156,7 @@ export const houston: Jurisdiction = {
       asOf: "2026-07",
       src: HAR_JULY_2026,
       url: HAR_URL,
-      note: "HAR single-family median, $340,000, +0.6% YoY (dossier C1 addendum). Read via a text-extraction proxy — har.com blocks direct automated fetches (PerimeterX 403) — corroborated by The Real Deal, 2026-08-13 (median $340,000, average \"$441,000\").",
+      note: "HAR single-family median, $340,000, +0.6% YoY (dossier C1 addendum). Read via a proxy that extracts page text — har.com blocks direct automated fetches (PerimeterX 403) — corroborated by The Real Deal, 2026-08-13 (median $340,000, average \"$441,000\").",
     },
     "bench.condo": {
       conf: "high",
