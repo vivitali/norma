@@ -79,7 +79,16 @@ const PAGE_ROUTES: Partial<Record<string, RouteKey>> = {
  * The namespaces every page reads, whatever page it is: the chrome, the shared input
  * controls, and the place-name tables.
  */
-const SHARED = ["AppHeader", "Nav", "Jurisdictions", "Provinces", "Inputs", "Disclosure", "Provenance"];
+const SHARED = [
+  "AppHeader",
+  "Countries",
+  "Nav",
+  "Jurisdictions",
+  "Provinces",
+  "Inputs",
+  "Disclosure",
+  "Provenance",
+];
 
 /**
  * The exact key paths that could leak on this page — not a pattern that looks like one.

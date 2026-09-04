@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppNav } from "@/components/app-nav";
 import { JurisdictionPicker } from "@/components/jurisdiction-picker";
+import { CountrySwitcher } from "@/components/country-switcher";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -44,6 +45,7 @@ export function AppHeader() {
           <div className="min-w-0 flex-1 sm:flex-none">
             <JurisdictionPicker />
           </div>
+          <CountrySwitcher />
           <LocaleSwitcher />
           <ThemeToggle />
         </div>
