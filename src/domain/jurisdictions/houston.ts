@@ -169,7 +169,7 @@ export const houston: Jurisdiction = {
       asOf: "2025-10-01",
       src: HUD_FMR,
       url: HUD_FMR_URL,
-      note: "HUD FY2026 Fair Market Rent, 2-bedroom, METRO-WIDE for the Houston-The Woodlands-Sugar Land HMFA: $1,320. An FMR is the 40th percentile of gross rent across ALL dwelling types surveyed in the area, not an apartment-only average — a genuinely different statistic from the CMHC apartment average this dataset otherwise carries, hence the separate `fmr2br` RentBasis value rather than reusing `apartment2br`. First read this pass as ZIP-only (Small Area FMR); a second pass found HUD does also publish this metro-wide figure directly on its own FMR Documentation System page (dossier C2 addendum) once fetched with a browser-like Referer.",
+      note: "HUD FY2026 Fair Market Rent, 2-bedroom, METRO-WIDE for the Houston-The Woodlands-Sugar Land HMFA: $1,573 (1BR is $1,323 — a different bedroom count, not this field). An FMR is the 40th percentile of gross rent across ALL dwelling types surveyed in the area, not an apartment-only average — a genuinely different statistic from the CMHC apartment average this dataset otherwise carries, hence the separate `fmr2br` RentBasis value rather than reusing `apartment2br`. First read this pass as ZIP-only (Small Area FMR); a second pass found HUD does also publish this metro-wide figure directly on its own FMR Documentation System page (dossier C2 addendum) once fetched with a browser-like Referer.",
     },
     yoy: {
       conf: "high",
