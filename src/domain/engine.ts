@@ -1972,7 +1972,8 @@ export interface ScenarioInput extends ClosingInput {
  *    low-down-payment columns — holding closing costs flat would hide the one
  *    cost that varies with the thing being compared.
  */
-export function scenario(j: Jurisdiction, F: CaRules, o: ScenarioInput) {
+export function scenario(j: Jurisdiction, F: CountryRules, o: ScenarioInput) {
+  if (F.country === "us") return scenarioToMaturity(j, F, o);
   const floor = minDown(F, o.price);
   const requested = (o.price * o.dpPct) / 100;
   const down = Math.max(requested, floor);
@@ -2052,6 +2053,95 @@ export function scenario(j: Jurisdiction, F: CaRules, o: ScenarioInput) {
     totalInterest,
     /** Interest plus the insurance premium — the true price of borrowing. */
     costOfBorrowing: totalInterest + premium,
+  };
+}
+
+/**
+ * The US (toMaturity) Scenarios path — the same "one down-payment column, every axis" shape as
+ * `scenario()` above, using `financing()`/`minDown()`/`propertyTaxAnnual()`'s own US branches
+ * rather than reimplementing PMI or the homestead exemption inline.
+ */
+function scenarioToMaturity(j: Jurisdiction, F: UsRules, o: ScenarioInput) {
+  const floor = minDown(F, o.price, o.ftb);
+  const requested = (o.price * o.dpPct) / 100;
+  const down = Math.max(requested, floor);
+  const dpPctEff = o.price > 0 ? (down / o.price) * 100 : 0;
+  const belowMinimum = requested < floor - 0.5;
+
+  const contractRate = o.contractRate ?? defaultContractRate(F, dpPctEff) / 100;
+  const fin = financing(F, { price: o.price, dpPct: dpPctEff, amortYears: o.amortYears, ftb: o.ftb, contractRate: contractRate * 100 });
+  const baseLoan = fin.baseLoan;
+  const ltv = o.price > 0 ? baseLoan / o.price : 0;
+  const insured = fin.insured;
+  const premRate = fin.premRate;
+  const premium = fin.premium;
+  const totalMortgage = fin.loan;
+
+  const f = payFactorMonthly(contractRate, o.amortYears);
+  const pi = totalMortgage * f;
+  const propTax = propertyTaxAnnual(j, o.price) / 12;
+  const maintenance = (o.price * F.maintenanceReserve) / 12;
+  const monthly = {
+    pi,
+    propTax,
+    insurance: o.insuranceAnnual / 12,
+    utilities: o.utilities,
+    condoFee: o.condoFee,
+    maintenance,
+    total: pi + propTax + o.insuranceAnnual / 12 + fin.monthlyInsurance + o.utilities + o.condoFee + maintenance,
+  };
+
+  const cc = closingTotal(j, F, { ...o, dpPct: dpPctEff });
+  const cash = down + cc.total;
+  const net = cash - cc.creditsAtClosing;
+  const surplus = o.funds === null ? null : o.funds - net;
+  const months = monthsToSave(surplus, o.save);
+
+  // No B-20-style stress test — qualify at the bare contract rate.
+  const qualRate = contractRate;
+  const stressPay = totalMortgage * payFactorMonthly(qualRate, o.amortYears);
+  // No heat allowance concept on a US mortgage; PMI IS counted, the way a lender's own DTI
+  // calculation would.
+  const housing = stressPay + fin.monthlyInsurance + propTax + o.condoFee * F.condoFeeInclusion;
+  const gds = o.qualIncome > 0 ? ((housing * 12) / o.qualIncome) * 100 : 0;
+  const tds = o.qualIncome > 0 ? (((housing + o.debts) * 12) / o.qualIncome) * 100 : 0;
+
+  const totalInterest = pi * o.amortYears * 12 - totalMortgage;
+  return {
+    dpPct: o.dpPct,
+    dpPctEff,
+    belowMinimum,
+    down,
+    baseLoan,
+    ltv,
+    insured,
+    premRate,
+    premium,
+    totalMortgage,
+    /** Percentage. */
+    contractRate: contractRate * 100,
+    monthly,
+    vsCeiling: monthly.total - o.comfortCeiling,
+    closingTotal: cc.total,
+    premiumTaxLine: j.premiumTax ? premium * j.premiumTax.rate : 0,
+    creditsAtClosing: cc.creditsAtClosing,
+    cash,
+    net,
+    surplus,
+    months,
+    fundable: surplus === null ? null : surplus >= 0,
+    /** Percentage. */
+    qualRate: qualRate * 100,
+    stressPay,
+    gds,
+    tds,
+    qualifies: o.qualIncome > 0 && gds <= F.gds && tds <= F.tds,
+    totalInterest,
+    /** Interest plus PMI paid while it applies — not a one-time premium on the US branch, so
+     * this is a rough "extra cost of borrowing" figure rather than the literal sum
+     * `costOfBorrowing`'s name implies on the Canadian side; disclosed here rather than
+     * silently reused. */
+    costOfBorrowing: totalInterest + (fin.insuranceMonths ?? 0) * fin.monthlyInsurance,
   };
 }
 

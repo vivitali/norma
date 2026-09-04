@@ -530,6 +530,10 @@ export interface CountryRulesBase {
  */
 export interface UsRules extends CountryRulesBase {
   country: "us";
+  /** Always null — no federal minimum-qualifying-rate stress test exists on a US mortgage.
+   * Narrower than the base type for the same reason `CaRules.stressTest` narrows the other
+   * way: a function already typed or narrowed to `UsRules` never has to null-check this. */
+  stressTest: null;
   programs: {
     conventional: {
       /** As a fraction of price, e.g. 0.03. */
@@ -605,6 +609,10 @@ export interface UsRules extends CountryRulesBase {
  */
 export interface CaRules extends CountryRulesBase {
   country: "ca";
+  /** Never null for Canada — OSFI's B-20 stress test always applies. Narrower than the base
+   * type so a function already narrowed to `CaRules` (by `F.country === "ca"`, or simply by
+   * being typed `CaRules` outright) never has to null-check this. */
+  stressTest: { floor: number; buffer: number };
   cmhc: {
     bands: readonly (readonly [number, number])[];
     longAmortSurcharge: number;
