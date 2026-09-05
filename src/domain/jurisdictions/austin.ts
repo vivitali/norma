@@ -32,7 +32,17 @@ const CITY_AUSTIN_TAX = "City of Austin, FY2025-26 official tax-rates table (aus
 const AISD_TAX = "Austin ISD, taxes-and-debt page (austinisd.org/budget/taxes-debt)";
 const TCAD_EXEMPT = "Travis Central Appraisal District, \"Exemption Listing Report,\" Year 2026 (generated 2026-07-19)";
 const TCAD_EXEMPT_URL = "https://traviscad.org/wp-content/uploads/2026_ExemptionListingTravis-07192026.pdf";
-const TX_TAX_CODE_11_13 = "Texas Tax Code s.11.13 (general residence homestead exemptions)";
+const TX_TAX_CODE_11_13 = "Texas Tax Code s.11.13(b) (general residence homestead exemptions)";
+// statutes.capitol.texas.gov's own page returned only a navigation shell to a fetch tool (no
+// article text extracted), so the actual subsection text was read via a secondary but verbatim
+// legal-code republication instead, cross-checked against an independent search result that
+// returned the identical quotation: "An adult is entitled to exemption from taxation by a school
+// district of $140,000 of the appraised value of the adult's residence homestead..." — no M&O/
+// I&S carve-out anywhere in the subsection or any cross-referenced section. This is a REPUBLISHED
+// mirror of the primary statute, not the primary .gov document itself — disclosed as `medium`,
+// not `high`, per this dataset's own rule that a secondary source caps below the primary
+// publisher even when it reproduces the primary text correctly.
+const TX_TAX_CODE_11_13_URL = "https://codes.findlaw.com/tx/tax-code/tax-sect-11-13/";
 const TRAVIS_CLERK = "Travis County Clerk, \"Recording Fee Information\" page (fee schedule updated 2025-03-18)";
 const TRAVIS_CLERK_URL = "https://countyclerk.traviscountytx.gov/departments/recording/fee-information/";
 
@@ -45,9 +55,10 @@ const fees: JurisdictionFees = {
   // — a TEXAS custom and TDI-schedule fact, not an Austin-specific one, so this is Houston's own
   // $100 figure carried forward unchanged (Phase 0 verdict), not re-researched.
   titleIns: 100,
-  // No Austin-specific inspection-fee figure exists (dossier's "Could not verify" list carries
-  // no primary source for this either, the same gap Houston's own dossier left open) — carried
-  // at Houston's own Texas-wide modelling default rather than an invented Austin-specific one.
+  // Inspection fees were not part of this dossier's research scope at all (its C9 table and its
+  // own "Could not verify" section cover only appraisal, survey and escrow) — not "researched
+  // and found absent." Carried at Houston's own Texas-wide modelling default rather than an
+  // invented Austin-specific one, since no Austin figure was sought or found either way.
   inspect: 450,
   // Midpoint of the dossier's own $500-$1,000 Austin appraisal-fee range (dossier C9).
   appraisal: 750,
@@ -59,10 +70,10 @@ const fees: JurisdictionFees = {
   // is roughly $110-$135; $123 is that range's midpoint. The per-page fee is high; the
   // page-count combination is this dossier's own modelled estimate (see provenance below).
   recording: 123,
-  // No Austin-specific moving-cost figure exists — carried at Houston's own Texas-wide
-  // modelling default, same reasoning as `inspect` above.
+  // Also outside this dossier's research scope — same reasoning as `inspect` above, not the
+  // same reasoning as `appraisal`/`survey` (which WERE researched, with a cited range).
   moving: 1500,
-  // No Austin-specific utility-setup figure exists — same reasoning as `inspect` above.
+  // Also outside this dossier's research scope — same reasoning as `inspect` above.
   setup: 250,
 };
 
@@ -106,7 +117,7 @@ export const austin: Jurisdiction = {
         kind: "flatAmount",
         amount: 140000,
         appliesToRate: 0.009252,
-        note: "AISD's $140,000 state general homestead exemption applies against AISD's WHOLE 0.9252 rate — both the 0.8022 M&O and the 0.1230 I&S portions — per Tax Code s.11.13(b), which exempts the value \"from taxation by a school district,\" naming no M&O/I&S distinction (dossier's own 'Could not verify' item on this question is resolved here by reading the statute's text directly, per the design task's decision). This also settles the same open question on Houston's already-shipped record, which applies its own school district's exemption the same way.",
+        note: "AISD's $140,000 state general homestead exemption applies against AISD's WHOLE 0.9252 rate — both the 0.8022 M&O and the 0.1230 I&S portions — per Tax Code s.11.13(b): \"An adult is entitled to exemption from taxation by a school district of $140,000 of the appraised value of the adult's residence homestead...\" No M&O/I&S carve-out appears in this subsection or any cross-referenced section (read via a secondary but verbatim legal-code republication, cross-checked against an independent search result quoting the identical text — see TX_TAX_CODE_11_13_URL's own comment for the access method). This resolves the dossier's own 'Could not verify' item on this question for THIS record — see the provenance entry keyed propTax.exemptions.0 below for the full citation, and houston.ts's own propTax.exemptions.0 entry for the same resolution applied there.",
       },
       {
         kind: "percentOfValue",
@@ -209,10 +220,22 @@ export const austin: Jurisdiction = {
     },
     "propTax.exemptions": {
       conf: "high",
-      asOf: "2026-07-19 (TCAD Exemption Listing Report); Tax Code s.11.13 is standing law",
-      src: `${TCAD_EXEMPT}; ${TX_TAX_CODE_11_13}`,
+      asOf: "2026-07-19 (TCAD Exemption Listing Report)",
+      src: TCAD_EXEMPT,
       url: TCAD_EXEMPT_URL,
-      note: "All five entities' local-option homestead percentages (or, for AISD, the flat state amount) are confirmed at high against TCAD's own 2026 Exemption Listing Report (dossier C10): AISD $140,000 flat (0%), City of Austin 20%, Travis County 20%, Central Health 20%, ACC 1% — the state-law floor a unit choosing any percentage exemption may not go below (s.11.13(n)). The listing's generation date (2026-07-19) is later than TY2025; local-option percentages are standing entity ordinances that change rarely, unlike the rate itself re-adopted annually, so this is treated as high for TY2025 too, with the vintage gap disclosed rather than silently assumed away.",
+      note: "All five entities' local-option homestead percentages (or, for AISD, the flat state amount) are confirmed at high against TCAD's own 2026 Exemption Listing Report (dossier C10): AISD $140,000 flat (0%), City of Austin 20%, Travis County 20%, Central Health 20%, ACC 1% — the state-law floor a unit choosing any percentage exemption may not go below (s.11.13(n)). The listing's generation date (2026-07-19) is later than TY2025; local-option percentages are standing entity ordinances that change rarely, unlike the rate itself re-adopted annually, so this is treated as high for TY2025 too, with the vintage gap disclosed rather than silently assumed away. A SEPARATE question — whether AISD's exemption applies against its whole rate or only the M&O portion — is answered by the statute's own text, graded independently below (see `propTax.exemptions.0`), not folded into this entry's high grade.",
+    },
+    // A separate, narrower provenance entry for the FIRST exemption entry (AISD's flat amount)
+    // specifically, because the question it answers — whether s.11.13(b) exempts AISD's WHOLE
+    // rate or only the M&O portion — rests on different evidence (a secondary legal-code mirror,
+    // not TCAD's own listing) than the entity percentages `propTax.exemptions` above covers, and
+    // deserves its own grade rather than inheriting "high" from a different claim.
+    "propTax.exemptions.0": {
+      conf: "medium",
+      asOf: "2026-09-05 (accessed)",
+      src: TX_TAX_CODE_11_13,
+      url: TX_TAX_CODE_11_13_URL,
+      note: "Tax Code s.11.13(b): \"An adult is entitled to exemption from taxation by a school district of $140,000 of the appraised value of the adult's residence homestead...\" — no M&O/I&S carve-out anywhere in the subsection or any cross-referenced section, so the $140,000 applies against AISD's WHOLE 0.9252 rate, both the 0.8022 M&O and the 0.1230 I&S portions. Graded medium, not high: statutes.capitol.texas.gov's own page returned only a navigation shell to a fetch tool, so this was read via a secondary but verbatim legal-code republication (codes.findlaw.com), cross-checked against an independent search result quoting identical text — a real citation, but not a direct read of the primary .gov document. This resolves the research dossier's own 'Could not verify' item on this question for THIS record; the same resolution is recorded on houston.ts's own propTax.exemptions.0 entry, which carries the identical statutory fact for HISD's exemption.",
     },
     "bench.house": {
       conf: "high",
