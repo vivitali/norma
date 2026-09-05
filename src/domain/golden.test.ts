@@ -36,6 +36,7 @@ const winnipeg = getJurisdiction("winnipeg")!;
 const toronto = getJurisdiction("toronto")!;
 const halifax = getJurisdiction("halifax")!;
 const houston = getJurisdiction("houston")!;
+const austin = getJurisdiction("austin")!;
 
 describe("golden: closingTotal", () => {
   it.each([
@@ -271,6 +272,120 @@ describe("golden: US (houston)", () => {
   it("scenario", () => {
     const result = scenario(houston, us, {
       price: 350000,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      insuranceAnnual: 3506,
+      utilities: 180,
+      condoFee: 0,
+      comfortCeiling: 3200,
+      qualIncome: 130000,
+      debts: 350,
+      funds: 45000,
+      save: 800,
+    });
+    expect(result).toMatchSnapshot();
+  });
+});
+
+/**
+ * The regression net for the add-state skill's second US metro: Austin (Travis County), the
+ * first record to exercise `PropertyTax.exemptions`'s array shape (a flat AISD exemption plus
+ * four percentage exemptions, each on its own taxing entity's own slice) rather than Houston's
+ * single flat entry. `price: 577000` is the record's own City of Austin benchmark
+ * (`austin.bench.house`), the same figure `austin.test.ts`'s hand-derived property-tax literal
+ * uses.
+ */
+describe("golden: US (austin)", () => {
+  it("closingTotal", () => {
+    const result = closingTotal(austin, us, {
+      price: 577000,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("affordability", () => {
+    const result = affordability(austin, us, {
+      income1: 95000,
+      income2: 45000,
+      otherIncome: 0,
+      haircut: 0,
+      debts: 350,
+      amortYears: 30,
+      comfortCeiling: 3200,
+      insuranceAnnual: 3506,
+      utilities: 180,
+      condoFee: 0,
+      contractRate: 6.66,
+      price: 577000,
+      dpPct: 10,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      funds: 45000,
+      save: 800,
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("amortization — payment is constant to maturity, no renewal fields", () => {
+    const result = amortization(us, {
+      price: 577000,
+      dpPct: 10,
+      amortYears: 30,
+      contractRate: 6.66,
+      // Ignored on the toMaturity path — see amortizationToMaturity()'s own doc comment.
+      renewalRate: 5.75,
+      termYears: 5,
+    });
+    expect(result).toMatchSnapshot();
+    const payments = new Set(result.rows.map((r) => r.payment));
+    expect(payments.size).toBe(1);
+    expect(result.rows.every((r) => !r.renewed)).toBe(true);
+    expect(result.shock).toBe(0);
+    expect(result.paymentAfterRenewal).toBe(result.firstPayment);
+  });
+
+  it("rentVsBuy", () => {
+    const result = rentVsBuy(austin, us, {
+      price: 577000,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      insuranceAnnual: 3506,
+      utilities: 180,
+      condoFee: 0,
+      rent: 1852,
+      rentInflation: 0.03,
+      appreciation: 0.04,
+      appreciationOn: true,
+      investReturn: 0.046,
+      // Ignored on the toMaturity path.
+      termYears: 5,
+      renewalRate: 5.75,
+      investDiff: true,
+      years: 10,
+      taxableIncome: 95000,
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("scenario", () => {
+    const result = scenario(austin, us, {
+      price: 577000,
       dpPct: 10,
       amortYears: 30,
       ftb: true,
