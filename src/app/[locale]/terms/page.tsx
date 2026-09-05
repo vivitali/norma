@@ -8,6 +8,8 @@ import {
 } from "@/components/legal-page";
 import { buildMetadata } from "@/lib/seo";
 import { OPERATOR, LEGAL_UPDATED } from "@/lib/legal";
+import { countryKey } from "@/lib/country-key";
+import { countryOf, type Locale } from "@/i18n/countries";
 
 export async function generateMetadata({
   params,
@@ -49,6 +51,7 @@ export default async function TermsPage({
 }: PageProps<"/[locale]/terms">) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const country = countryOf(locale as Locale);
 
   const t = await getTranslations({ locale, namespace: "Terms" });
   const tl = await getTranslations({ locale, namespace: "Legal" });
@@ -64,11 +67,11 @@ export default async function TermsPage({
       />
 
       <LegalSection heading={t("secWhat")}>
-        <p>{t("bodyWhat")}</p>
+        <p>{t(countryKey("bodyWhat", country))}</p>
       </LegalSection>
 
       <LegalSection heading={t("secNot")}>
-        <p>{t("bodyNot")}</p>
+        <p>{t(countryKey("bodyNot", country))}</p>
       </LegalSection>
 
       <LegalSection heading={t("secAccuracy")}>
@@ -80,7 +83,7 @@ export default async function TermsPage({
       </LegalSection>
 
       <LegalSection heading={t("secLaw")}>
-        <p>{t("bodyLaw")}</p>
+        <p>{t(countryKey("bodyLaw", country))}</p>
       </LegalSection>
 
       <LegalSection heading={t("secIp")}>

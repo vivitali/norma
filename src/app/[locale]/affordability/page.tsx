@@ -479,7 +479,28 @@ export default function AffordabilityPage() {
                 value={fmt(result.monthly.pi)}
               />
               <PanelRow label={t("mPropTax")} value={fmt(result.monthly.propTax)} provenance={<Provenance kind="estimate" />} />
+              {/*
+                Houston-specific, not US-wide: the Tax Code s.23.23 homestead appraisal cap
+                (houston.ts's own `propTax.exemptions` provenance note) does not bind in the
+                purchase year, when the appraised value IS the purchase price — it only limits
+                growth from the next reassessment onward. Gated on the jurisdiction rather than
+                `rules.country === "us"` because this is a Texas statute, not a US-market fact;
+                Houston is the only US jurisdiction today, so the two happen to coincide, but a
+                second US jurisdiction must not inherit this note for free.
+              */}
+              {jurisdiction.id === "houston" ? (
+                <NoteLine tight>{t("propTaxCapNote")}</NoteLine>
+              ) : null}
               <PanelRow label={t("cInsurance")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
+              {/*
+                Same scoping note as propTaxCapNote above: wind/hail exposure is a Texas fact,
+                not a US one. `fees.insurance` is `medium` confidence (houston.ts) — a statewide
+                TDI average, not Harris-County-specific — so this says shop around rather than
+                quoting the number the row above it already shows.
+              */}
+              {jurisdiction.id === "houston" ? (
+                <NoteLine tight>{t("insuranceHighNote")}</NoteLine>
+              ) : null}
               {/*
                 PMI — zero on every Canadian record (CMHC's premium is financed into
                 the loan, not billed monthly; see financing()'s own doc comment), so
