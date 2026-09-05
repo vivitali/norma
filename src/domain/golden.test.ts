@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ca } from "./rules/ca";
+import { us } from "./rules/us";
 import { getJurisdiction } from "./jurisdictions";
 import {
   affordability,
@@ -34,6 +35,7 @@ import {
 const winnipeg = getJurisdiction("winnipeg")!;
 const toronto = getJurisdiction("toronto")!;
 const halifax = getJurisdiction("halifax")!;
+const houston = getJurisdiction("houston")!;
 
 describe("golden: closingTotal", () => {
   it.each([
@@ -163,6 +165,119 @@ describe("golden: scenario", () => {
       elsewhere: false,
       residency: "resident",
       insuranceAnnual: 1400,
+      utilities: 180,
+      condoFee: 0,
+      comfortCeiling: 3200,
+      qualIncome: 130000,
+      debts: 350,
+      funds: 45000,
+      save: 800,
+    });
+    expect(result).toMatchSnapshot();
+  });
+});
+
+/**
+ * The regression net for step 3+4 of the US-market spec (rules/us.ts and Houston): the same
+ * discipline as the Canadian section above, on the one US jurisdiction. `price: 350000` matches
+ * the research dossier's own worked title-insurance example ($2,015 on a $350,000 policy — see
+ * `jurisdictions/houston.test.ts`), so this snapshot and that unit test describe the same
+ * purchase from two angles.
+ */
+describe("golden: US (houston)", () => {
+  it("closingTotal", () => {
+    const result = closingTotal(houston, us, {
+      price: 350000,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("affordability", () => {
+    const result = affordability(houston, us, {
+      income1: 95000,
+      income2: 45000,
+      otherIncome: 0,
+      haircut: 0,
+      debts: 350,
+      amortYears: 30,
+      comfortCeiling: 3200,
+      insuranceAnnual: 3506,
+      utilities: 180,
+      condoFee: 0,
+      contractRate: 6.66,
+      price: 350000,
+      dpPct: 10,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      funds: 45000,
+      save: 800,
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("amortization — payment is constant to maturity, no renewal fields", () => {
+    const result = amortization(us, {
+      price: 350000,
+      dpPct: 10,
+      amortYears: 30,
+      contractRate: 6.66,
+      // Ignored on the toMaturity path — see amortizationToMaturity()'s own doc comment.
+      renewalRate: 5.75,
+      termYears: 5,
+    });
+    expect(result).toMatchSnapshot();
+    const payments = new Set(result.rows.map((r) => r.payment));
+    expect(payments.size).toBe(1);
+    expect(result.rows.every((r) => !r.renewed)).toBe(true);
+    expect(result.shock).toBe(0);
+    expect(result.paymentAfterRenewal).toBe(result.firstPayment);
+  });
+
+  it("rentVsBuy", () => {
+    const result = rentVsBuy(houston, us, {
+      price: 350000,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      insuranceAnnual: 3506,
+      utilities: 180,
+      condoFee: 0,
+      rent: 1573,
+      rentInflation: 0.03,
+      appreciation: 0.04,
+      appreciationOn: true,
+      investReturn: 0.046,
+      // Ignored on the toMaturity path.
+      termYears: 5,
+      renewalRate: 5.75,
+      investDiff: true,
+      years: 10,
+      taxableIncome: 95000,
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("scenario", () => {
+    const result = scenario(houston, us, {
+      price: 350000,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      insuranceAnnual: 3506,
       utilities: 180,
       condoFee: 0,
       comfortCeiling: 3200,

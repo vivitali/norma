@@ -3,6 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { hbpPlay } from "@/domain/engine";
+import { regionOf } from "@/domain/types";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useRules } from "@/hooks/use-country";
@@ -58,10 +59,10 @@ export default function RrspHbpPage() {
       hbpPlay(rules, {
         contribution: resolved.hbpContribution,
         income: resolved.taxIncome,
-        prov: jurisdiction.prov,
+        prov: regionOf(jurisdiction),
         withdrawAmount: resolved.hbpWithdraw,
       }),
-    [rules, resolved.hbpContribution, resolved.hbpWithdraw, resolved.taxIncome, jurisdiction.prov],
+    [rules, resolved.hbpContribution, resolved.hbpWithdraw, resolved.taxIncome, jurisdiction],
   );
   const rate = play.marginalRate;
 

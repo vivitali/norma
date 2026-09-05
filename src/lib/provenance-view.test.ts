@@ -201,7 +201,8 @@ describe("coverageOf", () => {
       ) + Object.keys(ca.provenance).filter((p) => isFigure(ca.provenance, p)).length;
 
     expect(coverage.total).toBe(expected);
-    expect(coverage.jurisdictions).toBe(14);
+    // 14 Canadian + Houston (US).
+    expect(coverage.jurisdictions).toBe(15);
   });
 
   it("actually excludes something — the exclusions are not vacuous", () => {
@@ -313,11 +314,19 @@ describe("FIGURE_GROUPS", () => {
       const { groups } = groupProvenance(jurisdiction.provenance);
       expect(groups.map((g) => g.id)).toEqual([...FIGURE_GROUPS]);
       // A group with nothing in it would render a heading over an empty list on
-      // some jurisdiction and not others. Every record populates all five.
+      // some jurisdiction and not others — UNLESS the jurisdiction genuinely has
+      // no figures of that kind at all. Every Canadian record populates all
+      // five, because every one levies at least a transfer/registration charge
+      // and carries a first-time-buyer rebate or tax-time credit. Texas (Houston)
+      // levies neither (dossier B1: no transfer tax, no mortgage recording tax;
+      // no federal/state rebate exists — see engine.ts's credits() and its
+      // cr_noRebateUs omission), so "charges" and "credits" are legitimately
+      // empty there rather than a hole in the data.
+      const expectEmpty = jurisdiction.id === "houston" ? ["charges", "credits"] : [];
       expect(
         groups.filter((g) => g.total === 0).map((g) => g.id),
         jurisdiction.id,
-      ).toEqual([]);
+      ).toEqual(expectEmpty);
     }
   });
 });

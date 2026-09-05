@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { Jurisdiction } from "@/domain/types";
 import type { PropertyType, Residency } from "@/domain/types";
+import { regionOf } from "@/domain/types";
 import { maxAmortYears } from "@/domain/engine";
 import { useRules } from "@/hooks/use-country";
 import { useMoney, usePercent } from "@/lib/format";
@@ -289,7 +290,7 @@ export function PurchaseInputs({
       ) : null}
 
       {/* Only Ontario stacks a municipal land transfer tax, and only in Toronto. */}
-      {elsewhere !== undefined && jurisdiction.prov === "ON" ? (
+      {elsewhere !== undefined && regionOf(jurisdiction) === "ON" ? (
         <div className="flex flex-col gap-1 border-t border-hairline pt-3">
           <div className="flex items-center justify-between gap-3">
             {/*
@@ -305,7 +306,7 @@ export function PurchaseInputs({
               exactly the split `Jurisdictions.at.<id>` already exists to carry.
             */}
             <Label htmlFor="elsewhere" className="text-[13px]">
-              {t("elsewhereIn")} {tProv(jurisdiction.prov)}
+              {t("elsewhereIn")} {tProv(regionOf(jurisdiction))}
             </Label>
             <Switch
               id="elsewhere"

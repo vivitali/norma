@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { JurisdictionProvider, useJurisdiction, pickJurisdiction } from "./use-jurisdiction";
 import { STORE_KEY_V2 } from "@/lib/storage";
 import { getJurisdiction, defaultJurisdictionOf } from "@/domain/jurisdictions";
-import type { Country } from "@/domain/types";
+import { regionOf } from "@/domain/types";
 import { CATALOGUES } from "@/test/catalogues";
 
 /**
@@ -53,7 +53,7 @@ describe("useJurisdiction", () => {
   it("exposes the resolved Jurisdiction record, not just its id", async () => {
     const { result } = renderHook(() => useJurisdiction(), { wrapper });
     act(() => result.current[1]("toronto"));
-    await waitFor(() => expect(result.current[0].prov).toBe("ON"));
+    await waitFor(() => expect(regionOf(result.current[0])).toBe("ON"));
   });
 
   it("resolves an unknown stored id to the default jurisdiction", async () => {
@@ -65,10 +65,9 @@ describe("useJurisdiction", () => {
 
 /**
  * The cross-country half of the fallback rule, tested against `pickJurisdiction` directly
- * rather than through the provider: today's registry has exactly one country, so there is no
- * real second-country jurisdiction to store and read back through localStorage. Exercising the
- * pure decision function with a fabricated record proves the RULE works now, ahead of
- * `rules/us.ts` giving it a genuine case to fire on.
+ * rather than through the provider. `houston` is a genuine second-country record now (the
+ * country seam's step 4) — no more fabricated record needed to exercise the "wrong country"
+ * branch.
  */
 describe("pickJurisdiction — the cross-country fallback", () => {
   it("keeps a stored jurisdiction that belongs to the current country", () => {
@@ -77,9 +76,8 @@ describe("pickJurisdiction — the cross-country fallback", () => {
   });
 
   it("falls back to the country's default when the stored jurisdiction belongs to another country", () => {
-    const toronto = getJurisdiction("toronto")!;
-    const otherCountryRecord = { ...toronto, country: "us" as Country };
-    expect(pickJurisdiction(otherCountryRecord, "ca")).toBe(defaultJurisdictionOf("ca"));
+    const houston = getJurisdiction("houston")!;
+    expect(pickJurisdiction(houston, "ca")).toBe(defaultJurisdictionOf("ca"));
   });
 
   it("falls back to the country's default when nothing resolved at all", () => {

@@ -6,6 +6,7 @@ import type { AffordabilityResult } from "@/domain/engine";
 import { maxAmortYears } from "@/domain/engine";
 import { useRules } from "@/hooks/use-country";
 import type { Jurisdiction } from "@/domain/types";
+import { regionOf } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
 import type { ToolFormState } from "@/lib/shared-inputs";
@@ -234,7 +235,7 @@ export function InputGroups({
           */}
           {resolved.benchmark !== null ? (
             <span className="-mt-1 text-[10.5px] text-ink3">
-              {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(resolved.benchmark)}
+              {jurisdiction.city ?? tProv(regionOf(jurisdiction))} · {fmt(resolved.benchmark)}
             </span>
           ) : resolved.priceKnown ? null : (
             <span className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
@@ -365,7 +366,7 @@ export function InputGroups({
               />
               {/* Only Ontario stacks a municipal transfer tax, so this toggle
                   only changes anything there. */}
-              {jurisdiction.prov === "ON" ? (
+              {regionOf(jurisdiction) === "ON" ? (
                 <div className="flex items-center gap-2">
                   <Switch
                     id="elsewhere"
@@ -373,7 +374,7 @@ export function InputGroups({
                     onCheckedChange={(elsewhere) => update({ elsewhere })}
                   />
                   <Label htmlFor="elsewhere" className="text-[11.5px]">
-                    {t("elsewhereIn")} {tProv(jurisdiction.prov)}
+                    {t("elsewhereIn")} {tProv(regionOf(jurisdiction))}
                   </Label>
                 </div>
               ) : null}
