@@ -2,11 +2,14 @@
   "Metadata": {
     "home": {
       "title": "Quelle maison pouvez-vous vous permettre ? — AffordMath",
-      "description": "Ce que vous pouvez réellement vous permettre d’acheter au Canada, calculé sur le revenu net et les coûts réels, selon les règles de votre province."
+      "description": "Ce que vous pouvez réellement vous permettre d’acheter au Canada, calculé sur le revenu net et les coûts réels, selon les règles de votre province.",
+      "title_us": "Combien de maison pouvez-vous vous permettre? — AffordMath",
+      "description_us": "Voyez ce que vous pouvez vraiment vous permettre d'acheter aux États-Unis — revenu net réel, coûts réels, règles fiscales de votre État."
     },
     "affordability": {
       "title": "Calculateur d’abordabilité — le coût réel",
-      "description": "Deux plafonds côte à côte — ce qu’un prêteur approuverait, et ce qui tient dans votre budget mensuel réel. Règles fiscales provinciales incluses."
+      "description": "Deux plafonds côte à côte — ce qu’un prêteur approuverait, et ce qui tient dans votre budget mensuel réel. Règles fiscales provinciales incluses.",
+      "description_us": "Deux plafonds côte à côte : ce qu'un prêteur approuverait, et ce que votre budget mensuel réel permet. Règles fiscales de votre État et comté incluses."
     },
     "sources": {
       "title": "Sources et provenance — AffordMath",
@@ -20,11 +23,13 @@
     },
     "closingCosts": {
       "title": "Calculateur des frais de clôture — ce que vous devez",
-      "description": "Chaque frais de clôture par province : droits de mutation, frais juridiques, ajustements, et quels remboursements arrivent le jour même."
+      "description": "Chaque frais de clôture par province : droits de mutation, frais juridiques, ajustements, et quels remboursements arrivent le jour même.",
+      "description_us": "Chaque frais de clôture : taxe foncière, titre, séquestre, ajustements — et ce que le Texas facture au lieu d'une taxe de mutation."
     },
     "downPayment": {
       "title": "Sources de mise de fonds — l’argent le moins cher d’abord",
-      "description": "CELIAPP, comptant, RAP, CELI, don, puis placements. Voyez ce que chaque source vous coûte et ce qu’elle laisse derrière."
+      "description": "CELIAPP, comptant, RAP, CELI, don, puis placements. Voyez ce que chaque source vous coûte et ce qu’elle laisse derrière.",
+      "description_us": "Comptant, don, IRA/401(k), puis autres placements. Le coût de chaque source et ce qu'elle laisse derrière."
     },
     "rrspHbp": {
       "title": "RAP — remboursement d’impôt, règles et remboursement",
@@ -32,11 +37,14 @@
     },
     "amortization": {
       "title": "Amortissement et renouvellement — le choc de paiement",
-      "description": "On ne fixe pas un taux pour toute la durée du prêt. Voyez l’effet d’un renouvellement à un taux plus élevé sur le paiement et sur le coût total."
+      "description": "On ne fixe pas un taux pour toute la durée du prêt. Voyez l’effet d’un renouvellement à un taux plus élevé sur le paiement et sur le coût total.",
+      "title_us": "Calendrier d'amortissement — chaque versement",
+      "description_us": "Un prêt fixe de 30 ans, versement par versement. Solde, intérêts et PMI par année, et la valeur d'annuler la PMI."
     },
     "rentVsBuy": {
       "title": "Louer ou acheter au Canada — tout dépend de la durée",
-      "description": "L’année de rentabilité est le seul chiffre qui tranche. Comparez la richesse finale des deux côtés, avec un test de marché plat et les frais de vente."
+      "description": "L’année de rentabilité est le seul chiffre qui tranche. Comparez la richesse finale des deux côtés, avec un test de marché plat et les frais de vente.",
+      "title_us": "Louer ou acheter aux États-Unis — tout dépend de la durée"
     },
     "scenarios": {
       "title": "Scénarios de mise de fonds — 5, 10, 20 ou 25 %",
@@ -91,7 +99,26 @@
     "faqQ_eligibility": "Puis-je acheter une habitation au Canada sans être citoyen ni résident permanent ?",
     "faqA_eligibility": "Parfois, et cette question précède tous les chiffres de ce site. Une loi fédérale limite quels non-Canadiens peuvent acheter une propriété résidentielle au Canada, avec des exceptions qui dépendent du statut d’immigration et de l’endroit où se trouve la propriété. Elle est à durée limitée et a été prolongée par règlement : consultez la règle en vigueur plutôt qu’un résumé. Par ailleurs, certaines provinces imposent un droit de mutation plus élevé aux acheteurs non-résidents : celui de la Nouvelle-Écosse est appliqué ici, ceux de l’Ontario et de la Colombie-Britannique ne sont pas modélisés du tout.",
     "faqQ_verified": "Les chiffres sont-ils vérifiés ?",
-    "faqA_verified": "En grande partie, et chaque chiffre le précise. Chacun est accompagné d’une fiche de provenance : le document consulté, la date de ce document, et jusqu’où l’on peut s’y fier. La plupart ont été relevés dans le barème de l’organisme lui-même. D’autres sont des valeurs par défaut que nous avons choisies et que nous déclarons, car les honoraires juridiques, les inspections et les frais de déménagement n’ont aucun éditeur officiel au Canada. Quelques-uns restent vides faute de publication, et l’application vous les demande plutôt que d’en inventer. La page des sources énumère chaque chiffre avec son document et sa date. Vérifiez tout ce sur quoi vous vous apprêtez à agir."
+    "faqA_verified": "En grande partie, et chaque chiffre le précise. Chacun est accompagné d’une fiche de provenance : le document consulté, la date de ce document, et jusqu’où l’on peut s’y fier. La plupart ont été relevés dans le barème de l’organisme lui-même. D’autres sont des valeurs par défaut que nous avons choisies et que nous déclarons, car les honoraires juridiques, les inspections et les frais de déménagement n’ont aucun éditeur officiel au Canada. Quelques-uns restent vides faute de publication, et l’application vous les demande plutôt que d’en inventer. La page des sources énumère chaque chiffre avec son document et sa date. Vérifiez tout ce sur quoi vous vous apprêtez à agir.",
+    "eyebrow_us": "États-Unis · Houston, TX",
+    "rulesHeading_us": "Des règles texanes, pas des moyennes nationales",
+    "rulesIntro_us": "Houston (comté de Harris) est modélisée avec son propre taux de taxe foncière, son exonération de résidence principale et ses conventions de frais de clôture — pas un chiffre national unique valable pour chaque État.",
+    "rulesTxHomesteadLabel": "Exonération de résidence",
+    "rulesTxHomestead": "L'exonération de résidence principale du district scolaire du comté de Harris protège 140 000 $ de la valeur d'une résidence principale de la portion HISD de la taxe foncière (en date du 2025-11-04).",
+    "rulesTxNoTransferLabel": "Aucune taxe de mutation",
+    "rulesTxNoTransfer": "Le Texas ne prélève aucune taxe de mutation immobilière au niveau de l'État. Les frais de clôture passent plutôt par l'assurance titres et les frais d'enregistrement du comté.",
+    "rulesTxPmiLabel": "Assurance hypothécaire",
+    "rulesTxPmi": "Sous 20 % de mise de fonds, l'acheteur paie une assurance hypothécaire privée chaque mois plutôt qu'une prime unique financée dans le prêt — annulable une fois le seuil de mise de fonds atteint.",
+    "rulesNote_us": "C'est pourquoi la réponse dépend du marché où vous achetez, et pourquoi un chiffre national unique serait faux dès que vous changez d'État.",
+    "faqQ_afford_us": "Combien de maison puis-je me permettre aux États-Unis?",
+    "faqA_preapproval_us": "Une préapprobation teste le revenu brut par rapport aux ratios d'endettement de base et global (28/36 est la règle classique). Elle ne soustrait pas la taxe foncière, l'assurance habitation, les frais de copropriété, les services publics et l'entretien qui accompagnent la maison, et elle ne tient pas compte de ce que vous voulez garder pour le reste du mois. L'écart entre les deux chiffres atteint plusieurs centaines de dollars par mois.",
+    "faqQ_stressTest_us": "Les États-Unis ont-ils un test de résistance hypothécaire comme au Canada?",
+    "faqA_stressTest_us": "Aucun test de résistance fédéral ne s'applique à une hypothèque américaine — vous êtes qualifié selon votre taux contractuel réel, pas un plancher réglementaire plus élevé. Les prêteurs plafonnent plutôt votre ratio d'endettement, et un prêt au-delà de 80 % de la valeur du bien porte généralement une assurance hypothécaire privée (PMI) jusqu'à ce que votre mise de fonds atteigne le seuil d'annulation.",
+    "faqQ_jurisdiction_us": "Est-ce que cela fonctionne ailleurs qu'à Houston, au Texas?",
+    "faqA_jurisdiction_us": "Pour l'instant, seule Houston (comté de Harris), au Texas, est modélisée — avec son propre taux de taxe foncière, son exonération de résidence et ses conventions de frais de clôture, pas une moyenne nationale. L'exonération de résidence principale du district scolaire du comté de Harris protège 140 000 $ de la valeur d'une résidence principale (en date du 2025-11-04), et le Texas ne prélève aucune taxe de mutation immobilière au niveau de l'État; d'autres États qui en ont une ne sont pas encore modélisés.",
+    "faqQ_eligibility_us": "Puis-je acheter une maison aux États-Unis si je ne suis pas citoyen?",
+    "faqA_eligibility_us": "Cet outil ne modélise aucune restriction fédérale de citoyenneté ou d'immigration sur l'achat d'un bien résidentiel américain — ce n'est pas la même question que soulève la loi fédérale canadienne, et confirmer votre propre situation dépasse ce que ce calculateur fait. Le financement en tant que non-citoyen est une question distincte, avec sa propre réponse selon le prêteur.",
+    "faqA_verified_us": "La plupart, et chaque chiffre indique lequel. Chacun porte une fiche de sourçage : le document contre lequel il a été vérifié, la date de ce document, et le degré de confiance qu'on peut lui accorder. La plupart proviennent directement du barème de l'autorité émettrice — l'IRS, la FHFA, l'enquête PMMS de Freddie Mac, le Texas Department of Insurance, les entités fiscales du comté de Harris. D'autres sont des valeurs par défaut que nous avons choisies et divulguées, car les frais de clôture et de déménagement n'ont pas de source officielle. Quelques-unes restent vides parce que personne ne les publie, et l'application vous les demande plutôt que d'en inventer une. La page des sources répertorie chaque chiffre avec son document et sa date. Vérifiez tout ce sur quoi vous êtes sur le point d'agir."
   },
   "AppHeader": {
     "theme": "Thème",

@@ -21,6 +21,13 @@ const PAGES = [
  * Every locale is checked, not just the source one, because the translations are the
  * ones that break it: French runs 15-20% longer than English for the same sentence,
  * Spanish similarly, and Ukrainian's declensions lengthen the words themselves.
+ *
+ * Metadata lives one catalogue per LANGUAGE (`CATALOGUES`, keyed `en`/`fr`/`uk`/`es`), not
+ * one per Locale — `en-US` and `es-US` read the same files `en-CA`/`es-CA` do. A page whose
+ * copy differs by country carries a `title_us`/`description_us` fork read through
+ * `countryKey()` (see the route's own `layout.tsx`), so checking `en-US`/`es-US` means
+ * checking those fork keys too, wherever a page happens to have one — this is what actually
+ * ships to a US reader, in addition to the base `title`/`description` every CA reader gets.
  */
 describe("metadata copy", () => {
   for (const [locale, messages] of Object.entries(LOCALES)) {
@@ -38,6 +45,18 @@ describe("metadata copy", () => {
         expect(entry?.description).toBeTruthy();
         expect(entry.description.length).toBeLessThanOrEqual(155);
       });
+
+      if (entry?.title_us) {
+        it(`${locale}/${page} has a US title within 60 characters`, () => {
+          expect(entry.title_us.length).toBeLessThanOrEqual(60);
+        });
+      }
+
+      if (entry?.description_us) {
+        it(`${locale}/${page} has a US description within 155 characters`, () => {
+          expect(entry.description_us.length).toBeLessThanOrEqual(155);
+        });
+      }
     }
   }
 

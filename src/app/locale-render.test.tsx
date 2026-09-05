@@ -153,7 +153,13 @@ describe.each(LOCALES)("every page renders in %s", (locale) => {
     renderWithIntl(
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
         <JurisdictionProvider>
-          <Page />
+          {/*
+            HomeContent takes `country` as a plain prop rather than reading `useCountry()`
+            itself — that hook lives behind a "use client" boundary a Server Component cannot
+            call through (see the component's own doc comment) — so this is the one page in
+            the list that needs a prop wired from the locale under test, not `<Page />` bare.
+          */}
+          {namespace === "Home" ? <HomeContent country={country} /> : <Page />}
         </JurisdictionProvider>
       </ThemeProvider>,
       { locale },

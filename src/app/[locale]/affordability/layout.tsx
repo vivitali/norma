@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { buildMetadata } from "@/lib/seo";
 import { assertRouteAvailable } from "@/lib/route-guard";
+import { countryKey } from "@/lib/country-key";
+import { countryOf, type Locale } from "@/i18n/countries";
 
 /**
  * This segment exists only to carry metadata. page.tsx is a client component
@@ -13,12 +15,13 @@ export async function generateMetadata({
   params,
 }: LayoutProps<"/[locale]/affordability">): Promise<Metadata> {
   const { locale } = await params;
+  const country = countryOf(locale as Locale);
   const t = await getTranslations({ locale, namespace: "Metadata.affordability" });
   return buildMetadata({
     locale,
     href: "/affordability",
     title: t("title"),
-    description: t("description"),
+    description: t(countryKey("description", country)),
   });
 }
 

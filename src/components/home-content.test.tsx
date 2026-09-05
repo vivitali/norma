@@ -86,7 +86,10 @@ describe("internal linking", () => {
   it("omits RRSP-HBP from the tool directory for a country with no page for it", () => {
     // RRSP-HBP is the one route ROUTE_COUNTRIES restricts to Canada (US-market spec,
     // "absent from the US navigation"). A US card pointing at it would 404.
-    renderWithIntl(<HomeContent />, { locale: "en-US" });
+    // `country` is a plain prop now (see HomeContent's own doc comment on why it can no
+    // longer derive this from `useCountry()`), so the test sets it explicitly rather than
+    // relying on the render locale alone.
+    renderWithIntl(<HomeContent country="us" />, { locale: "en-US" });
     const tools = screen.getByRole("region", { name: "What each tool answers" });
     expect(tools.querySelector('a[href="/rrsp-hbp"]')).toBeNull();
     // Every other built route is unaffected.

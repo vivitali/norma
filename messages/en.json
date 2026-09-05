@@ -2,11 +2,14 @@
   "Metadata": {
     "home": {
       "title": "How much house can you afford in Canada? — AffordMath",
-      "description": "See what you can genuinely afford to buy in Canada — from real net income and real carrying costs, with your province's rules applied."
+      "description": "See what you can genuinely afford to buy in Canada — from real net income and real carrying costs, with your province's rules applied.",
+      "title_us": "How much house can you afford? — AffordMath",
+      "description_us": "See what you can genuinely afford to buy in the US — from real take-home pay and real carrying costs, with your state's tax and cost rules applied."
     },
     "affordability": {
       "title": "Affordability calculator — real cost, not pre-approval",
-      "description": "Two ceilings side by side: what a lender would approve, and what fits your actual monthly budget. Your province's tax and cost rules included."
+      "description": "Two ceilings side by side: what a lender would approve, and what fits your actual monthly budget. Your province's tax and cost rules included.",
+      "description_us": "Two ceilings side by side: what a lender would approve, and what fits your actual monthly budget. Your state and county's tax and cost rules included."
     },
     "sources": {
       "title": "Sources and provenance — AffordMath",
@@ -20,11 +23,13 @@
     },
     "closingCosts": {
       "title": "Closing costs calculator — what you owe on closing day",
-      "description": "Every closing cost line by province: land transfer tax, legal fees, adjustments, and which rebates actually arrive on closing day."
+      "description": "Every closing cost line by province: land transfer tax, legal fees, adjustments, and which rebates actually arrive on closing day.",
+      "description_us": "Every closing cost line: property tax, title and escrow fees, adjustments, and what Texas charges instead of a transfer tax."
     },
     "downPayment": {
       "title": "Down payment sources — the cheapest money first",
-      "description": "FHSA, cash, RRSP Home Buyers' Plan, TFSA, gift, then investments. See what each source costs you and what it leaves behind."
+      "description": "FHSA, cash, RRSP Home Buyers' Plan, TFSA, gift, then investments. See what each source costs you and what it leaves behind.",
+      "description_us": "Cash, gift, IRA/401(k), then other investments. See what each source costs you and what it leaves behind."
     },
     "rrspHbp": {
       "title": "RRSP Home Buyers' Plan — refund, rules and repayment",
@@ -32,11 +37,14 @@
     },
     "amortization": {
       "title": "Amortization and renewal — the payment shock nobody models",
-      "description": "You do not lock a rate for the life of the loan. See what renewing into a higher rate does to the payment, and what it costs over the mortgage."
+      "description": "You do not lock a rate for the life of the loan. See what renewing into a higher rate does to the payment, and what it costs over the mortgage.",
+      "title_us": "Amortization schedule — every payment to payoff",
+      "description_us": "A 30-year fixed mortgage, payment by payment. See the balance, interest and PMI cost by year, and what PMI cancellation is worth."
     },
     "rentVsBuy": {
       "title": "Rent vs buy in Canada — it depends how long you stay",
-      "description": "The break-even year is the only number that decides it. Compare terminal wealth both ways, with a flat-market test and the costs of selling included."
+      "description": "The break-even year is the only number that decides it. Compare terminal wealth both ways, with a flat-market test and the costs of selling included.",
+      "title_us": "Rent vs buy in the US — it depends how long you stay"
     },
     "scenarios": {
       "title": "Down payment scenarios — 5, 10, 20 or 25 percent",
@@ -91,7 +99,26 @@
     "faqQ_eligibility": "Can I buy a home in Canada if I am not a citizen or permanent resident?",
     "faqA_eligibility": "Sometimes, and that question comes before every number on this site. A federal Act limits which non-Canadians may purchase residential property in Canada, with exceptions that turn on immigration status and on where the property is. It is time-limited and has been extended by regulation, so check the current rule rather than a summary of it. Separately, some provinces charge a higher land transfer tax to buyers who are not residents: Nova Scotia’s is applied here, and Ontario’s and British Columbia’s are not modelled at all.",
     "faqQ_verified": "Are the numbers verified?",
-    "faqA_verified": "Most of them, and every figure says which. Each one carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted. Most were read off the issuing authority's own schedule. Others are modelling defaults we chose and disclose, because legal fees, inspections and moving costs have no authoritative publisher in Canada. A few are left empty because nobody publishes them at all, and the app asks you for those rather than inventing one. The sources page lists every figure with its document and date. Confirm anything you are about to act on."
+    "faqA_verified": "Most of them, and every figure says which. Each one carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted. Most were read off the issuing authority's own schedule. Others are modelling defaults we chose and disclose, because legal fees, inspections and moving costs have no authoritative publisher in Canada. A few are left empty because nobody publishes them at all, and the app asks you for those rather than inventing one. The sources page lists every figure with its document and date. Confirm anything you are about to act on.",
+    "eyebrow_us": "United States · Houston, TX",
+    "rulesHeading_us": "Texas rules, not national averages",
+    "rulesIntro_us": "Houston (Harris County) is modelled with its own property tax rate, homestead exemption and closing-cost conventions — not a single national number standing in for every state.",
+    "rulesTxHomesteadLabel": "Homestead exemption",
+    "rulesTxHomestead": "Harris County's school-district homestead exemption shields $140,000 of a primary residence's value from the HISD portion of the property tax bill (as of 2025-11-04).",
+    "rulesTxNoTransferLabel": "No transfer tax",
+    "rulesTxNoTransfer": "Texas charges no state real estate transfer tax on a home sale. Closing costs run through title insurance and county recording fees instead.",
+    "rulesTxPmiLabel": "Mortgage insurance",
+    "rulesTxPmi": "Below 20% down, a buyer pays private mortgage insurance monthly rather than a one-time premium financed into the loan — cancellable once equity clears the threshold.",
+    "rulesNote_us": "Which is why the answer depends on the market you buy in, and why a single national figure would be wrong the moment you cross a state line.",
+    "faqQ_afford_us": "How much house can I afford in the US?",
+    "faqA_preapproval_us": "A pre-approval tests gross income against front-end and back-end debt-to-income ratios (28/36 is the classic guideline). It does not subtract the property tax, homeowners insurance, HOA fees, utilities and maintenance that arrive with the house, and it takes no view on what you want the rest of your month to contain. The gap between the two figures runs to several hundred dollars a month.",
+    "faqQ_stressTest_us": "Does the US have a mortgage stress test like Canada's?",
+    "faqA_stressTest_us": "No federal stress test applies to a US mortgage — you qualify against your actual contract rate, not a higher regulatory floor. Lenders instead cap your debt-to-income ratio, and a loan above 80% loan-to-value usually carries private mortgage insurance (PMI) until your equity clears the threshold to cancel it.",
+    "faqQ_jurisdiction_us": "Does this work outside Houston, Texas?",
+    "faqA_jurisdiction_us": "Right now, Houston (Harris County), Texas is the only US market modelled — its own property tax rate, homestead exemption and closing-cost conventions, not a national average. Harris County's school-district homestead exemption shields $140,000 of a primary residence's value (as of 2025-11-04), and Texas charges no state real estate transfer tax at all; other states that do are not modelled yet.",
+    "faqQ_eligibility_us": "Can I buy a home in the US if I am not a citizen?",
+    "faqA_eligibility_us": "This tool does not model any federal citizenship or immigration restriction on buying US residential property — that is a different question from the one Canada's federal Act raises, and confirming your own situation is outside what this calculator does. Financing as a non-citizen is a separate question with its own lender-specific answer.",
+    "faqA_verified_us": "Most of them, and every figure says which. Each one carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted. Most were read off the issuing authority's own schedule — the IRS, FHFA, Freddie Mac's PMMS, the Texas Department of Insurance, Harris County's own taxing entities. Others are modelling defaults we chose and disclose, because closing fees and moving costs have no authoritative publisher. A few are left empty because nobody publishes them at all, and the app asks you for those rather than inventing one. The sources page lists every figure with its document and date. Confirm anything you are about to act on."
   },
   "AppHeader": {
     "theme": "Theme",
