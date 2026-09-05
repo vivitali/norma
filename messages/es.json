@@ -723,7 +723,8 @@
     "calcAmortLeft": "Amortización restante",
     "title_us": "Calendario de amortización",
     "scheduleWhy_us": "Los intereses dominan los primeros años y el capital los siguientes — ese cambio es lo que muestra este gráfico.",
-    "altText_us": "Barras apiladas de interés y capital pagados cada año durante {n} años. El interés domina los primeros años. {flipSentence}"
+    "altText_us": "Barras apiladas de interés y capital pagados cada año durante {n} años. El interés domina los primeros años. {flipSentence}",
+    "pmiCancelYear": "El seguro hipotecario privado se cancela en el año {n}, eliminando {amt} al mes de cada pago posterior."
   },
   "RentVsBuy": {
     "title": "Alquilar o comprar",

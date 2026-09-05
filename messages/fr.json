@@ -723,7 +723,8 @@
     "calcAmortLeft": "Amortissement restant",
     "title_us": "Calendrier d'amortissement",
     "scheduleWhy_us": "Les intérêts dominent les premières années et le capital les suivantes — c'est ce basculement que montre ce graphique.",
-    "altText_us": "Barres empilées des intérêts et du capital versés chaque année sur {n} ans. Les intérêts dominent les premières années. {flipSentence}"
+    "altText_us": "Barres empilées des intérêts et du capital versés chaque année sur {n} ans. Les intérêts dominent les premières années. {flipSentence}",
+    "pmiCancelYear": "L’assurance hypothécaire privée s’annule en année {n}, retirant {amt} par mois de chaque versement après cela."
   },
   "RentVsBuy": {
     "title": "Louer ou acheter",

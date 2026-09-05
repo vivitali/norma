@@ -705,6 +705,7 @@
     "costOfBorrowing": "Cost of borrowing",
     "mortgageAmount": "Mortgage amount",
     "pmiMonthly": "PMI, monthly",
+    "pmiCancelYear": "PMI cancels in year {n}, removing {amt} a month from every payment after that.",
     "payoffYear": "Paid off in year {n}",
     "noRenewalSet": "No renewal rate set — the schedule assumes today’s rate for the whole loan.",
     "tagYours": "Your figures",

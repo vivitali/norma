@@ -249,6 +249,23 @@ export default function AmortizationPage() {
                     provenance={<Provenance kind="rule" />}
                   />
                 ) : null}
+                {/*
+                  Metadata.amortization.description_us promises "what PMI
+                  cancellation is worth" — the schedule and the chart imply it
+                  through the PMI column dropping to zero, but name it nowhere.
+                  `result.fin.insuranceMonths` is non-null whenever
+                  `monthlyInsurance > 0` (financing()'s own invariant), so this
+                  reads off the SAME two fields the row above does rather than
+                  re-deriving anything.
+                */}
+                {result.fin.monthlyInsurance > 0 && result.fin.insuranceMonths !== null ? (
+                  <NoteLine>
+                    {t("pmiCancelYear", {
+                      n: Math.ceil(result.fin.insuranceMonths / 12),
+                      amt: fmt(result.fin.monthlyInsurance),
+                    })}
+                  </NoteLine>
+                ) : null}
                 <PanelRow label={t(countryKey("rPayNow", rules.country))} value={fmt(result.firstPayment)} strong />
                 <PanelRow label={t("payoffLabel")} value={t("payoffYear", { n: result.payoffYear })} />
                 {/*
