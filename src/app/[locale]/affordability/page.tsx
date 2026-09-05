@@ -3,8 +3,8 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { affordability, scenario } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { useSections } from "@/hooks/use-sections";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -21,6 +21,7 @@ import {
 import { SCENARIO_PERCENTS } from "@/lib/scenarios-view";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
+import { countryKey } from "@/lib/country-key";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
 import { CrossLink, TraceLabel } from "@/components/cross-link";
 import { GapBand } from "@/components/affordability/gap-band";
@@ -29,7 +30,7 @@ import { MathColumns } from "@/components/affordability/math-columns";
 import { InputGroups } from "@/components/affordability/input-groups";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
-import { AnswerHead, FigureFooter, InlineAsk, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { AnswerHead, FigureFooter, InlineAsk, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 
 /** A check state maps onto a dot tone; the derivation has no state at all. */
 const TONE: Record<CheckState, Tone> = {
@@ -44,17 +45,18 @@ export default function AffordabilityPage() {
   // The reader-facing place name; `jurisdiction.city` is the lowercase record key.
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
   const result = useMemo(
-    () => affordability(jurisdiction, federal, resolved),
-    [jurisdiction, resolved],
+    () => affordability(jurisdiction, rules, resolved),
+    [jurisdiction, rules, resolved],
   );
 
   // The section whose check produced the verdict, open on arrival. Derived from
@@ -77,7 +79,7 @@ export default function AffordabilityPage() {
     const qualIncome =
       (resolved.income1 + resolved.income2 + resolved.otherIncome) * (1 - resolved.haircut / 100);
     for (const dpPct of SCENARIO_PERCENTS) {
-      const column = scenario(jurisdiction, federal, {
+      const column = scenario(jurisdiction, rules, {
         ...resolved,
         dpPct,
         qualIncome,
@@ -86,7 +88,7 @@ export default function AffordabilityPage() {
       if (column.qualifies) return dpPct;
     }
     return null;
-  }, [jurisdiction, resolved, result]);
+  }, [jurisdiction, rules, resolved, result]);
 
   const propTaxProv =
     jurisdiction.provenance["propTax.publishedRate"] ?? jurisdiction.provenance["propTax.effective"];
@@ -316,17 +318,37 @@ export default function AffordabilityPage() {
             // sub-line verbatim, both a few hundred pixels above. The deciding
             // section's one always-visible line has to earn its place.
             result.tdsBinds
-              ? t("ckApTds", { a: fmt(result.binding), d: fmt(resolved.debts) })
-              : t("ckApGds", { a: fmt(result.binding) }),
+              ? t(countryKey("ckApTds", rules.country), { a: fmt(result.binding), d: fmt(resolved.debts) })
+              : t(countryKey("ckApGds", rules.country), { a: fmt(result.binding) }),
             fmt(result.ceiling),
-            t("mStressWhy", { floor: pct(federal.stressTest.floor, 2) }),
+            // No federal stress test exists on a US mortgage — rules.stressTest is null
+            // there, and the qualifying rate below IS the contract rate.
+            rules.stressTest
+              ? t("mStressWhy", { floor: pct(rules.stressTest.floor, 2) })
+              : t("mNoStressTest"),
             <>
               <PanelRow label={t("mQualInc")} value={fmt(result.qualIncome)} />
-              <PanelRow label={t("mStressRate")} value={pct(result.qualRate, 2)} provenance={<Provenance kind="rule" />} />
+              <PanelRow
+                label={t(countryKey("mStressRate", rules.country))}
+                value={pct(result.qualRate, 2)}
+                provenance={<Provenance kind="rule" />}
+              />
               <PanelRow label={t("mFactor")} value={result.fq.toFixed(6)} />
-              <PanelRow label={`${t("mGdsAllow")} · GDS ${pct(federal.gds)}`} value={fmt(result.gdsAllow)} provenance={<Provenance kind="rule" />} />
-              <PanelRow label={`${t("mTdsAllow")} · TDS ${pct(federal.tds)}`} value={fmt(result.tdsAllow)} provenance={<Provenance kind="rule" />} />
-              <PanelRow label={t("mBinding")} value={`${fmt(result.binding)} · ${result.tdsBinds ? "TDS" : "GDS"}`} strong />
+              <PanelRow
+                label={`${t("mGdsAllow")} · ${t(countryKey("dtiFrontAbbr", rules.country))} ${pct(rules.gds)}`}
+                value={fmt(result.gdsAllow)}
+                provenance={<Provenance kind="rule" />}
+              />
+              <PanelRow
+                label={`${t("mTdsAllow")} · ${t(countryKey("dtiBackAbbr", rules.country))} ${pct(rules.tds)}`}
+                value={fmt(result.tdsAllow)}
+                provenance={<Provenance kind="rule" />}
+              />
+              <PanelRow
+                label={t("mBinding")}
+                value={`${fmt(result.binding)} · ${t(countryKey(result.tdsBinds ? "dtiBackAbbr" : "dtiFrontAbbr", rules.country))}`}
+                strong
+              />
               <PanelRow label={t("mMaxPrice")} value={fmt(result.ceiling)} strong />
               {/*
                 WHICH LIMIT PRODUCED THE NUMBER ABOVE.
@@ -358,25 +380,48 @@ export default function AffordabilityPage() {
                     ? t("boundComfort", { a: fmt(result.gap) })
                     : result.tdsBinds
                       ? t("boundDebts", { a: fmt(result.debtCapacity) })
-                      : t("boundIncome", { r: pct(result.qualRate, 2) })}
+                      : t(countryKey("boundIncome", rules.country), { r: pct(result.qualRate, 2) })}
                 </p>
               ) : null}
               <Gauges result={result} />
-              <p className="mt-[18px] max-w-[700px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
-                {t("heatNote", { h: fmt(federal.heatAllowance) })}
-                {/*
-                  The other thing this panel does on the reader's behalf and never
-                  said: a condo fee is counted at `federal.condoFeeInclusion` in the
-                  ratios above and at 100% in the monthly total below, and both are
-                  correct. It rides on `heatNote` rather than taking a paragraph of
-                  its own because it is the same disclosure — what a LENDER counts,
-                  as against what the household pays — and the clause renders only
-                  when there is a fee to disclose.
-                */}
-                {result.monthly.condoFee > 0
-                  ? ` ${t("condoLenderNote", { share: pct(federal.condoFeeInclusion * 100) })}`
-                  : null}
-              </p>
+              {/*
+                No heat-allowance concept exists on a US mortgage — `rules.heatAllowance`
+                is CA-only, and `condoFeeInclusion` is 1 on every US record (Fannie
+                Mae/FHA DTI guidance counts the full HOA fee, not CMHC's 50%
+                convention), so there is no lender-vs-household gap left to disclose.
+                Both halves of this paragraph are CA-specific; it renders nothing at all
+                on a US call rather than a half-true sentence.
+              */}
+              {rules.country === "ca" ? (
+                <p className="mt-[18px] max-w-[700px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
+                  {t("heatNote", { h: fmt(rules.heatAllowance) })}
+                  {/*
+                    The other thing this panel does on the reader's behalf and never
+                    said: a condo fee is counted at `rules.condoFeeInclusion` in the
+                    ratios above and at 100% in the monthly total below, and both are
+                    correct. It rides on `heatNote` rather than taking a paragraph of
+                    its own because it is the same disclosure — what a LENDER counts,
+                    as against what the household pays — and the clause renders only
+                    when there is a fee to disclose.
+                  */}
+                  {result.monthly.condoFee > 0
+                    ? ` ${t("condoLenderNote", { share: pct(rules.condoFeeInclusion * 100) })}`
+                    : null}
+                </p>
+              ) : null}
+              {/*
+                FHA is DATA ONLY on `rules.programs.fha` (see UsRules's own doc
+                comment) — no engine function reads it, so nothing on this screen
+                computes an FHA figure. The tip names the programme and says so,
+                rather than silently omitting the one alternative-financing fact a
+                declined US buyer most wants: a 3.5% down payment exists, just not
+                through the conventional-loan math this page models.
+              */}
+              {rules.country === "us" ? (
+                <NoteLine tight>
+                  {t("fhaTip", { p: pct(rules.programs.fha.minDown * 100) })}
+                </NoteLine>
+              ) : null}
               {/*
                 VERDICT. Declined only, and suppressed when the cash panel is
                 already carrying its second line -- the cap is two per page, and a
@@ -435,6 +480,14 @@ export default function AffordabilityPage() {
               />
               <PanelRow label={t("mPropTax")} value={fmt(result.monthly.propTax)} provenance={<Provenance kind="estimate" />} />
               <PanelRow label={t("cInsurance")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
+              {/*
+                PMI — zero on every Canadian record (CMHC's premium is financed into
+                the loan, not billed monthly; see financing()'s own doc comment), so
+                this row is silent there rather than a permanent $0 line.
+              */}
+              {result.monthly.pmi > 0 ? (
+                <PanelRow label={t("cPmi")} value={fmt(result.monthly.pmi)} provenance={<Provenance kind="rule" />} />
+              ) : null}
               <PanelRow label={t("cUtilities")} value={fmt(result.monthly.utilities)} provenance={<Provenance kind="estimate" />} />
               {result.monthly.condoFee > 0 ? (
                 <PanelRow label={t("cCondoFee")} value={fmt(result.monthly.condoFee)} />

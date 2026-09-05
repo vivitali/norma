@@ -3,7 +3,7 @@ import { cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { getJurisdiction } from "@/domain/jurisdictions";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import type { Jurisdiction } from "@/domain/types";
 import { CATALOGUES } from "@/test/catalogues";
 import { PurchaseInputs } from "./purchase-inputs";
@@ -205,7 +205,7 @@ describe("the 30-year amortization", () => {
     const { container } = renderWithIntl(
       <PurchaseInputs
         {...base(toronto)}
-        pricePlaceholder={federal.cmhc.insuredCap}
+        pricePlaceholder={ca.cmhc.insuredCap}
         amortYears={30}
         ptype="house"
         ftb={false}

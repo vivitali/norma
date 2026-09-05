@@ -299,3 +299,16 @@ externally (see PRODUCT.md).
     is a standing statement about the computation rather than part of it. That is why it
     is deliberately absent from `src/lib/sections.ts`, which registers the page's own
     computation. If it ever grows a control, it has become a section and belongs there.
+  - **`/privacy` and `/terms` are the one exception, and it goes further than a plain
+    `<section>`: they carry NO sections at all**, disclosing or otherwise — every clause
+    renders flat, in document order, fully open on arrival (`src/components/legal-page.tsx`).
+    The reason is legal, not editorial. A privacy policy must be "in clear and simple
+    language" under Quebec's Private Sector Act s. 8.2, and an illegible or
+    incomprehensible clause in a contract of adhesion is null under CCQ art. 1436 where it
+    causes injury; a term the reader never opened is the paradigm case of the external
+    clause CCQ art. 1435 refuses to enforce. Folding a limitation-of-liability clause
+    behind a caret is not a neutral presentation choice on these two pages — it is the
+    thing that would make the clause unenforceable. Both pages are correspondingly absent
+    from `src/lib/sections.ts`'s `SECTION_REGISTRIES`, with an explicit allowlist entry in
+    `messages-coverage.test.ts` rather than a silent gap, so the orphan-key guard still
+    covers their copy.

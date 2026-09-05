@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultContractRate, minDown } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import { getJurisdiction, jurisdictions } from "@/domain/jurisdictions";
 import { TOOL_DEFAULTS } from "./shared-inputs";
 import {
@@ -19,92 +19,92 @@ const untouched = TOOL_DEFAULTS;
 describe("resolveInputs", () => {
   it("derives price from the city benchmark for the chosen property type", () => {
     // A Winnipeg user and a Vancouver user must not both start at $450,000.
-    expect(resolveInputs(untouched, winnipeg, federal).price).toBe(winnipeg.bench.house);
-    expect(resolveInputs(untouched, vancouver, federal).price).toBe(vancouver.bench.house);
+    expect(resolveInputs(untouched, winnipeg, ca).price).toBe(winnipeg.bench.house);
+    expect(resolveInputs(untouched, vancouver, ca).price).toBe(vancouver.bench.house);
     expect(winnipeg.bench.house).not.toBe(vancouver.bench.house);
   });
 
   it("follows the property type", () => {
     const condo = { ...untouched, ptype: "condo" as const };
-    expect(resolveInputs(condo, winnipeg, federal).price).toBe(winnipeg.bench.condo);
+    expect(resolveInputs(condo, winnipeg, ca).price).toBe(winnipeg.bench.condo);
   });
 
   it("keeps an edited price across a jurisdiction change", () => {
     const edited = { ...untouched, price: 512345 };
-    expect(resolveInputs(edited, winnipeg, federal).price).toBe(512345);
-    expect(resolveInputs(edited, vancouver, federal).price).toBe(512345);
+    expect(resolveInputs(edited, winnipeg, ca).price).toBe(512345);
+    expect(resolveInputs(edited, vancouver, ca).price).toBe(512345);
   });
 
   it("derives the contract rate from the down payment", () => {
-    expect(resolveInputs({ ...untouched, dpPct: 10 }, winnipeg, federal).contractRate).toBeCloseTo(
-      federal.rates.insured * 100,
+    expect(resolveInputs({ ...untouched, dpPct: 10 }, winnipeg, ca).contractRate).toBeCloseTo(
+      ca.rates.insured * 100,
       10,
     );
-    expect(resolveInputs({ ...untouched, dpPct: 20 }, winnipeg, federal).contractRate).toBeCloseTo(
-      federal.rates.uninsured * 100,
+    expect(resolveInputs({ ...untouched, dpPct: 20 }, winnipeg, ca).contractRate).toBeCloseTo(
+      ca.rates.uninsured * 100,
       10,
     );
   });
 
   it("keeps an overridden contract rate across the 20% boundary", () => {
     const over = { ...untouched, contractRate: 5.75 };
-    expect(resolveInputs({ ...over, dpPct: 10 }, winnipeg, federal).contractRate).toBe(5.75);
-    expect(resolveInputs({ ...over, dpPct: 20 }, winnipeg, federal).contractRate).toBe(5.75);
+    expect(resolveInputs({ ...over, dpPct: 10 }, winnipeg, ca).contractRate).toBe(5.75);
+    expect(resolveInputs({ ...over, dpPct: 20 }, winnipeg, ca).contractRate).toBe(5.75);
   });
 
   it("sums the four named debts", () => {
     const r = resolveInputs(
       { ...untouched, car: 550, student: 200, cc: 75, otherDebt: 0 },
       winnipeg,
-      federal,
+      ca,
     );
     expect(r.debts).toBe(825);
   });
 
   it("treats untouched debts as zero, not as an assumed payment", () => {
-    expect(resolveInputs(untouched, winnipeg, federal).debts).toBe(0);
+    expect(resolveInputs(untouched, winnipeg, ca).debts).toBe(0);
   });
 
   it("treats an absent second applicant as absent, not as one earning nothing", () => {
     // The accepted ruling: a co-buyer is not assumed. Defaulting income2 to a
     // real figure roughly doubles every new visitor's headline number from a
     // fact they never gave.
-    expect(resolveInputs(untouched, winnipeg, federal).income2).toBe(0);
-    expect(resolveInputs({ ...untouched, income2: 45000 }, winnipeg, federal).income2).toBe(45000);
+    expect(resolveInputs(untouched, winnipeg, ca).income2).toBe(0);
+    expect(resolveInputs({ ...untouched, income2: 45000 }, winnipeg, ca).income2).toBe(45000);
   });
 
   it("derives condoFee to 0 even for a condo", () => {
     // We have no strata-fee data. Inventing one would be a rule with no source;
     // the comfort check asks for it inline instead.
     const condo = { ...untouched, ptype: "condo" as const };
-    expect(resolveInputs(condo, winnipeg, federal).condoFee).toBe(0);
+    expect(resolveInputs(condo, winnipeg, ca).condoFee).toBe(0);
   });
 
   it("leaves funds and save null — there is nothing honest to assume", () => {
-    const r = resolveInputs(untouched, winnipeg, federal);
+    const r = resolveInputs(untouched, winnipeg, ca);
     expect(r.funds).toBeNull();
     expect(r.save).toBeNull();
   });
 
   it("passes an answered funds figure through", () => {
-    expect(resolveInputs({ ...untouched, funds: 50000 }, winnipeg, federal).funds).toBe(50000);
+    expect(resolveInputs({ ...untouched, funds: 50000 }, winnipeg, ca).funds).toBe(50000);
   });
 
   it("resolves the comfort ceiling to the named constant", () => {
-    expect(resolveInputs(untouched, winnipeg, federal).comfortCeiling).toBe(DEFAULT_COMFORT_CEILING);
+    expect(resolveInputs(untouched, winnipeg, ca).comfortCeiling).toBe(DEFAULT_COMFORT_CEILING);
   });
 
   it("resolves a blanked field back to its derived default", () => {
     // Blanking is how a user says "go back to what you had". Empty commits null
     // from NumberField, and null re-derives here.
     const edited = { ...untouched, price: 999999 };
-    expect(resolveInputs({ ...edited, price: null }, winnipeg, federal).price).toBe(
+    expect(resolveInputs({ ...edited, price: null }, winnipeg, ca).price).toBe(
       winnipeg.bench.house,
     );
   });
 
   it("produces no nulls except the unknowns and the one absent-by-meaning field", () => {
-    const r = resolveInputs(untouched, winnipeg, federal);
+    const r = resolveInputs(untouched, winnipeg, ca);
     const nulls = Object.entries(r)
       .filter(([, v]) => v === null)
       .map(([k]) => k);
@@ -118,21 +118,21 @@ describe("resolveInputs", () => {
   it("resolves every down-payment source to a number, and remembers that none was given", () => {
     // The two facts drive different screens. Zero is right for the arithmetic;
     // reporting a shortfall on a first visit and blaming the reader is not.
-    const r = resolveInputs(untouched, winnipeg, federal);
+    const r = resolveInputs(untouched, winnipeg, ca);
     expect([r.fhsa, r.cashSav, r.rrsp, r.tfsa, r.gift, r.nonreg]).toEqual([0, 0, 0, 0, 0, 0]);
     expect(anySourceGiven(untouched)).toBe(false);
     expect(anySourceGiven({ ...untouched, tfsa: 12000 })).toBe(true);
   });
 
   it("takes taxable income from the household income already given", () => {
-    const r = resolveInputs({ ...untouched, income1: 80000, income2: 40000 }, winnipeg, federal);
+    const r = resolveInputs({ ...untouched, income1: 80000, income2: 40000 }, winnipeg, ca);
     expect(r.taxIncome).toBe(120000);
   });
 
   it("takes benchmark rent from the jurisdiction, not a universal constant", () => {
     // A CONDO. Every rent in the dataset is a CMHC two-bedroom apartment average,
     // so it prices a condo purchase and nothing else — see `rentComparable`.
-    const r = resolveInputs({ ...untouched, ptype: "condo" }, winnipeg, federal);
+    const r = resolveInputs({ ...untouched, ptype: "condo" }, winnipeg, ca);
     expect(r.rent).toBe(winnipeg.rent ?? DEFAULT_RENT);
   });
 
@@ -141,7 +141,7 @@ describe("resolveInputs", () => {
     // not measure this. `bench.house` beside it is a detached house, and running
     // the comparison across that gap produced a verdict about two different lives
     // — silently, on the page's default property type.
-    const r = resolveInputs(untouched, winnipeg, federal);
+    const r = resolveInputs(untouched, winnipeg, ca);
     expect(winnipeg.rent).toBeGreaterThan(0);
     expect(r.rentKnown).toBe(false);
     expect(r.rentBasisMismatch).toBe(true);
@@ -153,14 +153,14 @@ describe("resolveInputs", () => {
     // because what is published measures a smaller home, the other because nothing
     // is published at all. CMHC suppresses every Yukon cell.
     const yt = getJurisdiction("yt")!;
-    const r = resolveInputs({ ...untouched, ptype: "condo" }, yt, federal);
+    const r = resolveInputs({ ...untouched, ptype: "condo" }, yt, ca);
     expect(r.rentKnown).toBe(false);
     expect(r.rentBasisMismatch).toBe(false);
   });
 
   it("takes the reader's own rent for any dwelling, mismatch or not", () => {
     // They know what they would rent. The gate is on the PUBLISHED figure only.
-    const r = resolveInputs({ ...untouched, rent: 3400 }, winnipeg, federal);
+    const r = resolveInputs({ ...untouched, rent: 3400 }, winnipeg, ca);
     expect(r.rent).toBe(3400);
     expect(r.rentKnown).toBe(true);
     expect(r.rentBasisMismatch).toBe(false);
@@ -170,14 +170,14 @@ describe("resolveInputs", () => {
     // The zero behind an unpublished benchmark is arithmetic, and a screen must be able
     // to tell it from a house that costs nothing. Without this the pages had only
     // `price`, and `$0 <= your ceiling` is "within reach".
-    expect(resolveInputs(untouched, winnipeg, federal).priceKnown).toBe(true);
+    expect(resolveInputs(untouched, winnipeg, ca).priceKnown).toBe(true);
     const territory = getJurisdiction("yt")!;
     expect(benchmarkPrice(territory, "house")).toBeNull();
-    const unpriced = resolveInputs(untouched, territory, federal);
+    const unpriced = resolveInputs(untouched, territory, ca);
     expect(unpriced.priceKnown).toBe(false);
     expect(unpriced.price).toBe(0);
     // The reader's own price is a price, wherever they are.
-    expect(resolveInputs({ ...untouched, price: 640000 }, territory, federal).priceKnown).toBe(true);
+    expect(resolveInputs({ ...untouched, price: 640000 }, territory, ca).priceKnown).toBe(true);
   });
 
   it("does not count a typed zero as a price", () => {
@@ -191,13 +191,13 @@ describe("resolveInputs", () => {
     // It falls through to the benchmark, like the blank field it means, rather than being
     // treated as an unpriced market: the ask is worded "Nobody publishes a benchmark price
     // for {place}", and in Winnipeg somebody does.
-    const zeroed = resolveInputs({ ...untouched, price: 0 }, winnipeg, federal);
+    const zeroed = resolveInputs({ ...untouched, price: 0 }, winnipeg, ca);
     expect(zeroed.price).toBe(winnipeg.bench.house);
     expect(zeroed.priceKnown).toBe(true);
     // Where nothing is published there is nothing to fall through to, and the zero stays a
     // zero that no screen may print an answer from.
     const territory = getJurisdiction("yt")!;
-    const nowhere = resolveInputs({ ...untouched, price: 0 }, territory, federal);
+    const nowhere = resolveInputs({ ...untouched, price: 0 }, territory, ca);
     expect(nowhere.price).toBe(0);
     expect(nowhere.priceKnown).toBe(false);
   });
@@ -209,7 +209,7 @@ describe("resolveInputs", () => {
     for (const j of jurisdictions) {
       for (const ptype of ["house", "condo", "newbuild"] as const) {
         for (const price of [null, 0, 640000]) {
-          const r = resolveInputs({ ...untouched, ptype, price }, j, federal);
+          const r = resolveInputs({ ...untouched, ptype, price }, j, ca);
           expect(r.priceKnown, `${j.id}/${ptype}/${price}`).toBe(r.price > 0);
         }
       }
@@ -222,13 +222,13 @@ describe("resolveInputs", () => {
     // Nunavut. DEFAULT_RENT keeps the arithmetic defined, but it is a national
     // placeholder, and attributing it to the place that published nothing is exactly the
     // invented figure this product exists not to ship.
-    expect(resolveInputs({ ...untouched, ptype: "condo" }, winnipeg, federal).rentKnown).toBe(true);
+    expect(resolveInputs({ ...untouched, ptype: "condo" }, winnipeg, ca).rentKnown).toBe(true);
     const territory = getJurisdiction("nu")!;
     expect(territory.rent ?? null).toBeNull();
-    const unrented = resolveInputs({ ...untouched, ptype: "condo" }, territory, federal);
+    const unrented = resolveInputs({ ...untouched, ptype: "condo" }, territory, ca);
     expect(unrented.rentKnown).toBe(false);
     expect(unrented.rent).toBe(DEFAULT_RENT);
-    expect(resolveInputs({ ...untouched, rent: 2300 }, territory, federal).rentKnown).toBe(true);
+    expect(resolveInputs({ ...untouched, rent: 2300 }, territory, ca).rentKnown).toBe(true);
   });
 
   it("does not count a typed zero as a rent either", () => {
@@ -239,14 +239,14 @@ describe("resolveInputs", () => {
     // buy with a keystroke.
     // Same resolution as the price: the zero falls through to the figure published for
     // here, which is a real rent, so the comparison is the one the untouched page makes.
-    const zeroed = resolveInputs({ ...untouched, rent: 0, ptype: "condo" }, winnipeg, federal);
+    const zeroed = resolveInputs({ ...untouched, rent: 0, ptype: "condo" }, winnipeg, ca);
     expect(zeroed.rent).toBe(winnipeg.rent);
     expect(zeroed.rentKnown).toBe(true);
     // And where CMHC published nothing there is nothing to fall through to: the zero does
     // not become a rent, the placeholder stands only so the arithmetic is defined, and the
     // page asks instead of printing a verdict.
     const territory = getJurisdiction("nu")!;
-    const nowhere = resolveInputs({ ...untouched, rent: 0 }, territory, federal);
+    const nowhere = resolveInputs({ ...untouched, rent: 0 }, territory, ca);
     expect(nowhere.rentKnown).toBe(false);
     expect(nowhere.rent).toBe(DEFAULT_RENT);
   });
@@ -254,13 +254,13 @@ describe("resolveInputs", () => {
   it("keeps the down-payment floor off a price it does not have", () => {
     // minDown() of nothing is nothing, so a raise would be announced against a $0
     // deposit on a $0 house. The page asks for a price instead.
-    const unpriced = resolveInputs({ ...untouched, dpPct: 5 }, getJurisdiction("nt")!, federal);
+    const unpriced = resolveInputs({ ...untouched, dpPct: 5 }, getJurisdiction("nt")!, ca);
     expect(unpriced.belowMinimum).toBe(false);
     expect(unpriced.dpPct).toBe(5);
   });
 
   it("converts rent inflation from the stored percentage to the fraction the engine takes", () => {
-    const r = resolveInputs({ ...untouched, rentInflation: 3 }, winnipeg, federal);
+    const r = resolveInputs({ ...untouched, rentInflation: 3 }, winnipeg, ca);
     expect(r.rentInflation).toBeCloseTo(0.03, 10);
   });
 });
@@ -326,15 +326,15 @@ describe("the legal minimum down payment", () => {
   it("raises a request below the floor, and says it did", () => {
     // 5% is legal below $500,000 and not above it. A page that amortized 5% on a
     // $1.6M house would be quoting a mortgage no lender in Canada may write.
-    const r = resolveInputs({ ...untouched, price: 1600000, dpPct: 5 }, winnipeg, federal);
+    const r = resolveInputs({ ...untouched, price: 1600000, dpPct: 5 }, winnipeg, ca);
     expect(r.belowMinimum).toBe(true);
     expect(r.dpPctRequested).toBe(5);
     expect(r.dpPct).toBeGreaterThan(5);
-    expect((r.price * r.dpPct) / 100).toBeCloseTo(minDown(federal, 1600000), 4);
+    expect((r.price * r.dpPct) / 100).toBeCloseTo(minDown(ca, 1600000), 4);
   });
 
   it("leaves a legal request exactly alone", () => {
-    const r = resolveInputs({ ...untouched, price: 400000, dpPct: 5 }, winnipeg, federal);
+    const r = resolveInputs({ ...untouched, price: 400000, dpPct: 5 }, winnipeg, ca);
     expect(r.belowMinimum).toBe(false);
     expect(r.dpPct).toBe(5);
   });
@@ -343,9 +343,9 @@ describe("the legal minimum down payment", () => {
     // Being raised to 20% removes the insurance premium, which is exactly when
     // the rate offered changes. Deriving it from the request would quote an
     // insured rate on an uninsured mortgage.
-    const raised = resolveInputs({ ...untouched, price: 3000000, dpPct: 5 }, winnipeg, federal);
+    const raised = resolveInputs({ ...untouched, price: 3000000, dpPct: 5 }, winnipeg, ca);
     expect(raised.dpPct).toBeCloseTo(20, 6);
-    expect(raised.contractRate).toBeCloseTo(defaultContractRate(federal, 20), 10);
+    expect(raised.contractRate).toBeCloseTo(defaultContractRate(ca, 20), 10);
   });
 });
 
@@ -360,7 +360,7 @@ describe("the blended tier — where the floor is not a round number", () => {
   const blended = { ...untouched, price: 900000, dpPct: 5 };
 
   it("floors to a percentage that is not one of the offered options", () => {
-    const r = resolveInputs(blended, winnipeg, federal);
+    const r = resolveInputs(blended, winnipeg, ca);
     expect(r.belowMinimum).toBe(true);
     expect([5, 10, 20, 25]).not.toContain(r.dpPct);
     expect(r.dpPct).toBeGreaterThan(5);
@@ -368,17 +368,17 @@ describe("the blended tier — where the floor is not a round number", () => {
   });
 
   it("keeps the reader's own choice addressable, so a control can bind to it", () => {
-    expect(resolveInputs(blended, winnipeg, federal).dpPctRequested).toBe(5);
+    expect(resolveInputs(blended, winnipeg, ca).dpPctRequested).toBe(5);
   });
 
   it("floors in dollars, matching the rule's own unit and scenario()'s threshold", () => {
     // A request a fraction of a dollar under the floor is a rounding artefact,
     // not someone asking for something illegal.
     const price = 900000;
-    const exact = (minDown(federal, price) / price) * 100;
-    const hair = ((minDown(federal, price) - 0.25) / price) * 100;
-    expect(resolveInputs({ ...untouched, price, dpPct: exact }, winnipeg, federal).belowMinimum).toBe(false);
-    expect(resolveInputs({ ...untouched, price, dpPct: hair }, winnipeg, federal).belowMinimum).toBe(false);
+    const exact = (minDown(ca, price) / price) * 100;
+    const hair = ((minDown(ca, price) - 0.25) / price) * 100;
+    expect(resolveInputs({ ...untouched, price, dpPct: exact }, winnipeg, ca).belowMinimum).toBe(false);
+    expect(resolveInputs({ ...untouched, price, dpPct: hair }, winnipeg, ca).belowMinimum).toBe(false);
   });
 });
 
@@ -394,7 +394,7 @@ describe("benchmarkPrice", () => {
     // city is at least a figure someone published, and the reader supplies the developer's
     // price. `ptype: "newbuild"` stays a tax and warranty treatment.
     expect(benchmarkPrice(winnipeg, "newbuild")).toBe(winnipeg.bench.house);
-    expect(resolveInputs({ ...untouched, ptype: "newbuild" }, winnipeg, federal).price).toBe(
+    expect(resolveInputs({ ...untouched, ptype: "newbuild" }, winnipeg, ca).price).toBe(
       winnipeg.bench.house,
     );
   });
@@ -402,7 +402,7 @@ describe("benchmarkPrice", () => {
   it("exposes the benchmark separately from the price it seeded", () => {
     // A screen showing the benchmark as a hint must branch on this, not on `price`:
     // an edited price is still a price when no benchmark exists behind it.
-    const r = resolveInputs({ ...untouched, price: 512345 }, winnipeg, federal);
+    const r = resolveInputs({ ...untouched, price: 512345 }, winnipeg, ca);
     expect(r.price).toBe(512345);
     expect(r.benchmark).toBe(winnipeg.bench.house);
   });

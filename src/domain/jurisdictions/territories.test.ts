@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildLines } from "../engine";
-import { federal } from "../federal";
+import { ca } from "../rules/ca";
 import { getJurisdiction } from "./index";
 
 const yt = () => getJurisdiction("yt")!;
@@ -19,7 +19,7 @@ const base = {
 
 /** A government line's amount, or undefined if the line is absent. */
 function gov(j: ReturnType<typeof yt>, key: string, o: Parameters<typeof buildLines>[2]) {
-  return buildLines(j, federal, o).gov.find((l) => l.key === key)?.amount;
+  return buildLines(j, ca, o).gov.find((l) => l.key === key)?.amount;
 }
 
 describe("territorial market data", () => {
@@ -119,7 +119,7 @@ describe("Yukon land titles tariff (Land Titles Act, 2015)", () => {
     // Under the current schedule the three lines are $350 + $630 + $100, and the prototype's
     // flat $650 + $100 was $330 short.
     const o = { ...base, price: 620000, dpPct: 20 };
-    const lines = buildLines(yt(), federal, o).gov;
+    const lines = buildLines(yt(), ca, o).gov;
     const total = lines.reduce((sum, l) => sum + l.amount, 0);
     expect(total).toBeCloseTo(1080, 2);
     expect(total).toBeGreaterThan(750);
@@ -286,9 +286,9 @@ describe("Nunavut land titles tariff (R-062-93 as inherited, still in force)", (
   it("charges no separate assurance fund line, unlike Yukon", () => {
     // Nunavut funds its assurance fund by transferring 10% of these fees into it, not by
     // billing the buyer a fourth line.
-    const keys = buildLines(nu(), federal, { ...base, price: 620000 }).gov.map((l) => l.key);
+    const keys = buildLines(nu(), ca, { ...base, price: 620000 }).gov.map((l) => l.key);
     expect(keys).not.toContain("li_assuranceFund");
-    expect(buildLines(yt(), federal, { ...base, price: 620000 }).gov.map((l) => l.key)).toContain(
+    expect(buildLines(yt(), ca, { ...base, price: 620000 }).gov.map((l) => l.key)).toContain(
       "li_assuranceFund",
     );
   });

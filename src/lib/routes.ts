@@ -1,6 +1,21 @@
 import { routing } from "@/i18n/routing";
+import type { Country } from "@/i18n/countries";
+import { ROUTE_COUNTRIES as OG_ROUTE_COUNTRIES, type IndexableRoute } from "./og-manifest";
 
 export type RouteKey = keyof typeof routing.pathnames;
+
+/**
+ * Which countries each route exists in, keyed by the same route strings `routing.pathnames`
+ * declares — re-exported from `src/lib/og-manifest.ts` rather than restated, since that file
+ * already has to carry this data import-free for `scripts/generate-og.mjs` and
+ * `scripts/assert-prerendered.mjs`. One source; `routes-availability.test.ts` pins `RouteKey`
+ * and `IndexableRoute` as the same key set so this cast can never silently paper over a route
+ * that exists in one list and not the other.
+ */
+export const ROUTE_COUNTRIES: Record<RouteKey, readonly Country[]> = OG_ROUTE_COUNTRIES as Record<
+  IndexableRoute,
+  readonly Country[]
+>;
 
 export interface NavEntry {
   route: RouteKey;
@@ -12,12 +27,26 @@ export interface NavEntry {
    * only what a user can actually reach. Shipping a page means flipping this to true.
    */
   built: boolean;
+  /**
+   * Which countries this route exists in — read off `ROUTE_COUNTRIES` above rather than
+   * hand-written per entry, so a route can only ever disagree with itself by editing
+   * `og-manifest.ts`, never by two call sites drifting apart. RRSP-HBP is Canada-only; every
+   * other route lists every registered country (US-market spec, "RRSP-HBP is absent from the
+   * US navigation").
+   */
+  countries: readonly Country[];
 }
 
 export interface NavGroup {
   /** Message key under the `Nav` namespace. */
   heading: string;
   entries: readonly NavEntry[];
+}
+
+/** Builds one NavEntry, reading its `countries` off `ROUTE_COUNTRIES` so it can never
+ * be written inconsistently with `og-manifest.ts`. */
+function entry(route: RouteKey, label: string): NavEntry {
+  return { route, label, built: true, countries: ROUTE_COUNTRIES[route] };
 }
 
 /**
@@ -28,35 +57,64 @@ export interface NavGroup {
 export const NAV: readonly NavGroup[] = [
   {
     heading: "afford",
-    entries: [
-      { route: "/affordability", label: "affordability", built: true },
-      { route: "/rent-vs-buy", label: "rentVsBuy", built: true },
-    ],
+    entries: [entry("/affordability", "affordability"), entry("/rent-vs-buy", "rentVsBuy")],
   },
   {
     heading: "buy",
     entries: [
-      { route: "/closing-costs", label: "closingCosts", built: true },
-      { route: "/down-payment", label: "downPayment", built: true },
-      { route: "/rrsp-hbp", label: "rrspHbp", built: true },
+      entry("/closing-costs", "closingCosts"),
+      entry("/down-payment", "downPayment"),
+      entry("/rrsp-hbp", "rrspHbp"),
     ],
   },
   {
     heading: "own",
-    entries: [
-      { route: "/amortization", label: "amortization", built: true },
-      { route: "/rent-vs-buy", label: "rentVsBuy", built: true },
-    ],
+    entries: [entry("/amortization", "amortization"), entry("/rent-vs-buy", "rentVsBuy")],
   },
   {
     heading: "utility",
-    entries: [
-      { route: "/scenarios", label: "scenarios", built: true },
-      { route: "/sources", label: "sources", built: true },
-    ],
+    entries: [entry("/scenarios", "scenarios"), entry("/sources", "sources")],
   },
 ];
 
 export function builtEntries(group: NavGroup): readonly NavEntry[] {
   return group.entries.filter((e) => e.built);
 }
+
+/**
+ * The footer registry — destinations that are obligations rather than tools.
+ *
+ * Deliberately NOT a fifth NAV group. `NAV` is grouped by the buyer's journey and every entry in
+ * it answers a question the reader came with; a privacy policy answers a question the reader did
+ * not ask and the law obliges us to answer anyway. Putting them in the menu panel would rank them
+ * beside Affordability and Closing Costs, which misstates what they are, and would push the
+ * panel's four columns to five for two links nobody browses to.
+ *
+ * They still need a registry rather than two hardcoded `<Link>`s, for the same reason NAV is one:
+ * `routes.test.ts` checks `routing.pathnames` against NAV ∪ FOOTER in both directions, so a route
+ * added to routing.ts and forgotten here fails the suite instead of becoming silently unreachable.
+ *
+ * `built` is kept for symmetry with NavEntry, and because these two pages ship in the same commit
+ * as this registry — a false here would mean a footer link to a 404.
+ */
+export interface FooterEntry {
+  route: RouteKey;
+  /**
+   * Message key under the `Legal` namespace — NOT `Nav`, which is why this is its own type rather
+   * than a reused `NavEntry`. A check written against `NavEntry` would look in the wrong catalogue.
+   */
+  label: string;
+}
+
+/**
+ * No `built` flag, deliberately, where `NavEntry` has one. NAV's flag earns its place because the
+ * registry recorded all nine routes before the pages existed and the renderer filtered them. Both
+ * of these pages ship in the same commit as this registry, so a `built: false` here would describe
+ * a state that has never existed — and `routes.test.ts` asserting every entry is reachable would
+ * make the filter unfalsifiable: a flag the tests prove can never be false is documentation of an
+ * impossible capability, not a safeguard.
+ */
+export const FOOTER: readonly FooterEntry[] = [
+  { route: "/privacy", label: "privacy" },
+  { route: "/terms", label: "terms" },
+];

@@ -11,19 +11,19 @@ import {
 
 describe("absoluteUrl", () => {
   it("returns an absolute URL on the canonical host", () => {
-    const url = absoluteUrl("en", "/affordability");
+    const url = absoluteUrl("en-CA", "/affordability");
     expect(url.startsWith(`${SITE_URL}/`)).toBe(true);
     expect(url.endsWith("/affordability")).toBe(true);
   });
 
   it("gives each locale a distinct URL", () => {
-    expect(absoluteUrl("fr", "/affordability")).not.toBe(
-      absoluteUrl("en", "/affordability"),
+    expect(absoluteUrl("fr-CA", "/affordability")).not.toBe(
+      absoluteUrl("en-CA", "/affordability"),
     );
   });
 
   it("never emits a double slash", () => {
-    expect(absoluteUrl("en", "/")).not.toMatch(/\/\/$/);
+    expect(absoluteUrl("en-CA", "/")).not.toMatch(/\/\/$/);
   });
 });
 
@@ -41,14 +41,14 @@ describe("languageAlternates", () => {
 
 describe("buildMetadata", () => {
   const meta = buildMetadata({
-    locale: "en",
+    locale: "en-CA",
     href: "/affordability",
     title: "What can you afford?",
     description: "Two ceilings, side by side.",
   });
 
   it("sets an absolute canonical", () => {
-    expect(meta.alternates?.canonical).toBe(absoluteUrl("en", "/affordability"));
+    expect(meta.alternates?.canonical).toBe(absoluteUrl("en-CA", "/affordability"));
   });
 
   it("carries hreflang for every locale", () => {
@@ -59,9 +59,9 @@ describe("buildMetadata", () => {
 
   it("sets Open Graph with the site name and canonical url", () => {
     expect(meta.openGraph?.siteName).toBe(SITE_NAME);
-    expect(meta.openGraph?.url).toBe(absoluteUrl("en", "/affordability"));
+    expect(meta.openGraph?.url).toBe(absoluteUrl("en-CA", "/affordability"));
     expect(meta.openGraph?.title).toBe("What can you afford?");
-    // A full language_TERRITORY tag, not the bare "en" this used to emit.
+    // A full language_TERRITORY tag, not the bare locale ("en-CA") this maps from.
     expect(meta.openGraph?.locale).toBe("en_CA");
   });
 
@@ -78,10 +78,10 @@ describe("og:locale", () => {
   // table that decides how figures are formatted, and "the two cannot disagree" is a
   // description of the coupling rather than a test of it.
   it.each([
-    ["en", "en_CA"],
-    ["fr", "fr_CA"],
-    ["uk", "uk_UA"],
-    ["es", "es_MX"],
+    ["en-CA", "en_CA"],
+    ["fr-CA", "fr_CA"],
+    ["uk-CA", "uk_UA"],
+    ["es-CA", "es_MX"],
   ])("emits %s as %s", (locale, expected) => {
     const meta = buildMetadata({
       locale,
@@ -94,41 +94,54 @@ describe("og:locale", () => {
 });
 
 describe("locale prefixing", () => {
-  // Guards the rule reimplemented in seo.ts. These expectations change when
-  // Task 8 switches localePrefix to "as-needed" — that is the point of having
-  // them: the URL shape cannot move without a test saying so.
-  it("prefixes every locale while localePrefix is the default 'always'", () => {
-    expect(absoluteUrl("en", "/affordability")).toBe(
-      `${SITE_URL}/en/affordability`,
+  // Guards the rule reimplemented in seo.ts. A locale prefix now spans two URL
+  // segments — the country ("ca") and the language ("en"/"fr"/...) — because
+  // routing.ts's `localePrefix.prefixes` maps each BCP-47 locale tag to
+  // "/ca/<language>". These expectations change if that prefix map ever moves off
+  // "always"; that is the point of pinning them here.
+  it("prefixes every locale under its country segment", () => {
+    expect(absoluteUrl("en-CA", "/affordability")).toBe(
+      `${SITE_URL}/ca/en/affordability`,
     );
     // The French canonical is the French SLUG, not the route key. A canonical that
     // names a URL the site never serves is worse than no canonical at all, so this
     // has to resolve through `pathnames` rather than concatenating the key.
-    expect(absoluteUrl("fr", "/affordability")).toBe(
-      `${SITE_URL}/fr/abordabilite`,
+    expect(absoluteUrl("fr-CA", "/affordability")).toBe(
+      `${SITE_URL}/ca/fr/abordabilite`,
     );
   });
 
   it("leaves a route with no localized slug on its English key", () => {
-    expect(absoluteUrl("fr", "/sources")).toBe(`${SITE_URL}/fr/sources`);
+    expect(absoluteUrl("fr-CA", "/sources")).toBe(`${SITE_URL}/ca/fr/sources`);
   });
 
-  it("maps the root to a bare locale path with no trailing slash", () => {
-    expect(absoluteUrl("en", "/")).toBe(`${SITE_URL}/en`);
+  it("maps the root to a bare country/language path with no trailing slash", () => {
+    expect(absoluteUrl("en-CA", "/")).toBe(`${SITE_URL}/ca/en`);
+  });
+
+  it("throws for a locale with no configured URL prefix, rather than guessing one", () => {
+    // The old, pre-/ca/ URL shape ("/en-CA/...") is exactly what a silent
+    // `/${locale}` fallback would have reconstructed here — invisibly, since every
+    // caller in this suite passes a locale from `routing.locales`, itself derived
+    // from the same registry `localePrefix.prefixes` comes from. Only a genuine
+    // routing.ts bug can reach this path, and it must fail loudly.
+    expect(() => absoluteUrl("xx-YY", "/affordability")).toThrow(
+      /no URL prefix configured for locale "xx-YY"/,
+    );
   });
 });
 
 describe("social card metadata", () => {
   const meta = buildMetadata({
-    locale: "fr",
+    locale: "fr-CA",
     href: "/affordability",
     title: "Calculateur",
     description: "Deux plafonds.",
   });
 
   it("points each locale at its own card", () => {
-    expect(ogImagePath("fr", "/affordability")).toBe("/og/fr/affordability.png");
-    expect(ogImagePath("uk", "/")).toBe("/og/uk/home.png");
+    expect(ogImagePath("fr-CA", "/affordability")).toBe("/og/fr-CA/affordability.png");
+    expect(ogImagePath("uk-CA", "/")).toBe("/og/uk-CA/home.png");
   });
 
   it("declares the image dimensions", () => {
@@ -142,12 +155,12 @@ describe("social card metadata", () => {
   it("describes the image with the page title", () => {
     const [image] = meta.openGraph?.images as { alt: string; url: string }[];
     expect(image.alt).toBe("Calculateur");
-    expect(image.url).toBe("/og/fr/affordability.png");
+    expect(image.url).toBe("/og/fr-CA/affordability.png");
   });
 
   it("gives twitter the same card, not a bare url", () => {
     const [image] = meta.twitter?.images as { url: string; alt: string }[];
-    expect(image.url).toBe("/og/fr/affordability.png");
+    expect(image.url).toBe("/og/fr-CA/affordability.png");
     expect(image.alt).toBe("Calculateur");
   });
 

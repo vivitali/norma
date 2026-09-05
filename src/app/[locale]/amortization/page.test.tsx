@@ -9,7 +9,7 @@ import AmortizationPage from "./page";
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
-const renderPage = (locale: Locale = "en") =>
+const renderPage = (locale: Locale = "en-CA") =>
   renderWithIntl(
     <JurisdictionProvider>
       <AmortizationPage />
@@ -188,7 +188,7 @@ describe("Amortization — French", () => {
     // render the raw key, and a collapsed page hides every section where that
     // can happen -- which is exactly where Amortization.altText was hiding.
     const user = userEvent.setup();
-    renderPage("fr");
+    renderPage("fr-CA");
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(document.body.textContent).not.toMatch(/Amortization\./);
     expect(screen.getAllByText(/Amortissement et renouvellement/).length).toBeGreaterThan(0);
@@ -234,7 +234,7 @@ describe("Amortization — with no published price, it asks", () => {
     // than a rule, because French articles are not derivable from spelling — and Terre-Neuve
     // takes none at all. The negative assertion is what stops the bare form coming back.
     inYukon();
-    renderPage("fr");
+    renderPage("fr-CA");
     expect(
       screen.getByText(/Personne ne publie de prix de référence pour le Yukon/),
     ).toBeInTheDocument();

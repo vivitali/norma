@@ -14,7 +14,7 @@ Shows Canadians what they can genuinely afford to buy or rent — computed from 
 
 ## Stack
 
-Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui (Radix base, Nova preset) · next-intl (locales: en, fr, uk, es — every route locale-prefixed) · Vitest + Testing Library
+Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui (Radix base, Nova preset) · next-intl (locales: en-CA, fr-CA, uk-CA, es-CA, mounted under `/ca/<language>` — every route locale-prefixed) · Vitest + Testing Library
 
 ## Commands (scripts contract — always use these, never raw stack commands)
 
@@ -39,36 +39,63 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
   hard-refuses a Node-runtime proxy (`process.exit(1)`, no flag), so `proxy.ts` cannot be deployed
   to our host at all. Don't "fix" this back to `proxy.ts` — it breaks `scripts/ship`. Revisit when
   the adapter supports Node middleware.
+- **A locale is a country and a language, and the two are named types.** `src/i18n/countries.ts`
+  defines `Language` (`en | fr | uk | es` — selects a catalogue, `Jurisdictions.at`, plural rules),
+  `Country` (`ca` only today, but a total `Record<Country, CountryProfile>` registry so a second
+  country is additive) and `Locale` (the BCP-47 pair, `en-CA`, the only thing next-intl's routing
+  sees). `routing.locales` and every URL prefix in `routing.ts`'s `localePrefix.prefixes` are
+  DERIVED from `COUNTRIES` — `allLocales()` and `localePrefixes()` — not written out twice.
+  Message catalogues stay one file per LANGUAGE (`messages/en.json`, never `messages/en-CA.json`);
+  `src/i18n/request.ts` loads by `languageOf(locale)`. A per-language check (parity, ICU plurals)
+  iterates `src/test/catalogues.ts`; a per-ROUTE check (prerendering, the sitemap, hreflang,
+  rendering every page) iterates `routing.locales` instead — see the comment at the top of
+  `src/i18n/countries.ts` for why that file has zero imports of its own: `scripts/smoke` and
+  `scripts/assert-prerendered.mjs` both import it directly, with Node's type stripping, to learn
+  the locale list and each locale's URL prefix without needing `node_modules` installed.
+- **Every Canadian route lives under `/ca/<language>`, not at the root.** `affordmath.com/en/…`
+  redirects permanently (308) to `affordmath.com/ca/en/…` via `next.config.ts`'s `redirects()`,
+  sourced from
+  `src/lib/redirects.ts` (unit-tested in `redirects.test.ts` for coverage and no `/ca/…` loop) —
+  the one-time migration this repo made so a country segment could exist at all. This is what a
+  two-segment `localePrefix` costs: `en-CA` maps to `/ca/en`, not `/en-CA`, and every place that
+  used to build a URL as `/${locale}` now has to resolve the real prefix (`src/lib/seo.ts`'s
+  `localePrefixOf`, not a bare template literal).
 - **Adding a page is two entries and a boolean.** Route keys and their localized slugs live in
   `src/i18n/routing.ts` (`pathnames`); the navigation IA lives in `src/lib/routes.ts` (`NAV`). Add
   the route to both, then flip `built: true` when the page exists. Tests enforce the pair in both
   directions, so forgetting either fails the suite. **Never write a route string anywhere else** —
   the folder name stays the canonical English key and the localized slug is a middleware rewrite.
 - **A locale is absent from a `pathnames` entry when its slug IS the canonical key.** next-intl
-  resolves a missing locale as `pathnameConfig[locale] || internalTemplate`, which is why `en`
+  resolves a missing locale as `pathnameConfig[locale] || internalTemplate`, which is why `en-CA`
   appears nowhere — and it is the seam that makes a locale additive: it can ship with English
   slugs and get them translated later, one line at a time.
-  - `fr` and `es` carry slugs. `uk` carries **none**, deliberately: slugs are ASCII (below), there
-    is no ASCII spelling of a Ukrainian word, and a transliteration is a string nobody searches
-    for or reads. `/uk/affordability` is at least recognisable from the English page.
+  - `fr-CA` and `es-CA` carry slugs. `uk-CA` carries **none**, deliberately: slugs are ASCII
+    (below), there is no ASCII spelling of a Ukrainian word, and a transliteration is a string
+    nobody searches for or reads. `/ca/uk/affordability` is at least recognisable from the English
+    page.
   - `/rrsp-hbp` has no Spanish slug either. RRSP and HBP are the names on the reader's own
     Canadian bank and tax paperwork; there is nothing to translate them into.
 - Slugs are ASCII, no accents (`/abordabilite`, not `/abordabilité`; `/amortizacion`, not
   `/amortización`) — an accented path percent-encodes the moment it is copied, pasted or logged.
-- **Adding a locale is four edits and a translation**, and three of them are one line:
-  `routing.locales` in `src/i18n/routing.ts`; the presentation facts in **`src/lib/locales.ts`**;
-  the catalogue in `src/test/catalogues.ts`; then `messages/<locale>.json` itself. `LOCALES` is a
-  `Record<Locale, LocaleProfile>`, so omitting it is a compile error rather than a silent fallback
-  to English conventions. **Every cross-locale test iterates those registries** — parity, ICU
-  placeholders, metadata length caps, section labels, Nav keys, cross-link rules, the engine's
-  dynamic line-item keys — so nothing else needs touching.
+- **Adding a Canadian locale is four edits and a translation**, and three of them are one line:
+  the language in `COUNTRIES.ca.languages` in `src/i18n/countries.ts` (`routing.locales` is
+  derived from it, so nothing in `routing.ts` itself needs touching); the presentation facts in
+  **`src/lib/locales.ts`**; the catalogue in `src/test/catalogues.ts`; then `messages/<language>.json`
+  itself. `LOCALES` is a `Record<Locale, LocaleProfile>`, so omitting it is a compile error rather
+  than a silent fallback to English conventions. **Every cross-locale test iterates those
+  registries** — parity, ICU placeholders, metadata length caps, section labels, Nav keys,
+  cross-link rules, the engine's dynamic line-item keys — so nothing else needs touching. Adding a
+  second COUNTRY is a larger job — see
+  `docs/superpowers/specs/2026-08-29-us-market-design.md`.
   - The rule that used to live in three files as `locale !== "en"` was never a rule. It was a
     two-locale coincidence, and Spanish breaks it: Latin American Spanish leads with the dollar
     sign exactly as English does. Currency placement and percent spacing are per-locale facts and
     live in the table.
-  - `es` formats through **`es-MX`**, not `es-ES`. The reader is a Spanish speaker in Canada
+  - `es-CA` formats through **`es-MX`**, not `es-ES`. The reader is a Spanish speaker in Canada
     holding Canadian paperwork; peninsular grouping would render the same figure as `1.234.567`
-    where `en-CA` renders `1,234,567`, on the same screen, depending on the language toggle.
+    where `en-CA` renders `1,234,567`, on the same screen, depending on the language toggle. The
+    comment on that table entry says this is a fact about the READER, not the URL's country
+    segment — `es-US`, when it ships, gets its own judgement call, not an inherited one.
 - **Allowlists passed to `useSharedState` MUST be module-level constants** from
   `src/lib/shared-inputs.ts`. The hook keys an effect on the array's identity; an inline literal is
   an infinite render loop, not a type error. This has bitten twice.
@@ -237,13 +264,39 @@ pattern that resembles one. The same applies to any future assertion over render
 1. `src/i18n/routing.ts` — the route key and its localized slugs. **French and Spanish are
    both required** and a test enforces each; Ukrainian deliberately takes none (see the
    conventions above). A route added with only a French slug fails the suite.
-2. `src/lib/routes.ts` — the nav entry and its `built` flag
+2. `src/lib/routes.ts` — the nav entry and its `built` flag. Most pages go in `NAV`; a page that
+   answers a legal obligation rather than a question the reader arrived with — `/privacy` and
+   `/terms` are the only two so far — goes in the separate `FOOTER` registry instead, with its own
+   `FooterEntry` type and its own `Legal`-namespace `label` (`NAV`'s labels are `Nav` keys).
+   `routes.test.ts` checks `routing.pathnames` against `NAV ∪ FOOTER` in both directions, so a
+   route left off either one still fails the suite.
 3. `src/lib/sections.ts` — the page's section registry, added to `SECTION_REGISTRIES` so the
    message-key test covers it. **Add it when the page ships, not before**: a registry naming a
    namespace that does not exist yet cannot be checked, and a test that skips it is not a test.
+   **`/privacy` and `/terms` are the deliberate exception — they have no entry, ever**: legal copy
+   renders flat with no disclosure gesture at all (see `DESIGN.md` §8 and the note in
+   `src/components/legal-page.tsx` for why), so there is nothing to register. Because that would
+   otherwise leave their `Legal`/`Privacy`/`Terms` namespaces outside every orphan-key guard,
+   `messages-coverage.test.ts` names them in an explicit allowlist instead of silently skipping
+   them — the same pattern to reach for the next namespace that has no sections of its own.
 4. `src/lib/seo.ts` — `INDEXABLE_ROUTES`, plus `Metadata.<page>` copy and the page's entry in
    `seo-copy.test.ts`'s `PAGES`
 5. `src/app/[locale]/<route>/layout.tsx` — metadata only. `page.tsx` is a client component and
+2. `src/lib/routes.ts` — the nav entry and its `built` flag
+3. `src/lib/og-manifest.ts` — `ROUTE_COUNTRIES[route]`, the `Country[]` this route exists in
+   (re-exported through `src/lib/seo.ts` and `src/lib/routes.ts`). Every route lists both
+   registered countries unless it genuinely has no counterpart in one of them — `/rrsp-hbp` is
+   the one exception today. This is what `NAV` filters by, what `assertRouteAvailable` 404s by,
+   and what the sitemap and hreflang scope by; a route that skips this line is offered to a
+   country whose page for it does not exist.
+4. `src/lib/sections.ts` — the page's section registry, added to `SECTION_REGISTRIES` so the
+   message-key test covers it. **Add it when the page ships, not before**: a registry naming a
+   namespace that does not exist yet cannot be checked, and a test that skips it is not a test.
+5. `src/lib/seo.ts` — `INDEXABLE_ROUTES`, plus `Metadata.<page>` copy and the page's entry in
+   `seo-copy.test.ts`'s `PAGES`. If the page's title or description differs by country, fork it
+   through `countryKey()` in the route's `layout.tsx` (below) rather than writing two pages —
+   `seo-copy.test.ts`'s 60/155 caps check the `_us` fork too, wherever one exists.
+6. `src/app/[locale]/<route>/layout.tsx` — metadata only. `page.tsx` is a client component and
    cannot export `generateMetadata`.
 
 **Every page that computes an answer can show its work.** `src/components/calc/calc-trace.tsx`
@@ -351,8 +404,10 @@ renders the raw key when one is missing, which reaches a French reader as `RentV
 5. Open issues below
 
 **The data is now verified — [#5](https://github.com/vivitali/norma/issues/5) is done.** Every one
-of the 14 jurisdiction records and `federal.ts` carries a `provenance` map naming the document each
-figure was checked against, that document's date, and how far it can be trusted.
+of the 14 jurisdiction records and the federal rules record (`src/domain/rules/ca.ts` since the
+country seam landed; `federal.ts` at the time this verification pass shipped) carries a
+`provenance` map naming the document each figure was checked against, that document's date, and
+how far it can be trusted.
 `UNVERIFIED_BENCHMARK`, `UNVERIFIED_PROP_TAX` and `PROVISIONAL_DERIVATION` have **zero call sites**.
 `/sources` renders the whole inventory from that data, grouped per jurisdiction.
 
@@ -389,6 +444,92 @@ values. Go to the primary source before complying.
 Two consequences of the old placeholders are now resolved by real data rather than by argument:
 Rent vs Buy's default verdict is no longer driven by an invented benchmark, and every market figure
 says which metric it is. `capacityPer100` is still zero at every income for debt-free households.
+
+**Every Canadian route now lives under `/ca/`** — implementation order step 1 of
+`docs/superpowers/specs/2026-08-29-us-market-design.md`, landed with **no US code and no
+calculation change**. `affordmath.com/en/affordability` redirects permanently (308) to
+`affordmath.com/ca/en/affordability`;
+`Language`, `Country` and `Locale` are now three named types in `src/i18n/countries.ts` (see the
+"Conventions" section above), and every page, in every language, is still prerendered —
+`scripts/verify-prerender` covers all thirteen page routes (the original nine tool pages plus
+`/privacy` and `/terms`, merged in afterward) across all four locales under their new prefix. This
+is the seam the rest of the US-market spec builds on; no `rules/us.ts`, no second country in
+`COUNTRIES`, and no US jurisdiction data exist yet.
+
+**The country seam landed in the domain layer next** — implementation order step 2, a pure
+refactor with **no behaviour change** (`src/domain/golden.test.ts` freezes engine output across
+three jurisdictions as the regression net; it stayed green through the whole branch).
+`src/domain/federal.ts` is gone; Canada's rules are `src/domain/rules/ca.ts`, reached through
+`RULES: Record<Country, CountryRules>` in `src/domain/rules/index.ts`. `FederalRules` split into
+`CountryRulesBase` (the fields every market needs, same shape, different values — `rates`,
+`stressTest`, `gds`/`tds`, `marginal`, `appreciation`, `investReturn`, `capGainsInclusion`, …) and
+`CaRules` (fields with no US counterpart to widen into — `cmhc`, `minDown`, `fhsa`, `hbp`,
+`rrspCap`, `gstFthb`, `heatAllowance`). Every engine function is typed against the narrower of the
+two it actually needs — `CountryRulesBase` where it reads only shared fields, `CaRules` where it
+reads a Canada-only one, directly or transitively. That transitivity is the finding worth
+remembering: `amortization()`, `rentVsBuy()` and `scenario()` read no Canada-only field
+themselves, but each calls `financing()` or `closingTotal()`, which do — so all three are
+`CaRules`-typed despite looking generic on their own signature. This is deliberate, not a gap: it
+is what makes step 3 (`rules/us.ts`) compile-driven rather than a hunt, because a function honestly
+typed against `CountryRulesBase` cannot silently start reading a Canada-only field later.
+`Jurisdiction` gained `country: Country`; `mortgage: { kind: "term"; termYears; renews: true } |
+{ kind: "toMaturity"; renews: false }` is the discriminated union pages must branch on, never on
+`country` — a future renewing country gets the Canadian treatment for free, and a page that forgets
+the second arm fails to compile once it has a value. `useRules()`/`useCountry()` (client
+components) and `rulesFor(country)` (server, and `/sources`) replace every `import { federal }`.
+
+**The US market landed on top of that seam, market data then UI.** `src/domain/rules/us.ts` is
+the second `CountryRules` entry (`RULES.us`), and `src/domain/jurisdictions/houston.ts` is the
+first — and so far only — US jurisdiction: Houston (Harris County), Texas, `country: "us"`,
+`mortgage: { kind: "toMaturity", renews: false }`. Every page reads the union through the same
+`useRules()`/`rulesFor()` seam the domain refactor built; nothing imports a country's rules by
+name. `src/i18n/routing.ts` and `src/i18n/countries.ts` gained the `en-US`/`es-US` locale pair
+(`/us/<language>`, mirroring `/ca/<language>`) and `ROUTE_COUNTRIES` (re-exported from
+`src/lib/og-manifest.ts` through `src/lib/seo.ts`) names, per route, which countries carry it —
+every route lists both today except `/rrsp-hbp`, which is Canada-only (`UsRules` has no `hbp`
+field, and the design spec calls it out by name: "RRSP-HBP is absent from the US navigation").
+`src/lib/route-guard.ts`'s `assertRouteAvailable`, called from every route's `layout.tsx`, turns
+"absent from this country" into a build-time 404 rather than a page Cloudflare would otherwise
+serve: `notFound()` during static generation produces a prerendered 404 (`status: 404` in that
+path's `.meta` file, verified against `next start`, not just the build log — the build's own
+summary line still lists the path, so the manifest is not where this gets checked), never a
+Worker invocation. `src/lib/routes.ts`'s `NAV` filters by the same table, so a US reader is never
+offered a card that would 404.
+
+**Pages branch on `rules.country` or `rules.mortgage.renews`, never on a hardcoded country
+string, and the choice between the two is not interchangeable** — see the domain-seam paragraph
+above for `mortgage.renews` (Amortization's renewal section, Rent vs Buy's compounding). Reading
+`rules.country` directly is right where the fork is genuinely about which country this is (GDS/TDS
+vs DTI naming, CMHC vs PMI, which down-payment sources exist) rather than about a mechanical
+property every future `toMaturity` country would also lack.
+
+**Copy that differs by country is forked through one helper, `src/lib/country-key.ts`'s
+`countryKey(base, country)`** — `${base}_us` for the US, `base` unchanged otherwise. It is
+deliberately not reached for on every `t()` call: most copy is country-neutral, and the doc
+comment on the helper itself says to keep the forked-key surface small and let a coverage test
+enumerate it rather than hedge everywhere "just in case". There is no runtime fallback — a missing
+`_us` key renders next-intl's own `Namespace.key_us` fallback string, which is exactly how the
+vocabulary contract below catches a fork applied without its message ever being written. The
+FAQPage-schema case on Home needed something more selective than a blanket fork: three of its six
+questions are genuinely country-neutral, so `home-content.tsx` exports a small `homeFaqKey()`
+wrapping `countryKey()` around a fixed set of forked keys, and `page.tsx`'s JSON-LD builder calls
+the SAME function — the two are asserted to mark up the same questions
+(`src/app/[locale]/page.test.tsx`), which only holds if both read off identical key logic.
+
+**The vocabulary contract is the test that actually enforces all of the above.**
+`page-contracts.test.tsx`'s "US vocabulary contract" renders every US-available page at a Houston
+seed (`en-US` — `pickJurisdiction` only honours a stored `jurId` belonging to the render locale's
+own country, so seeding Houston without a US locale silently falls back to the Canadian default
+and tests nothing) and asserts none of CMHC, GDS, TDS, "land transfer", FHSA, HBP or TFSA appears,
+literally, anywhere in the rendered text — and the converse at a Winnipeg seed for PMI, DTI and
+"homestead". It is written as one `it.each` over the page list, not one assertion per page, and it
+has already caught real leaks more than once: a rent-vs-buy mismatch banner that named CMHC
+unconditionally, an Amortization chart legend and alt text that claimed a renewal this mortgage
+cannot have, and a Scenarios lifetime-cost row and ledger column headers that forked their
+row-level sibling but not themselves. `locale-render.test.tsx`'s `LOCALES` is `routing.locales`
+(now six, not four), so every page render already covers `en-US`/`es-US` too, for the missing-key
+and garbage-value classes of defect; the vocabulary contract is the one check for wrong-but-present
+copy that renders without error.
 
 **Open issues:**
 - ~~[#1](https://github.com/vivitali/norma/issues/1)~~ — **closed by this branch.** Ukrainian and
@@ -540,6 +681,11 @@ pending in `design-reference/` for later phases.
 
 - Don't hardcode province rules inline in components — they live in `src/domain/jurisdictions/*.ts`,
   one typed file per jurisdiction, ported from `design-reference/hbt-data.js`. See the Phase 1 spec.
+  Don't hardcode COUNTRY rules inline either — Canada's live in `src/domain/rules/ca.ts`, reached
+  through `RULES: Record<Country, CountryRules>` in `src/domain/rules/index.ts` (`useRules()` /
+  `useCountry()` in client components, `rulesFor(country)` where there is a `country` but no React
+  context). `federal.ts` and the module-level `federal` singleton are gone; nothing in `src/`
+  imports a country's rules by a bare name anymore.
 - Don't add a deploy target or CI workflow without asking — monetization (above) is still open.
 - **A figure may leave the app only if `src/domain` records a verification date covering it.**
   The home page carries `FAQPage` structured data, whose whole function is to make claims

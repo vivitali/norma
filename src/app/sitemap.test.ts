@@ -1,21 +1,34 @@
 import { globSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { routing } from "@/i18n/routing";
-import { INDEXABLE_ROUTES, absoluteUrl } from "@/lib/seo";
+import { INDEXABLE_ROUTES, absoluteUrl, localesForRoute } from "@/lib/seo";
 import sitemap from "./sitemap";
 
 describe("sitemap", () => {
   const entries = sitemap();
 
-  it("has one entry per route per locale", () => {
-    expect(entries).toHaveLength(INDEXABLE_ROUTES.length * routing.locales.length);
+  it("has one entry per route per locale THAT ROUTE EXISTS IN", () => {
+    // Not INDEXABLE_ROUTES.length * routing.locales.length: RRSP-HBP is Canada-only
+    // (US-market spec), so it contributes four entries, not six, and the sitemap must
+    // not claim an es-US or en-US RRSP-HBP page that 404s.
+    const expected = INDEXABLE_ROUTES.reduce(
+      (sum, href) => sum + localesForRoute(href).length,
+      0,
+    );
+    expect(entries).toHaveLength(expected);
   });
 
-  it("contains every locale of every indexable route", () => {
+  it("contains every locale of every indexable route THAT ROUTE EXISTS IN", () => {
     for (const href of INDEXABLE_ROUTES) {
-      for (const locale of routing.locales) {
+      for (const locale of localesForRoute(href)) {
         expect(entries.some((e) => e.url === absoluteUrl(locale, href))).toBe(true);
       }
+    }
+  });
+
+  it("never lists a US locale for the Canada-only RRSP-HBP route", () => {
+    const usUrls = ["en-US", "es-US"].map((locale) => absoluteUrl(locale, "/rrsp-hbp"));
+    for (const url of usUrls) {
+      expect(entries.some((e) => e.url === url)).toBe(false);
     }
   });
 

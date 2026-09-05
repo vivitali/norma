@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import en from "../../messages/en.json";
-import { NAV } from "./routes";
+import { NAV, FOOTER } from "./routes";
 import { HOME_FAQ_KEYS } from "@/components/home-content";
 
 /**
@@ -47,6 +47,15 @@ const DYNAMIC_PREFIXES = [
  * exactly the half-wired FAQ someone later feeds to the JSON-LD. Reading the two
  * registries instead means an orphan is still an orphan.
  */
+/**
+ * FOOTER's labels, DERIVED rather than prefix-exempted, for the same reason Home's are: a stray
+ * `Legal.whatever` should still be an orphan. `src/lib/routes.ts` carries these two strings
+ * without naming the `Legal` namespace, so `sourceFor("Legal")` cannot see them.
+ */
+function derivedFooterKeys(): string[] {
+  return FOOTER.map((entry) => entry.label);
+}
+
 function derivedHomeKeys(): string[] {
   return [
     ...NAV.flatMap((group) => group.entries.map((entry) => `tool_${entry.label}`)),
@@ -136,6 +145,12 @@ const NAMESPACES = [
   // provenance inventory: seven of its keys described the old page and had to
   // go, and copy that describes a page nobody built is exactly what this catches.
   "Sources",
+  // The legal namespaces. They have no entry in SECTION_REGISTRIES — the pages render flat, so
+  // there are no sections to register — which means they also miss sections.test.ts's both-locale
+  // label check. Without them here they would sit outside EVERY orphan guard, and three keys
+  // (`resultNote`, `rateNote`, `privacyLede`) had already shipped translated with no call site
+  // before this line existed.
+  "Legal", "Privacy", "Terms",
 ] as const;
 
 describe("message coverage", () => {
@@ -151,8 +166,23 @@ describe("message coverage", () => {
         (key) =>
           !DYNAMIC_PREFIXES.some((prefix) => key.startsWith(prefix)) &&
           !(namespace === "Home" && derivedHomeKeys().includes(key)) &&
+          !(namespace === "Legal" && derivedFooterKeys().includes(key)) &&
           !source.includes(`"${key}"`) &&
-          !source.includes(`'${key}'`),
+          !source.includes(`'${key}'`) &&
+          // Country-forked key, reached as `t(countryKey(base, rules.country))`
+          // (src/lib/country-key.ts) rather than a literal `t("${base}_us")` —
+          // `countryKey` builds "${base}_us" at RUNTIME, so the literal string
+          // this scan looks for never appears in source. Covered if the BASE key
+          // (the literal first argument countryKey is actually called with) has
+          // its own call site, which is what makes the fork reachable at all.
+          !(key.endsWith("_us") && (source.includes(`"${key.slice(0, -3)}"`) || source.includes(`'${key.slice(0, -3)}'`))) &&
+          // Home's tool_* keys are reached as `t(countryKey(\`tool_${entry.label}\`,
+          // country))` — a template literal wrapped in countryKey, so neither the
+          // plain-literal check above (no literal at all) nor the `_us`-strips-to-a-
+          // literal check above (the base is a template, not a literal) can see it.
+          // `derivedHomeKeys()` already knows the base form for exactly this reason;
+          // its `_us` sibling is covered the same way the base is.
+          !(namespace === "Home" && key.endsWith("_us") && derivedHomeKeys().includes(key.slice(0, -3))),
       );
       const allowed = KNOWN_ORPHANS[namespace] ?? [];
       // Named, not counted. A count lets one orphan be deleted and another added

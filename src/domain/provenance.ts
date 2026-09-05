@@ -45,6 +45,10 @@ const FEE_NOTES: Record<keyof JurisdictionFees, string> = {
     "Movers price by distance, volume and season; no authority publishes a rate. Regional modelling default.",
   setup:
     "Utility connection and account-opening charges are set by each supplier; no single publisher covers them. Regional modelling default.",
+  survey:
+    "Surveyors set their own price; no state or county publishes a survey-fee schedule. Regional modelling default.",
+  recording:
+    "The recording fee itself is a published county schedule where a jurisdiction has one — see that jurisdiction's own provenance entry, which overrides this default note where it applies. Kept here only so the field always has a fallback note.",
 };
 
 /**

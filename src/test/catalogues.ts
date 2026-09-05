@@ -2,14 +2,23 @@ import en from "../../messages/en.json";
 import fr from "../../messages/fr.json";
 import uk from "../../messages/uk.json";
 import es from "../../messages/es.json";
-import type { Locale } from "@/lib/locales";
+import type { Language } from "@/i18n/countries";
 
 /**
- * Every message catalogue, keyed by locale.
+ * Every message catalogue, keyed by LANGUAGE — not by locale.
  *
- * `satisfies Record<Locale, unknown>` is the point of this module: adding a locale to
- * `routing.ts` and forgetting its catalogue is a compile error here, rather than a
- * suite that quietly keeps checking two of four locales. Before this existed, ten test
+ * Catalogues stay one file per language (`messages/en.json`, not per country×language
+ * pair): "land transfer tax" vs "transfer tax" is a different MESSAGE KEY, the same way
+ * `Jurisdictions.at.<id>` already solves per-record wording, not a second catalogue file.
+ * So every check that walks these trees — parity, ICU plurals, placeholder coverage,
+ * cross-link rules — is inherently a per-language check and iterates this registry.
+ * A per-ROUTE check (prerendering, the sitemap, hreflang, rendering every page) needs
+ * the actual `Locale` pairs instead and iterates `routing.locales` — see
+ * `src/i18n/countries.ts` and `src/app/locale-render.test.tsx`.
+ *
+ * `satisfies Record<Language, unknown>` is the point of this module: adding a language to
+ * `COUNTRIES` and forgetting its catalogue is a compile error here, rather than a
+ * suite that quietly keeps checking two of four languages. Before this existed, ten test
  * files each wrote their own `{ en, fr }` literal, so "in both locales" meant
  * "in the two locales that happened to be listed in this file".
  *
@@ -18,19 +27,19 @@ import type { Locale } from "@/lib/locales";
  * assertions belong in locale-specific tests; this is for the checks that must hold
  * across all of them.
  */
-export const CATALOGUES = { en, fr, uk, es } as const satisfies Record<Locale, unknown>;
+export const CATALOGUES = { en, fr, uk, es } as const satisfies Record<Language, unknown>;
 
 /** A catalogue with its structure forgotten — what a path-walking check wants. */
 export type Tree = Record<string, unknown>;
 
-export const CATALOGUE_ENTRIES = Object.entries(CATALOGUES) as [Locale, Tree][];
+export const CATALOGUE_ENTRIES = Object.entries(CATALOGUES) as [Language, Tree][];
 
-/** The locale every other one is translated FROM. */
-export const SOURCE_LOCALE = "en";
+/** The language every other one is translated FROM. */
+export const SOURCE_LANGUAGE = "en";
 
-/** Every locale except the source, paired with its catalogue. */
+/** Every language except the source, paired with its catalogue. */
 export const TRANSLATED_ENTRIES = CATALOGUE_ENTRIES.filter(
-  ([locale]) => locale !== SOURCE_LOCALE,
+  ([language]) => language !== SOURCE_LANGUAGE,
 );
 
 /** Every leaf path in a catalogue, e.g. "Affordability.ckApproval". */

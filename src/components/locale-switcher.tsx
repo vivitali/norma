@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { routing } from "@/i18n/routing";
+import { localesForCountry } from "@/i18n/countries";
 import { LOCALES, type Locale } from "@/lib/locales";
 
 /**
@@ -30,8 +30,14 @@ export function LocaleSwitcher() {
   const t = useTranslations("AppHeader");
   const pathname = usePathname();
   const router = useRouter();
-  const params = useParams<{ locale: string }>();
+  const params = useParams<{ locale: Locale }>();
   const activeLocale = params.locale;
+  // Only the current country's languages: US-market spec Decision 3, "a country is a
+  // registry entry" — with a second country this must not silently offer its languages
+  // on a Canadian page. Today localesForCountry(en-CA) === routing.locales because ca
+  // is the only registered country, so this is a no-op in shape and a real guard in
+  // behaviour the day a second one ships.
+  const options = localesForCountry(activeLocale);
 
   return (
     <Select
@@ -39,10 +45,10 @@ export function LocaleSwitcher() {
       onValueChange={(locale) => router.replace(pathname, { locale: locale as Locale })}
     >
       <SelectTrigger aria-label={t("changeLanguage")} className="w-auto">
-        <SelectValue>{LOCALES[activeLocale as Locale]?.label ?? activeLocale}</SelectValue>
+        <SelectValue>{LOCALES[activeLocale]?.label ?? activeLocale}</SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {routing.locales.map((locale) => (
+        {options.map((locale) => (
           <SelectItem key={locale} value={locale}>
             {LOCALES[locale].label}
           </SelectItem>

@@ -10,6 +10,7 @@ const fees: JurisdictionFees = { lawyer: 2100, titleIns: 350, inspect: 900, appr
 
 export const nu: Jurisdiction = {
   id: "nu",
+  country: "ca",
   prov: "NU",
   // Iqaluit, not Nunavut, and this is the record where the distinction is severe rather than
   // tidy: about a fifth of Nunavummiut live in Iqaluit, 24 of the territory's 25 communities are

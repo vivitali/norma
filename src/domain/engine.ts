@@ -1,10 +1,14 @@
 import type {
   Applicability,
-  FederalRules,
+  CaRules,
+  CountryRules,
+  CountryRulesBase,
   Jurisdiction,
   PropertyType,
   Residency,
+  UsRules,
 } from "./types";
+import { regionOf } from "./types";
 
 export interface BracketPart {
   from: number;
@@ -16,7 +20,7 @@ export interface BracketPart {
 /**
  * Can I Buy This House? — calculation engine. Pure functions, no DOM, no React state.
  * Every screen that renders a number reads it from here, so two screens can never disagree.
- * Rule VALUES live in src/domain/federal.ts and src/domain/jurisdictions/; only mechanics live here.
+ * Rule VALUES live in src/domain/rules/*.ts and src/domain/jurisdictions/; only mechanics live here.
  * Canadian mortgages compound semi-annually — payFactor() is not the US monthly formula.
  */
 
@@ -48,6 +52,78 @@ export function payFactor(annualRate: number, years: number): number {
 }
 
 /**
+ * Monthly payment per $1 of mortgage, US monthly compounding — NOT `payFactor()`, which
+ * compounds semi-annually per Canadian law. A US 30-year fixed compounds monthly: the periodic
+ * rate is simply `annualRate / 12`.
+ */
+export function payFactorMonthly(annualRate: number, years: number): number {
+  const i = annualRate / 12;
+  const n = Math.max(1, years * 12);
+  return i <= 0 ? 1 / n : i / (1 - Math.pow(1 + i, -n));
+}
+
+/**
+ * Annual property tax against MARKET PRICE, honouring a US-style homestead exemption where one
+ * exists. The single seam every caller (`buildLines`, `affordability`, `rentVsBuy`, `scenario`)
+ * uses instead of multiplying `price * j.propTax.effective` directly — see
+ * `PropertyTax.exemptions`'s doc comment in types.ts for why a flat subtraction against the
+ * WHOLE effective rate would overstate the relief.
+ *
+ * Still LINEAR in price, which is what keeps `affordability()`'s closed-form ceiling solvable:
+ * `taxable * appliesToRate + price * (effective - appliesToRate)` expands to
+ * `price * effective - amount * appliesToRate` — a rate term on price plus a constant credit.
+ * `propertyTaxCredit()` below is that constant, for the callers that solve FOR price rather
+ * than compute FROM it.
+ */
+export function propertyTaxAnnual(j: Jurisdiction, price: number): number {
+  const ex = j.propTax.exemptions;
+  if (!ex) return price * j.propTax.effective;
+  const taxable = Math.max(0, price - ex.amount);
+  const remainderRate = j.propTax.effective - ex.appliesToRate;
+  return taxable * ex.appliesToRate + price * remainderRate;
+}
+
+/**
+ * The constant dollar credit a homestead exemption is worth, independent of price — the term
+ * `affordability()`'s ceiling equations add back to the household's budget before dividing by
+ * the (unchanged) property-tax RATE coefficient. Zero where a record carries no exemption.
+ */
+export function propertyTaxCredit(j: Jurisdiction): number {
+  const ex = j.propTax.exemptions;
+  return ex ? ex.amount * ex.appliesToRate : 0;
+}
+
+/**
+ * The month (1-based, into the amortization) a US mortgage's SCHEDULED balance first reaches
+ * `autoTerminateLtv` of the ORIGINAL price — the Homeowners Protection Act's automatic PMI
+ * termination point. `null` if the loan is paid off (or the schedule never reaches the
+ * threshold) within `amortYears`, which should not happen for a real conforming loan but is
+ * handled rather than assumed away.
+ */
+function pmiTerminationMonth(o: {
+  price: number;
+  loan: number;
+  amortYears: number;
+  contractRate: number;
+  autoTerminateLtv: number;
+}): number | null {
+  const targetBalance = o.autoTerminateLtv * o.price;
+  if (o.loan <= targetBalance) return 0;
+  const rate = o.contractRate / 100;
+  const i = rate / 12;
+  const n = Math.max(1, o.amortYears * 12);
+  const pay = o.loan * payFactorMonthly(rate, o.amortYears);
+  let bal = o.loan;
+  for (let m = 1; m <= n; m++) {
+    const interest = bal * i;
+    const principal = Math.min(pay - interest, bal);
+    bal -= principal;
+    if (bal <= targetBalance + 0.005) return m;
+  }
+  return null;
+}
+
+/**
  * How many months of saving close a cash gap.
  *
  * Three genuinely different answers, and the type keeps them apart:
@@ -71,13 +147,22 @@ export function monthsToSave(gap: number | null, save: number | null): number | 
  * The tiers are NOT written here. They were — `500000`, `1500000`, `0.05`, `0.1`, `0.2` as
  * literals — and a page component then wrote `MIN_DOWN_TIER = 500000` a second time to
  * caption them, which is exactly the duplication engine.ts's own header forbids: rule values
- * live in federal.ts, only mechanics live here. They now come off `F.minDown`, with the
+ * live in the rules record, only mechanics live here. They now come off `F.minDown`, with the
  * provenance entry that makes them quotable to the reader.
  *
- * Marginal below the insured cap, flat at or above it — see `FederalRules.minDown` for why
+ * Marginal below the insured cap, flat at or above it — see `CaRules.minDown` for why
  * the 20% is a different kind of thing from the two bands beneath it.
+ *
+ * `ftb` is read only on the US branch — `programs.conventional.minDownFtb` (3%) vs `minDown`
+ * (5%), a flat percentage-of-price choice rather than a tiered schedule. The Canadian branch
+ * ignores it entirely, exactly as before, so every existing CA call site (which never passed a
+ * third argument) is untouched.
  */
-export function minDown(F: FederalRules, price: number): number {
+export function minDown(F: CountryRules, price: number, ftb?: boolean): number {
+  if (F.country === "us") {
+    const rate = ftb ? F.programs.conventional.minDownFtb : F.programs.conventional.minDown;
+    return price * rate;
+  }
   if (price >= F.cmhc.insuredCap) return price * F.minDown.uninsuredRate;
   return bracketTax(price, F.minDown.bands).total;
 }
@@ -118,7 +203,7 @@ export interface AmortEligibilityInput {
  * amortization the reader set, because silently recomputing someone's input is how a screen
  * comes to disagree with the figure the reader is looking at.
  */
-export function maxAmortYears(F: FederalRules, o: AmortEligibilityInput): number {
+export function maxAmortYears(F: CaRules, o: AmortEligibilityInput): number {
   const uninsured = o.dpPct >= 20 || o.price >= F.cmhc.insuredCap;
   const homeStart = o.ftb || o.ptype === "newbuild";
   return uninsured || homeStart ? F.maxAmortFtbInsured : F.maxAmortOther;
@@ -144,9 +229,57 @@ export interface FinancingInput {
   price: number;
   dpPct: number;
   amortYears: number;
+  /** US only: feeds `minDown()`'s FTB-vs-standard percentage. Ignored on the Canadian branch,
+   * which has never taken a third argument to `minDown()`. */
+  ftb?: boolean;
+  /** US only, percentage (e.g. 6.66). Used to compute the month PMI auto-terminates. Falls
+   * back to `defaultContractRate()` when omitted, so every existing CA and US call site that
+   * never set this keeps working. */
+  contractRate?: number;
 }
 
-export function financing(F: FederalRules, o: FinancingInput) {
+/**
+ * `financing()` returns a superset shape across both countries: `monthlyInsurance` and
+ * `insuranceMonths` are `0`/`null` on the Canadian branch, whose own arithmetic is otherwise
+ * byte-identical to before this field existed (see `golden.test.ts`).
+ *
+ * The Canadian CMHC premium is a ONE-TIME amount financed into the loan (`premium`, added to
+ * `loan`). US mortgage insurance (PMI) is priced, paid and behaves completely differently: a
+ * MONTHLY charge (`monthlyInsurance`), NOT financed into the loan at all (`premium` stays `0`,
+ * `loan === baseLoan`), and cancellable — `insuranceMonths` is the month it stops, per the
+ * Homeowners Protection Act (see `pmiTerminationMonth()`).
+ */
+export function financing(F: CountryRules, o: FinancingInput) {
+  if (F.country === "us") {
+    const down = (o.price * o.dpPct) / 100;
+    const baseLoan = o.price - down;
+    const ltv = o.price > 0 ? baseLoan / o.price : 0;
+    const insured = ltv > F.programs.conventional.pmi.cancelRequestLtv;
+    const premRate = 0;
+    const premium = 0;
+    const monthlyInsurance = insured ? (baseLoan * F.programs.conventional.pmi.annualRate) / 12 : 0;
+    const contractRate = o.contractRate ?? defaultContractRate(F, o.dpPct);
+    const insuranceMonths = insured
+      ? pmiTerminationMonth({
+          price: o.price,
+          loan: baseLoan,
+          amortYears: o.amortYears,
+          contractRate,
+          autoTerminateLtv: F.programs.conventional.pmi.autoTerminateLtv,
+        })
+      : null;
+    return {
+      down,
+      baseLoan,
+      insured,
+      premRate,
+      premium,
+      loan: baseLoan,
+      minDown: minDown(F, o.price, o.ftb),
+      monthlyInsurance,
+      insuranceMonths,
+    };
+  }
   const down = (o.price * o.dpPct) / 100;
   const baseLoan = o.price - down;
   const insured = o.dpPct < 20 && o.price < F.cmhc.insuredCap;
@@ -157,7 +290,17 @@ export function financing(F: FederalRules, o: FinancingInput) {
     premRate = band[1] + (o.amortYears > 25 ? F.cmhc.longAmortSurcharge : 0);
   }
   const premium = insured ? baseLoan * premRate : 0;
-  return { down, baseLoan, insured, premRate, premium, loan: baseLoan + premium, minDown: minDown(F, o.price) };
+  return {
+    down,
+    baseLoan,
+    insured,
+    premRate,
+    premium,
+    loan: baseLoan + premium,
+    minDown: minDown(F, o.price),
+    monthlyInsurance: 0,
+    insuranceMonths: null,
+  };
 }
 
 export type FinancingResult = ReturnType<typeof financing>;
@@ -213,8 +356,16 @@ export function applies(when: Applicability | undefined, o: ClosingInput): boole
   return unmetBy(when, o).length === 0;
 }
 
-/** A non-applicable line item is ABSENT from the result, never a zero row. */
-export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
+/**
+ * A non-applicable line item is ABSENT from the result, never a zero row.
+ *
+ * Country-generic almost entirely by construction: every `TransferLine.kind` and `fees.*`
+ * field is a shared shape, so the loop below needs no branch on `F.country` at all —
+ * `j.transfer === []` for Houston degrades the `gov` group to empty with no crash and no
+ * phantom row, exactly as the design spec requires. The two genuinely US-only additions
+ * (the title-company fee label, and the prepaid-escrow line) are appended at the end.
+ */
+export function buildLines(j: Jurisdiction, F: CountryRules, o: ClosingInput) {
   const fin = financing(F, o);
   const gov: LineItem[] = [];
   for (const it of j.transfer) {
@@ -260,7 +411,14 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
   const f = j.fees;
   const pro: LineItem[] = [];
   pro.push({
-    key: j.pro === "notary" ? "li_notary" : j.pro === "lawyerOrNotary" ? "li_lawyerOrNotary" : "li_lawyer",
+    key:
+      j.pro === "notary"
+        ? "li_notary"
+        : j.pro === "lawyerOrNotary"
+          ? "li_lawyerOrNotary"
+          : j.pro === "titleCompany"
+            ? "li_titleCompany"
+            : "li_lawyer",
     amount: (f.lawyer ?? f.notary ?? 0),
   });
   if (f.locCert != null) pro.push({ key: "li_locCert", amount: f.locCert });
@@ -276,12 +434,31 @@ export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
   if (o.ptype === "condo" && f.statusCert != null) {
     pro.push({ key: "li_statusCert", amount: f.statusCert });
   }
+  // US only — a survey and a county recording fee, neither of which any Canadian record
+  // carries. Absent, not zero, on every record that lacks them (matches `locCert`/`titleIns`).
+  if (f.survey != null) pro.push({ key: "li_survey", amount: f.survey });
+  if (f.recording != null) pro.push({ key: "li_recording", amount: f.recording });
 
   const adj: LineItem[] = [
-    { key: "li_taxAdj", ex: "ex_taxAdj", amount: (o.price * j.propTax.effective) / 4 },
+    { key: "li_taxAdj", ex: "ex_taxAdj", amount: propertyTaxAnnual(j, o.price) / 4 },
     { key: "li_moving", amount: f.moving },
     { key: "li_setup", amount: f.setup },
   ];
+  // US only — a lender collects `escrowPrepaidMonths` of property tax and insurance upfront to
+  // seed the escrow account. `j.insurance` is the jurisdiction's own disclosed estimate; a
+  // reader's real insurance figure is not visible here (`ClosingInput` carries none), so this
+  // line is necessarily seeded from the SAME jurisdiction-level estimate `AnswerHead` /
+  // `AffordabilityInput.insuranceAnnual` defaults from elsewhere — see the note in the PR
+  // report about this seam.
+  if (F.country === "us" && j.insurance != null) {
+    const monthlyTax = propertyTaxAnnual(j, o.price) / 12;
+    const monthlyInsurance = j.insurance / 12;
+    adj.push({
+      key: "li_prepaidEscrow",
+      ex: "ex_prepaidEscrow",
+      amount: (monthlyTax + monthlyInsurance) * F.escrowPrepaidMonths,
+    });
+  }
   return { fin, gov, pro, adj };
 }
 
@@ -310,7 +487,7 @@ export interface LaterCredit {
   amount: number;
 }
 
-export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: LineItem[]) {
+export function credits(j: Jurisdiction, F: CountryRules, o: ClosingInput, gov: LineItem[]) {
   const atClosing: CreditLine[] = [];
   const later: LaterCredit[] = [];
   for (const rb of j.rebates) {
@@ -480,8 +657,16 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
    * changed what travels, not whether it applies.
    */
   const omitted: { key: string; ex: string }[] = [];
-  if (o.ftb && o.ptype === "newbuild" && o.price < F.gstFthb.zeroAt) {
+  if (F.country === "ca" && o.ftb && o.ptype === "newbuild" && o.price < F.gstFthb.zeroAt) {
     omitted.push({ key: "cr_gstFthb", ex: "ex_gstFthb" });
+  }
+  // US: no federal or Texas rebate programme exists at all — no first-time-buyer transfer-tax
+  // rebate (there is no transfer tax to rebate), no GST/HST-style rebate. `atClosing`/`later`
+  // are already empty because `j.rebates`/`j.taxTime` are empty on every US record; this is the
+  // one line that explains WHY, in words, rather than leaving a Canadian reader's "where are my
+  // rebates" question unanswered by silence.
+  if (F.country === "us") {
+    omitted.push({ key: "cr_noRebateUs", ex: "ex_noRebateUs" });
   }
   return {
     atClosing,
@@ -496,7 +681,7 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
 }
 
 /** Total cash at closing without the itemised table — for screens that only need the number. */
-export function closingTotal(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
+export function closingTotal(j: Jurisdiction, F: CountryRules, o: ClosingInput) {
   const L = buildLines(j, F, o);
   const sum = (a: LineItem[]) => a.reduce((t, r) => t + r.amount, 0);
   const total = sum(L.gov) + sum(L.pro) + sum(L.adj);
@@ -546,7 +731,7 @@ export interface AffordabilityInput {
  * left federal.rates.insured/.uninsured unread by any screen. Returned as a
  * percentage, which is what AffordabilityInput.contractRate takes.
  */
-export function defaultContractRate(F: FederalRules, dpPct: number): number {
+export function defaultContractRate(F: CountryRulesBase, dpPct: number): number {
   return (dpPct < 20 ? F.rates.insured : F.rates.uninsured) * 100;
 }
 
@@ -602,19 +787,31 @@ export function defaultContractRate(F: FederalRules, dpPct: number): number {
  * flagship figure, not a review fix. Whoever takes it: the binding price is where
  * `dpPct/100` meets `minDown(F, P)/P`, which is closed form off `minDown.bands`.
  */
-export function financedFraction(F: FederalRules, dpPct: number, amortYears: number): number {
+export function financedFraction(F: CountryRules, dpPct: number, amortYears: number): number {
   const ltv = 1 - dpPct / 100;
+  // US PMI is never financed into the loan — see `financing()`'s own doc comment. The
+  // financed fraction is simply the LTV, no premium term added.
+  if (F.country === "us") return ltv;
   if (dpPct >= 20) return ltv;
   const band = F.cmhc.bands.find((b) => ltv <= b[0]) ?? F.cmhc.bands[F.cmhc.bands.length - 1];
   return ltv * (1 + band[1] + (amortYears > 25 ? F.cmhc.longAmortSurcharge : 0));
 }
 
-export function affordability(j: Jurisdiction, F: FederalRules, o: AffordabilityInput) {
+export function affordability(j: Jurisdiction, F: CountryRules, o: AffordabilityInput) {
   const gross = o.income1 + o.income2 + o.otherIncome;
   const qualIncome = gross * (1 - o.haircut / 100);
-  const qualRate = Math.max(F.stressTest.floor, o.contractRate + F.stressTest.buffer) / 100;
-  const fq = payFactor(qualRate, o.amortYears);
-  const fc = payFactor(o.contractRate / 100, o.amortYears);
+  // US: no B-20-style stress test exists — qualify at the bare contract rate (design spec,
+  // "stressTest null -> qualify at the contract rate"). Canadian arithmetic below is
+  // untouched: F.stressTest is never null on that branch.
+  const qualRate = F.stressTest
+    ? Math.max(F.stressTest.floor, o.contractRate + F.stressTest.buffer) / 100
+    : o.contractRate / 100;
+  // US mortgages compound MONTHLY, not semi-annually — payFactor() is the Canadian formula
+  // (see its own doc comment). Every payment-factor call in this function goes through this
+  // one switch so a US branch cannot accidentally keep using the Canadian compounding.
+  const factorFn = F.country === "us" ? payFactorMonthly : payFactor;
+  const fq = factorFn(qualRate, o.amortYears);
+  const fc = factorFn(o.contractRate / 100, o.amortYears);
 
   const gdsAllow = (qualIncome * (F.gds / 100)) / 12;
   const tdsAllow = (qualIncome * (F.tds / 100)) / 12 - o.debts;
@@ -629,6 +826,14 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   // `denomLender` multiplies THAT. Nothing in this file multiplies `fq` by a constant.
   const financed = financedFraction(F, o.dpPct, o.amortYears);
   const denomLender = financed * fq + j.propTax.effective / 12;
+  // No heat allowance concept exists on a US mortgage qualification — CMHC's GDS/TDS
+  // guidance is what invented this line for Canada. Zero, not omitted, so the arithmetic
+  // below stays one formula for both countries.
+  const heatAllowance = F.country === "ca" ? F.heatAllowance : 0;
+  // A US homestead exemption is a constant dollar credit against the property-tax RATE term
+  // above — see propertyTaxCredit()'s own comment for the algebra. Zero on every Canadian
+  // record (no jurisdiction here carries `propTax.exemptions`).
+  const propTaxCreditMonthly = propertyTaxCredit(j) / 12;
   /**
    * The ceiling this household would reach carrying `debts` of monthly obligation.
    * Parameterised because the debt-impact figures below are the DIFFERENCE between
@@ -642,11 +847,11 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
     // count — and the full fee two lines below, because that is what the household pays.
     // Both are correct and they are not the same figure; the screen has to say so, which is
     // why the share is a named federal rule with provenance rather than a bare 0.5.
-    return Math.max(0, (binds - F.heatAllowance - o.condoFee * F.condoFeeInclusion) / denomLender);
+    return Math.max(0, (binds - heatAllowance - o.condoFee * F.condoFeeInclusion + propTaxCreditMonthly) / denomLender);
   };
   const ceiling = ceilingCarrying(o.debts);
 
-  const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee;
+  const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee + propTaxCreditMonthly;
   const denomComfort = financed * fc + j.propTax.effective / 12 + F.maintenanceReserve / 12;
   const comfort = Math.max(0, budget) / denomComfort;
 
@@ -663,28 +868,34 @@ export function affordability(j: Jurisdiction, F: FederalRules, o: Affordability
   // Priced off the entered contract rate — the same rate that drives the comfort ceiling above
   // — so the "what fits your budget" card and the monthly P&I row can never disagree, and the
   // rate input actually moves every figure on the screen.
-  const pi = cc.fin.loan * payFactor(o.contractRate / 100, o.amortYears);
+  const pi = cc.fin.loan * factorFn(o.contractRate / 100, o.amortYears);
   const monthly = {
     pi,
-    propTax: (o.price * j.propTax.effective) / 12,
+    propTax: propertyTaxAnnual(j, o.price) / 12,
     insurance: o.insuranceAnnual / 12,
+    // PMI — zero on every Canadian record, since CA's `financing()` branch always returns
+    // `monthlyInsurance: 0`. Included in `total` below, so a US comfort ceiling that ignores
+    // it cannot ship.
+    pmi: cc.fin.monthlyInsurance,
     utilities: o.utilities,
     condoFee: o.condoFee,
     maintenance: (o.price * F.maintenanceReserve) / 12,
     total: 0,
   };
   monthly.total =
-    monthly.pi + monthly.propTax + monthly.insurance + monthly.utilities + monthly.condoFee + monthly.maintenance;
+    monthly.pi + monthly.propTax + monthly.insurance + monthly.pmi + monthly.utilities + monthly.condoFee + monthly.maintenance;
 
-  // What a lender counts at the target price: a fixed heating allowance, not real utilities.
+  // What a lender counts at the target price: a fixed heating allowance, not real utilities
+  // (zero on the US branch — see heatAllowance above). PMI is added to the numerator on the
+  // US branch too, exactly as a lender's own DTI calculation would.
   const gdsAtTarget =
     qualIncome <= 0
       ? 0
-      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * F.condoFeeInclusion) / (qualIncome / 12)) * 100;
+      : ((cc.fin.loan * fq + cc.fin.monthlyInsurance + monthly.propTax + heatAllowance + o.condoFee * F.condoFeeInclusion) / (qualIncome / 12)) * 100;
   const tdsAtTarget =
     qualIncome <= 0
       ? 0
-      : ((cc.fin.loan * fq + monthly.propTax + F.heatAllowance + o.condoFee * F.condoFeeInclusion + o.debts) / (qualIncome / 12)) * 100;
+      : ((cc.fin.loan * fq + cc.fin.monthlyInsurance + monthly.propTax + heatAllowance + o.condoFee * F.condoFeeInclusion + o.debts) / (qualIncome / 12)) * 100;
 
   // Marginal cost of debt WHERE TDS BINDS: what one dollar of monthly obligation
   // removes from the ceiling once total debt service is the constraint.
@@ -767,8 +978,12 @@ export interface AmortizationRow {
   payment: number;
   /** Percentage. */
   rate: number;
-  /** True for the first year of a new term. */
+  /** True for the first year of a new term. Always false on a US (toMaturity) schedule — there
+   * are no terms to renew. */
   renewed: boolean;
+  /** US only: PMI paid during this year (0 once it has terminated, or on every Canadian row —
+   * the CMHC premium is a one-time amount financed into the loan, not a recurring line here). */
+  insurance?: number;
 }
 
 /**
@@ -787,8 +1002,14 @@ export interface AmortizationRow {
  *
  * Note there is no jurisdiction parameter. The reference took one and never read
  * it — nothing in an amortization schedule is provincial.
+ *
+ * `F.mortgage.kind === "toMaturity"` (the US) takes a wholly separate path below: no
+ * re-pricing at ANY boundary — `termYears`/`renewalRate` are ignored entirely, matching the
+ * design spec's "no term, no renewal, no re-pricing" — monthly, not semi-annual, compounding,
+ * and PMI charged into each row while `fin.insuranceMonths` says it applies.
  */
-export function amortization(F: FederalRules, o: AmortizationInput) {
+export function amortization(F: CountryRules, o: AmortizationInput) {
+  if (F.country === "us") return amortizationToMaturity(F, o);
   const fin = financing(F, o);
   const term = Math.max(1, o.termYears);
   const startRate = o.contractRate / 100;
@@ -846,6 +1067,66 @@ export function amortization(F: FederalRules, o: AmortizationInput) {
   };
 }
 
+/**
+ * The US (toMaturity) amortization path — a 30-year fixed compounds MONTHLY (`payFactorMonthly`,
+ * not the Canadian `payFactor`) at ONE rate for the whole life of the loan. `termYears` and
+ * `renewalRate` are ignored entirely: there is no term to renew. `paymentAfterRenewal` equals
+ * `firstPayment` and `shock` is always zero — the same values the Canadian branch already
+ * returns when no renewal is modelled, so a caller reading either field sees the honest "no
+ * shock" answer rather than a second sentinel.
+ *
+ * PMI is charged into each row while `fin.insuranceMonths` says it still applies, and reflected
+ * in `totalPaid` (`fin.monthlyInsurance` is NOT part of the mortgage payment `pay` itself — it
+ * is billed alongside it, not amortized).
+ */
+function amortizationToMaturity(F: UsRules, o: AmortizationInput) {
+  const fin = financing(F, o);
+  const rate = o.contractRate / 100;
+  const i = rate / 12;
+  const pay = fin.loan * payFactorMonthly(rate, o.amortYears);
+  const firstPayment = pay;
+
+  let bal = fin.loan;
+  const rows: AmortizationRow[] = [];
+  let totalInterest = 0;
+  let totalPaid = 0;
+
+  for (let t = 1; t <= o.amortYears && bal > 0.005; t++) {
+    const opening = bal;
+    let interest = 0;
+    let principal = 0;
+    let insurance = 0;
+    for (let m = 0; m < 12 && bal > 0.005; m++) {
+      const monthIndex = (t - 1) * 12 + m + 1;
+      const int = bal * i;
+      const prin = Math.min(pay - int, bal);
+      bal -= prin;
+      interest += int;
+      principal += prin;
+      if (fin.insuranceMonths !== null && monthIndex <= fin.insuranceMonths) {
+        insurance += fin.monthlyInsurance;
+      }
+    }
+    if (bal < 0.005) bal = 0;
+    totalInterest += interest;
+    totalPaid += interest + principal + insurance;
+    rows.push({ t, opening, interest, principal, closing: bal, payment: pay, rate: rate * 100, renewed: false, insurance });
+  }
+
+  return {
+    fin,
+    rows,
+    totalInterest,
+    totalPaid,
+    firstPayment,
+    peakPayment: firstPayment,
+    paymentAfterRenewal: firstPayment,
+    shock: 0,
+    term: o.amortYears,
+    payoffYear: rows.length,
+  };
+}
+
 export type AmortizationResult = ReturnType<typeof amortization>;
 
 /* ================================================================= *
@@ -853,8 +1134,8 @@ export type AmortizationResult = ReturnType<typeof amortization>;
  * ================================================================= */
 
 /** Combined federal + provincial marginal rate on the next dollar of taxable income. */
-export function marginalRate(F: FederalRules, prov: string, income: number): number {
-  const tbl = F.marginal[prov] ?? F.marginal.CA;
+export function marginalRate(F: CountryRulesBase, prov: string, income: number): number {
+  const tbl = F.marginal[prov] ?? F.marginal[F.marginalFallbackKey];
   for (const [cap, rate] of tbl) if (cap === null || income <= cap) return rate;
   return tbl[tbl.length - 1][1];
 }
@@ -876,11 +1157,11 @@ export function marginalRate(F: FederalRules, prov: string, income: number): num
  * prototype carry-over. Integrating it correctly makes the arithmetic honest, not the
  * brackets sourced; a figure derived from it still may not travel as a statutory claim.
  */
-export function taxOnBand(F: FederalRules, prov: string, from: number, to: number): number {
+export function taxOnBand(F: CountryRulesBase, prov: string, from: number, to: number): number {
   const lo = Math.max(0, Math.min(from, to));
   const hi = Math.max(0, Math.max(from, to));
   if (hi <= lo) return 0;
-  const tbl = F.marginal[prov] ?? F.marginal.CA;
+  const tbl = F.marginal[prov] ?? F.marginal[F.marginalFallbackKey];
   let prev = 0;
   let tax = 0;
   for (const [cap, rate] of tbl) {
@@ -926,8 +1207,13 @@ export interface WaterfallRow {
    * `CreditLine.st === "ftbOnly"` rather than inventing a second convention: dropping the
    * row would tell a reader who has $40,000 in an FHSA that the app simply forgot it, where
    * showing it blocked tells them the rule that stops them using it here.
+   *
+   * `"noProgram"` is the US case: FHSA, HBP and TFSA are Canadian registered-account
+   * programmes with no US analogue at all (not merely gated by first-time-buyer status), so
+   * a US call ignores whatever the caller passed for those three inputs and reports why —
+   * the same "keep the row, explain the zero" treatment as `"ftb"`, for a different reason.
    */
-  blocked?: "ftb";
+  blocked?: "ftb" | "noProgram";
 }
 
 export interface WaterfallInput {
@@ -973,23 +1259,31 @@ export interface WaterfallInput {
  *
  * Tax on a partial non-registered draw is pro-rated by the fraction of the
  * account sold — selling a third of the account realises a third of the gain.
+ *
+ * US sources are `cash`, `gift` and `nonreg` only — no FHSA, HBP or TFSA analogue exists.
+ * `fhsa`/`hbp`/`tfsa` on `WaterfallInput` are IGNORED on that branch, whatever the caller
+ * passed: each row's `avail` is forced to zero and `blocked: "noProgram"` names why, rather
+ * than silently drawing on a Canadian registered-account balance a US reader would not have
+ * anyway. The IRA first-time-buyer $10,000 penalty exception (dossier A15) is NOT modelled —
+ * flagged here as a follow-up rather than added ahead of a page that would surface it.
  */
-export function waterfall(F: FederalRules, o: WaterfallInput) {
+export function waterfall(F: CountryRules, o: WaterfallInput) {
   const rate = marginalRate(F, o.prov, o.income);
-  const hbpRoom = Math.min(Math.max(0, o.rrsp), F.hbp.max);
+  const hbpRoom = F.country === "ca" ? Math.min(Math.max(0, o.rrsp), F.hbp.max) : 0;
   const ftbOnly = o.ftb ? undefined : ("ftb" as const);
+  const noProgram = F.country === "us" ? ("noProgram" as const) : undefined;
   const defs: {
     key: SourceKey;
     avail: number;
     cost: SourceCost;
     gain?: number;
-    blocked?: "ftb";
+    blocked?: "ftb" | "noProgram";
   }[] = [
-    { key: "fhsa", avail: o.ftb ? Math.max(0, o.fhsa) : 0, cost: "free", blocked: ftbOnly },
+    { key: "fhsa", avail: noProgram ? 0 : o.ftb ? Math.max(0, o.fhsa) : 0, cost: "free", blocked: noProgram ?? ftbOnly },
     { key: "cash", avail: Math.max(0, o.cash), cost: "free" },
     { key: "gift", avail: Math.max(0, o.gift), cost: "free" },
-    { key: "hbp", avail: o.ftb ? hbpRoom : 0, cost: "strings", blocked: ftbOnly },
-    { key: "tfsa", avail: Math.max(0, o.tfsa), cost: "strings" },
+    { key: "hbp", avail: noProgram ? 0 : o.ftb ? hbpRoom : 0, cost: "strings", blocked: noProgram ?? ftbOnly },
+    { key: "tfsa", avail: noProgram ? 0 : Math.max(0, o.tfsa), cost: "strings", blocked: noProgram },
     { key: "nonreg", avail: Math.max(0, o.nonreg), cost: "tax", gain: Math.max(0, o.nonregGain) },
   ];
 
@@ -1007,9 +1301,12 @@ export function waterfall(F: FederalRules, o: WaterfallInput) {
     let repayAnnual = 0;
     if (d.cost === "tax" && d.avail > 0 && drawn > 0) {
       gainRealised = (d.gain ?? 0) * (drawn / d.avail);
-      tax = gainRealised * F.capGainsInclusion * rate;
+      // Canada includes a FRACTION of the gain in ordinary income, taxed at the marginal rate
+      // (`kind: "inclusion"`); the US taxes a realised long-term gain at its OWN flat rate,
+      // unrelated to ordinary-income brackets (`kind: "flat"`) — see CountryRulesBase.gains.
+      tax = F.gains.kind === "inclusion" ? gainRealised * F.gains.rate * rate : gainRealised * F.gains.rate;
     }
-    if (d.key === "hbp" && drawn > 0) repayAnnual = drawn / F.hbp.repayYears;
+    if (d.key === "hbp" && drawn > 0 && F.country === "ca") repayAnnual = drawn / F.hbp.repayYears;
     taxTotal += tax;
     rows.push({
       key: d.key,
@@ -1052,7 +1349,7 @@ export interface GlidePoint {
  * `reach` is null when the target is never met inside the window — the honest
  * answer, and the one that should change the copy rather than be rounded away.
  */
-export function glidePath(F: FederalRules, shortfall: number, monthly: number, months = 36) {
+export function glidePath(F: CountryRulesBase, shortfall: number, monthly: number, months = 36) {
   const i = F.savingsReturn / 12;
   const n = Math.max(1, months);
   const series: GlidePoint[] = [];
@@ -1109,7 +1406,7 @@ export interface HbpInput {
  * function is not given. The screen states the three numbers and lets the reader
  * decide, rather than asserting an answer it cannot support.
  */
-export function hbpPlay(F: FederalRules, o: HbpInput) {
+export function hbpPlay(F: CaRules, o: HbpInput) {
   const contribution = Math.max(0, Math.min(o.contribution, F.hbp.max));
   const income = Math.max(0, o.income);
   // The rate on the NEXT dollar, which is what the deduction's first dollar saves and what
@@ -1213,9 +1510,18 @@ export type HbpResult = ReturnType<typeof hbpPlay>;
  */
 export function rentComparable(j: Jurisdiction, ptype: PropertyType): boolean {
   if (j.rentBasis === undefined) return false;
-  // The one basis the dataset holds. `newbuild` reads the house benchmark
-  // (see `benchmarkPrice`), so it inherits the house answer.
-  return j.rentBasis === "apartment2br" && ptype === "condo";
+  // Two bases, both a two-bedroom apartment average — CMHC's on the Canadian
+  // records, HUD's Fair Market Rent on the US ones (Houston: dossier A-something,
+  // `rentBasis: "fmr2br"`) — either is comparable to a CONDO purchase and neither
+  // is comparable to a house. `newbuild` reads the house benchmark (see
+  // `benchmarkPrice`), so it inherits the house answer on both bases.
+  //
+  // This was `=== "apartment2br"` alone until a Houston-seeded Rent vs Buy test
+  // (`page-contracts.test.tsx`) caught it: `RentBasis` has carried `"fmr2br"`
+  // since the US jurisdiction record shipped, but this function never learned the
+  // second value, so Houston printed the "wrong dwelling type" mismatch ask on
+  // EVERY property type — condo included — and could never answer at all.
+  return (j.rentBasis === "apartment2br" || j.rentBasis === "fmr2br") && ptype === "condo";
 }
 
 export interface RentVsBuyInput extends ClosingInput {
@@ -1259,6 +1565,13 @@ export interface RentVsBuyInput extends ClosingInput {
    */
   investDiff: boolean;
   years: number;
+  /**
+   * US only: taxable income, filing single (the assumption per the design spec), for the
+   * itemised-vs-standard deduction benefit's marginal rate. Optional and defaults to $0 (the
+   * lowest bracket) — no page wires a real income input to Rent vs Buy today; ignored entirely
+   * on the Canadian branch.
+   */
+  taxableIncome?: number;
 }
 
 export interface RentVsBuyRow {
@@ -1305,6 +1618,22 @@ export interface RentVsBuyRow {
   rentW: number;
   /** buyW − rentW. Positive means buying is ahead by this year. */
   adv: number;
+  /**
+   * US only: this year's itemised-deduction benefit over the standard deduction — mortgage
+   * interest (capped at the acquisition-debt cap's SHARE of the loan) plus property tax
+   * (capped at the SALT cap), less the standard deduction, times the marginal rate; zero when
+   * the standard deduction would have been larger. Invested alongside everything else rather
+   * than subtracted from `ownerOutlay` directly — see `rentVsBuyToMaturity`'s own comment.
+   */
+  deductionBenefit?: number;
+  /** US only: whether itemising beat the standard deduction THIS year — most buyers, per the
+   * design spec's own framing, get nothing from the deduction. */
+  itemizedBeatsStandard?: boolean;
+  /** US only: PMI actually charged THIS year, already folded into `ownerOutlay` — broken out
+   * here so a screen can show the line item without re-deriving it from `fin.monthlyInsurance`
+   * and `fin.insuranceMonths` a second time. Undefined on the Canadian branch, whose CMHC
+   * premium is a one-time amount financed into the loan, not a recurring cost. */
+  pmi?: number;
 }
 
 /**
@@ -1318,8 +1647,14 @@ export interface RentVsBuyRow {
  *
  * Equity is net of selling cost, because wealth you cannot realise without
  * paying an agent is not wealth you have.
+ *
+ * `F.country === "us"` branches to `rentVsBuyToMaturity()` below — a separate function rather
+ * than more `if`s threaded through this one, because the US path changes FOUR things at once
+ * (compounding, no renewal, PMI, and the tax treatment of both the sale gain and the invested
+ * difference) and interleaving them here would make neither branch legible.
  */
-export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
+export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
+  if (F.country === "us") return rentVsBuyToMaturity(j, F, o);
   const years = Math.max(1, o.years);
   const fin = financing(F, o);
   const cc = closingTotal(j, F, o);
@@ -1407,9 +1742,9 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
     }
     // Insurance, utilities and condo fees grow at the cost of SERVICES, not at the price of
     // the house — so this is deliberately not `o.appreciation`. The rate itself moved to
-    // federal.ts with a provenance entry: as a module-local constant here it compounded for
+    // the rules record with a provenance entry: as a module-local constant here it compounded for
     // up to forty years while being structurally unreachable by /sources, which builds its
-    // inventory from federal.provenance and the jurisdiction maps.
+    // inventory from the rules' provenance and the jurisdiction maps.
     const infl = Math.pow(1 + F.nonShelterInflation, t - 1);
     const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax.effective;
     const insurance = o.insuranceAnnual * infl;
@@ -1480,6 +1815,165 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
   };
 }
 
+/**
+ * The US (toMaturity) Rent vs Buy path.
+ *
+ * Four things differ from the Canadian function above, all per the design spec:
+ *
+ * 1. **Compounding and renewal.** Monthly compounding (`payFactorMonthly`) at ONE contract
+ *    rate for the whole horizon — no term, no renewal, ever. `o.termYears`/`o.renewalRate` are
+ *    ignored entirely, the same choice `amortizationToMaturity()` makes.
+ * 2. **PMI** is added to `ownerOutlay` for as long as `fin.insuranceMonths` says it applies —
+ *    a real recurring cost a Canadian CMHC premium (financed once, up front) never is.
+ * 3. **The itemised-vs-standard tax benefit.** Per the spec's own formula:
+ *    `max(0, min(interest, interest * min(1, midCap/loan)) + min(propertyTax, saltCap) -
+ *    standardDeduction.single) * marginalRate`. `min(interest, interest * min(1, midCap/loan))`
+ *    collapses to `interest * min(1, midCap/loan)` (interest is never negative), reproduced
+ *    literally rather than simplified so the formula stays checkable against the spec text.
+ *    **Filing single is the assumption**, per the spec — `RentVsBuyInput.taxableIncome` is
+ *    optional and defaults to $0 (the lowest bracket) when the caller does not supply it; this
+ *    is a real gap the UI half must close by wiring an actual income input onto the page,
+ *    flagged in the PR report rather than guessed at here. The benefit is invested into its
+ *    own growing portfolio (`tbp`, mirroring `rp`/`bp`) rather than subtracted from
+ *    `ownerOutlay` directly, because it is realised at tax-filing time, not at the moment the
+ *    cost is incurred — the same reasoning `taxTimeCredits` already applies on the Canadian
+ *    side, generalised to a benefit that recurs every year instead of arriving once.
+ * 4. **Capital gains at "sale."** The owner's home-sale gain is excluded up to §121
+ *    (`sec121.single`); the excess is taxed at the flat rate `F.gains.rate` (the US branch's
+ *    `gains.kind` is always `"flat"`). The renter's and buyer's invested-difference portfolios
+ *    (`rp`, `bp`, `tbp` — all just money in the market, regardless of which side funded them)
+ *    face the SAME flat rate on their accumulated gain when "sold" for the wealth comparison —
+ *    tracked via a running CONTRIBUTED total per portfolio (`afterGainsTax()` below), a FIFO-
+ *    blind approximation rather than a lot-by-lot cost-basis simulation, disclosed here as a
+ *    simplification rather than left silent.
+ */
+function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
+  const years = Math.max(1, o.years);
+  const rate0 = o.contractRate ?? defaultContractRate(F, o.dpPct) / 100;
+  // `RentVsBuyInput.contractRate` is a FRACTION (its own doc comment says so); `FinancingInput`
+  // — and therefore `financing()`'s `pmiTerminationMonth()` call — reads `contractRate` as a
+  // PERCENTAGE (see that field's doc comment; `scenarioToMaturity()` normalises the same way).
+  // `rate0` above is always the fraction, resolved once, so `priced` is the ONE place this
+  // function converts it before anything downstream can see the wrong unit. Passing `o`
+  // straight to `financing()`/`closingTotal()` here previously fed a fraction where a
+  // percentage was expected — 0.0666 read as 0.0666%, not 6.66% — understating PMI's
+  // auto-termination month by roughly half (month 49 instead of month 111 on $350k/10%/30y at
+  // 6.66%, verified against `pmiTerminationMonth()` directly).
+  const priced = { ...o, contractRate: rate0 * 100 };
+  const fin = financing(F, priced);
+  const cc = closingTotal(j, F, priced);
+  const upFront = cc.net;
+  const g = o.appreciationOn ? o.appreciation : 0;
+  const ret = o.investReturn;
+  const region = regionOf(j);
+  const marginalIncome = o.taxableIncome ?? 0;
+  const marginal = marginalRate(F, region, marginalIncome);
+  const loanShare = fin.loan > 0 ? Math.min(1, F.tax.midCap / fin.loan) : 1;
+
+  const flatGainsRate = F.gains.kind === "flat" ? F.gains.rate : 0;
+  /** Value minus tax on its accumulated gain over `contributed`, at the flat LTCG rate — see
+   * this function's own doc comment, point 4, for the FIFO-blind simplification. */
+  const afterGainsTax = (value: number, contributed: number) =>
+    value - Math.max(0, value - contributed) * flatGainsRate;
+
+  const i = rate0 / 12;
+  const pay = fin.loan * payFactorMonthly(rate0, o.amortYears);
+
+  let bal = fin.loan;
+  let rp = 0;
+  let rpContrib = 0;
+  let bp = 0;
+  let bpContrib = 0;
+  let tbp = 0;
+  let tbpContrib = 0;
+  let payoffYear: number | null = null;
+  const rows: RentVsBuyRow[] = [];
+
+  for (let t = 1; t <= years; t++) {
+    const opening = bal;
+    let interest = 0;
+    let paid = 0;
+    let insuranceThisYear = 0;
+    for (let m = 0; m < 12 && bal > 0.005; m++) {
+      const monthIndex = (t - 1) * 12 + m + 1;
+      const int = bal * i;
+      const prin = Math.min(pay - int, bal);
+      bal -= prin;
+      interest += int;
+      paid += int + prin;
+      if (fin.insuranceMonths !== null && monthIndex <= fin.insuranceMonths) {
+        insuranceThisYear += fin.monthlyInsurance;
+      }
+    }
+    if (bal < 0.005) {
+      bal = 0;
+      payoffYear ??= t;
+    }
+    const infl = Math.pow(1 + F.nonShelterInflation, t - 1);
+    const price = o.price * Math.pow(1 + g, t - 1);
+    const propTax = propertyTaxAnnual(j, price);
+    const insurance = o.insuranceAnnual * infl;
+    const services = o.utilities * 12 * infl;
+    const strata = o.condoFee * 12 * infl;
+    const utilities = services + strata;
+    const maintenance = o.price * F.maintenanceReserve * infl;
+    const pmi = insuranceThisYear;
+    const ownerOutlay = paid + propTax + insurance + pmi + utilities + maintenance;
+    const renterOutlay = o.rent * 12 * Math.pow(1 + o.rentInflation, t - 1) + services;
+    const diff = ownerOutlay - renterOutlay;
+
+    if (o.investDiff) {
+      const rpDraw = Math.max(0, diff);
+      const bpDraw = Math.max(0, -diff);
+      rp = rp * (1 + ret) + rpDraw;
+      rpContrib += rpDraw;
+      bp = bp * (1 + ret) + bpDraw;
+      bpContrib += bpDraw;
+    }
+
+    const itemizedInterest = interest * loanShare;
+    const itemizedTax = Math.min(propTax, F.tax.saltCap);
+    const itemized = itemizedInterest + itemizedTax;
+    const itemizedBeatsStandard = itemized > F.tax.standardDeduction.single;
+    const deductionBenefit = Math.max(0, itemized - F.tax.standardDeduction.single) * marginal;
+    tbp = tbp * (1 + ret) + deductionBenefit;
+    tbpContrib += deductionBenefit;
+
+    const homeValue = o.price * Math.pow(1 + g, t);
+    const sellingCost = homeValue * F.sellingCost;
+    const homeGain = Math.max(0, homeValue - o.price);
+    const taxableHomeGain = Math.max(0, homeGain - F.sec121.single);
+    const homeGainTax = taxableHomeGain * flatGainsRate;
+    const equity = homeValue - sellingCost - bal - homeGainTax;
+
+    const buyW = equity + afterGainsTax(tbp, tbpContrib) + (o.investDiff ? afterGainsTax(bp, bpContrib) : 0);
+    const rentW = afterGainsTax(upFront * Math.pow(1 + ret, t), upFront) + (o.investDiff ? afterGainsTax(rp, rpContrib) : 0);
+
+    rows.push({
+      t, opening, interest, paid, balance: bal, propTax, insurance, utilities, maintenance,
+      services, strata, rate: rate0, taxTimeCredits: deductionBenefit,
+      ownerOutlay, renterOutlay, diff,
+      rp: o.investDiff ? rp : 0,
+      bp: o.investDiff ? bp : 0,
+      homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
+      deductionBenefit, itemizedBeatsStandard, pmi,
+    });
+  }
+
+  return {
+    fin, cc, upFront,
+    pay,
+    rate: rate0 * 100,
+    /** Always null — a toMaturity mortgage never renews. */
+    renewalRate: null,
+    renewedAt: null,
+    rows,
+    breakEven: rows.find((r) => r.adv > 0)?.t ?? null,
+    payoffYear,
+    years,
+  };
+}
+
 export type RentVsBuyResult = ReturnType<typeof rentVsBuy>;
 
 /** Clamped row lookup by year, 1-based. */
@@ -1522,7 +2016,8 @@ export interface ScenarioInput extends ClosingInput {
  *    low-down-payment columns — holding closing costs flat would hide the one
  *    cost that varies with the thing being compared.
  */
-export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
+export function scenario(j: Jurisdiction, F: CountryRules, o: ScenarioInput) {
+  if (F.country === "us") return scenarioToMaturity(j, F, o);
   const floor = minDown(F, o.price);
   const requested = (o.price * o.dpPct) / 100;
   const down = Math.max(requested, floor);
@@ -1549,6 +2044,11 @@ export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
     pi,
     propTax,
     insurance: o.insuranceAnnual / 12,
+    // Always 0 on this (Canadian) branch — CMHC's premium is financed into the loan, not
+    // billed monthly. See `monthly.pmi` on `scenarioToMaturity` below for the US figure;
+    // both use the SAME key so a Scenarios column can render one PMI row for either
+    // country without branching on which shape `monthly` is.
+    pmi: 0,
     utilities: o.utilities,
     condoFee: o.condoFee,
     maintenance,
@@ -1602,6 +2102,98 @@ export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
     totalInterest,
     /** Interest plus the insurance premium — the true price of borrowing. */
     costOfBorrowing: totalInterest + premium,
+  };
+}
+
+/**
+ * The US (toMaturity) Scenarios path — the same "one down-payment column, every axis" shape as
+ * `scenario()` above, using `financing()`/`minDown()`/`propertyTaxAnnual()`'s own US branches
+ * rather than reimplementing PMI or the homestead exemption inline.
+ */
+function scenarioToMaturity(j: Jurisdiction, F: UsRules, o: ScenarioInput) {
+  const floor = minDown(F, o.price, o.ftb);
+  const requested = (o.price * o.dpPct) / 100;
+  const down = Math.max(requested, floor);
+  const dpPctEff = o.price > 0 ? (down / o.price) * 100 : 0;
+  const belowMinimum = requested < floor - 0.5;
+
+  const contractRate = o.contractRate ?? defaultContractRate(F, dpPctEff) / 100;
+  const fin = financing(F, { price: o.price, dpPct: dpPctEff, amortYears: o.amortYears, ftb: o.ftb, contractRate: contractRate * 100 });
+  const baseLoan = fin.baseLoan;
+  const ltv = o.price > 0 ? baseLoan / o.price : 0;
+  const insured = fin.insured;
+  const premRate = fin.premRate;
+  const premium = fin.premium;
+  const totalMortgage = fin.loan;
+
+  const f = payFactorMonthly(contractRate, o.amortYears);
+  const pi = totalMortgage * f;
+  const propTax = propertyTaxAnnual(j, o.price) / 12;
+  const maintenance = (o.price * F.maintenanceReserve) / 12;
+  const monthly = {
+    pi,
+    propTax,
+    insurance: o.insuranceAnnual / 12,
+    // PMI — see `monthly.pmi`'s comment on the Canadian branch above for why this is the
+    // same key rather than a US-only field.
+    pmi: fin.monthlyInsurance,
+    utilities: o.utilities,
+    condoFee: o.condoFee,
+    maintenance,
+    total: pi + propTax + o.insuranceAnnual / 12 + fin.monthlyInsurance + o.utilities + o.condoFee + maintenance,
+  };
+
+  const cc = closingTotal(j, F, { ...o, dpPct: dpPctEff });
+  const cash = down + cc.total;
+  const net = cash - cc.creditsAtClosing;
+  const surplus = o.funds === null ? null : o.funds - net;
+  const months = monthsToSave(surplus, o.save);
+
+  // No B-20-style stress test — qualify at the bare contract rate.
+  const qualRate = contractRate;
+  const stressPay = totalMortgage * payFactorMonthly(qualRate, o.amortYears);
+  // No heat allowance concept on a US mortgage; PMI IS counted, the way a lender's own DTI
+  // calculation would.
+  const housing = stressPay + fin.monthlyInsurance + propTax + o.condoFee * F.condoFeeInclusion;
+  const gds = o.qualIncome > 0 ? ((housing * 12) / o.qualIncome) * 100 : 0;
+  const tds = o.qualIncome > 0 ? (((housing + o.debts) * 12) / o.qualIncome) * 100 : 0;
+
+  const totalInterest = pi * o.amortYears * 12 - totalMortgage;
+  return {
+    dpPct: o.dpPct,
+    dpPctEff,
+    belowMinimum,
+    down,
+    baseLoan,
+    ltv,
+    insured,
+    premRate,
+    premium,
+    totalMortgage,
+    /** Percentage. */
+    contractRate: contractRate * 100,
+    monthly,
+    vsCeiling: monthly.total - o.comfortCeiling,
+    closingTotal: cc.total,
+    premiumTaxLine: j.premiumTax ? premium * j.premiumTax.rate : 0,
+    creditsAtClosing: cc.creditsAtClosing,
+    cash,
+    net,
+    surplus,
+    months,
+    fundable: surplus === null ? null : surplus >= 0,
+    /** Percentage. */
+    qualRate: qualRate * 100,
+    stressPay,
+    gds,
+    tds,
+    qualifies: o.qualIncome > 0 && gds <= F.gds && tds <= F.tds,
+    totalInterest,
+    /** Interest plus PMI paid while it applies — not a one-time premium on the US branch, so
+     * this is a rough "extra cost of borrowing" figure rather than the literal sum
+     * `costOfBorrowing`'s name implies on the Canadian side; disclosed here rather than
+     * silently reused. */
+    costOfBorrowing: totalInterest + (fin.insuranceMonths ?? 0) * fin.monthlyInsurance,
   };
 }
 

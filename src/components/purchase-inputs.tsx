@@ -3,8 +3,9 @@
 import { useTranslations } from "next-intl";
 import type { Jurisdiction } from "@/domain/types";
 import type { PropertyType, Residency } from "@/domain/types";
-import { federal } from "@/domain/federal";
+import { regionOf } from "@/domain/types";
 import { maxAmortYears } from "@/domain/engine";
+import { useRules } from "@/hooks/use-country";
 import { useMoney, usePercent } from "@/lib/format";
 import { NumberField } from "@/components/number-field";
 import { NoteLine } from "@/components/tool-page";
@@ -131,6 +132,7 @@ export function PurchaseInputs({
   const tProv = useTranslations("Provinces");
   const fmt = useMoney();
   const pct = usePercent();
+  const rules = useRules();
   /**
    * null when there is no price to model at all — see `pricePlaceholder`.
    *
@@ -164,13 +166,22 @@ export function PurchaseInputs({
    * the payment above is built on; the control marks the option they cannot have and
    * the note says what it would take to get it — the same gesture, in the same words,
    * as the Affordability screen's own amortization control.
+   *
+   * `maxAmortYears` is CA-only: it reads the CMHC long-amortization surcharge
+   * eligibility rule, which has no US counterpart — a US mortgage is a single 30-year
+   * fixed product (`rules.maxAmortOther`) with no first-time-buyer amortization
+   * extension to be eligible for. Branched on `rules.country`, never on which page
+   * is rendering, so the same component answers correctly wherever it's mounted.
    */
-  const amortCap = maxAmortYears(federal, {
-    dpPct: dpPctEffective,
-    price: effectivePrice ?? 0,
-    ftb: ftbEffective,
-    ptype: ptypeEffective,
-  });
+  const amortCap =
+    rules.country === "ca"
+      ? maxAmortYears(rules, {
+          dpPct: dpPctEffective,
+          price: effectivePrice ?? 0,
+          ftb: ftbEffective,
+          ptype: ptypeEffective,
+        })
+      : rules.maxAmortOther;
 
   /**
    * Data-driven, not a province check: the control exists wherever a transfer
@@ -256,11 +267,13 @@ export function PurchaseInputs({
         out of the sentence; the condition is stated qualitatively instead, and every
         term in it is one the reader can check.
       */}
-      {amortYears !== undefined && amortCap < federal.maxAmortFtbInsured ? (
+      {amortYears !== undefined &&
+      rules.country === "ca" &&
+      amortCap < rules.maxAmortFtbInsured ? (
         <NoteLine tone="caution" tight>
           {t("amortCapped", {
-            n: federal.maxAmortFtbInsured,
-            p: pct(federal.minDown.uninsuredRate * 100),
+            n: rules.maxAmortFtbInsured,
+            p: pct(rules.minDown.uninsuredRate * 100),
           })}
         </NoteLine>
       ) : null}
@@ -288,7 +301,7 @@ export function PurchaseInputs({
       ) : null}
 
       {/* Only Ontario stacks a municipal land transfer tax, and only in Toronto. */}
-      {elsewhere !== undefined && jurisdiction.prov === "ON" ? (
+      {elsewhere !== undefined && regionOf(jurisdiction) === "ON" ? (
         <div className="flex flex-col gap-1 border-t border-hairline pt-3">
           <div className="flex items-center justify-between gap-3">
             {/*
@@ -304,7 +317,7 @@ export function PurchaseInputs({
               exactly the split `Jurisdictions.at.<id>` already exists to carry.
             */}
             <Label htmlFor="elsewhere" className="text-[13px]">
-              {t("elsewhereIn")} {tProv(jurisdiction.prov)}
+              {t("elsewhereIn")} {tProv(regionOf(jurisdiction))}
             </Label>
             <Switch
               id="elsewhere"

@@ -4,7 +4,9 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
-import type { Locale } from "@/lib/locales";
+import { routing } from "@/i18n/routing";
+import { countryOf, type Locale } from "@/i18n/countries";
+import { ROUTE_COUNTRIES, type RouteKey } from "@/lib/routes";
 
 import { HomeContent } from "@/components/home-content";
 import { AppHeader } from "@/components/app-header";
@@ -43,13 +45,50 @@ const PAGES = [
   ["Sources", SourcesContent],
 ] as const;
 
-const LOCALES = Object.keys(CATALOGUES) as Locale[];
+// A per-ROUTE check (this renders every page route) iterates the actual `Locale`
+// pairs from routing.ts, not the language-keyed CATALOGUES registry: rendering
+// "es" would ask renderWithIntl for a locale that does not exist since the CA
+// route migration. See src/i18n/countries.ts and src/test/catalogues.ts.
+const LOCALES = routing.locales;
+
+/**
+ * The route each page namespace above renders, for the ones ROUTE_COUNTRIES
+ * restricts. Home, AppHeader and Sources are omitted deliberately: Home and
+ * AppHeader are chrome rather than a single route, and every route in
+ * ROUTE_COUNTRIES that DOES restrict something is covered by naming it here —
+ * an entry missing from this map is simply assumed to exist in every country,
+ * which is true of every route except RRSP-HBP today.
+ *
+ * This test mounts `page.tsx` directly rather than going through `layout.tsx`
+ * (where `assertRouteAvailable` lives), so it never sees the 404 a real request
+ * would get — it would otherwise crash instead, the way RRSP-HBP does reading
+ * `rules.hbp` on `CountryRules` for `"us"`, which has no such field. Skipping
+ * the pair here is the render test's analogue of the layout's guard.
+ */
+const PAGE_ROUTES: Partial<Record<string, RouteKey>> = {
+  Affordability: "/affordability",
+  ClosingCosts: "/closing-costs",
+  DownPayment: "/down-payment",
+  RrspHbp: "/rrsp-hbp",
+  Amortization: "/amortization",
+  RentVsBuy: "/rent-vs-buy",
+  Scenarios: "/scenarios",
+};
 
 /**
  * The namespaces every page reads, whatever page it is: the chrome, the shared input
  * controls, and the place-name tables.
  */
-const SHARED = ["AppHeader", "Nav", "Jurisdictions", "Provinces", "Inputs", "Disclosure", "Provenance"];
+const SHARED = [
+  "AppHeader",
+  "Countries",
+  "Nav",
+  "Jurisdictions",
+  "Provinces",
+  "Inputs",
+  "Disclosure",
+  "Provenance",
+];
 
 /**
  * The exact key paths that could leak on this page — not a pattern that looks like one.
@@ -100,12 +139,27 @@ beforeEach(() => window.localStorage.clear());
  * exactly where an unrendered key survives review.
  */
 describe.each(LOCALES)("every page renders in %s", (locale) => {
-  it.each(PAGES)("%s", async (namespace, Page) => {
+  const country = countryOf(locale as Locale);
+  // Skip a page whose route ROUTE_COUNTRIES excludes from this locale's country — the
+  // real request 404s via `assertRouteAvailable` in the route's layout before this
+  // component ever mounts (see PAGE_ROUTES above).
+  const availablePages = PAGES.filter(([namespace]) => {
+    const route = PAGE_ROUTES[namespace];
+    return !route || ROUTE_COUNTRIES[route].includes(country);
+  });
+
+  it.each(availablePages)("%s", async (namespace, Page) => {
     const user = userEvent.setup();
     renderWithIntl(
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
         <JurisdictionProvider>
-          <Page />
+          {/*
+            HomeContent takes `country` as a plain prop rather than reading `useCountry()`
+            itself — that hook lives behind a "use client" boundary a Server Component cannot
+            call through (see the component's own doc comment) — so this is the one page in
+            the list that needs a prop wired from the locale under test, not `<Page />` bare.
+          */}
+          {namespace === "Home" ? <HomeContent country={country} /> : <Page />}
         </JurisdictionProvider>
       </ThemeProvider>,
       { locale },

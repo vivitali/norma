@@ -22,12 +22,19 @@ const IDS = jurisdictions.map((j) => j.id);
  * Key parity, empty strings and ICU placeholders are checked across every locale in
  * `src/lib/messages.test.ts`. This file owns the one thing that check cannot see: that
  * the jurisdiction tables line up with the jurisdictions the engine actually has.
+ *
+ * Houston (the US-market seam's step 4) is named in all four catalogues as of the
+ * US-UI branch — the previous `NOT_YET_NAMED` exemption is gone; every jurisdiction
+ * `src/domain` carries gets a real display name here, in both forms, in every
+ * locale, restoring this test to the strict two-way check it enforces everywhere
+ * else.
  */
 describe("jurisdiction names", () => {
   it.each(jurisdictionTables)("%s names every jurisdiction, bare and prepositional", (_l, table) => {
     const { at: prep, ...bare } = table;
-    expect(IDS.filter((id) => !bare[id])).toEqual([]);
-    expect(IDS.filter((id) => !prep[id])).toEqual([]);
+    const ids = IDS;
+    expect(ids.filter((id) => !bare[id])).toEqual([]);
+    expect(ids.filter((id) => !prep[id])).toEqual([]);
   });
 
   it.each(jurisdictionTables)("%s names no id that no longer exists", (_locale, table) => {

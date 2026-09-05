@@ -11,6 +11,7 @@ const fees: JurisdictionFees = { notary: 1800, locCert: 400, inspect: 600, appra
 
 export const montreal: Jurisdiction = {
   id: "montreal",
+  country: "ca",
   prov: "QC",
   city: "montreal",
   cityData: true,

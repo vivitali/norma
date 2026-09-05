@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { federal } from "@/domain/federal";
 import type { Jurisdiction } from "@/domain/types";
 import { Provenance, type ProvenanceKind } from "@/components/provenance";
+import { useRules } from "@/hooks/use-country";
 import { cn } from "@/lib/utils";
 
 /**
@@ -333,11 +333,12 @@ export function FigureFooter({
   children?: ReactNode;
 }) {
   const t = useTranslations("Disclosure");
+  const rules = useRules();
   return (
     <div className="mt-10 border-t border-border pt-4 text-[11.5px] text-ink3">
       <p>{t("unverifiedFlag")}</p>
       <p>
-        {t("lastVerified")} {federal.verified}
+        {t("lastVerified")} {rules.verified}
       </p>
       {children}
       {!jurisdiction.cityData ? <p>{t("noCityData")}</p> : null}

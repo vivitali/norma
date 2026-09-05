@@ -1,14 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { readFieldPath } from "../provenance";
-import { jurisdictions, getJurisdiction, defaultJurisdiction } from "./index";
+import { regionOf } from "../types";
+import {
+  jurisdictions,
+  getJurisdiction,
+  defaultJurisdiction,
+  jurisdictionsOf,
+  defaultJurisdictionOf,
+} from "./index";
 
 const VALID_PROVINCES = new Set([
   "ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "PE", "NL", "YT", "NT", "NU",
 ]);
+const VALID_STATES = new Set(["TX"]);
 
 describe("jurisdictions", () => {
-  it("has exactly 14 jurisdictions", () => {
-    expect(jurisdictions).toHaveLength(14);
+  it("has exactly 15 jurisdictions", () => {
+    // 14 Canadian + Houston (US), the first record the country seam's step 4 added.
+    expect(jurisdictions).toHaveLength(15);
   });
 
   it("has unique ids", () => {
@@ -16,18 +25,36 @@ describe("jurisdictions", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("has a valid province code on every jurisdiction", () => {
+  it("has a valid country on every jurisdiction", () => {
     for (const j of jurisdictions) {
-      expect(VALID_PROVINCES.has(j.prov), `${j.id} has invalid province ${j.prov}`).toBe(true);
+      expect(["ca", "us"], j.id).toContain(j.country);
     }
   });
 
-  it("has at least one transfer line item and a lawyer/notary fee on every jurisdiction", () => {
+  it("has a valid region code on every jurisdiction", () => {
     for (const j of jurisdictions) {
+      const region = regionOf(j);
+      const valid = j.country === "ca" ? VALID_PROVINCES : VALID_STATES;
+      expect(valid.has(region), `${j.id} has invalid region ${region}`).toBe(true);
+    }
+  });
+
+  it("has at least one transfer line item on every CANADIAN jurisdiction", () => {
+    // Not a universal invariant: Texas levies no real estate transfer tax at all (dossier B1),
+    // so Houston's own transfer array is deliberately empty — the exact case buildLines()'s
+    // "degrade to an empty government group" behaviour exists to handle, per the US-market
+    // design spec's Decision 2.
+    for (const j of jurisdictions) {
+      if (j.country !== "ca") continue;
       expect(j.transfer.length, `${j.id} has no transfer line items`).toBeGreaterThan(0);
+    }
+  });
+
+  it("has a lawyer/notary/title-company fee on every jurisdiction", () => {
+    for (const j of jurisdictions) {
       expect(
         j.fees.lawyer ?? j.fees.notary,
-        `${j.id} has neither a lawyer nor notary fee`,
+        `${j.id} has neither a lawyer/title-company nor notary fee`,
       ).toBeGreaterThan(0);
     }
   });
@@ -45,7 +72,8 @@ describe("jurisdictions", () => {
   });
 
   it("looks up a known jurisdiction by id", () => {
-    expect(getJurisdiction("winnipeg")?.prov).toBe("MB");
+    const winnipeg = getJurisdiction("winnipeg");
+    expect(winnipeg && regionOf(winnipeg)).toBe("MB");
   });
 
   it("returns undefined for an unknown id", () => {
@@ -122,6 +150,27 @@ describe("jurisdictions", () => {
   it("exposes a default jurisdiction that is itself one of the listed jurisdictions", () => {
     expect(jurisdictions).toContain(defaultJurisdiction);
     expect(getJurisdiction(defaultJurisdiction.id)).toBe(defaultJurisdiction);
+  });
+
+  it("filters to one country's jurisdictions, in registry order", () => {
+    const ca = jurisdictionsOf("ca");
+    // No longer every jurisdiction — houston (us) is now in the shared registry too.
+    expect(ca).toEqual(jurisdictions.filter((j) => j.country === "ca"));
+    for (const j of ca) expect(j.country).toBe("ca");
+
+    const us = jurisdictionsOf("us");
+    expect(us).toEqual(jurisdictions.filter((j) => j.country === "us"));
+    for (const j of us) expect(j.country).toBe("us");
+  });
+
+  it("resolves a country's default to one of its own jurisdictions", () => {
+    const def = defaultJurisdictionOf("ca");
+    expect(def).toBe(defaultJurisdiction);
+    expect(jurisdictionsOf("ca")).toContain(def);
+
+    const usDef = defaultJurisdictionOf("us");
+    expect(usDef.id).toBe("houston");
+    expect(jurisdictionsOf("us")).toContain(usDef);
   });
 });
 

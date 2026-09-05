@@ -3,12 +3,13 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { closingTotal } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import { jurisdictions } from "@/domain/jurisdictions";
 import { resolveInputs } from "@/lib/resolve-inputs";
 import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
 import { CATALOGUES } from "@/test/catalogues";
 import type { Locale } from "@/lib/locales";
+import { languageOf, localesForCountry } from "@/i18n/countries";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import ClosingCostsPage from "./page";
 
@@ -58,7 +59,7 @@ function seedVancouverTiedNewBuild() {
   );
 }
 
-const renderPage = (locale: Locale = "en") =>
+const renderPage = (locale: Locale = "en-CA") =>
   renderWithIntl(
     <JurisdictionProvider>
       <ClosingCostsPage />
@@ -144,8 +145,8 @@ describe("Closing costs — the hero is the same figure as everything under it",
     const toronto = jurisdictions.find((j) => j.id === "toronto")!;
     const expected = closingTotal(
       toronto,
-      federal,
-      resolveInputs({ ...TOOL_DEFAULTS, ftb: true }, toronto, federal),
+      ca,
+      resolveInputs({ ...TOOL_DEFAULTS, ftb: true }, toronto, ca),
     );
     // The test is only meaningful where the two differ, so the difference is
     // asserted rather than assumed: a jurisdiction with no closing-day credit
@@ -280,7 +281,7 @@ describe("Closing costs — a rebate that pays nothing still says why", () => {
     expect(screen.queryByText(NONE)).not.toBeInTheDocument();
   });
 
-  it.each(Object.keys(CATALOGUES) as Locale[])(
+  it.each(localesForCountry("en-CA"))(
     "keeps both BC PTT exemptions visible and calls them tied, not superseded, at the 500,000-dollar exact-tie price — %s",
     async (locale) => {
       // At $500,000 both exemptions forgive the identical tax — see the note in `credits()` in
@@ -288,7 +289,9 @@ describe("Closing costs — a rebate that pays nothing still says why", () => {
       // rebate was worth MORE, because it was not. One case per locale, driven off the
       // catalogue itself rather than a hand-written string per language, so a locale added
       // later is covered automatically.
-      const cc = CATALOGUES[locale].ClosingCosts;
+      // Canadian locales only: the seed is a BC record, and a US locale would fall back to
+      // Houston. The catalogue is per LANGUAGE, hence `languageOf`.
+      const cc = CATALOGUES[languageOf(locale)].ClosingCosts;
       seedVancouverTiedNewBuild();
       const user = userEvent.setup();
       renderPage(locale);
@@ -315,7 +318,7 @@ describe("Closing costs — a rebate that pays nothing still says why", () => {
   it("says the same thing in French", async () => {
     seedVancouverNewBuild();
     const user = userEvent.setup();
-    renderPage("fr");
+    renderPage("fr-CA");
     await open(user, /Crédits/);
     expect(
       screen.getByText(/un seul remboursement offert ici peut être réclamé/),
@@ -369,7 +372,7 @@ describe("Closing costs — French", () => {
     // render the raw key, and a collapsed page hides every section where that
     // can happen -- which is exactly where Amortization.altText was hiding.
     const user = userEvent.setup();
-    renderPage("fr");
+    renderPage("fr-CA");
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(screen.getAllByText("Comptant requis le jour de la clôture").length).toBeGreaterThan(0);
     expect(document.body.textContent).not.toMatch(/ClosingCosts\./);

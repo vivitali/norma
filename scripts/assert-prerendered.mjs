@@ -39,21 +39,48 @@ const prerender = read(PRERENDER, "routes");
 // `locale` is currently the only declared dimension. Any future dynamic param —
 // a fixed province list, say — must be added here too, or it falls back to being
 // unchecked across pages.
+//
+// Imports src/i18n/countries.ts directly rather than src/i18n/routing.ts. Both declare
+// the same locale list (routing.locales is `allLocales()` from this same registry) —
+// but routing.ts itself imports countries.ts with a bare relative specifier
+// ("./countries"), which the Next/webpack bundler resolves fine and which tsc accepts
+// under "moduleResolution": "bundler", yet Node's own ESM resolver — used here via
+// Node's native type stripping, with no bundler in front of it — requires an explicit
+// extension on a relative specifier and fails to resolve it. countries.ts has no
+// imports of its own (see its file header), so going straight to it sidesteps that
+// resolution gap entirely instead of asking routing.ts to write its imports for two
+// different resolvers.
 let declaredParams = {};
 try {
-  const { routing } = await import("../src/i18n/routing.ts");
-  const locales = routing?.locales;
+  const { allLocales } = await import("../src/i18n/countries.ts");
+  const { routeLocales } = await import("../src/lib/og-manifest.ts");
+  const locales = allLocales();
   // An empty or malformed list is not "nothing to check" — it silently restores
   // exactly the blind spot this exists to close, and stays green while doing it.
   if (!Array.isArray(locales) || locales.length === 0) {
-    console.error("prerender guard: src/i18n/routing.ts declares no locales");
+    console.error("prerender guard: src/i18n/countries.ts declares no locales");
     console.error(`  got: ${JSON.stringify(locales)}`);
     console.error("  Without them the guard cannot tell that a whole locale went missing.");
     process.exit(1);
   }
-  declaredParams = { locale: locales };
+  // A FUNCTION of the page pattern, not a flat list: most routes want every
+  // registered locale, but RRSP-HBP is Canada-only (US-market spec — no US
+  // analogue), so its own requirement is four locales, not six. Extracted the same
+  // way sitemap.ts and og-manifest.ts's own consumers do: strip the "/[locale]"
+  // prefix and the trailing "/page" to recover the indexable route key ("/", "/rrsp-
+  // hbp", ...), then look up ROUTE_COUNTRIES through routeLocales(). A page pattern
+  // that maps to no known indexable route (there is none today) gets every locale,
+  // which is the conservative direction — it would fail LOUDLY as a "partial"
+  // problem below rather than silently stop checking.
+  declaredParams = {
+    locale: (page) => {
+      const stripped = page.replace(/^\/\[locale\]/, "").replace(/\/page$/, "");
+      const route = stripped === "" ? "/" : stripped;
+      return routeLocales(route, locales);
+    },
+  };
 } catch (error) {
-  console.error("prerender guard: cannot read locales from src/i18n/routing.ts");
+  console.error("prerender guard: cannot read locales from src/i18n/countries.ts");
   console.error(`  ${error.message}`);
   console.error("  Without them the guard cannot tell that a whole locale went missing.");
   process.exit(1);

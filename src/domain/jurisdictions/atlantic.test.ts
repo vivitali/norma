@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildLines, credits } from "../engine";
-import { federal } from "../federal";
+import { ca } from "../rules/ca";
 import { getJurisdiction } from "./index";
 
 const halifax = () => getJurisdiction("halifax")!;
@@ -22,7 +22,7 @@ const base = {
 /** The government line the engine emits for a purchase, or undefined if the row is absent. */
 function govLine(id: string, key: string, o: Parameters<typeof buildLines>[2]) {
   const j = getJurisdiction(id)!;
-  return buildLines(j, federal, o).gov.find((l) => l.key === key);
+  return buildLines(j, ca, o).gov.find((l) => l.key === key);
 }
 
 describe("Newfoundland and Labrador's Registry of Deeds tariff", () => {
@@ -93,7 +93,7 @@ describe("Newfoundland and Labrador's Registry of Deeds tariff", () => {
 describe("Nova Scotia's new-build HST rebate", () => {
   const nsCredit = (o: Parameters<typeof buildLines>[2]) => {
     const j = halifax();
-    return credits(j, federal, o, buildLines(j, federal, o).gov).later.find(
+    return credits(j, ca, o, buildLines(j, ca, o).gov).later.find(
       (c) => c.key === "cr_nsNewBuildHst",
     );
   };

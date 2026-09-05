@@ -4,14 +4,14 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/lib/locales";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import { money } from "@/domain/engine";
 import RrspHbpPage from "./page";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
-const renderPage = (locale: Locale = "en") =>
+const renderPage = (locale: Locale = "en-CA") =>
   renderWithIntl(
     <JurisdictionProvider>
       <RrspHbpPage />
@@ -129,7 +129,7 @@ describe("RRSP → HBP — the room the reader may not have", () => {
     renderPage();
     await open(user, /The refund/);
     expect(screen.getAllByText("Federal HBP maximum").length).toBeGreaterThan(0);
-    expect(screen.getByText(fmtCap(federal.rrspCap))).toBeInTheDocument();
+    expect(screen.getByText(fmtCap(ca.rrspCap))).toBeInTheDocument();
   });
 
   it("points at the Notice of Assessment rather than stating an accrual rate", async () => {
@@ -158,7 +158,7 @@ describe("RRSP → HBP — the rules", () => {
   });
 
   it("discloses the 2022-2025 cohort's extra three years beside the grace note", async () => {
-    // `graceYears` is 2 for everyone the engine computes for, and federal.ts
+    // `graceYears` is 2 for everyone the engine computes for, and rules/ca.ts
     // records the exception. Disclosed rather than computed: deriving it needs
     // the withdrawal year, which is a persisted input this page does not have.
     const user = userEvent.setup();
@@ -171,7 +171,7 @@ describe("RRSP → HBP — the rules", () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /The repayment/);
-    expect(screen.getByText(`Year ${federal.hbp.repayYears}`)).toBeInTheDocument();
+    expect(screen.getByText(`Year ${ca.hbp.repayYears}`)).toBeInTheDocument();
   });
 });
 
@@ -181,7 +181,7 @@ describe("RRSP → HBP — French", () => {
     // render the raw key, and a collapsed page hides every section where that
     // can happen -- which is exactly where Amortization.altText was hiding.
     const user = userEvent.setup();
-    renderPage("fr");
+    renderPage("fr-CA");
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(document.body.textContent).not.toMatch(/RrspHbp\./);
     expect(screen.getAllByText(/Régime d’accession|RAP/).length).toBeGreaterThan(0);

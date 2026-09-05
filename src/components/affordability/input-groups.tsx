@@ -4,12 +4,14 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
 import { maxAmortYears } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { useRules } from "@/hooks/use-country";
 import type { Jurisdiction } from "@/domain/types";
+import { regionOf } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
 import type { ToolFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
+import { countryKey } from "@/lib/country-key";
 import { NumberField } from "@/components/number-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -58,6 +60,7 @@ export function InputGroups({
   const tJur = useTranslations("Jurisdictions");
   const fmt = useMoney();
   const pct = usePercent();
+  const rules = useRules();
 
   /**
    * The longest amortization this purchase can actually be written at.
@@ -65,13 +68,20 @@ export function InputGroups({
    * Read off the RESOLVED down payment, not the requested one: `resolveInputs` has
    * already raised a request below the legal floor, and eligibility is a fact about
    * the loan the app is modelling rather than about the button the reader pressed.
+   *
+   * `maxAmortYears` is CA-only — see `purchase-inputs.tsx`'s identical branch and its
+   * doc comment. A US mortgage is a single 30-year fixed product with no first-time-
+   * buyer amortization extension to be eligible for.
    */
-  const maxAmort = maxAmortYears(federal, {
-    dpPct: resolved.dpPct,
-    price: resolved.price,
-    ftb: resolved.ftb,
-    ptype: resolved.ptype,
-  });
+  const maxAmort =
+    rules.country === "ca"
+      ? maxAmortYears(rules, {
+          dpPct: resolved.dpPct,
+          price: resolved.price,
+          ftb: resolved.ftb,
+          ptype: resolved.ptype,
+        })
+      : rules.maxAmortOther;
 
   /**
    * v2 has one disclosure gesture and it belongs to the sections above, so the
@@ -233,7 +243,7 @@ export function InputGroups({
           */}
           {resolved.benchmark !== null ? (
             <span className="-mt-1 text-[10.5px] text-ink3">
-              {jurisdiction.city ?? tProv(jurisdiction.prov)} · {fmt(resolved.benchmark)}
+              {jurisdiction.city ?? tProv(regionOf(jurisdiction))} · {fmt(resolved.benchmark)}
             </span>
           ) : resolved.priceKnown ? null : (
             <span className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
@@ -283,7 +293,7 @@ export function InputGroups({
             deliberately and by inspection rather than by extraction — the two
             components render this control in different layouts, but a reader who
             crosses between /affordability and /closing-costs must not find the same
-            rule stated two ways. `federal.maxAmortFtbInsured` rather than the reader's
+            rule stated two ways. `rules.maxAmortFtbInsured` rather than the reader's
             own choice, because the sentence is about the option that is on offer or
             not, and it fires whether or not they are sitting on it.
           */}
@@ -297,11 +307,11 @@ export function InputGroups({
               disabled: v > maxAmort,
             }))}
           />
-          {maxAmort < federal.maxAmortFtbInsured ? (
+          {rules.country === "ca" && maxAmort < rules.maxAmortFtbInsured ? (
             <NoteLine tone="caution">
               {tInputs("amortCapped", {
-                n: federal.maxAmortFtbInsured,
-                p: pct(federal.minDown.uninsuredRate * 100),
+                n: rules.maxAmortFtbInsured,
+                p: pct(rules.minDown.uninsuredRate * 100),
               })}
             </NoteLine>
           ) : null}
@@ -346,7 +356,7 @@ export function InputGroups({
                 {t("ftb")}
               </Label>
             </div>
-            <NoteLine>{tInputs("ftbWhy")}</NoteLine>
+            <NoteLine>{tInputs(countryKey("ftbWhy", rules.country))}</NoteLine>
           </div>
           {advanced(
             "adv-purchase",
@@ -364,7 +374,7 @@ export function InputGroups({
               />
               {/* Only Ontario stacks a municipal transfer tax, so this toggle
                   only changes anything there. */}
-              {jurisdiction.prov === "ON" ? (
+              {regionOf(jurisdiction) === "ON" ? (
                 <div className="flex items-center gap-2">
                   <Switch
                     id="elsewhere"
@@ -372,7 +382,7 @@ export function InputGroups({
                     onCheckedChange={(elsewhere) => update({ elsewhere })}
                   />
                   <Label htmlFor="elsewhere" className="text-[11.5px]">
-                    {t("elsewhereIn")} {tProv(jurisdiction.prov)}
+                    {t("elsewhereIn")} {tProv(regionOf(jurisdiction))}
                   </Label>
                 </div>
               ) : null}

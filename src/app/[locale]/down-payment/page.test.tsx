@@ -9,7 +9,7 @@ import DownPaymentPage from "./page";
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
 
-const renderPage = (locale: Locale = "en") =>
+const renderPage = (locale: Locale = "en-CA") =>
   renderWithIntl(
     <JurisdictionProvider>
       <DownPaymentPage />
@@ -249,7 +249,7 @@ describe("Down payment — French", () => {
     // render the raw key, and a collapsed page hides every section where that
     // can happen -- which is exactly where Amortization.altText was hiding.
     const user = userEvent.setup();
-    renderPage("fr");
+    renderPage("fr-CA");
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(screen.getByText("Sources de la mise de fonds")).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/DownPayment\./);
@@ -280,5 +280,20 @@ describe("Down payment — with no published price there is no target", () => {
     await user.tab();
     expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /The funding order/ })).toBeInTheDocument();
+  });
+});
+
+describe("Down payment — the RRSP-HBP cross-link", () => {
+  it("links to RRSP-HBP for a Canadian reader", () => {
+    renderPage("en-CA");
+    expect(document.querySelector('[data-cross="sentence"]')).not.toBeNull();
+  });
+
+  it("omits the RRSP-HBP cross-link for a US reader — the route has no US page", () => {
+    // RRSP-HBP is Canada-only (US-market spec, "absent from the US navigation"); the
+    // hbp row itself is already dropped from visibleRows for the US, but the trace
+    // link at the foot of the waterfall pointed at it unconditionally.
+    renderPage("en-US");
+    expect(document.querySelector('[data-cross="sentence"]')).toBeNull();
   });
 });

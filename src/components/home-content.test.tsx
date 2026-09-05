@@ -83,6 +83,22 @@ describe("internal linking", () => {
     ).toHaveLength(1);
   });
 
+  it("omits RRSP-HBP from the tool directory for a country with no page for it", () => {
+    // RRSP-HBP is the one route ROUTE_COUNTRIES restricts to Canada (US-market spec,
+    // "absent from the US navigation"). A US card pointing at it would 404.
+    // `country` is a plain prop now (see HomeContent's own doc comment on why it can no
+    // longer derive this from `useCountry()`), so the test sets it explicitly rather than
+    // relying on the render locale alone.
+    renderWithIntl(<HomeContent country="us" />, { locale: "en-US" });
+    const tools = screen.getByRole("region", { name: "What each tool answers" });
+    expect(tools.querySelector('a[href="/rrsp-hbp"]')).toBeNull();
+    // Every other built route is unaffected.
+    for (const route of BUILT_ROUTES) {
+      if (route === "/rrsp-hbp") continue;
+      expect(tools.querySelector(`a[href="${route}"]`), route).not.toBeNull();
+    }
+  });
+
   it("writes no route string of its own", async () => {
     // Routes come from src/lib/routes.ts. A literal here is how a slug rename silently 404s.
     const source = await import("node:fs").then((fs) =>
@@ -295,13 +311,13 @@ describe("French", () => {
   afterEach(() => cleanup());
 
   it("leaks no raw message key", () => {
-    const { container } = renderWithIntl(<HomeContent />, { locale: "fr" });
+    const { container } = renderWithIntl(<HomeContent />, { locale: "fr-CA" });
     expect(container.textContent).not.toMatch(/\bHome\.[a-zA-Z_]+/);
     expect(container.textContent).not.toMatch(/\bNav\.[a-zA-Z_]+/);
   });
 
   it("translates the tool descriptions rather than falling back to English", () => {
-    renderWithIntl(<HomeContent />, { locale: "fr" });
+    renderWithIntl(<HomeContent />, { locale: "fr-CA" });
     expect(document.body.textContent).toContain(fr.Home.toolsHeading);
     expect(document.body.textContent).toContain(fr.Home.tool_closingCosts);
   });

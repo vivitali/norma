@@ -3,9 +3,9 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { amortization, rowAt } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -13,6 +13,7 @@ import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { AMORTIZATION_SECTIONS } from "@/lib/sections";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
+import { countryKey } from "@/lib/country-key";
 import { cn } from "@/lib/utils";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
 import { SegmentedGroup } from "@/components/affordability/segmented-group";
@@ -22,8 +23,6 @@ import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 
-const TERM_CHOICES = [1, 3, 5, 10] as const;
-
 export default function AmortizationPage() {
   const t = useTranslations("Amortization");
   // The ask that replaces the answer where nobody publishes a price, and the
@@ -32,6 +31,7 @@ export default function AmortizationPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     AMORTIZATION_SECTIONS,
@@ -50,15 +50,19 @@ export default function AmortizationPage() {
      *
      * The payment panel loses nothing by closing: `rPayNow` and `rInterest` are
      * already head stats, so its two headline figures are on screen either way.
+     *
+     * `rules.mortgage.renews` guards it: a US 30-year fixed has no renewal
+     * section to open at all (see below), so `payment` — carrying the same
+     * `rPayNow`/`rInterest` figures the CA hero also leans on — opens instead.
      */
-    "renewal",
+    rules.mortgage.renews ? "renewal" : "payment",
   );
   const fmt = useMoney();
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
 
   const input = useMemo(
@@ -73,14 +77,14 @@ export default function AmortizationPage() {
     [resolved],
   );
 
-  const result = useMemo(() => amortization(federal, input), [input]);
+  const result = useMemo(() => amortization(rules, input), [rules, input]);
   /**
    * The same loan renewed at today's rate. Without it "extra interest" has no
    * referent — the reader would be comparing a renewal scenario against nothing.
    */
   const baseline = useMemo(
-    () => amortization(federal, { ...input, renewalRate: null }),
-    [input],
+    () => amortization(rules, { ...input, renewalRate: null }),
+    [rules, input],
   );
   const extraInterest = result.totalInterest - baseline.totalInterest;
 
@@ -91,23 +95,43 @@ export default function AmortizationPage() {
   const rising = shock > 0.5;
   const falling = shock < -0.5;
 
-  const head = rising
-    ? t("shockUp", { amt: fmt(shock) })
-    : falling
-      ? t("shockDown", { amt: fmt(-shock) })
-      : t("shockNone");
-  const sub = rising
-    ? t("shockUpSub", { n: firstRenewal ?? 0, extra: fmt(extraInterest) })
-    : falling
-      ? t("shockDownSub")
-      : t("shockNoneSub", { n: firstRenewal ?? 0 });
+  /**
+   * `rules.mortgage.renews` — never `rules.country` — is what a page branches on
+   * (CLAUDE.md, "Pages branch on rules, not on country strings"). A US 30-year
+   * fixed has no term and no renewal: `shock` is always 0 and `firstRenewal` is
+   * always null on that branch (see `amortizationToMaturity`'s own doc comment),
+   * so the CA shock sentence would render "no shock" while still implying a
+   * renewal that cannot happen. One honest sentence replaces it instead.
+   */
+  const head = !rules.mortgage.renews
+    ? t("usFixedHead", { rate: pct(resolved.contractRate, 2) })
+    : rising
+      ? t("shockUp", { amt: fmt(shock) })
+      : falling
+        ? t("shockDown", { amt: fmt(-shock) })
+        : t("shockNone");
+  const sub = !rules.mortgage.renews
+    ? t("usFixedSub")
+    : rising
+      ? t("shockUpSub", { n: firstRenewal ?? 0, extra: fmt(extraInterest) })
+      : falling
+        ? t("shockDownSub")
+        : t("shockNoneSub", { n: firstRenewal ?? 0 });
 
-  const presets = [
-    { key: "presetToday", value: null },
-    { key: "presetFloor", value: federal.stressTest.floor },
-    { key: "presetPlus2", value: Math.round((resolved.contractRate + 2) * 100) / 100 },
-    { key: "presetPlus4", value: Math.round((resolved.contractRate + 4) * 100) / 100 },
-  ] as const;
+  // Presets feed the renewal-rate control, which only exists where a mortgage
+  // renews — `rules.stressTest` is null on the US branch, so this whole table
+  // would read a null floor. Never referenced when `!rules.mortgage.renews`, but
+  // typed as possibly-empty here rather than asserted, so a future call site
+  // cannot read it unguarded.
+  const presets =
+    rules.mortgage.renews && rules.stressTest
+      ? ([
+          { key: "presetToday", value: null },
+          { key: "presetFloor", value: rules.stressTest.floor },
+          { key: "presetPlus2", value: Math.round((resolved.contractRate + 2) * 100) / 100 },
+          { key: "presetPlus4", value: Math.round((resolved.contractRate + 4) * 100) / 100 },
+        ] as const)
+      : ([] as const);
 
   const section = (id: string, tone: Tone, line: string, figure: string, why: string, body: ReactNode) => {
     const def = AMORTIZATION_SECTIONS.find((entry) => entry.id === id)!;
@@ -147,23 +171,33 @@ export default function AmortizationPage() {
           */}
           <PendingFigures pending={!hydrated}>
           <AnswerHead
-            eyebrow={t("title")}
+            eyebrow={t(countryKey("title", rules.country))}
             figure={fmt(result.paymentAfterRenewal)}
             pulseKey={jurisdiction.id}
             head={head}
             sub={sub}
             tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
-            stats={[
-              { label: t("rPayNow"), value: fmt(result.firstPayment), mark: "rule" },
-              {
-                label: t("rChange"),
-                // money() puts the sign outside the symbol already; doing it again here
-                // is how one screen ends up disagreeing with another about "− $340".
-                value: fmt(shock),
-                note: rising ? t("shockUpTag") : falling ? t("shockDownTag") : t("shockNoneTag"),
-              },
-              { label: t("rInterest"), value: fmt(result.totalInterest), mark: "rule" },
-            ]}
+            stats={
+              rules.mortgage.renews
+                ? [
+                    { label: t("rPayNow"), value: fmt(result.firstPayment), mark: "rule" },
+                    {
+                      label: t("rChange"),
+                      // money() puts the sign outside the symbol already; doing it again here
+                      // is how one screen ends up disagreeing with another about "− $340".
+                      value: fmt(shock),
+                      note: rising ? t("shockUpTag") : falling ? t("shockDownTag") : t("shockNoneTag"),
+                    },
+                    { label: t("rInterest"), value: fmt(result.totalInterest), mark: "rule" },
+                  ]
+                : [
+                    // No renewal, no shock to name — the second stat instead says the
+                    // one fact that replaces it: the rate that holds for the whole loan.
+                    { label: t("rPayNow_us"), value: fmt(result.firstPayment), mark: "rule" },
+                    { label: t("cRate"), value: pct(resolved.contractRate, 2), note: t("usFixedTag") },
+                    { label: t("rInterest"), value: fmt(result.totalInterest), mark: "rule" },
+                  ]
+            }
           />
           </PendingFigures>
 
@@ -179,13 +213,15 @@ export default function AmortizationPage() {
             {section(
               "payment",
               "none",
-              t("setupLine", {
-                mort: fmt(result.fin.loan),
-                rate: pct(resolved.contractRate, 2),
-                ren: resolved.renewalRate === null ? pct(resolved.contractRate, 2) : pct(resolved.renewalRate, 2),
-              }),
+              rules.mortgage.renews
+                ? t("setupLine", {
+                    mort: fmt(result.fin.loan),
+                    rate: pct(resolved.contractRate, 2),
+                    ren: resolved.renewalRate === null ? pct(resolved.contractRate, 2) : pct(resolved.renewalRate, 2),
+                  })
+                : t("setupLine_us", { mort: fmt(result.fin.loan), rate: pct(resolved.contractRate, 2) }),
               fmt(result.firstPayment),
-              t("paymentWhy"),
+              t(countryKey("paymentWhy", rules.country)),
               <>
                 <PanelRow label={t("mortgageAmount")} value={fmt(result.fin.loan)} strong />
                 {result.fin.premium > 0 ? (
@@ -200,8 +236,47 @@ export default function AmortizationPage() {
                   value={pct(resolved.contractRate, 2)}
                   provenance={<Provenance kind="rule" />}
                 />
-                <PanelRow label={t("rPayNow")} value={fmt(result.firstPayment)} strong />
+                {/*
+                  PMI — billed monthly, unlike CMHC's one-time financed premium above
+                  (which is why this is a second row rather than folded into it) — and
+                  silent once `result.fin.monthlyInsurance` is 0, exactly as the premium
+                  row above is silent on every US call.
+                */}
+                {result.fin.monthlyInsurance > 0 ? (
+                  <PanelRow
+                    label={t("pmiMonthly")}
+                    value={fmt(result.fin.monthlyInsurance)}
+                    provenance={<Provenance kind="rule" />}
+                  />
+                ) : null}
+                {/*
+                  Metadata.amortization.description_us promises "what PMI
+                  cancellation is worth" — the schedule and the chart imply it
+                  through the PMI column dropping to zero, but name it nowhere.
+                  `result.fin.insuranceMonths` is non-null whenever
+                  `monthlyInsurance > 0` (financing()'s own invariant), so this
+                  reads off the SAME two fields the row above does rather than
+                  re-deriving anything.
+                */}
+                {result.fin.monthlyInsurance > 0 && result.fin.insuranceMonths !== null ? (
+                  <NoteLine>
+                    {t("pmiCancelYear", {
+                      n: Math.ceil(result.fin.insuranceMonths / 12),
+                      amt: fmt(result.fin.monthlyInsurance),
+                    })}
+                  </NoteLine>
+                ) : null}
+                <PanelRow label={t(countryKey("rPayNow", rules.country))} value={fmt(result.firstPayment)} strong />
                 <PanelRow label={t("payoffLabel")} value={t("payoffYear", { n: result.payoffYear })} />
+                {/*
+                  A US 30-year fixed holds its rate to maturity — there is no term to
+                  distinguish from the amortization, so `termNote`'s "priced today / the
+                  rest is repriced at every renewal" split, and its jump to the (absent)
+                  #renewal section, would name a mechanism this mortgage does not have.
+                */}
+                {!rules.mortgage.renews ? (
+                  <NoteLine>{t("holdsToMaturity")}</NoteLine>
+                ) : null}
                 {/*
                   Directly under "Paid off in year 30", because that row is where
                   the misreading is made: a newcomer reads a 30-year payoff beside
@@ -210,22 +285,35 @@ export default function AmortizationPage() {
                   this states no figure the app invented — and the link is an
                   in-page jump, not a CrossLink: it goes to this page's own
                   `renewal` section, which `useHashTarget` then opens and focuses.
+                  CA only — see `holdsToMaturity` above for the US's own version of
+                  this fact, which needs no jump because there is no renewal section.
                 */}
-                <NoteLine>
-                  {t.rich("termNote", {
-                    term: result.term,
-                    amort: resolved.amortYears,
-                    jump: (chunks) => (
-                      <a href="#renewal" className="text-ac underline underline-offset-2">
-                        {chunks}
-                      </a>
-                    ),
-                  })}
-                </NoteLine>
+                {rules.mortgage.renews ? (
+                  <NoteLine>
+                    {t.rich("termNote", {
+                      term: result.term,
+                      amort: resolved.amortYears,
+                      jump: (chunks) => (
+                        <a href="#renewal" className="text-ac underline underline-offset-2">
+                          {chunks}
+                        </a>
+                      ),
+                    })}
+                  </NoteLine>
+                ) : null}
               </>,
             )}
 
-            {section(
+            {/*
+              A US 30-year fixed has no term and no renewal (`rules.mortgage.renews`
+              is false) — this whole section, its shock verdict, its term/renewal-rate
+              controls, all name a mechanism that mortgage does not have, so it does
+              not render at all rather than showing a permanent "no change" verdict.
+              `holdsToMaturity` above (in the payment section) carries the one honest
+              sentence in its place.
+            */}
+            {rules.mortgage.renews &&
+              section(
               "renewal",
               rising ? "blocked" : falling ? "pass" : "caution",
               rising ? t("shockUpTag") : falling ? t("shockDownTag") : t("shockNoneTag"),
@@ -281,7 +369,9 @@ export default function AmortizationPage() {
                     label={t("termYears")}
                     value={stored.termYears}
                     onChange={(termYears) => update({ termYears })}
-                    options={TERM_CHOICES.map((v) => ({ value: v, label: t("yearsWord", { n: v }) }))}
+                    options={(rules.mortgage.kind === "term" ? rules.mortgage.termYears : []).map(
+                      (v) => ({ value: v, label: t("yearsWord", { n: v }) }),
+                    )}
                   />
                 </div>
               </>,
@@ -310,7 +400,15 @@ export default function AmortizationPage() {
                   strong
                 />
                 <PanelRow label={t("totalPaid")} value={fmt(result.totalPaid)} />
-                <PanelRow label={t("rExtra")} value={fmt(extraInterest)} />
+                {/*
+                  A US 30-year fixed never renews, so `extraInterest` is always exactly 0
+                  here (the baseline it is measured against ignores `renewalRate`, which
+                  `amortizationToMaturity` never reads at all) — a true but meaningless
+                  zero next to a label that names a mechanism this mortgage does not have.
+                */}
+                {rules.mortgage.renews ? (
+                  <PanelRow label={t("rExtra")} value={fmt(extraInterest)} />
+                ) : null}
               </>,
             )}
 
@@ -319,7 +417,7 @@ export default function AmortizationPage() {
               row printed "Year by year · Year by year". The schedule's one finding
               the reader cannot get from the collapsed row is where it ends.
             */}
-            {section("schedule", "none", t("payoffYear", { n: result.payoffYear }), "", t("scheduleWhy"), (
+            {section("schedule", "none", t("payoffYear", { n: result.payoffYear }), "", t(countryKey("scheduleWhy", rules.country)), (
               <>
                 <ScheduleChart result={result} />
                 <div
@@ -339,6 +437,17 @@ export default function AmortizationPage() {
                         <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cPayment")}</th>
                         <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cInterest")}</th>
                         <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cPrincipal")}</th>
+                        {/*
+                          PMI, only while it applies — absent for every Canadian row
+                          (`row.insurance` is undefined there; CMHC's premium is the
+                          one-time row above, not a recurring column) and absent past
+                          the month it auto-terminates on a US row, so a column that
+                          would be $0 for the whole loan's remaining life is not shown
+                          at all rather than as a wall of zeroes.
+                        */}
+                        {result.rows.some((r) => (r.insurance ?? 0) > 0) ? (
+                          <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("cPmi")}</th>
+                        ) : null}
                         <th scope="col" className="py-1.5 text-right font-medium">{t("cBalance")}</th>
                       </tr>
                     </thead>
@@ -381,6 +490,9 @@ export default function AmortizationPage() {
                             <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.payment)}</td>
                             <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.interest)}</td>
                             <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.principal)}</td>
+                            {result.rows.some((r) => (r.insurance ?? 0) > 0) ? (
+                              <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.insurance ?? 0)}</td>
+                            ) : null}
                             <td className="py-1.5 text-right tabular-nums">{fmt(row.closing)}</td>
                           </tr>
                         );
@@ -469,7 +581,7 @@ export default function AmortizationPage() {
         </>
       ) : (
         <AnswerHead
-          eyebrow={t("title")}
+          eyebrow={t(countryKey("title", rules.country))}
           head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
           sub={tInputs("noPriceSub")}
         />

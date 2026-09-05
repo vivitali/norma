@@ -1,9 +1,15 @@
-import type { FederalRules } from "./types";
+import type { CaRules } from "../types";
 
 /**
- * The date every `high`-confidence federal figure below was read off its issuing authority.
- * Not a guess and not a file mtime: on this date CMHC, OSFI, CRA, the Bank of Canada and
- * FP Canada were each opened and the figure compared line for line.
+ * Canada's country rules. Formerly `src/domain/federal.ts`'s `federal` singleton — renamed and
+ * moved for `docs/superpowers/specs/2026-08-29-us-market-design.md`'s country seam
+ * (implementation order item 2): `federal` read as "the federal rules" when there was only one
+ * set, and there are about to be two. Values and provenance are byte-for-byte unchanged from
+ * `federal.ts`; `src/domain/golden.test.ts` is the regression net that proves it.
+ *
+ * The date every `high`-confidence figure below was read off its issuing authority. Not a
+ * guess and not a file mtime: on this date CMHC, OSFI, CRA, the Bank of Canada and FP Canada
+ * were each opened and the figure compared line for line.
  */
 const VERIFIED_AT = "2026-08-24";
 
@@ -44,7 +50,14 @@ const INVEST_RETURN_NOTE =
 const APPRECIATION_NOTE =
   "A forward-looking house price growth assumption, not a forecast anyone is accountable for. The value is taken from FP Canada's 2026 Projection Assumption Guidelines, which is the Canadian standard for long-term projections — but a projection assumption is still an assumption, so it is disclosed as one rather than presented as a rate that will happen.";
 
-export const federal: FederalRules = {
+/**
+ * The mortgage term lengths Amortization's `SegmentedGroup` used to hardcode as
+ * `TERM_CHOICES = [1, 3, 5, 10]`. Moved here so the UI reads its options off the rules record
+ * rather than a component-local literal — see `Mortgage` in types.ts.
+ */
+export const ca: CaRules = {
+  country: "ca",
+  mortgage: { kind: "term", termYears: [1, 3, 5, 10], renews: true },
   cmhc: {
     bands: [
       [0.65, 0.006],
@@ -70,6 +83,7 @@ export const federal: FederalRules = {
   hbp: { max: 60000, repayYears: 15, graceYears: 2, ruleDays: 89 },
   rrspCap: 33810,
   capGainsInclusion: 0.5,
+  gains: { kind: "inclusion", rate: 0.5 },
   marginal: {
     MB: [[47564, 0.248], [58522, 0.2675], [101200, 0.3325], [117000, 0.379], [181400, 0.434], [258500, 0.464], [null, 0.504]],
     ON: [[52886, 0.2005], [58522, 0.2415], [105775, 0.2965], [117000, 0.3389], [181400, 0.4341], [253414, 0.4841], [null, 0.5353]],
@@ -80,6 +94,7 @@ export const federal: FederalRules = {
     NS: [[32074, 0.2379], [58522, 0.3], [64181, 0.345], [117000, 0.43], [181400, 0.47], [null, 0.54]],
     CA: [[55000, 0.245], [58522, 0.27], [110000, 0.335], [117000, 0.38], [181400, 0.435], [258500, 0.465], [null, 0.51]],
   },
+  marginalFallbackKey: "CA",
   sellingCost: 0.05,
   maintenanceReserve: 0.01,
   appreciation: { inflation: 0.021, shelter: 0.031, flat: 0 },
@@ -245,5 +260,5 @@ export const federal: FederalRules = {
       conf: "assumption",
       note: "Every bracket and combined rate here is an unverified prototype carry-over. Out of scope for the 2026-08-24 pass, which covered federal parameters only; the tables need their own per-jurisdiction sourcing against CRA and each provincial finance authority before marginalRate() is ported. Recorded as an assumption rather than `none` because the field holds a value; the gap is tracked on #3.",
     },
-  }
+  },
 };

@@ -5,6 +5,7 @@ const fees: JurisdictionFees = { lawyer: 1800, titleIns: 350, inspect: 600, appr
 
 export const winnipeg: Jurisdiction = {
   id: "winnipeg",
+  country: "ca",
   prov: "MB",
   city: "winnipeg",
   cityData: true,

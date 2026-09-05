@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { routing } from "@/i18n/routing";
-import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY, ogImagePath } from "./og-manifest";
+import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY, ogImagePath, routeLocales } from "./og-manifest";
 
 const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
@@ -12,8 +12,10 @@ const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
  * exactly the kind of regression nobody notices until someone posts a link.
  */
 describe("social cards", () => {
-  for (const locale of routing.locales) {
-    for (const href of INDEXABLE_ROUTES) {
+  for (const href of INDEXABLE_ROUTES) {
+    // Scoped to the route's own locales, not every registered locale: RRSP-HBP has
+    // no en-US or es-US card to generate, because it has no en-US or es-US page.
+    for (const locale of routeLocales(href, routing.locales)) {
       const path = `public${ogImagePath(locale, href)}`;
 
       it(`${locale} ${href} has a card`, () => {

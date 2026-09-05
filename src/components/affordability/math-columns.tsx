@@ -2,9 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { useRules } from "@/hooks/use-country";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { useMoney, usePercent } from "@/lib/format";
+import { countryKey } from "@/lib/country-key";
 import { cn } from "@/lib/utils";
 
 function MathRow({
@@ -48,6 +49,7 @@ export function MathColumns({
   const t = useTranslations("Affordability");
   const fmt = useMoney();
   const pct = usePercent();
+  const rules = useRules();
 
   return (
     <div className="grid max-w-[900px] grid-cols-1 gap-9 lg:grid-cols-2">
@@ -55,16 +57,33 @@ export function MathColumns({
         <div className="mb-3 text-[13px] font-semibold">{t("mLender")}</div>
         <MathRow label={t("mQualInc")} value={fmt(result.qualIncome)} />
         <MathRow
-          label={t("mStressRate")}
+          label={t(countryKey("mStressRate", rules.country))}
           value={pct(result.qualRate, 2)}
-          why={t("mStressWhy", { floor: pct(federal.stressTest.floor, 2) })}
+          // No federal stress test exists on a US mortgage — rules.stressTest is null
+          // there, and the qualifying rate IS the contract rate. See CaRules.stressTest
+          // vs UsRules.stressTest in src/domain/types.ts.
+          why={
+            rules.stressTest
+              ? t("mStressWhy", { floor: pct(rules.stressTest.floor, 2) })
+              : t("mNoStressTest")
+          }
         />
-        <MathRow label={t("mFactor")} value={result.fq.toFixed(6)} why={t("mFactorWhy")} />
-        <MathRow label={`${t("mGdsAllow")} · GDS ${pct(federal.gds)}`} value={fmt(result.gdsAllow)} />
-        <MathRow label={`${t("mTdsAllow")} · TDS ${pct(federal.tds)}`} value={fmt(result.tdsAllow)} />
+        <MathRow
+          label={t("mFactor")}
+          value={result.fq.toFixed(6)}
+          why={t(countryKey("mFactorWhy", rules.country))}
+        />
+        <MathRow
+          label={`${t("mGdsAllow")} · ${t(countryKey("dtiFrontAbbr", rules.country))} ${pct(rules.gds)}`}
+          value={fmt(result.gdsAllow)}
+        />
+        <MathRow
+          label={`${t("mTdsAllow")} · ${t(countryKey("dtiBackAbbr", rules.country))} ${pct(rules.tds)}`}
+          value={fmt(result.tdsAllow)}
+        />
         <MathRow
           label={t("mBinding")}
-          value={`${fmt(result.binding)} · ${result.tdsBinds ? "TDS" : "GDS"}`}
+          value={`${fmt(result.binding)} · ${t(countryKey(result.tdsBinds ? "dtiBackAbbr" : "dtiFrontAbbr", rules.country))}`}
           strong
           why={result.tdsBinds ? t("ckTds") : t("ckGds")}
         />

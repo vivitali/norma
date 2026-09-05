@@ -53,6 +53,7 @@ const fees: JurisdictionFees = { lawyer: 1800, titleIns: 350, inspect: 700, appr
 
 export const yt: Jurisdiction = {
   id: "yt",
+  country: "ca",
   prov: "YT",
   // Whitehorse, not Yukon: roughly three quarters of Yukoners live here and every figure in this
   // record — the mill rate, the fees, the moving cost — is a Whitehorse figure. `cityData` stays

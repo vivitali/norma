@@ -2,20 +2,36 @@
 
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { useRules } from "@/hooks/use-country";
 import { gaugeBar } from "@/lib/scale";
 import { usePercent } from "@/lib/format";
+import { countryKey } from "@/lib/country-key";
 import { figureClass } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
-/** GDS and TDS at the target price, on a shared 60% axis so the bars compare. */
+/**
+ * GDS and TDS at the target price, on a shared 60% axis so the bars compare — or, on
+ * a US call, front-end and back-end DTI, the same two ratios under the US's own
+ * acronyms (design spec, "What splits, and what does not").
+ */
 export function Gauges({ result }: { result: AffordabilityResult }) {
   const t = useTranslations("Affordability");
   const pct = usePercent();
+  const rules = useRules();
 
   const rows = [
-    { code: "GDS", short: t("gdsShort"), value: result.gdsAtTarget, limit: federal.gds },
-    { code: "TDS", short: t("tdsShort"), value: result.tdsAtTarget, limit: federal.tds },
+    {
+      code: t(countryKey("dtiFrontAbbr", rules.country)),
+      short: t("gdsShort"),
+      value: result.gdsAtTarget,
+      limit: rules.gds,
+    },
+    {
+      code: t(countryKey("dtiBackAbbr", rules.country)),
+      short: t("tdsShort"),
+      value: result.tdsAtTarget,
+      limit: rules.tds,
+    },
   ];
 
   return (

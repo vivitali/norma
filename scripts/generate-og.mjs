@@ -1,8 +1,18 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { ImageResponse } from "next/dist/server/og/image-response.js";
-import { routing } from "../src/i18n/routing.ts";
-import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY } from "../src/lib/og-manifest.ts";
+import { allLocales, countryOf, languageOf } from "../src/i18n/countries.ts";
+import { INDEXABLE_ROUTES, ROUTE_METADATA_KEY, routeLocales } from "../src/lib/og-manifest.ts";
+
+// Imports src/i18n/countries.ts directly rather than src/i18n/routing.ts. routing.ts
+// itself imports countries.ts with a bare relative specifier ("./countries"), which
+// the Next/webpack bundler and tsc both resolve fine but which Node's own ESM
+// resolver — used here via Node's native type stripping, with no bundler in front of
+// it — rejects outright (it requires an explicit extension on a relative specifier).
+// countries.ts has no imports of its own, so going straight to it sidesteps that
+// resolution gap; see scripts/assert-prerendered.mjs and scripts/smoke, which do the
+// same for the same reason.
+const LOCALES = allLocales();
 
 /**
  * Renders one social card per route per locale into public/og/<locale>/<slug>.png.
@@ -89,11 +99,18 @@ function card({ title, fonts }) {
   );
 }
 
+// Catalogues stay one file per LANGUAGE (messages/en.json, not messages/en-CA.json) —
+// see src/i18n/countries.ts — so this reads by languageOf(locale), not by the locale
+// pair itself.
 const messages = Object.fromEntries(
   await Promise.all(
-    routing.locales.map(async (locale) => [
+    LOCALES.map(async (locale) => [
       locale,
-      JSON.parse(await import("node:fs").then((fs) => fs.readFileSync(`messages/${locale}.json`, "utf8"))),
+      JSON.parse(
+        await import("node:fs").then((fs) =>
+          fs.readFileSync(`messages/${languageOf(locale)}.json`, "utf8"),
+        ),
+      ),
     ]),
   ),
 );
@@ -113,10 +130,17 @@ for (const weight of [400, 600]) {
 }
 
 let written = 0;
-for (const locale of routing.locales) {
-  for (const href of INDEXABLE_ROUTES) {
+for (const href of INDEXABLE_ROUTES) {
+  // Scoped to the route's own availability: RRSP-HBP has no en-US or es-US card to
+  // write, because it has no en-US or es-US page — see ROUTE_COUNTRIES in
+  // og-manifest.ts.
+  for (const locale of routeLocales(href, LOCALES)) {
     const key = ROUTE_METADATA_KEY[href];
-    const title = messages[locale].Metadata[key]?.title;
+    const entry = messages[locale].Metadata[key];
+    // A page whose title genuinely differs by country (Home, Amortization, Rent vs Buy —
+    // see each route's layout.tsx) carries a `title_us` fork read through `countryKey()`;
+    // this mirrors that selection so a US card never renders the Canadian title.
+    const title = (countryOf(locale) === "us" && entry?.title_us) || entry?.title;
     if (!title) throw new Error(`missing Metadata.${key}.title for ${locale}`);
 
     const slug = href === "/" ? "home" : href.replace(/^\//, "");

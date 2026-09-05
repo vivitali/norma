@@ -9,6 +9,7 @@ const fees: JurisdictionFees = { lawyer: 1900, titleIns: 350, inspect: 750, appr
 
 export const nt: Jurisdiction = {
   id: "nt",
+  country: "ca",
   prov: "NT",
   // Yellowknife, not the Northwest Territories: about 45% of NWT residents live here, and the
   // property tax rate, fees and moving cost in this record are all Yellowknife figures. The

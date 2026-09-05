@@ -146,7 +146,14 @@ export function checkPrerendered(appRoutes, prerender, declaredParams = {}) {
       // hasOwn, not a bare lookup: a param named [constructor] would otherwise
       // resolve to a function and blow up the spread below.
       if (!Object.hasOwn(declaredParams, name)) continue;
-      const declared = declaredParams[name];
+      const raw = declaredParams[name];
+      // A ROUTE-SPECIFIC declaration, not just a param-wide one: `raw` may be a
+      // function of the page pattern rather than a flat array, because a route can
+      // be declared for only SOME of a param's values — RRSP-HBP is Canada-only, so
+      // its own `locale` requirement is four locales, not all six. A flat array
+      // stays the common case (every other route wants every locale) and needs no
+      // caller change.
+      const declared = typeof raw === "function" ? raw(page) : raw;
 
       const covered = new Set(
         concrete

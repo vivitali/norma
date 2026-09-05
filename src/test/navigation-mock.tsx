@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
  *   vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
  */
 export const nextNavigation = {
-  useParams: () => ({ locale: "en" }),
+  useParams: () => ({ locale: "en-CA" }),
   usePathname: () => "/",
 };
 

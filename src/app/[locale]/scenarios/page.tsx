@@ -3,9 +3,10 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { minDown, scenario, type ScenarioResult } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { countryKey } from "@/lib/country-key";
 import { CalcLedger } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -28,13 +29,14 @@ export default function ScenariosPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
 
   /**
@@ -55,7 +57,7 @@ export default function ScenariosPage() {
   const columns = useMemo(
     () =>
       SCENARIO_PERCENTS.map((dpPct) =>
-        scenario(jurisdiction, federal, {
+        scenario(jurisdiction, rules, {
           price: resolved.price,
           dpPct,
           amortYears: resolved.amortYears,
@@ -74,7 +76,7 @@ export default function ScenariosPage() {
           save: resolved.save,
         }),
       ),
-    [jurisdiction, resolved, qualIncome],
+    [jurisdiction, rules, resolved, qualIncome],
   );
 
   const rec = recommend(columns);
@@ -182,8 +184,23 @@ export default function ScenariosPage() {
     { label: t("rBaseLoan"), value: (c) => fmt(c.baseLoan) },
     { label: t("rLtv"), value: (c) => pct(c.ltv * 100, 1), mark: "rule" },
     { label: t("rTotalMort"), value: (c) => fmt(c.totalMortgage), mark: "rule" },
-    { label: t("rPremRate"), value: (c) => (c.premRate > 0 ? pct(c.premRate * 100, 2) : t("fNoPremium")), mark: "rule" },
-    { label: t("rPremAmt"), value: (c) => (c.premium > 0 ? fmt(c.premium) : "—"), mark: "rule" },
+    /*
+     * CMHC's premium is CA-only: `financing()`'s US branch always returns
+     * `premRate: 0` / `premium: 0` — PMI is a monthly charge, never financed into
+     * the loan (see the field's own doc comment) — so these two rows would read
+     * "No CMHC premium at all" on every US column, which names an insurer this
+     * market has no relationship with. Replaced below by `rPmiMonthly`, reading
+     * `monthly.pmi`, the figure that actually carries the US cost.
+     */
+    ...(rules.country === "ca"
+      ? [
+          { label: t("rPremRate"), value: (c: ScenarioResult) => (c.premRate > 0 ? pct(c.premRate * 100, 2) : t("fNoPremium")), mark: "rule" as const },
+          { label: t("rPremAmt"), value: (c: ScenarioResult) => (c.premium > 0 ? fmt(c.premium) : "—"), mark: "rule" as const },
+        ]
+      : []),
+    ...(columns.some((c) => c.monthly.pmi > 0)
+      ? [{ label: t("rPmiMonthly"), value: (c: ScenarioResult) => fmt(c.monthly.pmi), mark: "rule" as const }]
+      : []),
     { label: t("rContract"), value: (c) => pct(c.contractRate, 2), mark: "rule" },
     { label: t("rPi"), value: (c) => fmt(c.monthly.pi) },
     { label: t("rPropTax"), value: (c) => fmt(c.monthly.propTax), mark: "estimate" },
@@ -219,7 +236,12 @@ export default function ScenariosPage() {
 
   const cashRows: MetricRow[] = [
     { label: t("rClosing"), value: (c) => fmt(c.closingTotal), mark: "rule" },
-    { label: t("rPremTax"), value: (c) => (c.premiumTaxLine > 0 ? fmt(c.premiumTaxLine) : "—"), mark: "rule" },
+    // `premiumTaxLine` is always 0 on the US branch too — it taxes the CMHC premium,
+    // which the US never finances (see the monthlyRows comment above) — so the row
+    // is CA-only rather than a permanent "—".
+    ...(rules.country === "ca"
+      ? [{ label: t("rPremTax"), value: (c: ScenarioResult) => (c.premiumTaxLine > 0 ? fmt(c.premiumTaxLine) : "—"), mark: "rule" as const }]
+      : []),
     { label: t("rCash"), value: (c) => fmt(c.net), strong: true, best: lowestBy((c) => c.net) },
     { label: t("rSurplus"), value: (c) => (c.surplus === null ? "—" : fmt(c.surplus)) },
     {
@@ -250,15 +272,26 @@ export default function ScenariosPage() {
     { label: t("rQualIncome"), value: () => fmt(qualIncome), mark: "estimate" },
     { label: t("rDebtsTotal"), value: () => fmt(resolved.debts) },
     { label: t("rQualRate"), value: (c) => pct(c.qualRate, 2), mark: "rule" },
-    { label: t("rStressPay"), value: (c) => fmt(c.stressPay) },
-    { label: t("rGds"), value: (c) => pct(c.gds, 1), mark: "rule" },
-    { label: t("rTds"), value: (c) => pct(c.tds, 1), mark: "rule" },
+    {
+      label: t(countryKey("rStressPay", rules.country)),
+      value: (c) => fmt(c.stressPay),
+    },
+    // GDS/TDS are Canadian acronyms for a concept the US calls front-end/back-end
+    // DTI — same two ratios (design spec, "What splits, and what does not"), so
+    // only the label forks, not the row or the arithmetic.
+    { label: t(countryKey("rGds", rules.country)), value: (c) => pct(c.gds, 1), mark: "rule" },
+    { label: t(countryKey("rTds", rules.country)), value: (c) => pct(c.tds, 1), mark: "rule" },
     { label: t("rResult"), value: (c) => (c.qualifies ? t("fQualifies") : t("fDeclines")), strong: true },
   ];
 
   const lifeRows: MetricRow[] = [
     { label: t("rInterest"), value: (c) => fmt(c.totalInterest), mark: "rule" },
-    { label: t("rPremAmt"), value: (c) => (c.premium > 0 ? fmt(c.premium) : "—") },
+    // Same CMHC-is-CA-only reasoning as `monthlyRows`/`cashRows` above: `c.premium`
+    // is always 0 on the US branch, so this row read "CMHC premium —" on every
+    // US column — a real leak this file's own vocabulary contract test caught.
+    ...(rules.country === "ca"
+      ? [{ label: t("rPremAmt"), value: (c: ScenarioResult) => (c.premium > 0 ? fmt(c.premium) : "—") }]
+      : []),
     {
       label: t("rBorrowCost"),
       value: (c) => fmt(c.costOfBorrowing),
@@ -285,28 +318,43 @@ export default function ScenariosPage() {
    * portion above it", which is simply false at or above `cmhc.insuredCap`: no
    * insurer writes the loan there, so the minimum is the flat uninsured rate and
    * the marginal schedule does not apply at all. And the tier it named came from
-   * a `const MIN_DOWN_TIER = 500000` in this file — a federal rule value living
+   * a `const MIN_DOWN_TIER = 500000` in this file — a rule value living
    * in a page component, with nothing able to keep it in step with `minDown()`
-   * three modules away. Both halves now come off `federal`.
+   * three modules away. Both halves now come off `rules`.
    */
-  const bands = federal.minDown.bands;
-  // `tierCeiling === null` is not a defensive flourish: a one-band schedule is a
-  // FLAT schedule, and the tiered sentence would then name a threshold that does
-  // not exist. It falls through to the same branch the insured cap does.
-  const tierCeiling = bands[0][0];
+  /**
+   * US: a flat percentage-of-price minimum, not a tiered CMHC-style schedule —
+   * `minDown()`'s own doc comment: `programs.conventional.minDownFtb` (3%) for a
+   * first-time buyer, `.minDown` (5%) otherwise, with no insured-cap concept at
+   * all. `rules.cmhc` and `rules.minDown` are CA-only fields (see CaRules), so
+   * this branches on `rules.country` before touching either.
+   */
   const minDownLine =
-    resolved.price >= federal.cmhc.insuredCap || tierCeiling === null || bands.length < 2
-      ? t("minDownNoteFlat", {
-          cap: fmt(federal.cmhc.insuredCap),
-          p: pct(federal.minDown.uninsuredRate * 100),
-          b: fmt(minDown(federal, resolved.price)),
+    rules.country === "us"
+      ? t("minDownNoteUs", {
+          pFtb: pct(rules.programs.conventional.minDownFtb * 100),
+          pOther: pct(rules.programs.conventional.minDown * 100),
+          b: fmt(minDown(rules, resolved.price, resolved.ftb)),
         })
-      : t("minDownNote", {
-          lo: pct(bands[0][1] * 100),
-          a: fmt(tierCeiling),
-          hi: pct(bands[1][1] * 100),
-          b: fmt(minDown(federal, resolved.price)),
-        });
+      : (() => {
+          const bands = rules.minDown.bands;
+          // `tierCeiling === null` is not a defensive flourish: a one-band schedule is a
+          // FLAT schedule, and the tiered sentence would then name a threshold that does
+          // not exist. It falls through to the same branch the insured cap does.
+          const tierCeiling = bands[0][0];
+          return resolved.price >= rules.cmhc.insuredCap || tierCeiling === null || bands.length < 2
+            ? t("minDownNoteFlat", {
+                cap: fmt(rules.cmhc.insuredCap),
+                p: pct(rules.minDown.uninsuredRate * 100),
+                b: fmt(minDown(rules, resolved.price)),
+              })
+            : t("minDownNote", {
+                lo: pct(bands[0][1] * 100),
+                a: fmt(tierCeiling),
+                hi: pct(bands[1][1] * 100),
+                b: fmt(minDown(rules, resolved.price)),
+              });
+        })();
 
   const note = (title: string, body: string) => (
     <div className="border-b border-hairline py-3">
@@ -379,7 +427,7 @@ export default function ScenariosPage() {
               // section it was the same sentence twice, one line apart.
               cashUnanswered ? t("gCashNote") : cashFundable ? t("fFundable") : t("fShort"),
               fmt(headline.net),
-              t("cashWhy"),
+              t(countryKey("cashWhy", rules.country)),
               <>
                 <CompareGrid
                   columns={columns}
@@ -388,7 +436,7 @@ export default function ScenariosPage() {
                   yoursPct={stored.dpPct}
                   caption={t("gCash")}
                 />
-                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyPremTax")}</p>
+                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t(countryKey("whyPremTax", rules.country))}</p>
                 <div className="mt-4 flex max-w-[420px] flex-col gap-3">
                   <NumberField
                     id="funds"
@@ -406,7 +454,7 @@ export default function ScenariosPage() {
               rec.kind === "noneQualify" ? "blocked" : "pass",
               rec.kind === "noneQualify" ? t("fDeclines") : t("fQualifies"),
               pct(headline.gds, 1),
-              t("approvalWhy"),
+              t(countryKey("approvalWhy", rules.country)),
               <>
                 <CompareGrid
                   columns={columns}
@@ -465,7 +513,7 @@ export default function ScenariosPage() {
               </>,
             )}
 
-            {section("lifetime", "none", t("gLifeNote"), fmt(headline.costOfBorrowing), t("lifetimeWhy"), (
+            {section("lifetime", "none", t("gLifeNote"), fmt(headline.costOfBorrowing), t(countryKey("lifetimeWhy", rules.country)), (
               <>
                 <CompareGrid
                   columns={columns}
@@ -480,8 +528,8 @@ export default function ScenariosPage() {
                   <p className="eyebrow pb-1 text-ink3">{t("howToRead")}</p>
                   {note(t("nTwentyTitle"), t("nTwentyBody"))}
                   {note(t("nAboveTitle"), t("nAboveBody"))}
-                  {note(t("nHurdleTitle"), t("nHurdleBody"))}
-                  {note(t("nOrderTitle"), t("nOrderBody"))}
+                  {note(t(countryKey("nHurdleTitle", rules.country)), t(countryKey("nHurdleBody", rules.country)))}
+                  {note(t(countryKey("nOrderTitle", rules.country)), t(countryKey("nOrderBody", rules.country)))}
                 </div>
               </>
             ))}
@@ -516,8 +564,8 @@ export default function ScenariosPage() {
                   { key: "mortgage", label: t("cMortgage"), numeric: true },
                   { key: "monthly", label: t("cMonthly"), numeric: true },
                   { key: "cash", label: t("cCash"), numeric: true },
-                  { key: "gds", label: t("cGds"), numeric: true },
-                  { key: "tds", label: t("cTds"), numeric: true },
+                  { key: "gds", label: t(countryKey("cGds", rules.country)), numeric: true },
+                  { key: "tds", label: t(countryKey("cTds", rules.country)), numeric: true },
                   { key: "lifetime", label: t("cLifetime"), numeric: true },
                 ]}
                 rows={columns.map((col) => ({

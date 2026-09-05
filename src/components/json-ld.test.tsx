@@ -4,7 +4,7 @@ import { SITE_NAME } from "@/lib/seo";
 import { JsonLd, webApplicationSchema } from "./json-ld";
 
 describe("webApplicationSchema", () => {
-  const schema = webApplicationSchema("en", "Two ceilings, side by side.");
+  const schema = webApplicationSchema("en-CA", "Two ceilings, side by side.");
 
   it("declares a WebApplication in the finance category", () => {
     expect(schema["@type"]).toBe("WebApplication");
