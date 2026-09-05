@@ -201,16 +201,28 @@ done <<< "$PROBES"
 # see src/lib/route-guard.ts, the runtime half of this same table.
 read -r -d '' RRSP_AVAILABILITY_SCRIPT <<'JS' || true
 import { pathToFileURL } from "node:url";
+import { readFileSync } from "node:fs";
 const root = process.argv[1];
 const countriesUrl = pathToFileURL(`${root}/src/i18n/countries.ts`).href;
 const ogManifestUrl = pathToFileURL(`${root}/src/lib/og-manifest.ts`).href;
-const { allLocales, localePrefixes } = await import(countriesUrl);
+const { allLocales, localePrefixes, languageOf } = await import(countriesUrl);
 const { routeLocales } = await import(ogManifestUrl);
 const locales = allLocales();
 const prefixes = localePrefixes();
 const available = new Set(routeLocales("/rrsp-hbp", locales));
+// The canonical key is the English slug; French carries /reer-rap. Probing the key under a
+// language that localizes it is a 404 by design (that is how the first production smoke
+// after the /ca/ migration went red while the site was fine), so read the per-language
+// slugs TEXTUALLY off routing.ts -- strictly: no match is a hard failure, never "no slugs".
+const routing = readFileSync(`${root}/src/i18n/routing.ts`, "utf8");
+const decl = /"\/rrsp-hbp":\s*perLanguage\(\{([^}]*)\}\)/.exec(routing);
+if (!decl) throw new Error("no `\"/rrsp-hbp\": perLanguage({...})` entry in src/i18n/routing.ts");
+const slugs = Object.fromEntries(
+  [...decl[1].matchAll(/(\w+):\s*"([^"]+)"/g)].map(([, lang, slug]) => [lang, slug]),
+);
 for (const locale of locales) {
-  console.log(`${prefixes[locale]}\t${available.has(locale) ? "1" : "0"}`);
+  const slug = slugs[languageOf(locale)] ?? "/rrsp-hbp";
+  console.log(`${prefixes[locale]}${slug}\t${available.has(locale) ? "1" : "0"}`);
 }
 JS
 
@@ -220,9 +232,8 @@ if ! RRSP_PROBES=$(node --input-type=module -e "$RRSP_AVAILABILITY_SCRIPT" "$ROO
   RRSP_PROBES=""
 fi
 
-while IFS=$'\t' read -r prefix available; do
-  [ -n "$prefix" ] || continue
-  path="$prefix/rrsp-hbp"
+while IFS=$'\t' read -r path available; do
+  [ -n "$path" ] || continue
   status=$(fetch_status "$BASE$path")
   if [ "$available" = "1" ]; then
     if [ "$status" = "200" ]; then
