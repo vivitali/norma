@@ -67,7 +67,7 @@ export const federal: FederalRules = {
   maxAmortFtbInsured: 30,
   maxAmortOther: 25,
   fhsa: { annual: 8000, lifetime: 40000 },
-  hbp: { max: 60000, repayYears: 15, graceYears: 2, ruleDays: 90 },
+  hbp: { max: 60000, repayYears: 15, graceYears: 2, ruleDays: 89 },
   rrspCap: 33810,
   capGainsInclusion: 0.5,
   marginal: {
@@ -179,10 +179,10 @@ export const federal: FederalRules = {
       note: "Correct for a withdrawal made today, and only for that. CRA defers the 15-year repayment period by a further three years for a FIRST withdrawal made between 2022-01-01 and 2025-12-31, making the grace 5 years for that cohort — a window that closed eight months ago, so many buyers on this page are in it. The value cannot honestly be a constant; it is a function of the withdrawal year. Deferred to the RRSP-HBP milestone, which is the only screen that consumes it.",
     },
     "hbp.ruleDays": {
-      conf: "medium",
-      asOf: "2026-08-24",
+      conf: "high",
+      asOf: "2026-09-02",
       src: CRA_HBP_WITHDRAW,
-      note: "CRA states this as an 89-day period, not 90 — five times on one page, and in the T1036 worksheet. 90 is the industry's rounding, and it is what this field holds. It is not corrected to 89 here because Metadata.rrspHbp.description hardcodes \"wait 90 days\" in both locale files, and a value/copy split would be worse than a consistent rounding. Correct both together. CRA's rule is also narrower than the UI's phrasing: it restricts the DEDUCTIBILITY of contributions made in the window, rather than imposing a holding period on the funds.",
+      note: 'CRA states this as an 89-day period, not 90 — five times on the withdrawal page and again in the T1036 worksheet: "certain rules limit the deduction of your RRSP contributions made during the 89-day period before you made a withdrawal under the HBP, and you may not be able to deduct part or all of the RRSP contributions made during this period." Corrected from the industry\'s 90-day rounding to CRA\'s own 89 here, in Metadata.rrspHbp.description, and in the RrspHbp copy, in all four locale files, together, so the value and the copy cannot disagree. CRA\'s rule is also narrower than a plain holding period: it restricts the DEDUCTIBILITY of a contribution made in the window, not the ability to withdraw — the withdrawal itself is never blocked.',
     },
     rrspCap: { conf: "high", asOf: "2026", src: `${CRA_LIMITS} (2026 RRSP dollar limit)` },
     capGainsInclusion: {

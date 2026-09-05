@@ -28,7 +28,7 @@
     },
     "rrspHbp": {
       "title": "RAP — remboursement d’impôt, règles et remboursement",
-      "description": "Cotiser, déduire, attendre 90 jours, retirer, rembourser sur 15 ans. Ce que vaut le remboursement et ce que coûte une année manquée."
+      "description": "Cotiser, déduire, attendre 89 jours, retirer, rembourser sur 15 ans. Ce que vaut le remboursement et ce que coûte une année manquée."
     },
     "amortization": {
       "title": "Amortissement et renouvellement — le choc de paiement",
@@ -91,7 +91,7 @@
     "faqQ_eligibility": "Puis-je acheter une habitation au Canada sans être citoyen ni résident permanent ?",
     "faqA_eligibility": "Parfois, et cette question précède tous les chiffres de ce site. Une loi fédérale limite quels non-Canadiens peuvent acheter une propriété résidentielle au Canada, avec des exceptions qui dépendent du statut d’immigration et de l’endroit où se trouve la propriété. Elle est à durée limitée et a été prolongée par règlement : consultez la règle en vigueur plutôt qu’un résumé. Par ailleurs, certaines provinces imposent un droit de mutation plus élevé aux acheteurs non-résidents : celui de la Nouvelle-Écosse est appliqué ici, ceux de l’Ontario et de la Colombie-Britannique ne sont pas modélisés du tout.",
     "faqQ_verified": "Les chiffres sont-ils vérifiés ?",
-    "faqA_verified": "En grande partie, et chaque chiffre le précise. Chacun est accompagné d’une fiche de provenance : le document consulté, la date de ce document, et jusqu’où l’on peut s’y fier. La plupart ont été relevés dans le barème de l’organisme lui-même. D’autres sont des valeurs par défaut que nous avons choisies et que nous déclarons, car les honoraires juridiques, les inspections et les frais de déménagement n’ont aucun éditeur officiel au Canada. Quelques-uns restent vides faute de publication, et l’application vous les demande plutôt que d’en inventer. La page des sources énumère chaque chiffre avec son document et sa date. Vérifiez tout ce sur quoi vous vous apprêtez à agir."
+    "faqA_verified": "La plupart, et chaque chiffre le précise. La plupart proviennent directement du document de l’autorité émettrice ; quelques-uns — honoraires juridiques, frais de déménagement — n’ont aucun éditeur à consulter, alors l’application choisit une valeur par défaut raisonnable et le déclare ; et là où rien n’existe non plus à supposer, elle vous le demande plutôt que d’inventer un chiffre. Considérez ceci comme un calculateur, pas un conseil, et vérifiez tout ce sur quoi vous vous apprêtez à agir."
   },
   "AppHeader": {
     "theme": "Thème",
@@ -327,7 +327,8 @@
     "rebNone": "Aucun remboursement ici",
     "rebCapped": "Plafonné à",
     "rebPhaseWhy": "Votre prix dépasse le seuil, donc le remboursement est réduit.",
-    "rebSuperseded": "Vous y avez droit, mais un autre remboursement offert ici vaut davantage : un seul peut être réclamé, alors c’est celui-là qui s’applique.",
+    "rebSuperseded": "Vous y avez droit, mais un seul remboursement offert ici peut être réclamé, et c’est un autre qui s’applique.",
+    "rebTied": "Vous y avez droit aussi — il vaut exactement la même chose que l’autre, alors un seul s’applique et le montant ne change pas, quel que soit celui choisi.",
     "rebOverCeiling": "Cette exonération cesse au-dessus d’un certain prix, et le vôtre le dépasse.",
     "cmhcPremium": "Prime d’assurance prêt hypothécaire SCHL",
     "addedToLoan": "ajoutée au prêt, non payée comptant",
@@ -507,8 +508,8 @@
     "step2": "2. Déduire",
     "step2Body": "Réclamez la cotisation en déduction sur votre déclaration. C’est d’ici que vient le remboursement.",
     "step3": "3. Attendre {d} jours",
-    "step3Body": "La cotisation doit demeurer dans le REER au moins {d} jours avant le retrait dans le cadre du RAP. Un retrait plus tôt rend cette portion non déductible.",
-    "step3Warn": "Cette règle est absolue. Aucune exception, aucun appel — et ce qu’elle coûte, c’est le remboursement, pas le retrait : cotisez à l’intérieur du délai et cette portion de la cotisation n’est tout simplement pas déductible.",
+    "step3Body": "Une cotisation versée dans les {d} jours avant votre retrait dans le cadre du RAP peut ne pas être déductible. Seule la déduction est en jeu — le retrait lui-même n’est jamais bloqué.",
+    "step3Warn": "L’ARC parle elle-même de ne pas pouvoir déduire « une partie ou la totalité » de cette cotisation — ce n’est pas une règle absolue sans exception, et ce n’en est pas une sur le retrait. Ce que vous risquez en cotisant à l’intérieur du délai, c’est le remboursement, jamais l’argent.",
     "step4": "4. Retirer",
     "step4Body": "Retirez jusqu’à {cap} sans impôt dans le cadre du RAP, avec le formulaire T1036.",
     "step5": "5. Rembourser",

@@ -117,7 +117,10 @@ interface RebateBase {
   /**
    * Mutually exclusive programmes share a group name. Within one, the largest rebate applies
    * and the rest emit as `superseded` — BC's first-time-buyer and newly-built PTT exemptions
-   * are each claimable, but only one of them.
+   * are each claimable, but only one of them. Where two members are worth EXACTLY the same
+   * (both exemptions above, at or under $500,000) the loser emits as `tied` instead: still
+   * zeroed so nothing is double-counted, but not told a rival programme paid more when it did
+   * not.
    */
   group?: string;
   /** Explainer message key, for a rebate that lands in `later` rather than at closing. */

@@ -289,7 +289,15 @@ export interface CreditLine {
   key: string;
   kind: "cap" | "exemptBand" | "fullExempt" | "tieredCap" | "none";
   amount: number;
-  st: "applied" | "capped" | "phasedOut" | "overCeiling" | "superseded" | "none" | "ftbOnly";
+  st:
+    | "applied"
+    | "capped"
+    | "phasedOut"
+    | "overCeiling"
+    | "superseded"
+    | "tied"
+    | "none"
+    | "ftbOnly";
   target: string;
   cap?: number;
   group?: string;
@@ -389,8 +397,6 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     if (bucket) bucket.push(c);
     else groups.set(c.group, [c]);
   }
-  // Rows removed because a sibling is worth EXACTLY the same — see the tie note below.
-  const duplicates = new Set<CreditLine>();
   for (const bucket of groups.values()) {
     if (bucket.length < 2) continue;
     const best = bucket.reduce((a, b) => (b.amount > a.amount ? b : a));
@@ -401,19 +407,33 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     if (best.amount <= 0) continue;
     for (const c of bucket) {
       if (c === best) continue;
-      // And nothing supersedes an equal. `superseded` renders as "another rebate here is
+      // A row worth nothing already carries the status that explains its own zero —
+      // `ftbOnly`, `phasedOut`, `overCeiling`, `none` — same reasoning as the
+      // `best.amount <= 0` guard above, just per-row instead of per-bucket. Relabelling it
+      // `superseded` (or `tied`) on top of that used to tell a non-first-time buyer "You
+      // qualify for this" for a programme whose OWN test they failed, because a paying
+      // sibling elsewhere in the group made `best.amount` positive. Only a row that is
+      // itself worth money and lost can be superseded or tied.
+      if (c.amount <= 0) continue;
+      // Nothing supersedes an equal either. `superseded` renders as "another rebate here is
       // worth more — only one can be claimed, so that one is applied instead", and on an
       // exact tie the first half of that sentence is false. It is an ordinary band, not a
       // corner: BOTH BC exemptions forgive the entire tax on a new build a first-time buyer
       // pays $500,000 or less for, because the first-time-buyer one is computed on the first
       // $500,000 and there is nothing above it to leave behind.
       //
-      // The tied row is dropped rather than relabelled. The reason the loser is normally
-      // kept is to let the UI explain the CHOICE — and a tie is not a choice: whichever
-      // programme the buyer claims, the money is identical to the dollar. So the group
-      // reports the relief once, and says nothing untrue about the row it does not print.
-      if (c.amount === best.amount) {
-        duplicates.add(c);
+      // `tied` keeps the row — dropping it used to be how a buyer learned about ONE eligible
+      // programme instead of two. It still cannot be double-counted, so its amount is
+      // zeroed like ftbOnly's and superseded's zero rows are; `best` alone carries the
+      // dollar figure that actually reduces the bill, and which member of the tie is `best`
+      // is arbitrary (the first one built), not a claim that it pays more.
+      // Cent precision, not `===`: both amounts are the product of tax-bracket arithmetic on
+      // a price, and two derivations that agree to the dollar can still differ in the last
+      // bit of a float. `bracketTax` sums per-band multiplications, so an exact tie is not
+      // guaranteed to survive floating point even when the underlying math is identical.
+      if (Math.round(c.amount * 100) === Math.round(best.amount * 100)) {
+        c.amount = 0;
+        c.st = "tied";
         continue;
       }
       c.amount = 0;
@@ -464,7 +484,7 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
     omitted.push({ key: "cr_gstFthb", ex: "ex_gstFthb" });
   }
   return {
-    atClosing: duplicates.size === 0 ? atClosing : atClosing.filter((c) => !duplicates.has(c)),
+    atClosing,
     later,
     /**
      * Programmes that apply to this purchase and that this app deliberately does not price.

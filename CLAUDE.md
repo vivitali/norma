@@ -414,12 +414,23 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
 - ~~**`RentVsBuy.years` is a bare noun concatenated in JSX**~~ — **fixed.** Both call sites pass
   `t("years", { n })` and Ukrainian is a real ICU plural: «роки» at 3, «років» at 5, 10, 15, 25
   and 40. The abbreviation «р.» that worked around it is gone.
-- **`Home.rulesUnverified` and `Home.faqA_verified` say the same thing twice** — the same
-  three-way disclosure in slightly different words on one page. Not wrong, but it doubles the
-  translation surface for every future locale.
-- **`Affordability.propTaxSource` does not disclose that the citation it introduces is English.**
-  French already extends the label to say so and English does not. The uk and es catalogues follow
-  the French, so English is now the odd one out.
+- ~~**`Home.rulesUnverified` and `Home.faqA_verified` say the same thing twice**~~ — **fixed.**
+  `rulesUnverified` stays the general disclosure (how provenance works, linking to `/sources`);
+  `faqA_verified` now answers the FAQ question directly, restoring the three-way split — most
+  figures are read off a publisher, the rest are either assumed-and-disclosed or asked-for — in
+  a shortened form that leads with "Most of them" rather than a flat "Yes" the taxonomy does not
+  support, and adds what the disclosure does not — "treat it as a calculator, not advice." It
+  still carries no number, per the `## Don't` rule on what an FAQ answer feeding `FAQPage`
+  structured data may claim: neither version ever did, so nothing there needed to change. A flat
+  "Yes" briefly shipped in this branch and was caught in review: it collapsed "assumed and
+  disclosed" (Vancouver's `fees.lawyer`/`fees.moving`, no fee input on any page) and "asked for"
+  (`none`-conf market prices, via `priceKnown`/`InlineAsk`) into one claim that was false for the
+  former.
+- ~~**`Affordability.propTaxSource` does not disclose that the citation it introduces is English.**~~
+  — **decided, not a defect.** The asymmetry is correct: fr/uk/es say "cited in English" because
+  their surrounding sentence is in their own language and the citation is not; English's own
+  sentence IS the citation's language, so there is nothing to disclose. Parity across locales is
+  not the goal here — accuracy in each one is, and English was already accurate.
 - ~~**Segmented controls could be widened past the viewport by a long label**~~ — **fixed in this
   branch, structurally.** Their options sit in one row, so a control's minimum width was the sum of
   the longest single WORD in each label; a word cannot break, and a flex item defaults to
@@ -440,15 +451,31 @@ says which metric it is. `capacityPer100` is still zero at every income for debt
   They are not interchangeable, each record's provenance says which it is, and tests fail if that
   disclosure is edited away. Picking one across the dataset is a **product** decision and was
   deliberately not taken.
-- **`hbp.ruleDays` is 90 and CRA says 89.** Not changed, because the RRSP-HBP metadata hardcodes
-  "wait 90 days" in both locale files and a value/copy split is worse than a consistent rounding.
-  Needs one edit to each locale file and then the constant, together.
+- ~~**`hbp.ruleDays` is 90 and CRA says 89.**~~ — **fixed.** CRA's own wording, confirmed against
+  canada.ca: "If you made contributions to your RRSPs during the 89-day period before you
+  withdrew the amount for your HBP withdrawal, your RRSP contribution may not be deductible." 89,
+  not 90, and it restricts the DEDUCTIBILITY of a contribution made in the window, not the
+  withdrawal itself. `federal.hbp.ruleDays` is now `89`, its provenance is `conf: "high"` quoting
+  the line above, and `Metadata.rrspHbp.description` reads "wait 89 days" in all four locale
+  files. The RRSP-HBP page copy (`RrspHbp.step3`, `.step3Body`, `.ruleDaysNote`) never hardcoded
+  the number — it interpolates `{d}` from `play.ruleDays`, itself read off the constant — but
+  `Metadata.rrspHbp.description` is plain prose with nothing binding it to the constant the way
+  the page copy is bound. `federal.test.ts`'s `"Metadata.rrspHbp.description names
+  federal.hbp.ruleDays"` is what actually enforces the two cannot disagree: it asserts, per
+  locale, that the description contains `String(federal.hbp.ruleDays)`, alongside a direct
+  `federal.hbp.ruleDays === 89` assertion. A prose string can drift from the value it names;
+  only a test that reads both and compares them closes that gap.
 - **`cmhc.bands` cannot express the 4.50% band** that applies at 90.01–95% LTV when the down
   payment is borrowed — about $2,500 under-charged on a $500k loan. The shape change belongs with
   the input that would tell us where the down payment came from.
-- **An exact-tie rebate is dropped rather than labelled.** No `CreditLine.st` is true of a tie, so
-  the group reports the relief once. If both rows should stay visible, it needs a new status plus a
-  reworded `rebSuperseded` (drop "is worth more").
+- ~~**An exact-tie rebate is dropped rather than labelled.**~~ — **fixed.** `CreditLine.st` gained
+  `"tied"`: on an exact tie, one member keeps its real amount and status, the rest are zeroed
+  (so the relief is still reported once, never doubled) but marked `tied` and stay in the array
+  instead of being filtered out. `rebSuperseded` no longer says a rival rebate "is worth more" —
+  a claim that was always false on a tie — and a new `rebTied` message explains the real reason:
+  worth exactly the same, so only one applies. BC's first-time-buyer and newly-built PTT
+  exemptions still tie at $500,000, per `src/domain/engine.test.ts` and
+  `src/domain/jurisdictions/bc.test.ts`, and the closing-costs page renders both rows.
 - ~~[#2](https://github.com/vivitali/norma/issues/2)~~ — **closed, before this branch, not by it.**
   `credits()` already looked its rebate target up by key in both `gov` and `j.transfer`
   (`engine.ts:182`, `engine.ts:200`), so the phantom-rebate defect was gone: `elsewhere` is safe to

@@ -378,7 +378,7 @@ export default function DownPaymentPage() {
                 {/*
                   TRACE. The waterfall draws on the Home Buyers' Plan and states the
                   15-year obligation in one clause; the mechanism — the refund, the
-                  90-day rule, what a missed year costs — is that page's whole
+                  89-day rule, what a missed year costs — is that page's whole
                   subject.
                 */}
                 <CrossLink namespace="DownPayment" id="xRrspHbp" href="/rrsp-hbp" />

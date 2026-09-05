@@ -136,6 +136,8 @@ export default function ClosingCostsPage() {
         return t("rebOverCeiling");
       case "superseded":
         return t("rebSuperseded");
+      case "tied":
+        return t("rebTied");
       case "ftbOnly":
         return t("turnOnFtb");
       case "none":
