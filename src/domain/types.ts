@@ -282,8 +282,8 @@ export interface PropertyTax {
   assessmentRatio: number;
   basis: AssessmentBasis;
   /**
-   * A US homestead-style exemption: a flat dollar amount subtracted from the taxable value
-   * before ONE NAMED PORTION of `effective` applies. Absent everywhere in Canada.
+   * US homestead-style exemptions: each entry reduces the taxable value before ONE NAMED
+   * PORTION of `effective` applies. Absent everywhere in Canada.
    *
    * Deliberately not a subtraction from the WHOLE `effective` rate: Harris County's $140,000
    * general homestead exemption is confirmed (`conf: "high"`) only against the HISD portion of
@@ -292,11 +292,37 @@ export interface PropertyTax {
    * exemption status the research dossier could not confirm at `high`. Applying the exemption
    * to the FULL rate would overstate the relief on the un-confirmed 1.24-point remainder — a
    * flattering error this product does not make. `appliesToRate` names which slice of
-   * `effective` the exemption actually reduces; `propertyTaxAnnual()` in engine.ts is the one
+   * `effective` each exemption actually reduces; `propertyTaxAnnual()` in engine.ts is the one
    * place that reads this field, so no page can reimplement the split differently.
+   *
+   * An ARRAY, not a single object, because a single flat exemption on one slice (Houston's
+   * shape) cannot express Austin's stack: a $140,000 flat exemption against AISD's whole rate
+   * PLUS four separate local-option PERCENTAGE exemptions, each against its own taxing entity's
+   * own slice, at a different percentage per entity (Tax Code §11.13(n)). Every entry's
+   * `appliesToRate` is exclusive of every other entry's — the same slice must never appear
+   * twice — and any rate not covered by any entry is taxed at the FULL price with no exemption,
+   * exactly as Houston's single-entry case already behaved.
    */
-  exemptions?: { amount: number; appliesToRate: number; note?: string };
+  exemptions?: readonly PropertyTaxExemption[];
 }
+
+/**
+ * One exemption against ONE NAMED SLICE of `PropertyTax.effective` (`appliesToRate`), never the
+ * whole combined rate. Two kinds, because Texas homestead relief comes in both:
+ *
+ * - `flatAmount` — a flat dollar amount subtracted from taxable value before the slice's rate
+ *   applies (Houston's and Austin's $140,000 state-mandated general school-district exemption).
+ * - `percentOfValue` — a percentage of market value exempted before the slice's rate applies,
+ *   floored at `minAmount` dollars per Tax Code §11.13(n) (a taxing unit that adopts ANY
+ *   percentage exemption must set it at not less than $5,000). `propertyTaxAnnual()` applies
+ *   this floor exactly, per price; the closed-form ceiling solve in `affordability()` uses the
+ *   unfloored linear approximation instead (`propertyTaxRate()`/`propertyTaxCredit()`) — see
+ *   those functions' own comments for why that is a documented, deliberately negligible gap
+ *   rather than a silent one.
+ */
+export type PropertyTaxExemption =
+  | { kind: "flatAmount"; amount: number; appliesToRate: number; note?: string }
+  | { kind: "percentOfValue"; pct: number; minAmount: number; appliesToRate: number; note?: string };
 
 /**
  * How well a single figure is sourced.

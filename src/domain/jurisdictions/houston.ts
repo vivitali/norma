@@ -85,11 +85,14 @@ export const houston: Jurisdiction = {
     // Only the HISD portion of the combined rate carries a CONFIRMED homestead exemption — see
     // the PropertyTax.exemptions doc comment in types.ts for why this is not applied to the
     // whole stack.
-    exemptions: {
-      amount: 140000,
-      appliesToRate: 0.008783,
-      note: "HISD's $140,000 general homestead exemption (dossier B2) applies against the HISD portion of the combined rate (0.8783 of the 2.120422 combined) ONLY. Harris County's own 20% local-option exemption is reported adopted by a secondary source, not the county's own adoption order, and the City of Houston, Flood Control District, Hospital District and Port of Houston's exemption status could not be confirmed at all this pass (dossier C3) — so none of those is modelled. This understates the true relief a Houston homestead buyer receives; it does not overstate it.",
-    },
+    exemptions: [
+      {
+        kind: "flatAmount",
+        amount: 140000,
+        appliesToRate: 0.008783,
+        note: "HISD's $140,000 general homestead exemption (dossier B2) applies against the HISD portion of the combined rate (0.8783 of the 2.120422 combined) ONLY. Harris County's own 20% local-option exemption is reported adopted by a secondary source, not the county's own adoption order, and the City of Houston, Flood Control District, Hospital District and Port of Houston's exemption status could not be confirmed at all this pass (dossier C3) — so none of those is modelled. This understates the true relief a Houston homestead buyer receives; it does not overstate it.",
+      },
+    ],
   },
   // No Texas real-estate transfer tax and no mortgage recording tax (dossier B1) — the empty
   // group `buildLines()` must degrade to cleanly, per the design spec.

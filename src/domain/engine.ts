@@ -63,34 +63,67 @@ export function payFactorMonthly(annualRate: number, years: number): number {
 }
 
 /**
- * Annual property tax against MARKET PRICE, honouring a US-style homestead exemption where one
- * exists. The single seam every caller (`buildLines`, `affordability`, `rentVsBuy`, `scenario`)
- * uses instead of multiplying `price * j.propTax.effective` directly — see
+ * Annual property tax against MARKET PRICE, honouring every US-style homestead exemption a
+ * record carries. The single seam every caller (`buildLines`, `affordability`, `rentVsBuy`,
+ * `scenario`) uses instead of multiplying `price * j.propTax.effective` directly — see
  * `PropertyTax.exemptions`'s doc comment in types.ts for why a flat subtraction against the
  * WHOLE effective rate would overstate the relief.
  *
- * Still LINEAR in price, which is what keeps `affordability()`'s closed-form ceiling solvable:
- * `taxable * appliesToRate + price * (effective - appliesToRate)` expands to
- * `price * effective - amount * appliesToRate` — a rate term on price plus a constant credit.
- * `propertyTaxCredit()` below is that constant, for the callers that solve FOR price rather
- * than compute FROM it.
+ * EXACT per price, including the `percentOfValue` $5,000 statutory floor (Tax Code §11.13(n)) —
+ * which means this is only PIECEWISE linear in price wherever a record carries a percentage
+ * exemption whose floor can bind at a realistic price (Austin's ACC 1% exemption floors at
+ * $500,000; nothing in this dataset's benchmark range floors below that). `propertyTaxRate()`
+ * and `propertyTaxCredit()` below give the unfloored LINEAR approximation `affordability()`'s
+ * closed-form ceiling solve needs; they agree with this function exactly wherever no floor
+ * binds, which is everywhere this product's own benchmark prices reach.
  */
 export function propertyTaxAnnual(j: Jurisdiction, price: number): number {
-  const ex = j.propTax.exemptions;
-  if (!ex) return price * j.propTax.effective;
-  const taxable = Math.max(0, price - ex.amount);
-  const remainderRate = j.propTax.effective - ex.appliesToRate;
-  return taxable * ex.appliesToRate + price * remainderRate;
+  const exemptions = j.propTax.exemptions;
+  if (!exemptions || exemptions.length === 0) return price * j.propTax.effective;
+  let coveredRate = 0;
+  let total = 0;
+  for (const ex of exemptions) {
+    coveredRate += ex.appliesToRate;
+    const exempt = ex.kind === "flatAmount" ? ex.amount : Math.max(ex.minAmount, ex.pct * price);
+    const taxable = Math.max(0, price - exempt);
+    total += taxable * ex.appliesToRate;
+  }
+  const remainderRate = j.propTax.effective - coveredRate;
+  return total + price * remainderRate;
 }
 
 /**
- * The constant dollar credit a homestead exemption is worth, independent of price — the term
- * `affordability()`'s ceiling equations add back to the household's budget before dividing by
- * the (unchanged) property-tax RATE coefficient. Zero where a record carries no exemption.
+ * The property-tax RATE coefficient after every `percentOfValue` exemption — everything a
+ * `flatAmount` exemption does NOT touch, because that enters as a constant credit instead (see
+ * `propertyTaxCredit`). A percentage exemption scales the taxable value by `(1 - pct)`, which
+ * scales that slice's contribution to `price * effective` by the same factor — so, ignoring the
+ * $5,000 floor (see `propertyTaxAnnual`'s own comment), it is a permanent reduction in the RATE
+ * coefficient, not a dollar credit. Equal to `j.propTax.effective` wherever no percentage
+ * exemption exists — every Canadian record, and Houston's flat-only exemption.
+ */
+export function propertyTaxRate(j: Jurisdiction): number {
+  const exemptions = j.propTax.exemptions;
+  if (!exemptions) return j.propTax.effective;
+  const pctAdjustment = exemptions.reduce(
+    (sum, ex) => sum + (ex.kind === "percentOfValue" ? ex.pct * ex.appliesToRate : 0),
+    0,
+  );
+  return j.propTax.effective - pctAdjustment;
+}
+
+/**
+ * The constant dollar credit every `flatAmount` homestead exemption is worth, independent of
+ * price — the term `affordability()`'s ceiling equations add back to the household's budget
+ * before dividing by `propertyTaxRate()`'s (unchanged-by-price) coefficient. Zero where a record
+ * carries no flat exemption.
  */
 export function propertyTaxCredit(j: Jurisdiction): number {
-  const ex = j.propTax.exemptions;
-  return ex ? ex.amount * ex.appliesToRate : 0;
+  const exemptions = j.propTax.exemptions;
+  if (!exemptions) return 0;
+  return exemptions.reduce(
+    (sum, ex) => sum + (ex.kind === "flatAmount" ? ex.amount * ex.appliesToRate : 0),
+    0,
+  );
 }
 
 /**
@@ -825,7 +858,11 @@ export function affordability(j: Jurisdiction, F: CountryRules, o: Affordability
   // is one line: `financed` below is `financedFraction(F, o.dpPct, o.amortYears)`, and
   // `denomLender` multiplies THAT. Nothing in this file multiplies `fq` by a constant.
   const financed = financedFraction(F, o.dpPct, o.amortYears);
-  const denomLender = financed * fq + j.propTax.effective / 12;
+  // `propertyTaxRate(j)`, not the raw `j.propTax.effective` — see that function's own comment.
+  // A percentage exemption (Austin's four local-option exemptions) permanently lowers the RATE
+  // coefficient, not just a constant dollar credit the way Houston's flat-only exemption does;
+  // using the raw effective rate here would understate every US ceiling that carries one.
+  const denomLender = financed * fq + propertyTaxRate(j) / 12;
   // No heat allowance concept exists on a US mortgage qualification — CMHC's GDS/TDS
   // guidance is what invented this line for Canada. Zero, not omitted, so the arithmetic
   // below stays one formula for both countries.
@@ -852,7 +889,7 @@ export function affordability(j: Jurisdiction, F: CountryRules, o: Affordability
   const ceiling = ceilingCarrying(o.debts);
 
   const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee + propTaxCreditMonthly;
-  const denomComfort = financed * fc + j.propTax.effective / 12 + F.maintenanceReserve / 12;
+  const denomComfort = financed * fc + propertyTaxRate(j) / 12 + F.maintenanceReserve / 12;
   const comfort = Math.max(0, budget) / denomComfort;
 
   // The target price, actually financed at the actual down payment.
