@@ -236,7 +236,7 @@ export default function ClosingCostsPage() {
           "none",
           groupLine(lines.gov),
           fmt(lines.gov.reduce((s, l) => s + l.amount, 0)),
-          t("govWhy"),
+          t(countryKey("govWhy", rules.country)),
           <>
             <LineRows items={lines.gov} namespace="ClosingCosts" />
             {lines.gov.some((l) => l.cashOnly) ? (

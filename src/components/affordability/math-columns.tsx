@@ -68,7 +68,11 @@ export function MathColumns({
               : t("mNoStressTest")
           }
         />
-        <MathRow label={t("mFactor")} value={result.fq.toFixed(6)} why={t("mFactorWhy")} />
+        <MathRow
+          label={t("mFactor")}
+          value={result.fq.toFixed(6)}
+          why={t(countryKey("mFactorWhy", rules.country))}
+        />
         <MathRow
           label={`${t("mGdsAllow")} · ${t(countryKey("dtiFrontAbbr", rules.country))} ${pct(rules.gds)}`}
           value={fmt(result.gdsAllow)}

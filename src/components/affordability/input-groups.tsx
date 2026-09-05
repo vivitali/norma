@@ -11,6 +11,7 @@ import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
 import type { ToolFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
+import { countryKey } from "@/lib/country-key";
 import { NumberField } from "@/components/number-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -355,7 +356,7 @@ export function InputGroups({
                 {t("ftb")}
               </Label>
             </div>
-            <NoteLine>{tInputs("ftbWhy")}</NoteLine>
+            <NoteLine>{tInputs(countryKey("ftbWhy", rules.country))}</NoteLine>
           </div>
           {advanced(
             "adv-purchase",

@@ -175,7 +175,14 @@ describe("message coverage", () => {
           // this scan looks for never appears in source. Covered if the BASE key
           // (the literal first argument countryKey is actually called with) has
           // its own call site, which is what makes the fork reachable at all.
-          !(key.endsWith("_us") && (source.includes(`"${key.slice(0, -3)}"`) || source.includes(`'${key.slice(0, -3)}'`))),
+          !(key.endsWith("_us") && (source.includes(`"${key.slice(0, -3)}"`) || source.includes(`'${key.slice(0, -3)}'`))) &&
+          // Home's tool_* keys are reached as `t(countryKey(\`tool_${entry.label}\`,
+          // country))` — a template literal wrapped in countryKey, so neither the
+          // plain-literal check above (no literal at all) nor the `_us`-strips-to-a-
+          // literal check above (the base is a template, not a literal) can see it.
+          // `derivedHomeKeys()` already knows the base form for exactly this reason;
+          // its `_us` sibling is covered the same way the base is.
+          !(namespace === "Home" && key.endsWith("_us") && derivedHomeKeys().includes(key.slice(0, -3))),
       );
       const allowed = KNOWN_ORPHANS[namespace] ?? [];
       // Named, not counted. A count lets one orphan be deleted and another added

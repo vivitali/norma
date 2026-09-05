@@ -65,6 +65,21 @@ export function homeFaqKey(base: string, country: Country): string {
 }
 
 /**
+ * Same shape as `HOME_FAQ_FORKS`/`homeFaqKey`, one level up: the tool directory's
+ * `tool_<NavEntry.label>` blurbs are mostly country-neutral prose (Affordability,
+ * Rent vs Buy, Scenarios, Sources), and `countryKey` has no runtime fallback — a
+ * blanket `countryKey(\`tool_${entry.label}\`, country)` would ask for
+ * `tool_affordability_us`, which no catalogue defines, and next-intl would render
+ * that raw key string to every US reader on the home page. Only the three
+ * descriptions that actually named a Canadian mechanism (land transfer tax; FHSA/
+ * RRSP-HBP/TFSA; a 25-year renewal) are forked.
+ */
+const TOOL_DESC_FORKS = new Set(["closingCosts", "downPayment", "amortization"]);
+function toolDescKey(label: string, country: Country): string {
+  return TOOL_DESC_FORKS.has(label) ? countryKey(`tool_${label}`, country) : `tool_${label}`;
+}
+
+/**
  * Every destination, each listed once.
  *
  * `NAV` lists `/rent-vs-buy` twice on purpose — it answers a question for someone entering the
@@ -154,8 +169,8 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
   );
 
   const ceilings = [
-    { key: "Lender", name: t("ceilingLender"), body: t("ceilingLenderBody") },
-    { key: "Carry", name: t("ceilingCarry"), body: t("ceilingCarryBody") },
+    { key: "Lender", name: t("ceilingLender"), body: t(countryKey("ceilingLenderBody", country)) },
+    { key: "Carry", name: t("ceilingCarry"), body: t(countryKey("ceilingCarryBody", country)) },
     { key: "Binding", name: t("ceilingBinding"), body: t("ceilingBindingBody") },
   ];
 
@@ -262,7 +277,7 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
                         {tNav(entry.label)}
                       </span>
                       <span className="max-w-[52ch] text-[13.5px] leading-[1.6] text-ink2 text-pretty">
-                        {t(`tool_${entry.label}`)}
+                        {t(toolDescKey(entry.label, country))}
                       </span>
                     </Link>
                   </li>
