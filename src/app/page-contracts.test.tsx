@@ -669,3 +669,71 @@ describe("every page that computes an answer can show its work", () => {
     }
   });
 });
+
+/**
+ * The vocabulary contract for the US market seam: a Houston-seeded page must never leak the
+ * Canadian terms it replaced, and a Winnipeg-seeded page must never leak the US terms that
+ * replaced them there. One `it.each` per direction, not eight copies of the same assertion —
+ * see CLAUDE.md's own framing of this as "one it.each over the pages, not eight copies".
+ *
+ * RRSP-HBP is excluded from the Houston direction only: it is Canada-only
+ * (`ROUTE_COUNTRIES["/rrsp-hbp"] = ["ca"]`), and `rules.hbp` does not exist on `UsRules` — a
+ * real request never reaches this page for a US locale (`assertRouteAvailable` 404s it in the
+ * route's layout before `page.tsx` mounts), so rendering it directly here the way this test
+ * mounts every other page would throw for a reason that has nothing to do with vocabulary.
+ *
+ * `pickJurisdiction` (`use-jurisdiction.tsx`) only honours a stored `jurId` when it belongs to
+ * the CURRENT country — derived from the render locale, not from the stored id — so seeding
+ * Houston without also rendering at a US locale would silently fall back to the Canadian
+ * default and test nothing.
+ */
+describe("US vocabulary contract", () => {
+  const HOUSTON_PAGES = PAGES.filter(([name]) => name !== "RRSP-HBP");
+
+  // Every term below is checked as a literal substring, case-sensitively: these are real
+  // English words this app's own copy uses (not a pattern that merely resembles one), the
+  // same discipline `locale-render.test.tsx`'s own leaked-key check applies to message keys.
+  const CA_ONLY_VOCAB = ["CMHC", "GDS", "TDS", "land transfer", "FHSA", "HBP", "TFSA", "renewal"];
+  const US_ONLY_VOCAB = ["PMI", "DTI", "homestead"];
+
+  async function expandAll() {
+    const user = userEvent.setup();
+    for (const button of screen.queryAllByRole("button", { expanded: false })) {
+      await user.click(button);
+    }
+    return document.body.textContent ?? "";
+  }
+
+  it.each(HOUSTON_PAGES)("%s: US wording, no Canadian vocabulary, under a Houston seed", async (name, Page) => {
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "houston", ...SEED[name] }),
+    );
+    renderWithIntl(
+      <JurisdictionProvider>
+        <Page />
+      </JurisdictionProvider>,
+      { locale: "en-US" },
+    );
+    const text = await expandAll();
+    for (const word of CA_ONLY_VOCAB) {
+      expect(text, `${name}: "${word}" leaked into a Houston-seeded, en-US render`).not.toContain(word);
+    }
+  });
+
+  it.each(PAGES)("%s: Canadian wording, no US vocabulary, under a Winnipeg seed", async (name, Page) => {
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "winnipeg", ...SEED[name] }),
+    );
+    renderWithIntl(
+      <JurisdictionProvider>
+        <Page />
+      </JurisdictionProvider>,
+    );
+    const text = await expandAll();
+    for (const word of US_ONLY_VOCAB) {
+      expect(text, `${name}: "${word}" leaked into a Winnipeg-seeded render`).not.toContain(word);
+    }
+  });
+});

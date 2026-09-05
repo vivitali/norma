@@ -646,7 +646,7 @@
     "usFixedHead": "Votre taux est fixé à {rate} pour toute la durée du prêt.",
     "usFixedSub": "Un prêt hypothécaire américain à 30 ans fixe ne se renouvelle pas — il n’y a aucun réajustement de taux à anticiper, et rien de tel n’est modélisé ici.",
     "usFixedTag": "fixe jusqu’à échéance",
-    "holdsToMaturity": "Votre taux reste à ce niveau jusqu’au remboursement complet — un prêt américain n’a ni terme ni renouvellement.",
+    "holdsToMaturity": "Votre taux reste à ce niveau jusqu'au remboursement complet — un prêt américain garde un taux fixe unique pour toute sa durée et ne se repositionne jamais.",
     "riskTitle": "Le risque de renouvellement est le plus grand risque non modélisé d’un prêt canadien",
     "riskBody": "Le test de résistance à l’origine vérifie que vous pourriez porter le paiement à deux points au-dessus de votre taux. C’est un test unique qui ne vous suit pas. À chaque renouvellement, vous revenez au marché sans aucune protection, et personne ne refait le test pour vous. C’est ce mécanisme qui brise les budgets : non pas l’achat, mais le renouvellement cinq ou dix ans plus tard. Planifiez le paiement que vous auriez à un taux nettement plus élevé, et considérez tout taux inférieur comme de la chance plutôt qu’une prévision.",
     "tableTitle": "Année par année",
@@ -703,7 +703,10 @@
     "calcLoan": "Prêt hypothécaire",
     "calcAmortYears": "Amortissement",
     "calcBalanceAtRenewal": "Solde au renouvellement",
-    "calcAmortLeft": "Amortissement restant"
+    "calcAmortLeft": "Amortissement restant",
+    "title_us": "Calendrier d'amortissement",
+    "scheduleWhy_us": "Les intérêts dominent les premières années et le capital les suivantes — c'est ce basculement que montre ce graphique.",
+    "altText_us": "Barres empilées des intérêts et du capital versés chaque année sur {n} ans. Les intérêts dominent les premières années. {flipSentence}"
   },
   "RentVsBuy": {
     "title": "Louer ou acheter",
@@ -828,7 +831,10 @@
     "cHomeValue": "Valeur de la propriété",
     "upFrontNote": "L'argent qu'il fallait fournir le jour de la clôture, {up}, investi à la place.",
     "calcInvestedBuy": "Excédent investi, achat",
-    "calcInvestedRent": "Excédent investi, location"
+    "calcInvestedRent": "Excédent investi, location",
+    "mismatchSub_us": "Le seul loyer publié pour {city} est le loyer équitable de marché (HUD) pour un deux-chambres, {rent} par mois. Vous évaluez une maison, donc ce chiffre répond à une autre question. Indiquez ce que coûterait en location un bien comme celui évalué ci-dessus.",
+    "rentMismatchTag_us": "Le HUD publie {rent} comme loyer équitable de marché pour un deux-chambres — un logement plus petit que celui évalué ci-dessus",
+    "leverNote_us": "La mise de fonds détermine le prêt, si la PMI s'applique et le taux contractuel obtenu. L'amortissement détermine l'année de remboursement indiquée sur le graphique."
   },
   "Scenarios": {
     "title": "Scénarios de mise de fonds",
@@ -947,7 +953,14 @@
     "cTds": "ATD",
     "cLifetime": "Coût d'emprunt",
     "cScenario": "Scénario",
-    "cModelled": "Modélisé à"
+    "cModelled": "Modélisé à",
+    "lifetimeWhy_us": "Intérêts plus le coût du PMI, sur toute la durée du prêt. C'est là que le mensuel le moins cher cesse souvent d'être le moins cher au total. Cela suppose que le taux contractuel d'aujourd'hui tient pour tout le prêt fixe de 30 ans — un prêt fixe américain n'a ni terme ni renouvellement, donc c'est le vrai coût total, pas une estimation jusqu'à une future révision.",
+    "nHurdleTitle_us": "Le taux hypothécaire est généralement l'obstacle après impôt",
+    "nHurdleBody_us": "L'intérêt hypothécaire peut être déductible si vous détaillez vos déductions, mais la plupart des acheteurs prennent la déduction forfaitaire et n'en tirent rien — voir Louer ou acheter pour savoir si détailler vaut le coup à vos chiffres. Dans tous les cas, comparez le taux hypothécaire aux rendements de placement après impôt, pas bruts.",
+    "nOrderTitle_us": "Remplissez d'abord les comptes avantagés fiscalement",
+    "nOrderBody_us": "Un IRA ou un 401(k) — surtout avec une contrepartie de l'employeur — bat généralement le remboursement anticipé du prêt avant tout le reste.",
+    "cGds_us": "DTI initial",
+    "cTds_us": "DTI global"
   },
   "Provenance": {
     "rule": "règle",

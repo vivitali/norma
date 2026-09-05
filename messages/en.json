@@ -646,7 +646,7 @@
     "usFixedHead": "Your rate is fixed at {rate} for the life of the loan.",
     "usFixedSub": "A US 30-year fixed mortgage does not renew — there is no rate reset to plan for, and none is modelled here.",
     "usFixedTag": "fixed to maturity",
-    "holdsToMaturity": "Your rate holds at this figure until the loan is paid off — a US mortgage has no term and no renewal.",
+    "holdsToMaturity": "Your rate holds at this figure until the loan is paid off — a US mortgage has one fixed rate for its whole term and never reprices.",
     "riskTitle": "Renewal risk is the largest unmodelled risk in a Canadian mortgage",
     "riskBody": "A stress test at origination checks you could carry the payment at two points above your rate. It is a one-time test, and it does not follow you. At every renewal you re-enter the market with no protection at all, and nobody re-runs the test for you. This is the mechanism that breaks household budgets: not the purchase, the renewal five or ten years later. Plan for the payment you would face at a materially higher rate, and treat any rate below that as good luck rather than a forecast.",
     "tableTitle": "Year by year",
@@ -703,7 +703,10 @@
     "calcLoan": "Mortgage",
     "calcAmortYears": "Amortization",
     "calcBalanceAtRenewal": "Balance at renewal",
-    "calcAmortLeft": "Amortization left"
+    "calcAmortLeft": "Amortization left",
+    "title_us": "Amortization schedule",
+    "scheduleWhy_us": "Interest dominates the early years and principal the later ones — that shift is what this chart shows.",
+    "altText_us": "Stacked bars of interest and principal paid each year over {n} years. Interest dominates the early years. {flipSentence}"
   },
   "RentVsBuy": {
     "title": "Rent versus buy",
@@ -828,7 +831,10 @@
     "cHomeValue": "Home value",
     "upFrontNote": "The cash you had to produce on closing day, {up}, invested instead.",
     "calcInvestedBuy": "Invested surplus, buying",
-    "calcInvestedRent": "Invested surplus, renting"
+    "calcInvestedRent": "Invested surplus, renting",
+    "mismatchSub_us": "The only rent published for {city} is HUD's two-bedroom Fair Market Rent, {rent} a month. You are pricing a house, so that figure answers a different question. Enter what a home like the one above would rent for.",
+    "rentMismatchTag_us": "HUD publishes {rent} as the Fair Market Rent for a two-bedroom apartment — a smaller home than the one priced above",
+    "leverNote_us": "Down payment sets the loan, whether PMI applies, and which contract rate you get. Amortization sets the payoff year marked on the chart."
   },
   "Scenarios": {
     "title": "Down payment scenarios",
@@ -947,7 +953,14 @@
     "cTds": "TDS",
     "cLifetime": "Cost of borrowing",
     "cScenario": "Scenario",
-    "cModelled": "Modelled at"
+    "cModelled": "Modelled at",
+    "lifetimeWhy_us": "Interest plus the PMI cost, over the whole mortgage. This is where the cheapest monthly usually stops being the cheapest overall. It assumes today's contract rate holds for the entire 30-year loan — a US fixed-rate mortgage has no term and never renews, so this is the real lifetime cost, not an estimate to some future reset.",
+    "nHurdleTitle_us": "The mortgage rate is the after-tax hurdle, usually",
+    "nHurdleBody_us": "Mortgage interest can be deductible if you itemize, but most buyers take the standard deduction and get nothing extra from it — see Rent vs Buy for whether itemising is worth it at your own numbers. Either way, compare the mortgage rate against after-tax investment returns, not gross ones.",
+    "nOrderTitle_us": "Fill tax-advantaged room first",
+    "nOrderBody_us": "An IRA or 401(k) — especially with an employer match — usually beats prepaying the mortgage before you weigh anything else.",
+    "cGds_us": "Front DTI",
+    "cTds_us": "Back DTI"
   },
   "Provenance": {
     "rule": "rule",

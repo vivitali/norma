@@ -171,7 +171,7 @@ export default function AmortizationPage() {
           */}
           <PendingFigures pending={!hydrated}>
           <AnswerHead
-            eyebrow={t("title")}
+            eyebrow={t(countryKey("title", rules.country))}
             figure={fmt(result.paymentAfterRenewal)}
             pulseKey={jurisdiction.id}
             head={head}
@@ -383,7 +383,15 @@ export default function AmortizationPage() {
                   strong
                 />
                 <PanelRow label={t("totalPaid")} value={fmt(result.totalPaid)} />
-                <PanelRow label={t("rExtra")} value={fmt(extraInterest)} />
+                {/*
+                  A US 30-year fixed never renews, so `extraInterest` is always exactly 0
+                  here (the baseline it is measured against ignores `renewalRate`, which
+                  `amortizationToMaturity` never reads at all) — a true but meaningless
+                  zero next to a label that names a mechanism this mortgage does not have.
+                */}
+                {rules.mortgage.renews ? (
+                  <PanelRow label={t("rExtra")} value={fmt(extraInterest)} />
+                ) : null}
               </>,
             )}
 
@@ -392,7 +400,7 @@ export default function AmortizationPage() {
               row printed "Year by year · Year by year". The schedule's one finding
               the reader cannot get from the collapsed row is where it ends.
             */}
-            {section("schedule", "none", t("payoffYear", { n: result.payoffYear }), "", t("scheduleWhy"), (
+            {section("schedule", "none", t("payoffYear", { n: result.payoffYear }), "", t(countryKey("scheduleWhy", rules.country)), (
               <>
                 <ScheduleChart result={result} />
                 <div
@@ -556,7 +564,7 @@ export default function AmortizationPage() {
         </>
       ) : (
         <AnswerHead
-          eyebrow={t("title")}
+          eyebrow={t(countryKey("title", rules.country))}
           head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
           sub={tInputs("noPriceSub")}
         />
