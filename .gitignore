@@ -54,7 +54,7 @@ next-env.d.ts
 # install`; 145,000 lines that would otherwise sit in every diff, and already
 # excluded from eslint for the same reason. Untracked so the repo stays about
 # the app.
-.claude/skills/
+.claude/skills/*
 # Except skills this repo authors itself (the vendored ones above are installed, not written here).
 !.claude/skills/add-state/
 .github/skills/

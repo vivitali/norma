@@ -15,9 +15,10 @@ const VALID_PROVINCES = new Set([
 const VALID_STATES = new Set(["TX"]);
 
 describe("jurisdictions", () => {
-  it("has exactly 15 jurisdictions", () => {
-    // 14 Canadian + Houston (US), the first record the country seam's step 4 added.
-    expect(jurisdictions).toHaveLength(15);
+  it("has exactly 16 jurisdictions", () => {
+    // 14 Canadian + Houston + Austin (US) — Houston was the country seam's step 4;
+    // Austin is the second US metro, added by the add-state skill.
+    expect(jurisdictions).toHaveLength(16);
   });
 
   it("has unique ids", () => {

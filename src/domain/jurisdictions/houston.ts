@@ -26,6 +26,13 @@ const HCC_TAX = "Houston Community College, truth-in-taxation page (hccs.edu), c
 const TDI_INSURANCE = "Texas Department of Insurance, Texas Homeowners Insurance Market Overview";
 const TDI_INSURANCE_URL = "https://www.tdi.texas.gov/general/texas-homeowners-insurance-market-overview.html";
 const HARRIS_CLERK = "Harris County Clerk real-property recording fee schedule, via deeds.com secondary aggregation";
+const TX_TAX_CODE_11_13 = "Texas Tax Code s.11.13(b) (general residence homestead exemptions)";
+// statutes.capitol.texas.gov's own page returns only a navigation shell to a fetch tool, so the
+// subsection text was read via a secondary but verbatim legal-code republication instead — see
+// austin.ts's identical constant for the full access-method note. Added when the Austin record
+// (the second Texas metro) settled the M&O/I&S question this record's own exemption note used to
+// leave open; the statute is a Texas-wide fact, so the resolution applies here too.
+const TX_TAX_CODE_11_13_URL = "https://codes.findlaw.com/tx/tax-code/tax-sect-11-13/";
 
 /**
  * TDI's promulgated title-insurance basic premium schedule for a $100,001-$1,000,000 policy:
@@ -85,11 +92,14 @@ export const houston: Jurisdiction = {
     // Only the HISD portion of the combined rate carries a CONFIRMED homestead exemption — see
     // the PropertyTax.exemptions doc comment in types.ts for why this is not applied to the
     // whole stack.
-    exemptions: {
-      amount: 140000,
-      appliesToRate: 0.008783,
-      note: "HISD's $140,000 general homestead exemption (dossier B2) applies against the HISD portion of the combined rate (0.8783 of the 2.120422 combined) ONLY. Harris County's own 20% local-option exemption is reported adopted by a secondary source, not the county's own adoption order, and the City of Houston, Flood Control District, Hospital District and Port of Houston's exemption status could not be confirmed at all this pass (dossier C3) — so none of those is modelled. This understates the true relief a Houston homestead buyer receives; it does not overstate it.",
-    },
+    exemptions: [
+      {
+        kind: "flatAmount",
+        amount: 140000,
+        appliesToRate: 0.008783,
+        note: "HISD's $140,000 general homestead exemption (dossier B2) applies against the HISD portion of the combined rate (0.8783 of the 2.120422 combined) ONLY — this is a boundary between taxing ENTITIES (HISD vs. the county/city/HCC), not a boundary within HISD's own rate: the $140,000 applies against HISD's WHOLE 0.8783, both its M&O and I&S portions (see propTax.exemptions.0's own provenance entry for the statutory citation settling that question). Harris County's own 20% local-option exemption is reported adopted by a secondary source, not the county's own adoption order, and the City of Houston, Flood Control District, Hospital District and Port of Houston's exemption status could not be confirmed at all this pass (dossier C3) — so none of those is modelled. This understates the true relief a Houston homestead buyer receives; it does not overstate it.",
+      },
+    ],
   },
   // No Texas real-estate transfer tax and no mortgage recording tax (dossier B1) — the empty
   // group `buildLines()` must degrade to cleanly, per the design spec.
@@ -149,6 +159,17 @@ export const houston: Jurisdiction = {
       asOf: "2025-11-04 (Prop 13 certified, retroactive to TY2025)",
       src: HCAD_B2,
       note: "$140,000 general homestead exemption against the HISD portion only — see the field's own note above for what is and is not modelled. The 10% homestead appraisal cap on YEAR-OVER-YEAR growth (Tax Code s.23.23, unchanged by the 2025 amendment) is NOT modelled: for a fresh purchase the appraised value in year one is the purchase price itself, so the cap does not bind until a later reassessment year, which this single-year figure does not project.",
+    },
+    // Added alongside the Austin record (the second Texas metro), which needed to settle the
+    // same question for its own AISD exemption — recorded here too because the statute is a
+    // Texas-wide fact, not an Austin-specific one, and this record's own note used to leave the
+    // M&O/I&S question explicitly open.
+    "propTax.exemptions.0": {
+      conf: "medium",
+      asOf: "2026-09-05 (accessed)",
+      src: TX_TAX_CODE_11_13,
+      url: TX_TAX_CODE_11_13_URL,
+      note: "Tax Code s.11.13(b): \"An adult is entitled to exemption from taxation by a school district of $140,000 of the appraised value of the adult's residence homestead...\" — no M&O/I&S carve-out anywhere in the subsection or any cross-referenced section, so the $140,000 applies against HISD's WHOLE 0.8783 rate, both M&O and I&S. Graded medium, not high: statutes.capitol.texas.gov's own page returned only a navigation shell to a fetch tool, so this was read via a secondary but verbatim legal-code republication (codes.findlaw.com), cross-checked against an independent search result quoting identical text — a real citation, but not a direct read of the primary .gov document.",
     },
     "bench.house": {
       conf: "high",

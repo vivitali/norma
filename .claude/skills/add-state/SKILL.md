@@ -164,6 +164,13 @@ In this order:
   the wrong note. This renders VERBATIM on `/sources`; a reader-visible number and its own
   citation disagreeing is exactly the class of error this product exists to prevent. Re-read every
   note against its field's actual value before committing.
+- **An interpretive claim in a `note` needs a real citation, exactly like a dollar figure.** A
+  note that says "the statute applies the exemption to the whole school levy" is a claim about
+  law, and it renders verbatim on `/sources`. Austin's first draft wrote "resolved by reading the
+  statute's text directly" without having fetched it; the reviewer caught it, and the fix was to
+  fetch Tax Code §11.13(b), quote it, and record it at its own provenance path
+  (`propTax.exemptions.0`, graded on its own). If you did not read it, do not say you did — grade
+  it `medium` and say what you read instead.
 - **`metric` disclosure for `bench`.** Say explicitly whether a benchmark is a median, an average,
   or an index (HAR publishes a median; some boards publish averages) — CLAUDE.md's own "raised"
   item on this dataset already flags that mixing metrics without disclosure is a standing
