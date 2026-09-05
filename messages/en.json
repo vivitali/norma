@@ -41,6 +41,14 @@
     "scenarios": {
       "title": "Down payment scenarios — 5, 10, 20 or 25 percent",
       "description": "Four down payments at the same price, compared on monthly cost, cash at closing, lender approval and lifetime interest. The cheapest monthly rarely wins."
+    },
+    "privacy": {
+      "title": "Privacy — AffordMath",
+      "description": "What is collected and what is not. Your calculator inputs stay in your browser and are never sent to a server."
+    },
+    "terms": {
+      "title": "Terms of use — AffordMath",
+      "description": "AffordMath is a calculator, not advice. What the service is, what it is not, and the limits of what its estimates can tell you."
     }
   },
   "Home": {
@@ -1012,5 +1020,62 @@
     "QC": "Quebec",
     "SK": "Saskatchewan",
     "YT": "Yukon"
+  },
+  "Legal": {
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "updated": "Last updated {date}",
+    "officerTitle": "Person in charge of the protection of personal information",
+    "footerDisclaimer": "AffordMath is an information tool. It is not financial, mortgage, tax or legal advice, and it is not an offer of credit. Every result is an estimate computed from figures you enter and from published rules, each dated on the Sources page. Your lender, notary or accountant establishes your actual numbers. Verify anything you are about to rely on.",
+    "legal": "Legal",
+    "operatorRole": "Operator",
+    "roleLabel": "Role",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "updatedLong": "25 August 2026"
+  },
+  "Privacy": {
+    "eyebrow": "Privacy",
+    "head": "Almost nothing about you reaches us, and this page says exactly what does.",
+    "sub": "AffordMath runs in your browser. What you type into a calculator stays on your device. The rest of this page is the detail Quebec and federal privacy law require us to publish.",
+    "secCollect": "What is collected",
+    "bodyCollect": "Two things, and only two. Aggregate page analytics — which pages are viewed, from which country, on which kind of device — through Cloudflare Web Analytics, which sets no cookies and does not follow you between sites. And the ordinary request information any web server receives, including your IP address, which Cloudflare uses to serve the page and to block abuse.",
+    "secNotCollect": "What is not collected",
+    "bodyNotCollect": "Your income, your debts, your savings, the price of the house you are considering, and every other figure you enter. Those are held in your browser's own local storage, read only by this site running on your own device, and never transmitted anywhere. There is no account, no sign-in, no email address and no server-side record of you. Clearing your browser data deletes them permanently, and nobody — including us — holds a copy.",
+    "secPurpose": "Why, and by what means",
+    "bodyPurpose": "The analytics exist to show which tools are used and which are ignored, so that work goes to the pages people actually reach. They are collected automatically when a page loads, by a script served from Cloudflare. Nothing is collected for advertising. Nothing is sold, and nothing is shared with a data broker.",
+    "secThirdParty": "Who receives it",
+    "bodyThirdParty": "Cloudflare, Inc., which hosts this site and provides its analytics. No one else. There is no advertising network, no tag manager, no social pixel and no third-party script other than Cloudflare's analytics beacon.",
+    "secOutside": "It is processed outside Quebec",
+    "bodyOutside": "Cloudflare is based in the United States and runs a global network, so the request information described above is processed outside Quebec and may be processed outside Canada, where it may be subject to another jurisdiction's laws. This is disclosed because Quebec law requires it to be. It is true of the analytics; it is not true of anything you type into a calculator, which never leaves your device.",
+    "secRights": "Your rights",
+    "bodyRights": "You may ask what personal information we hold about you, ask for it to be corrected, ask for it to be deleted, and withdraw your consent to its collection. In practice we hold nothing that identifies you, so the honest answer to most such requests is that there is nothing to produce — but ask, and you will have that answer in writing within 30 days. To stop the analytics outright, any browser content blocker will do it, and the site works identically without them.",
+    "secOfficer": "Who is responsible",
+    "bodyOfficer": "Questions about this policy, and any request to exercise a right above, go to the person in charge of the protection of personal information:",
+    "secRetention": "How long it is kept",
+    "bodyRetention": "Cloudflare's analytics are aggregated and retained on their schedule; we keep no raw log of your visit. Your calculator inputs persist in your browser until you clear them. Any personal information we do come to hold is destroyed or anonymised once the purpose it was collected for is fulfilled.",
+    "secBreach": "If something goes wrong",
+    "bodyBreach": "We keep a register of confidentiality incidents. Where an incident presents a risk of serious injury we will notify the Commission d'accès à l'information du Québec and the people affected, and where the federal threshold of a real risk of significant harm is met, the Office of the Privacy Commissioner of Canada.",
+    "secChanges": "Changes",
+    "bodyChanges": "The date above is when this page last changed. Material changes will be described here rather than made silently."
+  },
+  "Terms": {
+    "eyebrow": "Terms of use",
+    "head": "A free calculator, and an honest account of what it can and cannot tell you.",
+    "sub": "Read the first two sections if you read nothing else. They are the ones that matter.",
+    "secWhat": "What this is",
+    "bodyWhat": "AffordMath is a set of calculators. You enter figures; it applies published federal rules and the rules of the province, territory or city you select; it shows the arithmetic and names where each rule came from. That is the entire service.",
+    "secNot": "What this is not",
+    "bodyNot": "It is not financial, mortgage, tax, accounting or legal advice. It is not a pre-approval, a rate quote, an offer of credit, or a promise that any lender will lend you anything. We are not a mortgage broker, a lender, a financial planner or a financial advisor; we are not licensed as any of those; and we do not act for you. No result here has been reviewed by anyone who knows your circumstances. Before relying on a figure, check it with your lender, your notary or lawyer, and your accountant.",
+    "secAccuracy": "Accuracy, and its limits",
+    "bodyAccuracy": "Every rule is checked against a named published document, dated on the Sources page, and carries how far it can be trusted — measured, derived, an assumption we disclose, or absent because nobody publishes it. That work is the point of the product and we take it seriously. It still does not make an output correct for you: rules and rates change, a figure verified on one date can be stale on another, market benchmarks are estimates, and no calculator knows anything about you that you did not type. Results are estimates.",
+    "secLiability": "Liability",
+    "bodyLiability": "The site is provided as it is, with no warranty that it will be available, error-free or fit for a particular purpose. To the extent the law allows, we are not liable for loss arising from your use of it or from a decision you make on the strength of a figure it produced. Nothing here excludes or limits liability that cannot lawfully be excluded — including liability for bodily or moral injury and for gross or intentional fault. Where a limitation cannot lawfully apply to you it does not apply to you, and the remainder of these terms continues to stand.",
+    "secLaw": "Governing law, and where a dispute goes",
+    "bodyLaw": "These terms are governed by the law of the province or territory where you reside, together with the applicable laws of Canada. If you are a consumer resident in Quebec you may bring proceedings before the courts of Quebec, and nothing here takes that away. There is no mandatory arbitration clause, and no waiver of your right to take part in a class action.",
+    "secIp": "What belongs to whom",
+    "bodyIp": "The calculation engine, the interface and the writing are ours. The statutes, rates and published figures the engine applies are not — they belong to the governments and organizations that publish them, and each is credited on the Sources page. The figures you enter are yours, and we never receive them.",
+    "secContact": "Who operates this site",
+    "bodyContact": "This site is operated by:"
   }
 }

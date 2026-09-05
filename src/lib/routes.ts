@@ -80,3 +80,41 @@ export const NAV: readonly NavGroup[] = [
 export function builtEntries(group: NavGroup): readonly NavEntry[] {
   return group.entries.filter((e) => e.built);
 }
+
+/**
+ * The footer registry — destinations that are obligations rather than tools.
+ *
+ * Deliberately NOT a fifth NAV group. `NAV` is grouped by the buyer's journey and every entry in
+ * it answers a question the reader came with; a privacy policy answers a question the reader did
+ * not ask and the law obliges us to answer anyway. Putting them in the menu panel would rank them
+ * beside Affordability and Closing Costs, which misstates what they are, and would push the
+ * panel's four columns to five for two links nobody browses to.
+ *
+ * They still need a registry rather than two hardcoded `<Link>`s, for the same reason NAV is one:
+ * `routes.test.ts` checks `routing.pathnames` against NAV ∪ FOOTER in both directions, so a route
+ * added to routing.ts and forgotten here fails the suite instead of becoming silently unreachable.
+ *
+ * `built` is kept for symmetry with NavEntry, and because these two pages ship in the same commit
+ * as this registry — a false here would mean a footer link to a 404.
+ */
+export interface FooterEntry {
+  route: RouteKey;
+  /**
+   * Message key under the `Legal` namespace — NOT `Nav`, which is why this is its own type rather
+   * than a reused `NavEntry`. A check written against `NavEntry` would look in the wrong catalogue.
+   */
+  label: string;
+}
+
+/**
+ * No `built` flag, deliberately, where `NavEntry` has one. NAV's flag earns its place because the
+ * registry recorded all nine routes before the pages existed and the renderer filtered them. Both
+ * of these pages ship in the same commit as this registry, so a `built: false` here would describe
+ * a state that has never existed — and `routes.test.ts` asserting every entry is reachable would
+ * make the filter unfalsifiable: a flag the tests prove can never be false is documentation of an
+ * impossible capability, not a safeguard.
+ */
+export const FOOTER: readonly FooterEntry[] = [
+  { route: "/privacy", label: "privacy" },
+  { route: "/terms", label: "terms" },
+];

@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { AppHeader } from "@/components/app-header";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
+import { AppFooter } from "@/components/app-footer";
 import { Analytics } from "@/components/analytics";
 import "../globals.css";
 
@@ -124,6 +125,12 @@ export default async function LocaleLayout({
             <JurisdictionProvider>
               <AppHeader />
               {children}
+              {/*
+                Outside JurisdictionProvider's content but inside it in the tree: the footer takes
+                no jurisdiction, and `mt-auto` on it is what pins it to the bottom of the
+                min-h-full flex column on short pages.
+              */}
+              <AppFooter locale={locale} />
             </JurisdictionProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

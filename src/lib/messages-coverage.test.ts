@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import en from "../../messages/en.json";
-import { NAV } from "./routes";
+import { NAV, FOOTER } from "./routes";
 import { HOME_FAQ_KEYS } from "@/components/home-content";
 
 /**
@@ -47,6 +47,15 @@ const DYNAMIC_PREFIXES = [
  * exactly the half-wired FAQ someone later feeds to the JSON-LD. Reading the two
  * registries instead means an orphan is still an orphan.
  */
+/**
+ * FOOTER's labels, DERIVED rather than prefix-exempted, for the same reason Home's are: a stray
+ * `Legal.whatever` should still be an orphan. `src/lib/routes.ts` carries these two strings
+ * without naming the `Legal` namespace, so `sourceFor("Legal")` cannot see them.
+ */
+function derivedFooterKeys(): string[] {
+  return FOOTER.map((entry) => entry.label);
+}
+
 function derivedHomeKeys(): string[] {
   return [
     ...NAV.flatMap((group) => group.entries.map((entry) => `tool_${entry.label}`)),
@@ -136,6 +145,12 @@ const NAMESPACES = [
   // provenance inventory: seven of its keys described the old page and had to
   // go, and copy that describes a page nobody built is exactly what this catches.
   "Sources",
+  // The legal namespaces. They have no entry in SECTION_REGISTRIES — the pages render flat, so
+  // there are no sections to register — which means they also miss sections.test.ts's both-locale
+  // label check. Without them here they would sit outside EVERY orphan guard, and three keys
+  // (`resultNote`, `rateNote`, `privacyLede`) had already shipped translated with no call site
+  // before this line existed.
+  "Legal", "Privacy", "Terms",
 ] as const;
 
 describe("message coverage", () => {
@@ -151,6 +166,7 @@ describe("message coverage", () => {
         (key) =>
           !DYNAMIC_PREFIXES.some((prefix) => key.startsWith(prefix)) &&
           !(namespace === "Home" && derivedHomeKeys().includes(key)) &&
+          !(namespace === "Legal" && derivedFooterKeys().includes(key)) &&
           !source.includes(`"${key}"`) &&
           !source.includes(`'${key}'`) &&
           // Country-forked key, reached as `t(countryKey(base, rules.country))`

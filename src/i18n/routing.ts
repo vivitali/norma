@@ -86,5 +86,7 @@ export const routing = defineRouting({
     "/rent-vs-buy": perLanguage({ fr: "/louer-ou-acheter", es: "/alquilar-o-comprar" }),
     "/scenarios": perLanguage({ fr: "/scenarios", es: "/escenarios" }),
     "/sources": perLanguage({ fr: "/sources", es: "/fuentes" }),
+    "/privacy": perLanguage({fr: "/confidentialite", es: "/privacidad" }),
+    "/terms": perLanguage({fr: "/conditions", es: "/terminos" }),
   },
 });
