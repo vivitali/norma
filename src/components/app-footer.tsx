@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { FOOTER } from "@/lib/routes";
+import { countryKey } from "@/lib/country-key";
+import { countryOf, type Locale } from "@/i18n/countries";
 
 /**
  * The site-wide footer, and the only place the "not advice" disclosure is guaranteed to appear.
@@ -19,14 +21,15 @@ import { FOOTER } from "@/lib/routes";
  * The links come from the FOOTER registry rather than being written here, so `routes.test.ts` can
  * check them against `routing.pathnames` in both directions.
  */
-export async function AppFooter({ locale }: { locale: string }) {
+export async function AppFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale, namespace: "Legal" });
+  const country = countryOf(locale);
 
   return (
     <footer className="mt-auto border-t border-border px-5 pt-8 pb-12 sm:px-10">
       <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5">
         <p className="max-w-[68ch] text-[12.5px] leading-[1.65] text-ink3 text-pretty">
-          {t("footerDisclaimer")}
+          {t(countryKey("footerDisclaimer", country))}
         </p>
         <nav aria-label={t("legal")}>
           <ul role="list" className="-mx-2 flex flex-wrap items-center gap-x-1 gap-y-0.5">
