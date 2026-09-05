@@ -1600,6 +1600,11 @@ export interface RentVsBuyRow {
   /** US only: whether itemising beat the standard deduction THIS year — most buyers, per the
    * design spec's own framing, get nothing from the deduction. */
   itemizedBeatsStandard?: boolean;
+  /** US only: PMI actually charged THIS year, already folded into `ownerOutlay` — broken out
+   * here so a screen can show the line item without re-deriving it from `fin.monthlyInsurance`
+   * and `fin.insuranceMonths` a second time. Undefined on the Canadian branch, whose CMHC
+   * premium is a one-time amount financed into the loan, not a recurring cost. */
+  pmi?: number;
 }
 
 /**
@@ -1922,7 +1927,7 @@ function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
       homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
-      deductionBenefit, itemizedBeatsStandard,
+      deductionBenefit, itemizedBeatsStandard, pmi,
     });
   }
 

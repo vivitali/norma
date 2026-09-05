@@ -9,6 +9,7 @@ import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
 import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
+import { countryKey } from "@/lib/country-key";
 import { RENT_VS_BUY_SECTIONS } from "@/lib/sections";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
@@ -81,6 +82,13 @@ export default function RentVsBuyPage() {
       termYears: resolved.termYears,
       renewalRate: resolved.renewalRate === null ? null : resolved.renewalRate / 100,
       years: HORIZON_YEARS,
+      // US only: `rentVsBuyToMaturity`'s itemised-vs-standard-deduction benefit reads this
+      // to find the reader's marginal rate. `resolved.taxIncome` is the same household-income
+      // figure Down Payment and RRSP-HBP already read for the same purpose (RRSP-HBP's
+      // marginal-rate lookup, Down Payment's own bracket display) — one number, not a second
+      // question this page would otherwise have to ask. The Canadian branch never reads
+      // `taxableIncome` at all, so passing it costs that branch nothing.
+      taxableIncome: resolved.taxIncome,
     }),
     [resolved],
   );
@@ -340,6 +348,16 @@ export default function RentVsBuyPage() {
                 */}
                 <PanelRow label={t("cPropTax")} value={fmt(atHorizon.propTax)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cMaint")} value={fmt(atHorizon.maintenance)} provenance={<Provenance kind="estimate" />} />
+                {/*
+                  US only. `atHorizon.pmi` is undefined on the Canadian branch (a CMHC
+                  premium is financed once, up front, not a recurring line here) and
+                  falls to 0 once `fin.insuranceMonths` has passed this year's start —
+                  gated on the figure itself, matching the "absent while it does not
+                  apply" convention `buildLines` and the trace's own credit rows use.
+                */}
+                {rules.country === "us" && (atHorizon.pmi ?? 0) > 0 ? (
+                  <PanelRow label={t("cPmi")} value={fmt(atHorizon.pmi ?? 0)} provenance={<Provenance kind="estimate" />} />
+                ) : null}
                 <PanelRow label={t("cOwner")} value={fmt(atHorizon.ownerOutlay)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cRenter")} value={fmt(atHorizon.renterOutlay)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cBalance")} value={fmt(atHorizon.balance)} />
@@ -348,6 +366,22 @@ export default function RentVsBuyPage() {
                     label={t("payoffLabel", { n: result.payoffYear })}
                     value={fmt(rowAt(result.rows, result.payoffYear).ownerOutlay)}
                   />
+                ) : null}
+                {/*
+                  US only. `itemizedBeatsStandard`/`deductionBenefit` are undefined on
+                  the Canadian branch — see `rentVsBuyToMaturity`'s own comment. Most
+                  buyers' itemised deductions (mortgage interest plus SALT-capped
+                  property tax) do not beat the standard deduction, so the mortgage-
+                  interest deduction most readers have heard of is worth nothing to
+                  them — this says which case applies at their own numbers rather than
+                  letting the reader assume the popular version.
+                */}
+                {rules.country === "us" ? (
+                  <NoteLine tone={atHorizon.itemizedBeatsStandard ? "quiet" : "caution"}>
+                    {atHorizon.itemizedBeatsStandard
+                      ? t("stdDeductionTip", { amt: fmt(atHorizon.deductionBenefit ?? 0) })
+                      : t("stdDeductionNone")}
+                  </NoteLine>
                 ) : null}
               </>,
             )}
@@ -464,7 +498,13 @@ export default function RentVsBuyPage() {
                     // convention buildLines uses everywhere else in this app: a row
                     // of zeroes reads as a cost the reader has, and they do not.
                     ...(atHorizon.taxTimeCredits > 0
-                      ? [{ label: t("calcTaxCredits"), value: fmt(atHorizon.taxTimeCredits), op: "plus" as const }]
+                      ? [
+                          {
+                            label: t(countryKey("calcTaxCredits", rules.country)),
+                            value: fmt(atHorizon.taxTimeCredits),
+                            op: "plus" as const,
+                          },
+                        ]
                       : []),
                     ...(atHorizon.bp > 0
                       ? [{ label: t("calcInvestedBuy"), value: fmt(atHorizon.bp), op: "plus" as const }]
@@ -496,6 +536,17 @@ export default function RentVsBuyPage() {
                     { key: "balance", label: t("cBalance"), numeric: true },
                     { key: "propTax", label: t("cPropTax"), numeric: true },
                     { key: "insurance", label: t("cInsurance"), numeric: true },
+                    // US only: PMI and the itemised-deduction tax benefit have no
+                    // Canadian counterpart on this row (a CMHC premium is financed
+                    // once, up front, not a recurring charge; there is no equivalent
+                    // deduction on the Canadian branch at all) — see `RentVsBuyRow`'s
+                    // own doc comments.
+                    ...(rules.country === "us"
+                      ? [
+                          { key: "pmi", label: t("cPmi"), numeric: true },
+                          { key: "taxBenefit", label: t("cTaxBenefit"), numeric: true },
+                        ]
+                      : []),
                     { key: "services", label: t("cServices"), numeric: true },
                     { key: "strata", label: t("cStrata"), numeric: true },
                     { key: "maint", label: t("cMaint"), numeric: true },
@@ -520,6 +571,9 @@ export default function RentVsBuyPage() {
                       balance: fmt(row.balance),
                       propTax: fmt(row.propTax),
                       insurance: fmt(row.insurance),
+                      ...(rules.country === "us"
+                        ? { pmi: fmt(row.pmi ?? 0), taxBenefit: fmt(row.deductionBenefit ?? 0) }
+                        : null),
                       services: fmt(row.services),
                       strata: fmt(row.strata),
                       maint: fmt(row.maintenance),
