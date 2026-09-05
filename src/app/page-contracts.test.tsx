@@ -641,6 +641,47 @@ describe("every page that computes an answer can show its work", () => {
     }
   });
 
+  /**
+   * The same contract, at a Houston seed rather than the Canadian default.
+   *
+   * TERMINAL widens to include Amortization here, deliberately, rather than reusing the CA
+   * list above: on a `toMaturity` mortgage `paymentAfterRenewal` IS `firstPayment`
+   * (`amortizationToMaturity`'s own doc comment — there is no term to renew, so the two never
+   * diverge), so the US hero terminates its own trace exactly where the CA one cannot. And the
+   * renewal step this trace conditionally adds (`resolved.renewalRate !== null && firstRenewal
+   * !== null`) must never appear at all: `firstRenewal` reads `rows.find(r => r.renewed)`, and
+   * `row.renewed` is never true on a toMaturity schedule.
+   */
+  it("holds at a Houston seed too, including Amortization", async () => {
+    const TERMINAL_US = ["Closing costs", "Down payment", "Rent vs buy", "Amortization"] as const;
+    for (const name of TERMINAL_US) {
+      const Page = COMPUTES.find(([n]) => n === name)![1];
+      window.localStorage.setItem(
+        "norma.inputs.v2",
+        JSON.stringify({ jurId: "houston", ...(name === "Rent vs buy" ? { ptype: "condo" } : {}) }),
+      );
+      const user = userEvent.setup();
+      const { container, unmount } = renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+        { locale: "en-US" },
+      );
+      const hero = container.querySelector('[data-slot="answer-figure"]')?.textContent?.trim();
+      expect(hero, `${name} renders no hero at a Houston seed`).toBeTruthy();
+      const body = await openCalc(user);
+      const calc = document.getElementById("calc")!;
+      const terminal = [...calc.querySelectorAll("dd")].map((dd) => dd.textContent?.trim()).filter(Boolean);
+      expect(terminal, `${name}: hero ${hero} appears nowhere in its own Houston-seeded derivation`).toContain(
+        hero,
+      );
+      if (name === "Amortization") {
+        expect(body.queryByText(/renewal/i), "Amortization's US trace names a renewal step").toBeNull();
+      }
+      unmount();
+    }
+  });
+
   it("derives nothing where no price is published", async () => {
     // The defect this file already documents one level up, at the headline: a page
     // with no price must ASK, and a derivation is a headline in slower motion.

@@ -1490,9 +1490,18 @@ export type HbpResult = ReturnType<typeof hbpPlay>;
  */
 export function rentComparable(j: Jurisdiction, ptype: PropertyType): boolean {
   if (j.rentBasis === undefined) return false;
-  // The one basis the dataset holds. `newbuild` reads the house benchmark
-  // (see `benchmarkPrice`), so it inherits the house answer.
-  return j.rentBasis === "apartment2br" && ptype === "condo";
+  // Two bases, both a two-bedroom apartment average — CMHC's on the Canadian
+  // records, HUD's Fair Market Rent on the US ones (Houston: dossier A-something,
+  // `rentBasis: "fmr2br"`) — either is comparable to a CONDO purchase and neither
+  // is comparable to a house. `newbuild` reads the house benchmark (see
+  // `benchmarkPrice`), so it inherits the house answer on both bases.
+  //
+  // This was `=== "apartment2br"` alone until a Houston-seeded Rent vs Buy test
+  // (`page-contracts.test.tsx`) caught it: `RentBasis` has carried `"fmr2br"`
+  // since the US jurisdiction record shipped, but this function never learned the
+  // second value, so Houston printed the "wrong dwelling type" mismatch ask on
+  // EVERY property type — condo included — and could never answer at all.
+  return (j.rentBasis === "apartment2br" || j.rentBasis === "fmr2br") && ptype === "condo";
 }
 
 export interface RentVsBuyInput extends ClosingInput {
