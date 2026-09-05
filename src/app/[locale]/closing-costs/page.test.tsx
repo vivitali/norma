@@ -7,7 +7,9 @@ import { ca } from "@/domain/rules/ca";
 import { jurisdictions } from "@/domain/jurisdictions";
 import { resolveInputs } from "@/lib/resolve-inputs";
 import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
+import { CATALOGUES } from "@/test/catalogues";
 import type { Locale } from "@/lib/locales";
+import { languageOf, localesForCountry } from "@/i18n/countries";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import ClosingCostsPage from "./page";
 
@@ -42,6 +44,18 @@ function seedVancouverNewBuild() {
   window.localStorage.setItem(
     "norma.inputs.v2",
     JSON.stringify({ jurId: "vancouver", price: 800000, ftb: true, ptype: "newbuild" }),
+  );
+}
+
+/**
+ * A BC first-time buyer of a $500,000 new build. Both PTT exemptions fully forgive the same
+ * tax at this price — an exact tie, not a rival with a bigger number — per the note in
+ * `credits()` in `src/domain/engine.ts`.
+ */
+function seedVancouverTiedNewBuild() {
+  window.localStorage.setItem(
+    "norma.inputs.v2",
+    JSON.stringify({ jurId: "vancouver", price: 500000, ftb: true, ptype: "newbuild" }),
   );
 }
 
@@ -262,10 +276,31 @@ describe("Closing costs — a rebate that pays nothing still says why", () => {
     expect(screen.getByText("Newly built home exemption")).toBeInTheDocument();
     expect(screen.getByText("First-time buyer transfer tax exemption")).toBeInTheDocument();
     expect(
-      screen.getByText(/another rebate here is worth more/),
+      screen.getByText(/only one rebate here can be claimed/),
     ).toBeInTheDocument();
     expect(screen.queryByText(NONE)).not.toBeInTheDocument();
   });
+
+  it.each(localesForCountry("en-CA"))(
+    "keeps both BC PTT exemptions visible and calls them tied, not superseded, at the 500,000-dollar exact-tie price — %s",
+    async (locale) => {
+      // At $500,000 both exemptions forgive the identical tax — see the note in `credits()` in
+      // `src/domain/engine.ts`. Neither row is dropped, and the loser is not told a rival
+      // rebate was worth MORE, because it was not. One case per locale, driven off the
+      // catalogue itself rather than a hand-written string per language, so a locale added
+      // later is covered automatically.
+      // Canadian locales only: the seed is a BC record, and a US locale would fall back to
+      // Houston. The catalogue is per LANGUAGE, hence `languageOf`.
+      const cc = CATALOGUES[languageOf(locale)].ClosingCosts;
+      seedVancouverTiedNewBuild();
+      const user = userEvent.setup();
+      renderPage(locale);
+      await open(user, new RegExp(cc.secCredits));
+
+      expect(screen.getByText(cc.rebTied)).toBeInTheDocument();
+      expect(screen.queryByText(cc.rebSuperseded)).not.toBeInTheDocument();
+    },
+  );
 
   it("says an over-ceiling exemption stops above a price, not that none exists", async () => {
     forced.st = "overCeiling";
@@ -285,7 +320,9 @@ describe("Closing costs — a rebate that pays nothing still says why", () => {
     const user = userEvent.setup();
     renderPage("fr-CA");
     await open(user, /Crédits/);
-    expect(screen.getByText(/un autre remboursement offert ici vaut davantage/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/un seul remboursement offert ici peut être réclamé/),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Aucun remboursement ici")).not.toBeInTheDocument();
   });
 });

@@ -521,6 +521,83 @@ describe("credits — mutually exclusive rebate groups", () => {
     const nonZero = C.atClosing.filter((c) => c.amount > 0);
     expect(nonZero.length).toBeGreaterThan(1);
   });
+
+  it("keeps an exact-tie rebate visible, zeroed and marked tied, rather than dropping it", () => {
+    // Both members of the group genuinely tie: same cap, same target line, so the same raw
+    // amount is capped to the same figure. Dropping the loser used to tell the buyer only one
+    // programme applied; the fix keeps the row so the buyer can see both they qualified for.
+    const tiedGroup: Jurisdiction = {
+      ...getJurisdiction("vancouver")!,
+      rebates: [
+        { key: "cr_a", kind: "cap", cap: 5000, on: "li_ptt", timing: "closing", group: "bcPtt" },
+        { key: "cr_b", kind: "cap", cap: 5000, on: "li_ptt", timing: "closing", group: "bcPtt" },
+      ],
+    };
+    const o = { ...base, price: 900000 };
+    const C = credits(tiedGroup, federal, o, buildLines(tiedGroup, federal, o).gov);
+    const a = C.atClosing.find((c) => c.key === "cr_a")!;
+    const b = C.atClosing.find((c) => c.key === "cr_b")!;
+    expect(a).toBeDefined();
+    expect(b).toBeDefined();
+    expect(a.amount).toBeGreaterThan(0);
+    expect(b.amount).toBe(0);
+    expect(b.st).toBe("tied");
+    // Not double-counted: the group's relief is worth exactly what one member pays.
+    expect(a.amount + b.amount).toBe(a.amount);
+  });
+
+  it("still calls it a tie when the two amounts agree to the cent but not in the last float bit", () => {
+    // `0.1 + 0.2 !== 0.3` in IEEE 754. Nothing in this dataset currently produces two rebate
+    // amounts that are mathematically equal but bit-different — every member of a group reads
+    // the same target line's `raw` and clips it — but the comparison should not silently start
+    // calling a same-to-the-cent pair "superseded" the day a rebate shape does. Caps set to
+    // 0.1 + 0.2 and 0.3 dollars, both below `raw`, force `Math.min` to pick the cap itself
+    // rather than the shared `raw`, reproducing the drift directly.
+    const tiedGroup: Jurisdiction = {
+      ...getJurisdiction("vancouver")!,
+      rebates: [
+        { key: "cr_a", kind: "cap", cap: 0.1 + 0.2, on: "li_ptt", timing: "closing", group: "bcPtt" },
+        { key: "cr_b", kind: "cap", cap: 0.3, on: "li_ptt", timing: "closing", group: "bcPtt" },
+      ],
+    };
+    const o = { ...base, price: 900000 };
+    const C = credits(tiedGroup, federal, o, buildLines(tiedGroup, federal, o).gov);
+    const a = C.atClosing.find((c) => c.key === "cr_a")!;
+    const b = C.atClosing.find((c) => c.key === "cr_b")!;
+    expect([a.st, b.st].sort()).toEqual(["capped", "tied"]);
+    expect([a.st, b.st]).not.toContain("superseded");
+  });
+
+  it("ties BC's first-time-buyer and newly-built PTT exemptions at $500,000, as documented in credits()", () => {
+    // Both fully exempt the tax on a first-time buyer's new build at or under $500,000: the
+    // first-time-buyer exemption is computed on the first $500,000 of the same tax, so there
+    // is nothing above it left to differ.
+    const vancouver = getJurisdiction("vancouver")!;
+    const o = { ...base, price: 500000, ptype: "newbuild" as const };
+    const C = credits(vancouver, federal, o, buildLines(vancouver, federal, o).gov);
+    const rows = C.atClosing.filter((c) => c.group === "bcPtt");
+    expect(rows).toHaveLength(2);
+    expect(rows.filter((c) => c.amount > 0)).toHaveLength(1);
+    expect(rows.some((c) => c.st === "tied")).toBe(true);
+  });
+
+  it("does not relabel a zero-amount ftbOnly row when a sibling in the group pays", () => {
+    // A non-first-time buyer of a $600,000 Vancouver new build: cr_pttNewBuild applies in
+    // full (no ftb test), cr_pttExempt fails ONLY the ftb test and is emitted at $0 with
+    // st "ftbOnly". `best.amount > 0` here — cr_pttNewBuild pays — so the old code walked
+    // into the per-row relabelling loop and overwrote cr_pttExempt's "ftbOnly" with
+    // "superseded", which renders as "You qualify for this" against a programme the buyer
+    // failed on its own terms.
+    const vancouver = getJurisdiction("vancouver")!;
+    const o = { ...base, price: 600000, ftb: false, ptype: "newbuild" as const };
+    const C = credits(vancouver, federal, o, buildLines(vancouver, federal, o).gov);
+    const exempt = C.atClosing.find((c) => c.key === "cr_pttExempt")!;
+    const newBuild = C.atClosing.find((c) => c.key === "cr_pttNewBuild")!;
+    expect(exempt.st).toBe("ftbOnly");
+    expect(exempt.amount).toBe(0);
+    expect(newBuild.st).toBe("applied");
+    expect(newBuild.amount).toBeGreaterThan(0);
+  });
 });
 
 describe("closingTotal", () => {

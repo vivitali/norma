@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ca } from "./ca";
+import { CATALOGUE_ENTRIES } from "@/test/catalogues";
 
 describe("ca rules data", () => {
   it("has GDS stricter than TDS, as Canadian lending rules require", () => {
@@ -46,8 +47,8 @@ describe("ca rules data", () => {
  * quietly reverting a sourced figure to the prototype's placeholder.
  */
 describe("ca rules — verified 2026 figures", () => {
-  it("uses the 2026 Home Buyers' Amount, computed at the 14% lowest federal rate", () => {
-    // $10,000 claim (CRA line 31270) x 14% (lowest federal bracket, 2026 and later) = $1,400.
+  it("uses the 2026 Home Buyers' Amount, computed at the 14% lowest ca rate", () => {
+    // $10,000 claim (CRA line 31270) x 14% (lowest ca bracket, 2026 and later) = $1,400.
     // NOT $1,500 — that is the 2025 figure, when the lowest rate was 15%/14.5%.
     expect(ca.hba).toBe(1400);
   });
@@ -119,6 +120,14 @@ describe("ca rules — verified 2026 figures", () => {
     expect(ca.hbp.max).toBe(60_000);
     expect(ca.hbp.repayYears).toBe(15);
     expect(ca.capGainsInclusion).toBe(0.5);
+  });
+
+  it("uses CRA's actual 89-day HBP contribution-deductibility window, not the industry's 90-day rounding", () => {
+    // CRA, confirmed against canada.ca: "If you made contributions to your RRSPs during the
+    // 89-day period before you withdrew the amount for your HBP withdrawal, your RRSP
+    // contribution may not be deductible." See the provenance note on "hbp.ruleDays" for the
+    // full quote and what the rule actually restricts (deductibility, not withdrawal).
+    expect(ca.hbp.ruleDays).toBe(89);
   });
 
   it("uses the First-Time Home Buyers' GST rebate as legislated", () => {
@@ -206,5 +215,20 @@ describe("ca provenance — the 2026 pass", () => {
       expect(ca.provenance[path]?.conf, path).toBe("medium");
       expect(ca.provenance[path]?.note, path).toBeTruthy();
     }
+  });
+});
+
+/**
+ * `Metadata.rrspHbp.description` hardcodes "wait {N} days" as prose, once per locale — there is
+ * no interpolation binding it to `ca.hbp.ruleDays` the way the RRSP-HBP page's own copy
+ * does (`RrspHbp.step3` etc. read `{d}` from `play.ruleDays`). This is what actually keeps the
+ * two from disagreeing again: not the metadata string's shape, but this test, which fails the
+ * day either one moves without the other.
+ */
+describe("Metadata.rrspHbp.description names ca.hbp.ruleDays", () => {
+  it.each(CATALOGUE_ENTRIES)("in %s", (_locale, catalogue) => {
+    const description = (catalogue as { Metadata: { rrspHbp: { description: string } } }).Metadata
+      .rrspHbp.description;
+    expect(description).toContain(String(ca.hbp.ruleDays));
   });
 });

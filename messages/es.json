@@ -28,7 +28,7 @@
     },
     "rrspHbp": {
       "title": "Plan de Compradores del RRSP — reembolso y reglas",
-      "description": "Aportar, deducir, esperar 90 días, retirar y devolver en 15 años. Lo que vale el reembolso y lo que cuesta omitir un año de devolución."
+      "description": "Aportar, deducir, esperar 89 días, retirar y devolver en 15 años. Lo que vale el reembolso y lo que cuesta omitir un año de devolución."
     },
     "amortization": {
       "title": "Amortización y renovación — el choque de pago",
@@ -91,7 +91,7 @@
     "faqQ_eligibility": "¿Puedo comprar una vivienda en Canadá si no soy ciudadano ni residente permanente?",
     "faqA_eligibility": "A veces, y esa pregunta va antes que cualquier cifra de este sitio. Una ley federal limita qué personas no canadienses pueden comprar vivienda en Canadá, con excepciones que dependen de la situación migratoria y del lugar donde está el inmueble. Tiene una vigencia limitada y se ha prorrogado por reglamento, así que consulte la regla vigente y no un resumen de ella. Aparte, algunas provincias cobran un impuesto de transferencia más alto a los compradores no residentes: el de Nueva Escocia se aplica aquí, y los de Ontario y Columbia Británica no están modelados en absoluto.",
     "faqQ_verified": "¿Están verificadas las cifras?",
-    "faqA_verified": "La mayoría, y cada cifra dice en qué caso está. Cada una lleva una ficha de procedencia: el documento con el que se verificó, la fecha de ese documento y hasta qué punto se puede confiar en ella. La mayoría se leyeron del propio calendario de la autoridad que las emite. Otras son valores por defecto del modelo que elegimos y declaramos, porque los honorarios legales, las inspecciones y los costos de mudanza no tienen un publicador autorizado en Canadá. Unas pocas se dejan vacías porque nadie las publica, y la aplicación se las pide a usted en vez de inventar una. La página de fuentes enumera cada cifra con su documento y su fecha. Confirme cualquier dato sobre el que vaya a actuar."
+    "faqA_verified": "La mayoría, y cada cifra dice cuál es su caso. La mayoría se leen directamente del documento de la autoridad que las emite; unas pocas —honorarios legales, costos de mudanza— no tienen publicador del que partir, así que la aplicación asume un valor por defecto razonable y lo declara; y donde tampoco hay nada que asumir, se lo pregunta en lugar de inventarlo. Trátelo como una calculadora, no como asesoría, y confirme todo aquello sobre lo que vaya a actuar."
   },
   "AppHeader": {
     "theme": "Tema",
@@ -344,7 +344,8 @@
     "rebNone": "Aquí no existe reembolso",
     "rebCapped": "Limitado a",
     "rebPhaseWhy": "Su precio supera el umbral, así que el reembolso se reduce.",
-    "rebSuperseded": "Usted cumple los requisitos, pero aquí otro reembolso vale más y solo se puede reclamar uno, así que se aplica aquel.",
+    "rebSuperseded": "Usted cumple los requisitos, pero aquí solo se puede reclamar un reembolso, y se aplica otro.",
+    "rebTied": "Usted también cumple los requisitos para este — vale exactamente lo mismo que el otro, así que solo se aplica uno y el monto no cambia de todos modos.",
     "rebOverCeiling": "Esta exención deja de aplicarse por encima de un precio fijado, y su precio lo supera.",
     "cmhcPremium": "Prima del seguro hipotecario CMHC",
     "addedToLoan": "se suma al préstamo, no se paga en efectivo",
@@ -538,8 +539,8 @@
     "step2": "2. Deducir",
     "step2Body": "Reclame la aportación como deducción en su declaración de impuestos. De ahí sale el reembolso.",
     "step3": "3. Esperar {d} días",
-    "step3Body": "La aportación debe permanecer en el RRSP al menos {d} días antes de retirarla bajo el HBP. Si retira antes, esa parte no es deducible.",
-    "step3Warn": "Esta regla es absoluta. No hay excepción ni apelación, y lo que cuesta es la devolución, no el retiro: si aporta dentro del plazo, esa parte de la aportación sencillamente no es deducible.",
+    "step3Body": "Una aportación hecha en los {d} días antes de su retiro bajo el HBP puede no ser deducible. Solo la deducción está en riesgo — el retiro en sí nunca se bloquea.",
+    "step3Warn": "La CRA dice textualmente que usted podría no poder deducir «parte o la totalidad» de esa aportación — no es una regla absoluta sin excepción, y no es una regla sobre el retiro. Lo que arriesga al aportar dentro del plazo es la devolución, nunca el dinero.",
     "step4": "4. Retirar",
     "step4Body": "Retire hasta {cap} libre de impuestos bajo el Plan de Compradores de Vivienda, con el formulario T1036.",
     "step5": "5. Devolver",

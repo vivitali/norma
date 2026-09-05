@@ -28,7 +28,7 @@
     },
     "rrspHbp": {
       "title": "RRSP Home Buyers' Plan — refund, rules and repayment",
-      "description": "Contribute, deduct, wait 90 days, withdraw, repay over 15 years. What the refund is worth and what a missed repayment year actually costs."
+      "description": "Contribute, deduct, wait 89 days, withdraw, repay over 15 years. What the refund is worth and what a missed repayment year actually costs."
     },
     "amortization": {
       "title": "Amortization and renewal — the payment shock nobody models",
@@ -91,7 +91,7 @@
     "faqQ_eligibility": "Can I buy a home in Canada if I am not a citizen or permanent resident?",
     "faqA_eligibility": "Sometimes, and that question comes before every number on this site. A federal Act limits which non-Canadians may purchase residential property in Canada, with exceptions that turn on immigration status and on where the property is. It is time-limited and has been extended by regulation, so check the current rule rather than a summary of it. Separately, some provinces charge a higher land transfer tax to buyers who are not residents: Nova Scotia’s is applied here, and Ontario’s and British Columbia’s are not modelled at all.",
     "faqQ_verified": "Are the numbers verified?",
-    "faqA_verified": "Most of them, and every figure says which. Each one carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted. Most were read off the issuing authority's own schedule. Others are modelling defaults we chose and disclose, because legal fees, inspections and moving costs have no authoritative publisher in Canada. A few are left empty because nobody publishes them at all, and the app asks you for those rather than inventing one. The sources page lists every figure with its document and date. Confirm anything you are about to act on."
+    "faqA_verified": "Most of them, and every figure says which. Most are read straight off the issuing authority's own document; a few — legal fees, moving costs — have no publisher to read from, so the app assumes a reasonable default and discloses it; and where nothing exists to assume either, it asks you instead of inventing one. Treat it as a calculator, not advice, and confirm anything you are about to act on."
   },
   "AppHeader": {
     "theme": "Theme",
@@ -344,7 +344,8 @@
     "rebNone": "No rebate exists here",
     "rebCapped": "Capped at",
     "rebPhaseWhy": "Your price is above the threshold, so the rebate is reduced.",
-    "rebSuperseded": "You qualify for this, but another rebate here is worth more — only one can be claimed, so that one is applied instead.",
+    "rebSuperseded": "You qualify for this, but only one rebate here can be claimed, and another one is applied instead.",
+    "rebTied": "You qualify for this too — it is worth exactly the same as the other one, so only one is applied and the amount does not change either way.",
     "rebOverCeiling": "This exemption stops above a set price, and your price is above it.",
     "cmhcPremium": "CMHC insurance premium",
     "addedToLoan": "added to the loan, not paid in cash",
@@ -538,8 +539,8 @@
     "step2": "2. Deduct",
     "step2Body": "Claim the contribution as a deduction on your tax return. This is where the refund comes from.",
     "step3": "3. Wait {d} days",
-    "step3Body": "The contribution must sit in the RRSP for at least {d} days before you withdraw it under the HBP. Withdraw sooner and that portion is not deductible.",
-    "step3Warn": "This rule is absolute. There is no exception and no appeal — and what it costs is the refund, not the withdrawal: contribute inside the window and that part of the contribution is simply not deductible.",
+    "step3Body": "A contribution made in the {d} days before your HBP withdrawal may not be deductible. Only the deduction is at risk — the withdrawal itself is never blocked.",
+    "step3Warn": "CRA's own wording is \"may not be able to deduct part or all\" of that contribution — not an absolute rule with no exception, and not a rule on the withdrawal at all. What you risk by contributing inside the window is the refund, never the money.",
     "step4": "4. Withdraw",
     "step4Body": "Withdraw up to {cap} tax-free under the Home Buyers’ Plan, using Form T1036.",
     "step5": "5. Repay",
