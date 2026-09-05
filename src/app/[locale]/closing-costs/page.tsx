@@ -17,6 +17,7 @@ import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
 import { anySourceGiven, isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
+import { countryKey } from "@/lib/country-key";
 import { CLOSING_SECTIONS } from "@/lib/sections";
 import { cashState } from "@/lib/closing-view";
 import type { Tone } from "@/lib/tone";
@@ -516,12 +517,28 @@ export default function ClosingCostsPage() {
             <p className="micro text-ink3">{t("mortgageAmount")}</p>
             <p className="text-[22px] font-semibold tracking-[-0.02em]">{fmt(total.fin.loan)}</p>
             <p className="text-[12.5px] leading-[1.55] text-ink3 text-pretty">
-              {total.fin.insured ? t("insuredNote") : t("uninsuredNote")}
+              {total.fin.insured
+                ? t(countryKey("insuredNote", rules.country))
+                : t(countryKey("uninsuredNote", rules.country))}
             </p>
             {total.fin.premium > 0 ? (
               <PanelRow
                 label={`${t("cmhcPremium")} · ${t("addedToLoan")}`}
                 value={fmt(total.fin.premium)}
+                provenance={<Provenance kind="rule" />}
+              />
+            ) : null}
+            {/*
+              US only: PMI is never financed into the loan (`financing()`'s own doc
+              comment) — it is a MONTHLY charge, which `total.fin.premium` (always 0
+              here) cannot surface. Without this row an insured US buyer saw the
+              uninsured note's Canadian sibling and no PMI figure anywhere on this
+              page at all.
+            */}
+            {rules.country === "us" && total.fin.insured && total.fin.monthlyInsurance > 0 ? (
+              <PanelRow
+                label={t("pmiMonthly")}
+                value={fmt(total.fin.monthlyInsurance)}
                 provenance={<Provenance kind="rule" />}
               />
             ) : null}
