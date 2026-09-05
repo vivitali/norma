@@ -58,3 +58,6 @@ next-env.d.ts
 .github/skills/
 .github/agents/
 .github/hooks/
+
+# Agent worktrees are nested inside the checkout; never commit them as gitlinks.
+.claude/worktrees/

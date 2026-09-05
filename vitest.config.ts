@@ -11,6 +11,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // Nested agent worktrees (.claude/worktrees/<id>/) carry their own test files;
+    // without this, `vitest run` from the root runs every parallel branch's suite too.
+    exclude: ["**/node_modules/**", ".claude/**"],
     setupFiles: ["./vitest.setup.ts"],
     server: { deps: { inline: [/next-intl/] } },
   },
