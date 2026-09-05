@@ -605,7 +605,7 @@ export default function RentVsBuyPage() {
         <AnswerHead
           eyebrow={t("title")}
           head={t("mismatchHead")}
-          sub={t("mismatchSub", {
+          sub={t(countryKey("mismatchSub", rules.country), {
             city: tJur(`at.${jurisdiction.id}`),
             rent: fmt(jurisdiction.rent ?? 0),
           })}
@@ -665,7 +665,7 @@ export default function RentVsBuyPage() {
                 {resolved.rentKnown
                   ? t("rentTag", { city: tJur(`at.${jurisdiction.id}`) })
                   : resolved.rentBasisMismatch
-                    ? t("rentMismatchTag", { rent: fmt(jurisdiction.rent ?? 0) })
+                    ? t(countryKey("rentMismatchTag", rules.country), { rent: fmt(jurisdiction.rent ?? 0) })
                     : t("rentUnknownTag", { city: tJur(`at.${jurisdiction.id}`) })}
               </p>
             ) : null}
@@ -772,7 +772,7 @@ export default function RentVsBuyPage() {
               min={0}
               onCommit={(condoFee) => update({ condoFee })}
             />
-            <NoteLine>{t("leverNote")}</NoteLine>
+            <NoteLine>{t(countryKey("leverNote", rules.country))}</NoteLine>
           </fieldset>
         </div>
       </section>

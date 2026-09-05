@@ -286,7 +286,12 @@ export default function ScenariosPage() {
 
   const lifeRows: MetricRow[] = [
     { label: t("rInterest"), value: (c) => fmt(c.totalInterest), mark: "rule" },
-    { label: t("rPremAmt"), value: (c) => (c.premium > 0 ? fmt(c.premium) : "—") },
+    // Same CMHC-is-CA-only reasoning as `monthlyRows`/`cashRows` above: `c.premium`
+    // is always 0 on the US branch, so this row read "CMHC premium —" on every
+    // US column — a real leak this file's own vocabulary contract test caught.
+    ...(rules.country === "ca"
+      ? [{ label: t("rPremAmt"), value: (c: ScenarioResult) => (c.premium > 0 ? fmt(c.premium) : "—") }]
+      : []),
     {
       label: t("rBorrowCost"),
       value: (c) => fmt(c.costOfBorrowing),
@@ -508,7 +513,7 @@ export default function ScenariosPage() {
               </>,
             )}
 
-            {section("lifetime", "none", t("gLifeNote"), fmt(headline.costOfBorrowing), t("lifetimeWhy"), (
+            {section("lifetime", "none", t("gLifeNote"), fmt(headline.costOfBorrowing), t(countryKey("lifetimeWhy", rules.country)), (
               <>
                 <CompareGrid
                   columns={columns}
@@ -523,8 +528,8 @@ export default function ScenariosPage() {
                   <p className="eyebrow pb-1 text-ink3">{t("howToRead")}</p>
                   {note(t("nTwentyTitle"), t("nTwentyBody"))}
                   {note(t("nAboveTitle"), t("nAboveBody"))}
-                  {note(t("nHurdleTitle"), t("nHurdleBody"))}
-                  {note(t("nOrderTitle"), t("nOrderBody"))}
+                  {note(t(countryKey("nHurdleTitle", rules.country)), t(countryKey("nHurdleBody", rules.country)))}
+                  {note(t(countryKey("nOrderTitle", rules.country)), t(countryKey("nOrderBody", rules.country)))}
                 </div>
               </>
             ))}
@@ -559,8 +564,8 @@ export default function ScenariosPage() {
                   { key: "mortgage", label: t("cMortgage"), numeric: true },
                   { key: "monthly", label: t("cMonthly"), numeric: true },
                   { key: "cash", label: t("cCash"), numeric: true },
-                  { key: "gds", label: t("cGds"), numeric: true },
-                  { key: "tds", label: t("cTds"), numeric: true },
+                  { key: "gds", label: t(countryKey("cGds", rules.country)), numeric: true },
+                  { key: "tds", label: t(countryKey("cTds", rules.country)), numeric: true },
                   { key: "lifetime", label: t("cLifetime"), numeric: true },
                 ]}
                 rows={columns.map((col) => ({

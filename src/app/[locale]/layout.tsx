@@ -9,6 +9,8 @@ import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { AppHeader } from "@/components/app-header";
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { AppFooter } from "@/components/app-footer";
+import { countryKey } from "@/lib/country-key";
+import { countryOf, type Locale } from "@/i18n/countries";
 import { Analytics } from "@/components/analytics";
 import "../globals.css";
 
@@ -57,6 +59,7 @@ export async function generateMetadata({
   params,
 }: LayoutProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
+  const country = countryOf(locale as Locale);
   const t = await getTranslations({ locale, namespace: "Metadata.home" });
 
   return {
@@ -67,7 +70,7 @@ export async function generateMetadata({
     applicationName: SITE_NAME,
     // Pages supply complete titles already inside 60 characters, so appending a
     // suffix here would push them over.
-    title: { default: t("title"), template: "%s" },
+    title: { default: t(countryKey("title", country)), template: "%s" },
   };
 }
 

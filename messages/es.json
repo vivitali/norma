@@ -2,11 +2,14 @@
   "Metadata": {
     "home": {
       "title": "¿Cuánta casa puede permitirse en Canadá? — AffordMath",
-      "description": "Vea lo que de verdad puede permitirse comprar en Canadá: calculado sobre su ingreso neto y sus costos reales, con las reglas de su provincia."
+      "description": "Vea lo que de verdad puede permitirse comprar en Canadá: calculado sobre su ingreso neto y sus costos reales, con las reglas de su provincia.",
+      "title_us": "¿Cuánta casa puede pagar? — AffordMath",
+      "description_us": "Vea lo que realmente puede pagar en EE. UU. — ingreso neto real, costos reales, con las reglas fiscales de su estado aplicadas."
     },
     "affordability": {
       "title": "Calculadora de capacidad de compra — el costo real",
-      "description": "Dos techos, uno junto al otro: lo que aprobaría un prestamista y lo que cabe en su presupuesto mensual real. Con las reglas de su provincia."
+      "description": "Dos techos, uno junto al otro: lo que aprobaría un prestamista y lo que cabe en su presupuesto mensual real. Con las reglas de su provincia.",
+      "description_us": "Dos topes lado a lado: lo que un prestamista aprobaría y lo que cabe en su presupuesto real. Reglas fiscales de su estado y condado incluidas."
     },
     "sources": {
       "title": "Fuentes y procedencia — AffordMath",
@@ -20,11 +23,13 @@
     },
     "closingCosts": {
       "title": "Gastos de cierre — lo que debe pagar el día del cierre",
-      "description": "Cada gasto de cierre por provincia: impuesto de transferencia, honorarios legales, ajustes y qué reembolsos llegan de verdad el día del cierre."
+      "description": "Cada gasto de cierre por provincia: impuesto de transferencia, honorarios legales, ajustes y qué reembolsos llegan de verdad el día del cierre.",
+      "description_us": "Cada costo de cierre: impuesto predial, título, plica, ajustes — y lo que Texas cobra en lugar de un impuesto de transferencia."
     },
     "downPayment": {
       "title": "Fuentes del pago inicial — el dinero más barato primero",
-      "description": "FHSA, efectivo, el Plan de Compradores del RRSP, TFSA, regalo y luego inversiones. Lo que le cuesta cada fuente y lo que deja atrás."
+      "description": "FHSA, efectivo, el Plan de Compradores del RRSP, TFSA, regalo y luego inversiones. Lo que le cuesta cada fuente y lo que deja atrás.",
+      "description_us": "Efectivo, regalo, IRA/401(k), luego otras inversiones. Vea el costo de cada fuente y qué deja atrás."
     },
     "rrspHbp": {
       "title": "Plan de Compradores del RRSP — reembolso y reglas",
@@ -32,11 +37,14 @@
     },
     "amortization": {
       "title": "Amortización y renovación — el choque de pago",
-      "description": "No fija una tasa para toda la vida del préstamo. Vea qué le hace al pago renovar a una tasa más alta y cuánto cuesta a lo largo de la hipoteca."
+      "description": "No fija una tasa para toda la vida del préstamo. Vea qué le hace al pago renovar a una tasa más alta y cuánto cuesta a lo largo de la hipoteca.",
+      "title_us": "Calendario de amortización — cada pago",
+      "description_us": "Una hipoteca fija a 30 años, pago por pago. Saldo, interés y PMI por año, y cuánto vale cancelar el PMI."
     },
     "rentVsBuy": {
       "title": "Alquilar o comprar en Canadá — depende de cuánto se quede",
-      "description": "El año de equilibrio es la única cifra que lo decide. Compare el patrimonio final de ambos lados, con prueba de mercado plano y costos de venta."
+      "description": "El año de equilibrio es la única cifra que lo decide. Compare el patrimonio final de ambos lados, con prueba de mercado plano y costos de venta.",
+      "title_us": "Alquilar o comprar en EE. UU. — depende de cuánto se quede"
     },
     "scenarios": {
       "title": "Escenarios de pago inicial — 5, 10, 20 o 25 %",
@@ -99,7 +107,26 @@
     "faqQ_eligibility": "¿Puedo comprar una vivienda en Canadá si no soy ciudadano ni residente permanente?",
     "faqA_eligibility": "A veces, y esa pregunta va antes que cualquier cifra de este sitio. Una ley federal limita qué personas no canadienses pueden comprar vivienda en Canadá, con excepciones que dependen de la situación migratoria y del lugar donde está el inmueble. Tiene una vigencia limitada y se ha prorrogado por reglamento, así que consulte la regla vigente y no un resumen de ella. Aparte, algunas provincias cobran un impuesto de transferencia más alto a los compradores no residentes: el de Nueva Escocia se aplica aquí, y los de Ontario y Columbia Británica no están modelados en absoluto.",
     "faqQ_verified": "¿Están verificadas las cifras?",
-    "faqA_verified": "La mayoría, y cada cifra dice cuál es su caso. La mayoría se leen directamente del documento de la autoridad que las emite; unas pocas —honorarios legales, costos de mudanza— no tienen publicador del que partir, así que la aplicación asume un valor por defecto razonable y lo declara; y donde tampoco hay nada que asumir, se lo pregunta en lugar de inventarlo. Trátelo como una calculadora, no como asesoría, y confirme todo aquello sobre lo que vaya a actuar."
+    "faqA_verified": "La mayoría, y cada cifra dice cuál es su caso. La mayoría se leen directamente del documento de la autoridad que las emite; unas pocas —honorarios legales, costos de mudanza— no tienen publicador del que partir, así que la aplicación asume un valor por defecto razonable y lo declara; y donde tampoco hay nada que asumir, se lo pregunta en lugar de inventarlo. Trátelo como una calculadora, no como asesoría, y confirme todo aquello sobre lo que vaya a actuar.",
+    "eyebrow_us": "Estados Unidos · Houston, TX",
+    "rulesHeading_us": "Reglas de Texas, no promedios nacionales",
+    "rulesIntro_us": "Houston (condado de Harris) está modelada con su propia tasa de impuesto predial, exención de vivienda principal y convenciones de costos de cierre — no una única cifra nacional que sirva para todos los estados.",
+    "rulesTxHomesteadLabel": "Exención de vivienda",
+    "rulesTxHomestead": "La exención de vivienda principal del distrito escolar del condado de Harris protege $140,000 del valor de una vivienda principal frente a la porción del HISD del impuesto predial (a partir del 2025-11-04).",
+    "rulesTxNoTransferLabel": "Sin impuesto de transferencia",
+    "rulesTxNoTransfer": "Texas no cobra ningún impuesto estatal de transferencia inmobiliaria en la venta de una vivienda. Los costos de cierre pasan en cambio por el seguro de título y las tarifas de registro del condado.",
+    "rulesTxPmiLabel": "Seguro hipotecario",
+    "rulesTxPmi": "Con menos del 20 % de pie, el comprador paga un seguro hipotecario privado cada mes en lugar de una prima única financiada en el préstamo — cancelable una vez que el capital alcanza el umbral.",
+    "rulesNote_us": "Por eso la respuesta depende del mercado donde compre, y por eso una única cifra nacional sería errónea en cuanto cruce a otro estado.",
+    "faqQ_afford_us": "¿Cuánta casa puedo pagar en Estados Unidos?",
+    "faqA_preapproval_us": "Una preaprobación evalúa el ingreso bruto frente a las razones de deuda a ingreso inicial y total (28/36 es la guía clásica). No resta el impuesto predial, el seguro de vivienda, las cuotas de HOA, los servicios públicos ni el mantenimiento que llegan con la casa, y no tiene en cuenta lo que usted quiere conservar el resto del mes. La brecha entre ambas cifras llega a varios cientos de dólares al mes.",
+    "faqQ_stressTest_us": "¿Existe en Estados Unidos una prueba de estrés hipotecaria como en Canadá?",
+    "faqA_stressTest_us": "Ninguna prueba de estrés federal se aplica a una hipoteca estadounidense: usted califica con su tasa contractual real, no con un piso regulatorio más alto. En cambio, los prestamistas limitan su razón de deuda a ingreso, y un préstamo por encima del 80 % del valor del inmueble suele llevar seguro hipotecario privado (PMI) hasta que su capital alcance el umbral de cancelación.",
+    "faqQ_jurisdiction_us": "¿Esto funciona fuera de Houston, Texas?",
+    "faqA_jurisdiction_us": "Por ahora, solo Houston (condado de Harris), Texas está modelada — con su propia tasa de impuesto predial, exención de vivienda y convenciones de costos de cierre, no un promedio nacional. La exención de vivienda principal del distrito escolar del condado de Harris protege $140,000 del valor de una vivienda principal (a partir del 2025-11-04), y Texas no cobra ningún impuesto estatal de transferencia inmobiliaria; otros estados que sí lo tienen aún no están modelados.",
+    "faqQ_eligibility_us": "¿Puedo comprar una vivienda en Estados Unidos si no soy ciudadano?",
+    "faqA_eligibility_us": "Esta herramienta no modela ninguna restricción federal de ciudadanía o inmigración para comprar una propiedad residencial en EE. UU. — es una pregunta distinta a la que plantea la ley federal canadiense, y confirmar su propia situación está fuera del alcance de esta calculadora. Financiar como no ciudadano es una pregunta aparte, con su propia respuesta según el prestamista.",
+    "faqA_verified_us": "La mayoría, y cada cifra indica cuál. Cada una lleva un registro de verificación: el documento contra el que se comprobó, la fecha de ese documento y cuánto se puede confiar en ella. La mayoría se leyeron directamente del propio calendario de la autoridad emisora — el IRS, la FHFA, la encuesta PMMS de Freddie Mac, el Departamento de Seguros de Texas, las propias entidades fiscales del condado de Harris. Otras son valores predeterminados que elegimos y divulgamos, porque los honorarios de cierre y los costos de mudanza no tienen un publicador oficial. Unas pocas quedan vacías porque nadie las publica, y la aplicación se las pide en lugar de inventar una. La página de fuentes lista cada cifra con su documento y fecha. Confirme cualquier cosa sobre la que esté por actuar."
   },
   "AppHeader": {
     "theme": "Tema",
@@ -628,7 +655,7 @@
     "usFixedHead": "Su tasa está fija en {rate} durante toda la vida del préstamo.",
     "usFixedSub": "Una hipoteca estadounidense a 30 años fija no se renueva — no hay ningún reajuste de tasa que planear, y aquí no se modela ninguno.",
     "usFixedTag": "fija hasta el vencimiento",
-    "holdsToMaturity": "Su tasa se mantiene en esta cifra hasta liquidar el préstamo — una hipoteca estadounidense no tiene plazo ni renovación.",
+    "holdsToMaturity": "Su tasa se mantiene en esta cifra hasta liquidar el préstamo — una hipoteca estadounidense tiene una única tasa fija durante todo el plazo y nunca se reajusta.",
     "riskTitle": "El riesgo de renovación es el mayor riesgo no modelado de una hipoteca canadiense",
     "riskBody": "Una prueba de resistencia al contratar comprueba que podría pagar la cuota a dos puntos por encima de su tasa. Es una prueba de una sola vez, y no le acompaña. En cada renovación vuelve a entrar al mercado sin protección alguna, y nadie repite la prueba por usted. Este es el mecanismo que rompe los presupuestos de los hogares: no la compra, sino la renovación cinco o diez años después. Planifique la cuota que afrontaría a una tasa notablemente mayor, y tome cualquier tasa por debajo de esa como buena suerte y no como una previsión.",
     "tableTitle": "Año por año",
@@ -685,7 +712,10 @@
     "calcLoan": "Hipoteca",
     "calcAmortYears": "Amortización",
     "calcBalanceAtRenewal": "Saldo en la renovación",
-    "calcAmortLeft": "Amortización restante"
+    "calcAmortLeft": "Amortización restante",
+    "title_us": "Calendario de amortización",
+    "scheduleWhy_us": "Los intereses dominan los primeros años y el capital los siguientes — ese cambio es lo que muestra este gráfico.",
+    "altText_us": "Barras apiladas de interés y capital pagados cada año durante {n} años. El interés domina los primeros años. {flipSentence}"
   },
   "RentVsBuy": {
     "title": "Alquilar o comprar",
@@ -810,7 +840,10 @@
     "cHomeValue": "Valor de la vivienda",
     "upFrontNote": "El efectivo que había que aportar el día del cierre, {up}, invertido en su lugar.",
     "calcInvestedBuy": "Excedente invertido, comprar",
-    "calcInvestedRent": "Excedente invertido, alquilar"
+    "calcInvestedRent": "Excedente invertido, alquilar",
+    "mismatchSub_us": "El único alquiler publicado para {city} es la Renta Justa de Mercado (HUD) para dos habitaciones, {rent} al mes. Usted está evaluando una casa, así que esa cifra responde a otra pregunta. Ingrese lo que costaría rentar una vivienda como la evaluada arriba.",
+    "rentMismatchTag_us": "El HUD publica {rent} como Renta Justa de Mercado para un departamento de dos habitaciones — una vivienda más pequeña que la evaluada arriba",
+    "leverNote_us": "El pago inicial determina el préstamo, si aplica el PMI y la tasa contractual que obtiene. La amortización determina el año de liquidación marcado en el gráfico."
   },
   "Scenarios": {
     "title": "Escenarios de pago inicial",
@@ -929,7 +962,14 @@
     "cTds": "TDS",
     "cLifetime": "Costo de financiamiento",
     "cScenario": "Escenario",
-    "cModelled": "Modelado al"
+    "cModelled": "Modelado al",
+    "lifetimeWhy_us": "Interés más el costo del PMI, durante todo el préstamo. Aquí es donde el mensual más barato suele dejar de ser el más barato en total. Supone que la tasa contractual de hoy se mantiene durante todo el préstamo fijo a 30 años — una hipoteca fija de EE. UU. no tiene plazo ni se renueva, así que este es el verdadero costo total, no una estimación hasta un futuro ajuste.",
+    "nHurdleTitle_us": "La tasa hipotecaria suele ser el umbral después de impuestos",
+    "nHurdleBody_us": "El interés hipotecario puede ser deducible si detalla sus deducciones, pero la mayoría de los compradores toma la deducción estándar y no obtiene nada de ella — vea Alquilar o comprar para saber si detallar vale la pena con sus cifras. De cualquier forma, compare la tasa hipotecaria con los rendimientos de inversión después de impuestos, no brutos.",
+    "nOrderTitle_us": "Llene primero las cuentas con ventaja fiscal",
+    "nOrderBody_us": "Una IRA o un 401(k) — sobre todo con aporte del empleador — suele superar el pago anticipado de la hipoteca antes de considerar cualquier otra cosa.",
+    "cGds_us": "DTI inicial",
+    "cTds_us": "DTI total"
   },
   "Provenance": {
     "rule": "regla",
