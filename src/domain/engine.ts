@@ -1115,7 +1115,7 @@ export type AmortizationResult = ReturnType<typeof amortization>;
 
 /** Combined federal + provincial marginal rate on the next dollar of taxable income. */
 export function marginalRate(F: CountryRulesBase, prov: string, income: number): number {
-  const tbl = F.marginal[prov] ?? F.marginal.CA;
+  const tbl = F.marginal[prov] ?? F.marginal[F.marginalFallbackKey];
   for (const [cap, rate] of tbl) if (cap === null || income <= cap) return rate;
   return tbl[tbl.length - 1][1];
 }
@@ -1141,7 +1141,7 @@ export function taxOnBand(F: CountryRulesBase, prov: string, from: number, to: n
   const lo = Math.max(0, Math.min(from, to));
   const hi = Math.max(0, Math.max(from, to));
   if (hi <= lo) return 0;
-  const tbl = F.marginal[prov] ?? F.marginal.CA;
+  const tbl = F.marginal[prov] ?? F.marginal[F.marginalFallbackKey];
   let prev = 0;
   let tax = 0;
   for (const [cap, rate] of tbl) {
@@ -1815,10 +1815,20 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
  */
 function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
   const years = Math.max(1, o.years);
-  const fin = financing(F, o);
-  const cc = closingTotal(j, F, o);
-  const upFront = cc.net;
   const rate0 = o.contractRate ?? defaultContractRate(F, o.dpPct) / 100;
+  // `RentVsBuyInput.contractRate` is a FRACTION (its own doc comment says so); `FinancingInput`
+  // — and therefore `financing()`'s `pmiTerminationMonth()` call — reads `contractRate` as a
+  // PERCENTAGE (see that field's doc comment; `scenarioToMaturity()` normalises the same way).
+  // `rate0` above is always the fraction, resolved once, so `priced` is the ONE place this
+  // function converts it before anything downstream can see the wrong unit. Passing `o`
+  // straight to `financing()`/`closingTotal()` here previously fed a fraction where a
+  // percentage was expected — 0.0666 read as 0.0666%, not 6.66% — understating PMI's
+  // auto-termination month by roughly half (month 49 instead of month 111 on $350k/10%/30y at
+  // 6.66%, verified against `pmiTerminationMonth()` directly).
+  const priced = { ...o, contractRate: rate0 * 100 };
+  const fin = financing(F, priced);
+  const cc = closingTotal(j, F, priced);
+  const upFront = cc.net;
   const g = o.appreciationOn ? o.appreciation : 0;
   const ret = o.investReturn;
   const region = regionOf(j);

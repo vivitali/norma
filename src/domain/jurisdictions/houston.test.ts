@@ -82,12 +82,12 @@ describe("houston — property tax after the HISD-portion homestead exemption", 
     expect(actual).toBeLessThan(full);
   });
 
-  it("matches a hand-derived figure at the HAR median: HISD portion exempts $140,000, the rest applies to full value", () => {
-    const price = houston.bench.house!;
-    const ex = houston.propTax.exemptions!;
-    const expected =
-      Math.max(0, price - ex.amount) * ex.appliesToRate + price * (houston.propTax.effective - ex.appliesToRate);
-    expect(propertyTaxAnnual(houston, price)).toBeCloseTo(expected, 6);
+  it("matches an independently hand-derived figure at the HAR median ($340,000)", () => {
+    // HISD portion (0.8783%) on (340,000 - 140,000) = $1,756.60, plus the remainder of the
+    // combined rate (2.120422% - 0.8783% = 1.242122%) on the full $340,000 = $4,223.21.
+    // 1,756.60 + 4,223.21 = $5,979.81 — computed by hand, independent of propertyTaxAnnual()'s
+    // own formula, so this test cannot pass merely because the implementation agrees with itself.
+    expect(propertyTaxAnnual(houston, 340000)).toBeCloseTo(5979.81, 2);
   });
 
   it("never produces a negative tax, even below the exemption amount", () => {

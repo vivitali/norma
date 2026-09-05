@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { ca } from "./ca";
 import { us } from "./us";
 import { getJurisdiction } from "../jurisdictions";
 import {
   affordability,
   amortization,
   financing,
+  marginalRate,
   rentVsBuy,
+  taxOnBand,
 } from "../engine";
 
 const houston = getJurisdiction("houston")!;
@@ -61,6 +64,35 @@ describe("us rules data", () => {
     expect(caps[caps.length - 1]).toBeNull();
     const closed = caps.filter((c): c is number => c !== null);
     for (let i = 1; i < closed.length; i++) expect(closed[i]).toBeGreaterThan(closed[i - 1]);
+  });
+
+  it("names its own fallback key, and that key resolves to a real table", () => {
+    expect(us.marginalFallbackKey).toBe("US");
+    expect(us.marginal[us.marginalFallbackKey]).toBeDefined();
+    expect(us.marginal[us.marginalFallbackKey]).toEqual(us.marginal.TX);
+  });
+});
+
+/**
+ * `marginal[region] ?? marginal[marginalFallbackKey]` — a second state with no income-tax
+ * table of its own must degrade to the US's real federal-only table, not throw on a bare
+ * `.CA` lookup that only exists on `CaRules` (the bug this pair of tests guards). Exercised
+ * through the public `marginalRate()`/`taxOnBand()` seam, not by reaching into the rules
+ * object directly, since that seam is what every engine caller actually goes through.
+ */
+describe("marginalFallbackKey — an unknown region degrades to the country's own fallback", () => {
+  it("us: an unmodelled state resolves to the same rate the federal (US) table gives", () => {
+    const known = marginalRate(us, "TX", 90000);
+    const unknown = marginalRate(us, "FL", 90000);
+    expect(unknown).toBe(known);
+    expect(taxOnBand(us, "FL", 0, 90000)).toBeCloseTo(taxOnBand(us, "TX", 0, 90000), 6);
+  });
+
+  it("ca: an unmodelled province still resolves via marginal.CA, unchanged by the US addition", () => {
+    const known = marginalRate(ca, "ON", 90000);
+    const unknown = marginalRate(ca, "NB", 90000);
+    expect(unknown).toBe(marginalRate(ca, "CA", 90000));
+    expect(unknown).not.toBe(known);
   });
 });
 
@@ -140,6 +172,60 @@ describe("us amortization — no renewal, monthly compounding", () => {
     const totalPaid = payment * n;
     const closedFormInterest = totalPaid - loan;
     expect(amort.totalInterest).toBeCloseTo(closedFormInterest, 0);
+  });
+});
+
+/**
+ * Guards the seam, not the symptom: `RentVsBuyInput.contractRate` is a FRACTION,
+ * `FinancingInput.contractRate` (what `financing()` — and its `pmiTerminationMonth()` call —
+ * actually reads) is a PERCENTAGE. Passing an explicit fractional rate straight through used to
+ * feed `financing()` a percentage two orders of magnitude too small, moving PMI's
+ * auto-termination month from 111 to 49 on $350k/10%-down/30y at 6.66%. This is the second time
+ * this codebase has shipped a fraction-vs-percentage confusion (see `defaultContractRate`'s own
+ * history) — the assertion below compares `rentVsBuy()`'s own `fin.insuranceMonths` against
+ * `financing()` called directly at the equivalent PERCENTAGE, so a future regression that
+ * reintroduces the unit bug fails here rather than only in a snapshot nobody re-derives by hand.
+ */
+describe("us rentVsBuy — contractRate unit (fraction in, percentage where financing() needs it)", () => {
+  it("computes the same PMI termination month rentVsBuy() and financing() would, given an explicit fractional rate", () => {
+    const contractRateFraction = 0.0666;
+    const price = 350000;
+    const dpPct = 10;
+    const amortYears = 30;
+
+    const result = rentVsBuy(houston, us, {
+      price,
+      dpPct,
+      amortYears,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      insuranceAnnual: 3506,
+      utilities: 180,
+      condoFee: 0,
+      rent: 1573,
+      rentInflation: 0.03,
+      appreciation: 0.04,
+      appreciationOn: true,
+      investReturn: 0.046,
+      termYears: 5,
+      renewalRate: null,
+      investDiff: true,
+      years: 10,
+      contractRate: contractRateFraction,
+    });
+
+    const expectedFin = financing(us, {
+      price,
+      dpPct,
+      amortYears,
+      contractRate: contractRateFraction * 100,
+    });
+
+    expect(result.fin.insuranceMonths).toBe(expectedFin.insuranceMonths);
+    expect(result.fin.insuranceMonths).toBe(111);
+    expect(result.fin.monthlyInsurance).toBeCloseTo(expectedFin.monthlyInsurance, 6);
   });
 });
 
