@@ -55,6 +55,8 @@ next-env.d.ts
 # excluded from eslint for the same reason. Untracked so the repo stays about
 # the app.
 .claude/skills/
+# Except skills this repo authors itself (the vendored ones above are installed, not written here).
+!.claude/skills/add-state/
 .github/skills/
 .github/agents/
 .github/hooks/
