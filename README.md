@@ -38,7 +38,8 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 
 ## What exists
 
-Nine pages across eleven locale-prefixed routes, in four languages, every one prerendered:
+Nine calculator pages plus a privacy policy and terms of use — thirteen locale-prefixed routes
+in total, in four languages, every one prerendered:
 
 **Affordability** · **Closing Costs** · **Down Payment** · **RRSP & Home Buyers' Plan** ·
 **Amortization** · **Rent vs Buy** · **Scenarios** · **Sources** · plus the home page.

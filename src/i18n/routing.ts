@@ -63,5 +63,7 @@ export const routing = defineRouting({
     "/rent-vs-buy": { "fr-CA": "/louer-ou-acheter", "es-CA": "/alquilar-o-comprar" },
     "/scenarios": { "fr-CA": "/scenarios", "es-CA": "/escenarios" },
     "/sources": { "fr-CA": "/sources", "es-CA": "/fuentes" },
+    "/privacy": { "fr-CA": "/confidentialite", "es-CA": "/privacidad" },
+    "/terms": { "fr-CA": "/conditions", "es-CA": "/terminos" },
   },
 });

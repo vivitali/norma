@@ -12,7 +12,13 @@
  * code carries on importing from there.
  */
 
-/** Routes that belong in the sitemap. Extend as pages ship. */
+/**
+ * Routes that belong in the sitemap. Extend as pages ship.
+ *
+ * `/privacy` and `/terms` are indexable, deliberately: they are unremarkable legal
+ * pages, not the kind of thin/duplicate content a sitemap should hide, and a search
+ * engine surfacing them directly (rather than only via the footer link) is normal.
+ */
 export const INDEXABLE_ROUTES = [
   "/",
   "/affordability",
@@ -23,6 +29,8 @@ export const INDEXABLE_ROUTES = [
   "/rent-vs-buy",
   "/scenarios",
   "/sources",
+  "/privacy",
+  "/terms",
 ] as const;
 
 export type IndexableRoute = (typeof INDEXABLE_ROUTES)[number];
@@ -47,6 +55,8 @@ export const ROUTE_METADATA_KEY = {
   "/rent-vs-buy": "rentVsBuy",
   "/scenarios": "scenarios",
   "/sources": "sources",
+  "/privacy": "privacy",
+  "/terms": "terms",
 } as const satisfies Record<IndexableRoute, string>;
 
 /**
