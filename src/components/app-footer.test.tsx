@@ -4,9 +4,10 @@ import { render, screen, within } from "@testing-library/react";
 import { AppFooter } from "./app-footer";
 import { FOOTER } from "@/lib/routes";
 import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
-import { languageOf } from "@/i18n/countries";
+import { languageOf, countryOf } from "@/i18n/countries";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/lib/locales";
+import { countryKey } from "@/lib/country-key";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
@@ -59,11 +60,11 @@ describe("AppFooter", () => {
       const { unmount } = await renderFooter(locale);
       // Asserted on the whole string, not a fragment. A disclaimer silently shortened to
       // something weaker is the failure worth catching, and it would pass a substring check.
+      // `countryKey` picks the US-forked key at a US locale — asserting the base key's text
+      // there would look for a string the footer never renders.
+      const legal = (CATALOGUES[languageOf(locale)] as { Legal: Record<string, string> }).Legal;
       expect(
-        screen.getByText(
-          (CATALOGUES[languageOf(locale)] as { Legal: { footerDisclaimer: string } }).Legal
-            .footerDisclaimer,
-        ),
+        screen.getByText(legal[countryKey("footerDisclaimer", countryOf(locale))]),
       ).toBeTruthy();
       unmount();
     });

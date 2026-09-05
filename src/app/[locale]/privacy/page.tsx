@@ -8,6 +8,8 @@ import {
 } from "@/components/legal-page";
 import { buildMetadata } from "@/lib/seo";
 import { PRIVACY_OFFICER, LEGAL_UPDATED } from "@/lib/legal";
+import { countryKey } from "@/lib/country-key";
+import { countryOf, type Locale } from "@/i18n/countries";
 
 export async function generateMetadata({
   params,
@@ -49,6 +51,7 @@ export default async function PrivacyPage({
   // Without this the route drops out of static rendering and Cloudflare bills it as a Worker
   // invocation under a 10ms CPU cap. scripts/verify-prerender fails the build if it goes missing.
   setRequestLocale(locale);
+  const country = countryOf(locale as Locale);
 
   const t = await getTranslations({ locale, namespace: "Privacy" });
   const tl = await getTranslations({ locale, namespace: "Legal" });
@@ -58,7 +61,7 @@ export default async function PrivacyPage({
       <LegalHead
         eyebrow={t("eyebrow")}
         head={t("head")}
-        sub={t("sub")}
+        sub={t(countryKey("sub", country))}
         updated={tl("updated", { date: tl("updatedLong") })}
         updatedIso={LEGAL_UPDATED}
       />
@@ -79,8 +82,8 @@ export default async function PrivacyPage({
         <p>{t("bodyThirdParty")}</p>
       </LegalSection>
 
-      <LegalSection heading={t("secOutside")}>
-        <p>{t("bodyOutside")}</p>
+      <LegalSection heading={t(countryKey("secOutside", country))}>
+        <p>{t(countryKey("bodyOutside", country))}</p>
       </LegalSection>
 
       <LegalSection heading={t("secRights")}>
@@ -104,7 +107,7 @@ export default async function PrivacyPage({
       </LegalSection>
 
       <LegalSection heading={t("secBreach")}>
-        <p>{t("bodyBreach")}</p>
+        <p>{t(countryKey("bodyBreach", country))}</p>
       </LegalSection>
 
       <LegalSection heading={t("secChanges")}>
