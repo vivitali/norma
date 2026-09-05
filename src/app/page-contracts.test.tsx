@@ -16,6 +16,7 @@ import RrspHbpPage from "./[locale]/rrsp-hbp/page";
 import AmortizationPage from "./[locale]/amortization/page";
 import RentVsBuyPage from "./[locale]/rent-vs-buy/page";
 import ScenariosPage from "./[locale]/scenarios/page";
+import { HomeContent } from "@/components/home-content";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
@@ -731,50 +732,111 @@ describe("every page that computes an answer can show its work", () => {
 describe("US vocabulary contract", () => {
   const HOUSTON_PAGES = PAGES.filter(([name]) => name !== "RRSP-HBP");
 
+  // Home is not in PAGES: it is a server component (`page.tsx` calls next-intl/server's
+  // `getTranslations`, unmocked here) wrapping the client `HomeContent`, which is what
+  // actually renders the copy this contract checks — see `home-content.tsx`'s own doc
+  // comment on why `country` is a plain prop rather than `useCountry()`. Rendered
+  // directly, at both countries, as its own pair of entries rather than folded into
+  // `PAGES` (whose shape — a bare `<Page />`, seeded through localStorage — Home does
+  // not use: it takes its country as a prop, not from a stored jurisdiction).
+  function HoustonHome() {
+    return <HomeContent country="us" />;
+  }
+  function WinnipegHome() {
+    return <HomeContent country="ca" />;
+  }
+
   // Every term below is checked as a literal substring, case-sensitively: these are real
   // English words this app's own copy uses (not a pattern that merely resembles one), the
   // same discipline `locale-render.test.tsx`'s own leaked-key check applies to message keys.
-  const CA_ONLY_VOCAB = ["CMHC", "GDS", "TDS", "land transfer", "FHSA", "HBP", "TFSA", "renewal"];
-  const US_ONLY_VOCAB = ["PMI", "DTI", "homestead"];
+  // "Canad" (not "Canada"/"Canadian" separately) catches both spellings in one entry;
+  // "province"/"provincial" are kept as two entries because neither is a substring of the
+  // other. The country switcher's own labels ("Canada"/"United States", `Countries.ca`/
+  // `Countries.us`) legitimately appear on every page regardless of which country is
+  // seeded, so they are stripped out of the rendered text before scanning rather than
+  // exempted term-by-term, which would have to be re-derived every time a label changed.
+  const CA_ONLY_VOCAB = [
+    "CMHC",
+    "GDS",
+    "TDS",
+    "land transfer",
+    "FHSA",
+    "HBP",
+    "TFSA",
+    "renewal",
+    "Canad",
+    "province",
+    "provincial",
+    "strata",
+    "stress",
+  ];
+  const US_ONLY_VOCAB = ["PMI", "DTI", "homestead", "Texas", "HOA"];
+
+  /** `Countries.ca`/`Countries.us` — see the CA_ONLY_VOCAB comment above. */
+  const COUNTRY_SWITCHER_LABELS = ["Canada", "United States"];
+
+  /**
+   * Home's FAQ deliberately asks and answers a handful of comparison questions BY
+   * NAME — "Does the US have a mortgage stress test like Canada's?" (`Home.faqQ_
+   * stressTest_us`/`faqA_stressTest_us`, `faqA_eligibility_us`'s "a different
+   * question from the one Canada's federal Act raises") — the exact pattern CLAUDE.md
+   * documents for `homeFaqKey`'s selective fork: real search-driven questions a US
+   * reader arrives with, answered by naming the Canadian concept they are asking
+   * about. That is not a vocabulary leak; it is the fork working. Every OTHER page
+   * and Home's own non-FAQ copy still gets the full check — this exemption is scoped
+   * to Home alone, for exactly the two words its reviewed FAQ pair needs.
+   */
+  const HOME_FAQ_CONTRAST_EXEMPT = ["Canad", "stress"];
 
   async function expandAll() {
     const user = userEvent.setup();
     for (const button of screen.queryAllByRole("button", { expanded: false })) {
       await user.click(button);
     }
-    return document.body.textContent ?? "";
+    let text = document.body.textContent ?? "";
+    for (const label of COUNTRY_SWITCHER_LABELS) {
+      text = text.split(label).join(" ");
+    }
+    return text;
   }
 
-  it.each(HOUSTON_PAGES)("%s: US wording, no Canadian vocabulary, under a Houston seed", async (name, Page) => {
-    window.localStorage.setItem(
-      "norma.inputs.v2",
-      JSON.stringify({ jurId: "houston", ...SEED[name] }),
-    );
-    renderWithIntl(
-      <JurisdictionProvider>
-        <Page />
-      </JurisdictionProvider>,
-      { locale: "en-US" },
-    );
-    const text = await expandAll();
-    for (const word of CA_ONLY_VOCAB) {
-      expect(text, `${name}: "${word}" leaked into a Houston-seeded, en-US render`).not.toContain(word);
-    }
-  });
+  it.each([...HOUSTON_PAGES, ["Home", HoustonHome] as const])(
+    "%s: US wording, no Canadian vocabulary, under a Houston seed",
+    async (name, Page) => {
+      window.localStorage.setItem(
+        "norma.inputs.v2",
+        JSON.stringify({ jurId: "houston", ...SEED[name] }),
+      );
+      renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+        { locale: "en-US" },
+      );
+      const text = await expandAll();
+      for (const word of CA_ONLY_VOCAB) {
+        if (name === "Home" && HOME_FAQ_CONTRAST_EXEMPT.includes(word)) continue;
+        expect(text, `${name}: "${word}" leaked into a Houston-seeded, en-US render`).not.toContain(word);
+      }
+    },
+  );
 
-  it.each(PAGES)("%s: Canadian wording, no US vocabulary, under a Winnipeg seed", async (name, Page) => {
-    window.localStorage.setItem(
-      "norma.inputs.v2",
-      JSON.stringify({ jurId: "winnipeg", ...SEED[name] }),
-    );
-    renderWithIntl(
-      <JurisdictionProvider>
-        <Page />
-      </JurisdictionProvider>,
-    );
-    const text = await expandAll();
-    for (const word of US_ONLY_VOCAB) {
-      expect(text, `${name}: "${word}" leaked into a Winnipeg-seeded render`).not.toContain(word);
-    }
-  });
+  it.each([...PAGES, ["Home", WinnipegHome] as const])(
+    "%s: Canadian wording, no US vocabulary, under a Winnipeg seed",
+    async (name, Page) => {
+      window.localStorage.setItem(
+        "norma.inputs.v2",
+        JSON.stringify({ jurId: "winnipeg", ...SEED[name] }),
+      );
+      renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+      );
+      const text = await expandAll();
+      for (const word of US_ONLY_VOCAB) {
+        expect(text, `${name}: "${word}" leaked into a Winnipeg-seeded render`).not.toContain(word);
+      }
+    },
+  );
 });

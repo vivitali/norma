@@ -427,7 +427,7 @@ export default function ScenariosPage() {
               // section it was the same sentence twice, one line apart.
               cashUnanswered ? t("gCashNote") : cashFundable ? t("fFundable") : t("fShort"),
               fmt(headline.net),
-              t("cashWhy"),
+              t(countryKey("cashWhy", rules.country)),
               <>
                 <CompareGrid
                   columns={columns}
@@ -436,7 +436,7 @@ export default function ScenariosPage() {
                   yoursPct={stored.dpPct}
                   caption={t("gCash")}
                 />
-                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyPremTax")}</p>
+                <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t(countryKey("whyPremTax", rules.country))}</p>
                 <div className="mt-4 flex max-w-[420px] flex-col gap-3">
                   <NumberField
                     id="funds"
@@ -454,7 +454,7 @@ export default function ScenariosPage() {
               rec.kind === "noneQualify" ? "blocked" : "pass",
               rec.kind === "noneQualify" ? t("fDeclines") : t("fQualifies"),
               pct(headline.gds, 1),
-              t("approvalWhy"),
+              t(countryKey("approvalWhy", rules.country)),
               <>
                 <CompareGrid
                   columns={columns}

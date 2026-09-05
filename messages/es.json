@@ -275,6 +275,7 @@
     "boundComfort": "Lo que limita lo que usted puede comprar es su propio techo mensual, no un prestamista: la aprobación queda unos {a} por encima del precio que ese techo sostiene.",
     "boundDebts": "Lo que limita este techo son sus otras deudas. Liquidarlas lo elevaría en unos {a}.",
     "boundIncome": "Lo que limita este techo es el costo de la vivienda frente a su ingreso, medido a la tasa de la prueba de resistencia, {r}, y no a la tasa que usted pagaría. Sus otras deudas todavía no lo reducen.",
+    "boundIncome_us": "Lo que limita este techo es el costo de la vivienda frente a su ingreso, medido a la tasa que realmente le ofrecieron, {r}, ya que aquí no se aplica ninguna prueba de resistencia federal. Sus otras deudas todavía no lo reducen.",
     "mImplied": "Hipoteca implícita con {p} de pago inicial",
     "mStated": "El techo mensual de comodidad que usted declaró",
     "mLess": "Menos",
@@ -441,7 +442,7 @@
     "ex_hba": "Un crédito federal no reembolsable en su declaración del año siguiente a la compra. No le ayuda el día del cierre. Depende de: condición de primera vivienda.",
     "ex_gstFthb": "Un comprador de primera vivienda de obra nueva que cumpla los requisitos puede recuperar el GST federal, íntegro hasta $1M y reduciéndose hasta cero en $1.5M. Esta calculadora no lo cuantifica en ningún sentido: nunca añade el GST ni el HST que grava una obra nueva, así que devolverlo aquí le abonaría un impuesto que nunca apareció en la factura de arriba. Cinco provincias cobran HST en lugar de GST, y el precio que hay detrás de una obra nueva aquí es una referencia de reventa que ya incluye impuestos; habría que arreglar ambas cosas antes de que el reembolso pudiera ser una cifra.",
     "ex_prepaidEscrow": "Tu prestamista cobra por adelantado algunos meses de impuesto predial y seguro de vivienda para abastecer tu cuenta en garantía, de modo que siempre haya fondos suficientes para pagar esas facturas cuando venzan.",
-    "ex_noRebateUs": "Texas no cobra impuesto de transferencia de bienes raíces, así que no hay nada que reembolsar — y actualmente no existe un crédito fiscal federal para compradores de vivienda primerizos. Los reembolsos y créditos canadienses de esta página no aplican aquí.",
+    "ex_noRebateUs": "Texas no cobra impuesto de transferencia de bienes raíces, así que no hay nada que reembolsar — y actualmente no existe un crédito fiscal federal para compradores de vivienda primerizos. Los reembolsos y créditos modelados para otras jurisdicciones no aplican aquí.",
     "breakdown": "La cuenta",
     "expandAll": "Abrir todo",
     "collapseAll": "Cerrar todo",
@@ -976,7 +977,10 @@
     "nOrderTitle_us": "Llene primero las cuentas con ventaja fiscal",
     "nOrderBody_us": "Una IRA o un 401(k) — sobre todo con aporte del empleador — suele superar el pago anticipado de la hipoteca antes de considerar cualquier otra cosa.",
     "cGds_us": "DTI inicial",
-    "cTds_us": "DTI total"
+    "cTds_us": "DTI total",
+    "whyPremTax_us": "Aquí el seguro hipotecario privado es un cargo mensual, no una prima que se paga al cierre, así que no añade nada al efectivo necesario al cierre.",
+    "cashWhy_us": "Un escenario más barato que no puede financiar no es una opción. El efectivo al cierre se recalcula por columna, porque el propio pago inicial es la partida más grande y crece en cada columna que lo aumenta.",
+    "approvalWhy_us": "La calificación se hace a la tasa contractual; aquí no se añade ningún margen de tasa federal. Una columna puede ser asequible y aun así ser rechazada."
   },
   "Provenance": {
     "rule": "regla",

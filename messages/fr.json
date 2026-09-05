@@ -275,6 +275,7 @@
     "boundComfort": "C’est votre propre plafond mensuel, et non un prêteur, qui limite ce que vous pouvez acheter : l’approbation dépasse d’environ {a} le prix que ce plafond soutient.",
     "boundDebts": "Ce sont vos autres dettes qui limitent ce plafond. Les éteindre le relèverait d’environ {a}.",
     "boundIncome": "C’est le coût du logement rapporté à votre revenu qui limite ce plafond — mesuré au taux du test de résistance, {r}, et non au taux que vous paieriez réellement. Vos autres dettes ne le réduisent pas encore.",
+    "boundIncome_us": "C’est le coût du logement rapporté à votre revenu qui limite ce plafond — mesuré au taux réellement offert, {r}, puisqu’aucun test de résistance fédéral ne s’applique ici. Vos autres dettes ne le réduisent pas encore.",
     "mImplied": "Prêt implicite avec {p} de mise de fonds",
     "mStated": "Votre plafond mensuel déclaré",
     "mLess": "Moins",
@@ -441,7 +442,7 @@
     "ex_hba": "Un crédit fédéral non remboursable à votre déclaration l’année suivant l’achat. Il ne vous aide pas le jour de la clôture. Dépend de : le statut d’acheteur d’une première habitation.",
     "ex_gstFthb": "Un acheteur d’une première habitation neuve admissible peut se faire rembourser la TPS fédérale, en totalité jusqu’à 1 M$ et en diminution jusqu’à zéro à 1,5 M$. Ce calculateur ne le chiffre dans aucun sens : il n’ajoute jamais la TPS ou la TVH qu’attire une habitation neuve, alors le rembourser ici vous créditerait d’une taxe qui n’a jamais figuré sur la facture ci-dessus. Cinq provinces perçoivent la TVH plutôt que la TPS, et le prix retenu ici pour une habitation neuve est un prix de référence de revente qui inclut déjà la taxe — il faudrait corriger les deux avant que le remboursement puisse devenir un chiffre.",
     "ex_prepaidEscrow": "Votre prêteur perçoit d’avance quelques mois de taxe foncière et d’assurance habitation pour alimenter votre compte séquestre, afin qu’il dispose toujours de fonds suffisants pour payer ces factures à l’échéance.",
-    "ex_noRebateUs": "Le Texas ne prélève aucune taxe de transfert immobilier, donc il n’y a rien à rembourser — et aucun crédit d’impôt fédéral pour premier acheteur n’existe actuellement. Les remboursements et crédits canadiens de cette page ne s’appliquent pas ici.",
+    "ex_noRebateUs": "Le Texas ne prélève aucune taxe de transfert immobilier, donc il n’y a rien à rembourser — et aucun crédit d’impôt fédéral pour premier acheteur n’existe actuellement. Les remboursements et crédits modélisés pour d’autres juridictions ne s’appliquent pas ici.",
     "breakdown": "La facture",
     "expandAll": "Tout ouvrir",
     "collapseAll": "Tout fermer",
@@ -976,7 +977,10 @@
     "nOrderTitle_us": "Remplissez d'abord les comptes avantagés fiscalement",
     "nOrderBody_us": "Un IRA ou un 401(k) — surtout avec une contrepartie de l'employeur — bat généralement le remboursement anticipé du prêt avant tout le reste.",
     "cGds_us": "DTI initial",
-    "cTds_us": "DTI global"
+    "cTds_us": "DTI global",
+    "whyPremTax_us": "Ici, l’assurance hypothécaire privée est une charge mensuelle, pas une prime versée à la clôture, donc elle n’ajoute rien au comptant nécessaire à la clôture.",
+    "cashWhy_us": "Un scénario moins cher que vous ne pouvez pas financer n’est pas une option. Le comptant à la clôture est recalculé par colonne, car la mise de fonds elle-même en est la plus grosse ligne et augmente dans chaque colonne qui la relève.",
+    "approvalWhy_us": "L’admissibilité est évaluée au taux contractuel ; aucune marge de taux fédérale n’est ajoutée ici. Une colonne peut être abordable et refusée quand même."
   },
   "Provenance": {
     "rule": "règle",

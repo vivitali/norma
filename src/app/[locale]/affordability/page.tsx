@@ -380,7 +380,7 @@ export default function AffordabilityPage() {
                     ? t("boundComfort", { a: fmt(result.gap) })
                     : result.tdsBinds
                       ? t("boundDebts", { a: fmt(result.debtCapacity) })
-                      : t("boundIncome", { r: pct(result.qualRate, 2) })}
+                      : t(countryKey("boundIncome", rules.country), { r: pct(result.qualRate, 2) })}
                 </p>
               ) : null}
               <Gauges result={result} />
