@@ -534,7 +534,7 @@ describe("credits — mutually exclusive rebate groups", () => {
       ],
     };
     const o = { ...base, price: 900000 };
-    const C = credits(tiedGroup, federal, o, buildLines(tiedGroup, federal, o).gov);
+    const C = credits(tiedGroup, ca, o, buildLines(tiedGroup, ca, o).gov);
     const a = C.atClosing.find((c) => c.key === "cr_a")!;
     const b = C.atClosing.find((c) => c.key === "cr_b")!;
     expect(a).toBeDefined();
@@ -561,7 +561,7 @@ describe("credits — mutually exclusive rebate groups", () => {
       ],
     };
     const o = { ...base, price: 900000 };
-    const C = credits(tiedGroup, federal, o, buildLines(tiedGroup, federal, o).gov);
+    const C = credits(tiedGroup, ca, o, buildLines(tiedGroup, ca, o).gov);
     const a = C.atClosing.find((c) => c.key === "cr_a")!;
     const b = C.atClosing.find((c) => c.key === "cr_b")!;
     expect([a.st, b.st].sort()).toEqual(["capped", "tied"]);
@@ -574,7 +574,7 @@ describe("credits — mutually exclusive rebate groups", () => {
     // is nothing above it left to differ.
     const vancouver = getJurisdiction("vancouver")!;
     const o = { ...base, price: 500000, ptype: "newbuild" as const };
-    const C = credits(vancouver, federal, o, buildLines(vancouver, federal, o).gov);
+    const C = credits(vancouver, ca, o, buildLines(vancouver, ca, o).gov);
     const rows = C.atClosing.filter((c) => c.group === "bcPtt");
     expect(rows).toHaveLength(2);
     expect(rows.filter((c) => c.amount > 0)).toHaveLength(1);
@@ -590,7 +590,7 @@ describe("credits — mutually exclusive rebate groups", () => {
     // failed on its own terms.
     const vancouver = getJurisdiction("vancouver")!;
     const o = { ...base, price: 600000, ftb: false, ptype: "newbuild" as const };
-    const C = credits(vancouver, federal, o, buildLines(vancouver, federal, o).gov);
+    const C = credits(vancouver, ca, o, buildLines(vancouver, ca, o).gov);
     const exempt = C.atClosing.find((c) => c.key === "cr_pttExempt")!;
     const newBuild = C.atClosing.find((c) => c.key === "cr_pttNewBuild")!;
     expect(exempt.st).toBe("ftbOnly");
@@ -709,7 +709,7 @@ describe("affordability", () => {
 
 describe("defaultContractRate", () => {
   // contractRate is NOT an input in the reference — it is derived from the down
-  // payment against the federal insured/uninsured spread. The port dropped this
+  // payment against the ca insured/uninsured spread. The port dropped this
   // and hardcoded 4.29, which left ca.rates.insured/.uninsured unread by
   // any screen.
   it("uses the insured rate below 20% down", () => {
@@ -1145,7 +1145,7 @@ describe("the lender's condo-fee convention is a rule, not a literal", () => {
     ptype: "condo" as const, elsewhere: false, residency: "resident" as const,
   };
 
-  it("counts the federal share of the fee in GDS at the target price", () => {
+  it("counts the ca share of the fee in GDS at the target price", () => {
     // Half in the lender's ratios, the whole fee in the household's budget: two correct
     // answers to two different questions, on the same screen, which is exactly why the
     // share is now a named rule with a CMHC citation rather than a `* 0.5` in the maths.

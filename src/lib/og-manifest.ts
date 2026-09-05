@@ -86,6 +86,10 @@ export const ROUTE_COUNTRIES: Record<IndexableRoute, readonly Country[]> = {
   "/rent-vs-buy": ["ca", "us"],
   "/scenarios": ["ca", "us"],
   "/sources": ["ca", "us"],
+  // The legal pages are drafted Quebec-first but a US reader is owed a privacy policy and
+  // terms no less; the pages themselves say which law they are written under.
+  "/privacy": ["ca", "us"],
+  "/terms": ["ca", "us"],
 };
 
 /**

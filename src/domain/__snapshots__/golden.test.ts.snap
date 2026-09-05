@@ -1890,7 +1890,7 @@ exports[`golden: hbpPlay > halifax 1`] = `
   "refund": 14961.125,
   "repayAnnual": 2333.3333333333335,
   "repayYears": 15,
-  "ruleDays": 90,
+  "ruleDays": 89,
   "schedule": [
     {
       "balance": 32666.666666666668,
@@ -1985,7 +1985,7 @@ exports[`golden: hbpPlay > toronto 1`] = `
   "refund": 10792.964,
   "repayAnnual": 2333.3333333333335,
   "repayYears": 15,
-  "ruleDays": 90,
+  "ruleDays": 89,
   "schedule": [
     {
       "balance": 32666.666666666668,
@@ -2080,7 +2080,7 @@ exports[`golden: hbpPlay > winnipeg 1`] = `
   "refund": 12371.072000000002,
   "repayAnnual": 2333.3333333333335,
   "repayYears": 15,
-  "ruleDays": 90,
+  "ruleDays": 89,
   "schedule": [
     {
       "balance": 32666.666666666668,
