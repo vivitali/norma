@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { affordability } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { ca } from "@/domain/rules/ca";
 import { getJurisdiction } from "@/domain/jurisdictions";
 import { resolveInputs } from "@/lib/resolve-inputs";
 import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
@@ -11,7 +11,7 @@ describe("engine-output coverage", () => {
     // The typecheck catches an unclassified NEW field; this catches a
     // classified field that no longer exists.
     const j = getJurisdiction("winnipeg")!;
-    const result = affordability(j, federal, resolveInputs(TOOL_DEFAULTS, j, federal));
+    const result = affordability(j, ca, resolveInputs(TOOL_DEFAULTS, j, ca));
     const classified = [...RENDERED, ...DELIBERATELY_UNRENDERED].sort();
     expect(classified).toEqual(Object.keys(result).sort());
   });

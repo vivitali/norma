@@ -1,6 +1,7 @@
 import type {
   Applicability,
-  FederalRules,
+  CaRules,
+  CountryRulesBase,
   Jurisdiction,
   PropertyType,
   Residency,
@@ -16,7 +17,7 @@ export interface BracketPart {
 /**
  * Can I Buy This House? — calculation engine. Pure functions, no DOM, no React state.
  * Every screen that renders a number reads it from here, so two screens can never disagree.
- * Rule VALUES live in src/domain/federal.ts and src/domain/jurisdictions/; only mechanics live here.
+ * Rule VALUES live in src/domain/rules/*.ts and src/domain/jurisdictions/; only mechanics live here.
  * Canadian mortgages compound semi-annually — payFactor() is not the US monthly formula.
  */
 
@@ -71,13 +72,13 @@ export function monthsToSave(gap: number | null, save: number | null): number | 
  * The tiers are NOT written here. They were — `500000`, `1500000`, `0.05`, `0.1`, `0.2` as
  * literals — and a page component then wrote `MIN_DOWN_TIER = 500000` a second time to
  * caption them, which is exactly the duplication engine.ts's own header forbids: rule values
- * live in federal.ts, only mechanics live here. They now come off `F.minDown`, with the
+ * live in the rules record, only mechanics live here. They now come off `F.minDown`, with the
  * provenance entry that makes them quotable to the reader.
  *
- * Marginal below the insured cap, flat at or above it — see `FederalRules.minDown` for why
+ * Marginal below the insured cap, flat at or above it — see `CaRules.minDown` for why
  * the 20% is a different kind of thing from the two bands beneath it.
  */
-export function minDown(F: FederalRules, price: number): number {
+export function minDown(F: CaRules, price: number): number {
   if (price >= F.cmhc.insuredCap) return price * F.minDown.uninsuredRate;
   return bracketTax(price, F.minDown.bands).total;
 }
@@ -118,7 +119,7 @@ export interface AmortEligibilityInput {
  * amortization the reader set, because silently recomputing someone's input is how a screen
  * comes to disagree with the figure the reader is looking at.
  */
-export function maxAmortYears(F: FederalRules, o: AmortEligibilityInput): number {
+export function maxAmortYears(F: CaRules, o: AmortEligibilityInput): number {
   const uninsured = o.dpPct >= 20 || o.price >= F.cmhc.insuredCap;
   const homeStart = o.ftb || o.ptype === "newbuild";
   return uninsured || homeStart ? F.maxAmortFtbInsured : F.maxAmortOther;
@@ -146,7 +147,7 @@ export interface FinancingInput {
   amortYears: number;
 }
 
-export function financing(F: FederalRules, o: FinancingInput) {
+export function financing(F: CaRules, o: FinancingInput) {
   const down = (o.price * o.dpPct) / 100;
   const baseLoan = o.price - down;
   const insured = o.dpPct < 20 && o.price < F.cmhc.insuredCap;
@@ -214,7 +215,7 @@ export function applies(when: Applicability | undefined, o: ClosingInput): boole
 }
 
 /** A non-applicable line item is ABSENT from the result, never a zero row. */
-export function buildLines(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
+export function buildLines(j: Jurisdiction, F: CaRules, o: ClosingInput) {
   const fin = financing(F, o);
   const gov: LineItem[] = [];
   for (const it of j.transfer) {
@@ -302,7 +303,7 @@ export interface LaterCredit {
   amount: number;
 }
 
-export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: LineItem[]) {
+export function credits(j: Jurisdiction, F: CaRules, o: ClosingInput, gov: LineItem[]) {
   const atClosing: CreditLine[] = [];
   const later: LaterCredit[] = [];
   for (const rb of j.rebates) {
@@ -476,7 +477,7 @@ export function credits(j: Jurisdiction, F: FederalRules, o: ClosingInput, gov: 
 }
 
 /** Total cash at closing without the itemised table — for screens that only need the number. */
-export function closingTotal(j: Jurisdiction, F: FederalRules, o: ClosingInput) {
+export function closingTotal(j: Jurisdiction, F: CaRules, o: ClosingInput) {
   const L = buildLines(j, F, o);
   const sum = (a: LineItem[]) => a.reduce((t, r) => t + r.amount, 0);
   const total = sum(L.gov) + sum(L.pro) + sum(L.adj);
@@ -526,7 +527,7 @@ export interface AffordabilityInput {
  * left federal.rates.insured/.uninsured unread by any screen. Returned as a
  * percentage, which is what AffordabilityInput.contractRate takes.
  */
-export function defaultContractRate(F: FederalRules, dpPct: number): number {
+export function defaultContractRate(F: CountryRulesBase, dpPct: number): number {
   return (dpPct < 20 ? F.rates.insured : F.rates.uninsured) * 100;
 }
 
@@ -582,14 +583,14 @@ export function defaultContractRate(F: FederalRules, dpPct: number): number {
  * flagship figure, not a review fix. Whoever takes it: the binding price is where
  * `dpPct/100` meets `minDown(F, P)/P`, which is closed form off `minDown.bands`.
  */
-export function financedFraction(F: FederalRules, dpPct: number, amortYears: number): number {
+export function financedFraction(F: CaRules, dpPct: number, amortYears: number): number {
   const ltv = 1 - dpPct / 100;
   if (dpPct >= 20) return ltv;
   const band = F.cmhc.bands.find((b) => ltv <= b[0]) ?? F.cmhc.bands[F.cmhc.bands.length - 1];
   return ltv * (1 + band[1] + (amortYears > 25 ? F.cmhc.longAmortSurcharge : 0));
 }
 
-export function affordability(j: Jurisdiction, F: FederalRules, o: AffordabilityInput) {
+export function affordability(j: Jurisdiction, F: CaRules, o: AffordabilityInput) {
   const gross = o.income1 + o.income2 + o.otherIncome;
   const qualIncome = gross * (1 - o.haircut / 100);
   const qualRate = Math.max(F.stressTest.floor, o.contractRate + F.stressTest.buffer) / 100;
@@ -768,7 +769,7 @@ export interface AmortizationRow {
  * Note there is no jurisdiction parameter. The reference took one and never read
  * it — nothing in an amortization schedule is provincial.
  */
-export function amortization(F: FederalRules, o: AmortizationInput) {
+export function amortization(F: CaRules, o: AmortizationInput) {
   const fin = financing(F, o);
   const term = Math.max(1, o.termYears);
   const startRate = o.contractRate / 100;
@@ -833,7 +834,7 @@ export type AmortizationResult = ReturnType<typeof amortization>;
  * ================================================================= */
 
 /** Combined federal + provincial marginal rate on the next dollar of taxable income. */
-export function marginalRate(F: FederalRules, prov: string, income: number): number {
+export function marginalRate(F: CountryRulesBase, prov: string, income: number): number {
   const tbl = F.marginal[prov] ?? F.marginal.CA;
   for (const [cap, rate] of tbl) if (cap === null || income <= cap) return rate;
   return tbl[tbl.length - 1][1];
@@ -856,7 +857,7 @@ export function marginalRate(F: FederalRules, prov: string, income: number): num
  * prototype carry-over. Integrating it correctly makes the arithmetic honest, not the
  * brackets sourced; a figure derived from it still may not travel as a statutory claim.
  */
-export function taxOnBand(F: FederalRules, prov: string, from: number, to: number): number {
+export function taxOnBand(F: CountryRulesBase, prov: string, from: number, to: number): number {
   const lo = Math.max(0, Math.min(from, to));
   const hi = Math.max(0, Math.max(from, to));
   if (hi <= lo) return 0;
@@ -954,7 +955,7 @@ export interface WaterfallInput {
  * Tax on a partial non-registered draw is pro-rated by the fraction of the
  * account sold — selling a third of the account realises a third of the gain.
  */
-export function waterfall(F: FederalRules, o: WaterfallInput) {
+export function waterfall(F: CaRules, o: WaterfallInput) {
   const rate = marginalRate(F, o.prov, o.income);
   const hbpRoom = Math.min(Math.max(0, o.rrsp), F.hbp.max);
   const ftbOnly = o.ftb ? undefined : ("ftb" as const);
@@ -1032,7 +1033,7 @@ export interface GlidePoint {
  * `reach` is null when the target is never met inside the window — the honest
  * answer, and the one that should change the copy rather than be rounded away.
  */
-export function glidePath(F: FederalRules, shortfall: number, monthly: number, months = 36) {
+export function glidePath(F: CountryRulesBase, shortfall: number, monthly: number, months = 36) {
   const i = F.savingsReturn / 12;
   const n = Math.max(1, months);
   const series: GlidePoint[] = [];
@@ -1089,7 +1090,7 @@ export interface HbpInput {
  * function is not given. The screen states the three numbers and lets the reader
  * decide, rather than asserting an answer it cannot support.
  */
-export function hbpPlay(F: FederalRules, o: HbpInput) {
+export function hbpPlay(F: CaRules, o: HbpInput) {
   const contribution = Math.max(0, Math.min(o.contribution, F.hbp.max));
   const income = Math.max(0, o.income);
   // The rate on the NEXT dollar, which is what the deduction's first dollar saves and what
@@ -1299,7 +1300,7 @@ export interface RentVsBuyRow {
  * Equity is net of selling cost, because wealth you cannot realise without
  * paying an agent is not wealth you have.
  */
-export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
+export function rentVsBuy(j: Jurisdiction, F: CaRules, o: RentVsBuyInput) {
   const years = Math.max(1, o.years);
   const fin = financing(F, o);
   const cc = closingTotal(j, F, o);
@@ -1387,9 +1388,9 @@ export function rentVsBuy(j: Jurisdiction, F: FederalRules, o: RentVsBuyInput) {
     }
     // Insurance, utilities and condo fees grow at the cost of SERVICES, not at the price of
     // the house — so this is deliberately not `o.appreciation`. The rate itself moved to
-    // federal.ts with a provenance entry: as a module-local constant here it compounded for
+    // the rules record with a provenance entry: as a module-local constant here it compounded for
     // up to forty years while being structurally unreachable by /sources, which builds its
-    // inventory from federal.provenance and the jurisdiction maps.
+    // inventory from the rules' provenance and the jurisdiction maps.
     const infl = Math.pow(1 + F.nonShelterInflation, t - 1);
     const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax.effective;
     const insurance = o.insuranceAnnual * infl;
@@ -1502,7 +1503,7 @@ export interface ScenarioInput extends ClosingInput {
  *    low-down-payment columns — holding closing costs flat would hide the one
  *    cost that varies with the thing being compared.
  */
-export function scenario(j: Jurisdiction, F: FederalRules, o: ScenarioInput) {
+export function scenario(j: Jurisdiction, F: CaRules, o: ScenarioInput) {
   const floor = minDown(F, o.price);
   const requested = (o.price * o.dpPct) / 100;
   const down = Math.max(requested, floor);

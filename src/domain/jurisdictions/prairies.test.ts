@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildLines } from "../engine";
-import { federal } from "../federal";
+import { ca } from "../rules/ca";
 import { getJurisdiction } from "./index";
 
 const wpg = () => getJurisdiction("winnipeg")!;
@@ -35,7 +35,7 @@ describe("Prairies 2026 figures", () => {
     // Saskatoon and Calgary both carry one; Winnipeg did not, producing systematically wrong
     // cross-city comparisons.
     expect(wpg().transfer.find((l) => l.key === "li_mortReg")).toBeDefined();
-    const gov = buildLines(wpg(), federal, { ...base, price: 454264 }).gov;
+    const gov = buildLines(wpg(), ca, { ...base, price: 454264 }).gov;
     expect(gov.find((l) => l.key === "li_mortReg")?.amount).toBe(137);
   });
 
@@ -198,7 +198,7 @@ describe("figures deliberately left alone", () => {
   });
 
   it("keeps Alberta's per-value levies, which are in the Act and not the tariff regulation", () => {
-    const gov = buildLines(yyc(), federal, { ...base, price: 622000 }).gov;
+    const gov = buildLines(yyc(), ca, { ...base, price: 622000 }).gov;
     // "or portion thereof" means round UP: 50 + 5 x ceil(622000/5000) = 50 + 5 x 125 = 675.
     expect(gov.find((l) => l.key === "li_titleReg")?.amount).toBe(675);
     expect(yyc().provenance["transfer.0.base"]?.src).toMatch(/64\.1\(2\)/);

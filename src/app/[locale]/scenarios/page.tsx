@@ -3,9 +3,9 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { minDown, scenario, type ScenarioResult } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { CalcLedger } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -28,13 +28,14 @@ export default function ScenariosPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
 
   /**
@@ -55,7 +56,7 @@ export default function ScenariosPage() {
   const columns = useMemo(
     () =>
       SCENARIO_PERCENTS.map((dpPct) =>
-        scenario(jurisdiction, federal, {
+        scenario(jurisdiction, rules, {
           price: resolved.price,
           dpPct,
           amortYears: resolved.amortYears,
@@ -74,7 +75,7 @@ export default function ScenariosPage() {
           save: resolved.save,
         }),
       ),
-    [jurisdiction, resolved, qualIncome],
+    [jurisdiction, rules, resolved, qualIncome],
   );
 
   const rec = recommend(columns);
@@ -285,27 +286,27 @@ export default function ScenariosPage() {
    * portion above it", which is simply false at or above `cmhc.insuredCap`: no
    * insurer writes the loan there, so the minimum is the flat uninsured rate and
    * the marginal schedule does not apply at all. And the tier it named came from
-   * a `const MIN_DOWN_TIER = 500000` in this file — a federal rule value living
+   * a `const MIN_DOWN_TIER = 500000` in this file — a rule value living
    * in a page component, with nothing able to keep it in step with `minDown()`
-   * three modules away. Both halves now come off `federal`.
+   * three modules away. Both halves now come off `rules`.
    */
-  const bands = federal.minDown.bands;
+  const bands = rules.minDown.bands;
   // `tierCeiling === null` is not a defensive flourish: a one-band schedule is a
   // FLAT schedule, and the tiered sentence would then name a threshold that does
   // not exist. It falls through to the same branch the insured cap does.
   const tierCeiling = bands[0][0];
   const minDownLine =
-    resolved.price >= federal.cmhc.insuredCap || tierCeiling === null || bands.length < 2
+    resolved.price >= rules.cmhc.insuredCap || tierCeiling === null || bands.length < 2
       ? t("minDownNoteFlat", {
-          cap: fmt(federal.cmhc.insuredCap),
-          p: pct(federal.minDown.uninsuredRate * 100),
-          b: fmt(minDown(federal, resolved.price)),
+          cap: fmt(rules.cmhc.insuredCap),
+          p: pct(rules.minDown.uninsuredRate * 100),
+          b: fmt(minDown(rules, resolved.price)),
         })
       : t("minDownNote", {
           lo: pct(bands[0][1] * 100),
           a: fmt(tierCeiling),
           hi: pct(bands[1][1] * 100),
-          b: fmt(minDown(federal, resolved.price)),
+          b: fmt(minDown(rules, resolved.price)),
         });
 
   const note = (title: string, body: string) => (

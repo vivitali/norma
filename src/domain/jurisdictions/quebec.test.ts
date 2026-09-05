@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bracketTax, buildLines, closingTotal, credits, type ClosingInput } from "../engine";
-import { federal } from "../federal";
+import { ca } from "../rules/ca";
 import { getJurisdiction } from "./index";
 
 const mtl = () => getJurisdiction("montreal")!;
@@ -52,11 +52,11 @@ describe("Quebec 2026 transfer duties", () => {
 
 describe("Quebec's refundable access-to-property credit", () => {
   const creditFor = (o: ClosingInput) =>
-    credits(mtl(), federal, o, buildLines(mtl(), federal, o).gov);
+    credits(mtl(), ca, o, buildLines(mtl(), ca, o).gov);
 
   /** The bulletin's examples are stated in DUTIES, so feed the duty directly. */
   const onDuty = (duty: number, o: ClosingInput = base) =>
-    credits(mtl(), federal, o, [{ key: "li_dutiesMuni", amount: duty }]).later.find(
+    credits(mtl(), ca, o, [{ key: "li_dutiesMuni", amount: duty }]).later.find(
       (c) => c.key === "cr_qcAccess",
     )?.amount ?? 0;
 
@@ -69,7 +69,7 @@ describe("Quebec's refundable access-to-property credit", () => {
   // Refundable and claimed at tax time means it is NOT money the buyer brings to the table.
   // A credit routed to `later` must leave `net` untouched — that is the whole point of `timing`.
   it("does not reduce the cash needed at closing", () => {
-    const t = closingTotal(mtl(), federal, base);
+    const t = closingTotal(mtl(), ca, base);
     expect(t.creditsAtClosing).toBe(0);
     expect(t.net).toBe(t.cash);
     expect(t.later).toBeGreaterThan(5000);
@@ -122,7 +122,7 @@ describe("Quebec's refundable access-to-property credit", () => {
 
 describe("Quebec tax-time credits", () => {
   const later = (o: ClosingInput) =>
-    credits(mtl(), federal, o, buildLines(mtl(), federal, o).gov).later;
+    credits(mtl(), ca, o, buildLines(mtl(), ca, o).gov).later;
 
   // $10,000 x the 2026 lowest federal rate of 14%. The ministry bulletin shows the federal
   // credit as $1,169 for a Quebec resident, which is 1,400 x 0.835 after the 16.5% Quebec
@@ -156,10 +156,10 @@ describe("Quebec premium tax", () => {
   });
 
   it("charges the tax in cash, on the premium, and never at 20% down", () => {
-    const insured = buildLines(mtl(), federal, { ...base, dpPct: 5 }).gov;
+    const insured = buildLines(mtl(), ca, { ...base, dpPct: 5 }).gov;
     const line = insured.find((l) => l.key === "li_premTax")!;
     expect(line.cashOnly).toBe(true);
-    expect(buildLines(mtl(), federal, base).gov.find((l) => l.key === "li_premTax")).toBeUndefined();
+    expect(buildLines(mtl(), ca, base).gov.find((l) => l.key === "li_premTax")).toBeUndefined();
   });
 });
 

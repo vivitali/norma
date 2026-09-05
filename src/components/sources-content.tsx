@@ -3,10 +3,10 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { federal } from "@/domain/federal";
-import { jurisdictions } from "@/domain/jurisdictions";
+import { jurisdictionsOf } from "@/domain/jurisdictions";
 import type { Confidence } from "@/domain/types";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useCountry, useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { SOURCES_SECTIONS } from "@/lib/sections";
 import {
@@ -147,14 +147,16 @@ export function SourcesContent() {
   const tDisc = useTranslations("Disclosure");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const country = useCountry();
+  const rules = useRules();
 
   const coverage = useMemo(
-    () => coverageOf(jurisdictions.map((j) => j.provenance), federal.provenance),
-    [],
+    () => coverageOf(jurisdictionsOf(country).map((j) => j.provenance), rules.provenance),
+    [country, rules],
   );
   const groups = useMemo<readonly FigureGroup[]>(
-    () => [federalGroup(federal.provenance), ...groupProvenance(jurisdiction.provenance).groups],
-    [jurisdiction],
+    () => [federalGroup(rules.provenance), ...groupProvenance(jurisdiction.provenance).groups],
+    [jurisdiction, rules],
   );
   // Federal is excluded from the choice: it is identical for every reader and it
   // is the longest list. See weakestGroupId.
@@ -248,7 +250,7 @@ export function SourcesContent() {
       <div className="text-[10.5px] text-ink3">
         <p>{tDisc("unverifiedFlag")}</p>
         <p className="mt-1">
-          {tDisc("lastVerified")} {federal.verified}
+          {tDisc("lastVerified")} {rules.verified}
         </p>
         {/*
           The notes come out of src/domain verbatim, in the language they were

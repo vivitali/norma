@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildLines, credits } from "../engine";
-import { federal } from "../federal";
+import { RULES } from "../rules";
 import { jurisdictions } from "./index";
 import { CATALOGUES } from "@/test/catalogues";
 
@@ -37,17 +37,22 @@ describe("every jurisdiction's line-item keys have copy", () => {
 
   for (const jurisdiction of jurisdictions) {
     it(`resolves every key for ${jurisdiction.id}`, () => {
+      // Read off the jurisdiction's OWN country rather than a single hardcoded
+      // record — the same discipline the locale tests apply via
+      // src/test/catalogues.ts — so a second country's jurisdictions are
+      // covered by this sweep the moment they land in the registry.
+      const rules = RULES[jurisdiction.country];
       const seen = new Set<string>();
       for (const shape of CASES) {
         for (const price of [300000, 800000, 1800000]) {
           for (const dpPct of [5, 20]) {
             const input = { price, dpPct, amortYears: 25, ...shape };
-            const lines = buildLines(jurisdiction, federal, input);
+            const lines = buildLines(jurisdiction, rules, input);
             for (const item of [...lines.gov, ...lines.pro, ...lines.adj]) {
               seen.add(item.key);
               if (item.ex) seen.add(item.ex);
             }
-            const credit = credits(jurisdiction, federal, input, lines.gov);
+            const credit = credits(jurisdiction, rules, input, lines.gov);
             for (const c of credit.atClosing) seen.add(c.key);
             for (const c of credit.later) {
               seen.add(c.key);

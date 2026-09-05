@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
-import { federal } from "@/domain/federal";
+import { useRules } from "@/hooks/use-country";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { useMoney, usePercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ export function MathColumns({
   const t = useTranslations("Affordability");
   const fmt = useMoney();
   const pct = usePercent();
+  const rules = useRules();
 
   return (
     <div className="grid max-w-[900px] grid-cols-1 gap-9 lg:grid-cols-2">
@@ -57,11 +58,11 @@ export function MathColumns({
         <MathRow
           label={t("mStressRate")}
           value={pct(result.qualRate, 2)}
-          why={t("mStressWhy", { floor: pct(federal.stressTest.floor, 2) })}
+          why={t("mStressWhy", { floor: pct(rules.stressTest.floor, 2) })}
         />
         <MathRow label={t("mFactor")} value={result.fq.toFixed(6)} why={t("mFactorWhy")} />
-        <MathRow label={`${t("mGdsAllow")} · GDS ${pct(federal.gds)}`} value={fmt(result.gdsAllow)} />
-        <MathRow label={`${t("mTdsAllow")} · TDS ${pct(federal.tds)}`} value={fmt(result.tdsAllow)} />
+        <MathRow label={`${t("mGdsAllow")} · GDS ${pct(rules.gds)}`} value={fmt(result.gdsAllow)} />
+        <MathRow label={`${t("mTdsAllow")} · TDS ${pct(rules.tds)}`} value={fmt(result.tdsAllow)} />
         <MathRow
           label={t("mBinding")}
           value={`${fmt(result.binding)} · ${result.tdsBinds ? "TDS" : "GDS"}`}

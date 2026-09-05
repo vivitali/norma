@@ -10,9 +10,9 @@ import {
   type CreditLine,
   type LineItem,
 } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -41,24 +41,25 @@ export default function ClosingCostsPage() {
   const tInputs = useTranslations("Inputs");
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
   const lines = useMemo(
-    () => buildLines(jurisdiction, federal, resolved),
-    [jurisdiction, resolved],
+    () => buildLines(jurisdiction, rules, resolved),
+    [jurisdiction, rules, resolved],
   );
   const credit = useMemo(
-    () => credits(jurisdiction, federal, resolved, lines.gov),
-    [jurisdiction, resolved, lines.gov],
+    () => credits(jurisdiction, rules, resolved, lines.gov),
+    [jurisdiction, rules, resolved, lines.gov],
   );
   const total = useMemo(
-    () => closingTotal(jurisdiction, federal, resolved),
-    [jurisdiction, resolved],
+    () => closingTotal(jurisdiction, rules, resolved),
+    [jurisdiction, rules, resolved],
   );
 
   const cash = cashState({ net: total.net, funds: resolved.funds });

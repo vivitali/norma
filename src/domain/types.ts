@@ -289,6 +289,8 @@ export type ProvenanceMap = Partial<Record<string, Provenance>>;
 
 export interface Jurisdiction {
   id: string;
+  /** Which market's rules this record prices under. Selects `RULES[country]`. */
+  country: Country;
   prov: ProvinceCode;
   city: string | null;
   cityData: boolean;
@@ -342,7 +344,99 @@ export interface Jurisdiction {
   provenance: ProvenanceMap;
 }
 
-export interface FederalRules {
+/**
+ * Which market's rules apply. Domain-owned and deliberately separate from `Country` in
+ * `src/i18n/countries.ts`, even though the two are the same literal union today (`"ca"`) and
+ * will grow in lockstep: `src/domain` must not import from `src/i18n` (see CLAUDE.md), so a
+ * type the domain needs to describe its own registry has to be declared here rather than
+ * borrowed. `useCountry()` (`src/hooks/use-country.ts`) resolves the ROUTING country from the
+ * URL and hands it to `RULES`/`rulesFor`, which are typed against THIS declaration — the two
+ * stay assignable to each other only because they are kept in sync by hand, one literal at a
+ * time, the same discipline `COUNTRIES` and `RULES` already both apply as total records.
+ */
+export type Country = "ca";
+
+/**
+ * How a mortgage is priced over its life. A discriminated union, not a boolean, because a
+ * boolean can only ever ask "does it renew" — the fact this file exists to carry — and cannot
+ * grow a third shape without becoming two booleans that can disagree.
+ *
+ * `"term"` is every Canadian mortgage: a rate fixed for a TERM (five years, typically), then
+ * re-priced at every term boundary over the remaining amortization. `termYears` is the set of
+ * term lengths a reader may choose between — moved here from a page component so the UI reads
+ * its options off the rules instead of a second hardcoded list (see
+ * `docs/superpowers/specs/2026-08-29-us-market-design.md`, "Decision 3").
+ *
+ * `"toMaturity"` is the US analogue — a 30-year fixed has no term, no renewal and (for most
+ * conforming loans) no prepayment penalty — and exists here as a TYPE ONLY. No `CountryRules`
+ * value uses it yet; it is the slot `rules/us.ts` fills in step 3 of the spec above. Pages are
+ * meant to branch on `renews`, never on `country`, so a future country that also renews gets
+ * the Canadian treatment for free and a page that forgets the `toMaturity` case fails to
+ * compile rather than silently rendering a renewal section for a loan that cannot renew.
+ */
+export type Mortgage =
+  | { kind: "term"; termYears: readonly number[]; renews: true }
+  | { kind: "toMaturity"; renews: false };
+
+/**
+ * The rule fields every market needs, with the SAME shape but different values per country —
+ * `docs/superpowers/specs/2026-08-29-us-market-design.md`'s "What splits, and what does not".
+ * `gds`/`tds` stay here even though the US calls the equivalent ratios something else (front-
+ * end/back-end DTI): same two numbers gating the same two questions, so only the label and the
+ * value differ by country, not the field.
+ *
+ * Everything below is a field this dataset happens to be able to describe identically for
+ * Canada and the United States TODAY. It is not a claim that the concept transfers cleanly in
+ * general — `capGainsInclusion` is the sharpest case: Canada taxes a FRACTION of every dollar
+ * of gain, while the US §121 exclusion on a primary residence is a flat-dollar carve-out
+ * ($250k single / $500k joint) with no inclusion rate at all. The spec says to leave the field
+ * shared "for now, with a comment" rather than solve that mismatch ahead of having a second
+ * country's engine code to design it against — so this is that comment. Expect `rules/us.ts`
+ * to either bend this field's meaning uncomfortably or split it; do not assume today's shape
+ * is right merely because it compiles for one country.
+ */
+export interface CountryRulesBase {
+  country: Country;
+  mortgage: Mortgage;
+  rates: { insured: number; uninsured: number; variable: number; prime: number };
+  sellingCost: number;
+  maintenanceReserve: number;
+  appreciation: { inflation: number; shelter: number; flat: number };
+  /**
+   * Growth rate for insurance, utilities and condo fees in the long-horizon models — the
+   * cost of SERVICES, which is not the price of a house, so it is deliberately not
+   * `appreciation.shelter`.
+   *
+   * It was a module-local constant in engine.ts, which meant it compounded for up to forty
+   * years on Rent vs Buy while being structurally invisible to /sources — that page builds
+   * its inventory from the rules' `provenance` and the jurisdiction maps, so a figure outside
+   * both could never be disclosed. Whether it should instead equal `appreciation.inflation`
+   * is a live product question; see its provenance note.
+   */
+  nonShelterInflation: number;
+  investReturn: { cash: number; balanced: number; growth: number };
+  savingsReturn: number;
+  condoFeeInclusion: number;
+  marginal: Record<string, MarginalTable>;
+  stressTest: { floor: number; buffer: number };
+  gds: number;
+  tds: number;
+  maxAmortOther: number;
+  capGainsInclusion: number;
+  /** The date this record's `high`-confidence figures were last read off their publishers. */
+  verified: string;
+  /** Per-figure sourcing, keyed by field path on this record. Required, never empty. */
+  provenance: ProvenanceMap;
+}
+
+/**
+ * Canada-only rule fields: no US counterpart exists to widen these into, so they stay on
+ * `CaRules` rather than the base — see the spec's "Canada-only" list. `country: "ca"` is what
+ * lets `RULES` (a `Record<Country, CountryRules>`) narrow correctly once `CountryRules` grows
+ * a second member.
+ */
+export interface CaRules extends CountryRulesBase {
+  country: "ca";
   cmhc: {
     bands: readonly (readonly [number, number])[];
     longAmortSurcharge: number;
@@ -366,45 +460,27 @@ export interface FederalRules {
      */
     uninsuredRate: number;
   };
-  stressTest: { floor: number; buffer: number };
-  gds: number;
-  tds: number;
   heatAllowance: number;
-  /**
-   * The share of a condominium fee a lender counts in GDS and TDS. A rule value with a
-   * publisher, so it does not belong in the arithmetic: it was `* 0.5` at four call sites,
-   * against the full fee used in the comfort budget on the same screen.
-   */
-  condoFeeInclusion: number;
-  rates: { insured: number; uninsured: number; variable: number; prime: number };
   maxAmortFtbInsured: number;
-  maxAmortOther: number;
   fhsa: { annual: number; lifetime: number };
   hbp: { max: number; repayYears: number; graceYears: number; ruleDays: number };
   rrspCap: number;
-  capGainsInclusion: number;
-  marginal: Record<string, MarginalTable>;
-  sellingCost: number;
-  maintenanceReserve: number;
-  appreciation: { inflation: number; shelter: number; flat: number };
-  /**
-   * Growth rate for insurance, utilities and condo fees in the long-horizon models — the
-   * cost of SERVICES, which is not the price of a house, so it is deliberately not
-   * `appreciation.shelter`.
-   *
-   * It was a module-local constant in engine.ts, which meant it compounded for up to forty
-   * years on Rent vs Buy while being structurally invisible to /sources — that page builds
-   * its inventory from `federal.provenance` and the jurisdiction maps, so a figure outside
-   * both could never be disclosed. Whether it should instead equal `appreciation.inflation`
-   * is a live product question; see its provenance note.
-   */
-  nonShelterInflation: number;
-  investReturn: { cash: number; balanced: number; growth: number };
-  savingsReturn: number;
   gstFthb: { rate: number; fullTo: number; zeroAt: number; cap: number };
   hba: number;
-  verified: string;
+  /**
+   * No longer read by any screen: the contract rate derives from dpPct against
+   * `rates.insured` / `rates.uninsured` (see `defaultContractRate` in engine.ts), with an
+   * override in the Affordability page's Advanced disclosure. Left in place rather than
+   * removed — src/domain/ is not churned by UI work. Tracked on #3.
+   */
   contractRate: number;
-  /** Per-figure sourcing, keyed by field path on this record. Required, never empty. */
-  provenance: ProvenanceMap;
 }
+
+/**
+ * Every market's rule set. A union of one today — `rules/us.ts` is step 3 of
+ * `docs/superpowers/specs/2026-08-29-us-market-design.md`, not this branch — but it is a union
+ * so a future `CaRules | UsRules` forces every switch over it to handle both, and so engine
+ * functions that only read `CountryRulesBase` fields can be typed against the union rather
+ * than either member.
+ */
+export type CountryRules = CaRules;

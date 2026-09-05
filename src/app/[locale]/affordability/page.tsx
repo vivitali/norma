@@ -3,8 +3,8 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { affordability, scenario } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { useSections } from "@/hooks/use-sections";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -44,17 +44,18 @@ export default function AffordabilityPage() {
   // The reader-facing place name; `jurisdiction.city` is the lowercase record key.
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
   const result = useMemo(
-    () => affordability(jurisdiction, federal, resolved),
-    [jurisdiction, resolved],
+    () => affordability(jurisdiction, rules, resolved),
+    [jurisdiction, rules, resolved],
   );
 
   // The section whose check produced the verdict, open on arrival. Derived from
@@ -77,7 +78,7 @@ export default function AffordabilityPage() {
     const qualIncome =
       (resolved.income1 + resolved.income2 + resolved.otherIncome) * (1 - resolved.haircut / 100);
     for (const dpPct of SCENARIO_PERCENTS) {
-      const column = scenario(jurisdiction, federal, {
+      const column = scenario(jurisdiction, rules, {
         ...resolved,
         dpPct,
         qualIncome,
@@ -86,7 +87,7 @@ export default function AffordabilityPage() {
       if (column.qualifies) return dpPct;
     }
     return null;
-  }, [jurisdiction, resolved, result]);
+  }, [jurisdiction, rules, resolved, result]);
 
   const propTaxProv =
     jurisdiction.provenance["propTax.publishedRate"] ?? jurisdiction.provenance["propTax.effective"];
@@ -319,13 +320,13 @@ export default function AffordabilityPage() {
               ? t("ckApTds", { a: fmt(result.binding), d: fmt(resolved.debts) })
               : t("ckApGds", { a: fmt(result.binding) }),
             fmt(result.ceiling),
-            t("mStressWhy", { floor: pct(federal.stressTest.floor, 2) }),
+            t("mStressWhy", { floor: pct(rules.stressTest.floor, 2) }),
             <>
               <PanelRow label={t("mQualInc")} value={fmt(result.qualIncome)} />
               <PanelRow label={t("mStressRate")} value={pct(result.qualRate, 2)} provenance={<Provenance kind="rule" />} />
               <PanelRow label={t("mFactor")} value={result.fq.toFixed(6)} />
-              <PanelRow label={`${t("mGdsAllow")} · GDS ${pct(federal.gds)}`} value={fmt(result.gdsAllow)} provenance={<Provenance kind="rule" />} />
-              <PanelRow label={`${t("mTdsAllow")} · TDS ${pct(federal.tds)}`} value={fmt(result.tdsAllow)} provenance={<Provenance kind="rule" />} />
+              <PanelRow label={`${t("mGdsAllow")} · GDS ${pct(rules.gds)}`} value={fmt(result.gdsAllow)} provenance={<Provenance kind="rule" />} />
+              <PanelRow label={`${t("mTdsAllow")} · TDS ${pct(rules.tds)}`} value={fmt(result.tdsAllow)} provenance={<Provenance kind="rule" />} />
               <PanelRow label={t("mBinding")} value={`${fmt(result.binding)} · ${result.tdsBinds ? "TDS" : "GDS"}`} strong />
               <PanelRow label={t("mMaxPrice")} value={fmt(result.ceiling)} strong />
               {/*
@@ -363,10 +364,10 @@ export default function AffordabilityPage() {
               ) : null}
               <Gauges result={result} />
               <p className="mt-[18px] max-w-[700px] text-[12.5px] leading-[1.6] text-ink3 text-pretty">
-                {t("heatNote", { h: fmt(federal.heatAllowance) })}
+                {t("heatNote", { h: fmt(rules.heatAllowance) })}
                 {/*
                   The other thing this panel does on the reader's behalf and never
-                  said: a condo fee is counted at `federal.condoFeeInclusion` in the
+                  said: a condo fee is counted at `rules.condoFeeInclusion` in the
                   ratios above and at 100% in the monthly total below, and both are
                   correct. It rides on `heatNote` rather than taking a paragraph of
                   its own because it is the same disclosure — what a LENDER counts,
@@ -374,7 +375,7 @@ export default function AffordabilityPage() {
                   when there is a fee to disclose.
                 */}
                 {result.monthly.condoFee > 0
-                  ? ` ${t("condoLenderNote", { share: pct(federal.condoFeeInclusion * 100) })}`
+                  ? ` ${t("condoLenderNote", { share: pct(rules.condoFeeInclusion * 100) })}`
                   : null}
               </p>
               {/*

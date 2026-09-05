@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildLines, credits } from "../engine";
-import { federal } from "../federal";
+import { ca } from "../rules/ca";
 import { getJurisdiction } from "./index";
 
 const van = () => getJurisdiction("vancouver")!;
@@ -17,7 +17,7 @@ const base = {
 /** The exemption row the engine emits for a purchase, or undefined if the row is absent. */
 function rebate(key: string, o: Parameters<typeof buildLines>[2]) {
   const j = van();
-  return credits(j, federal, o, buildLines(j, federal, o).gov).atClosing.find((c) => c.key === key);
+  return credits(j, ca, o, buildLines(j, ca, o).gov).atClosing.find((c) => c.key === key);
 }
 
 describe("BC newly-built-home exemption", () => {
@@ -39,7 +39,7 @@ describe("BC newly-built-home exemption", () => {
   it("never stacks the two BC exemptions", () => {
     const o = { ...base, price: 800000, ftb: true, ptype: "newbuild" as const };
     const j = van();
-    const C = credits(j, federal, o, buildLines(j, federal, o).gov);
+    const C = credits(j, ca, o, buildLines(j, ca, o).gov);
     const applied = C.atClosing.filter((c) => c.group === "bcPtt" && c.amount > 0);
     expect(applied).toHaveLength(1);
     // The larger of the two wins: the newly-built exemption forgives the whole tax on
@@ -60,7 +60,7 @@ describe("BC newly-built-home exemption", () => {
     // same to the dollar. The group reports the relief once.
     const o = { ...base, price: 480000, ftb: true, ptype: "newbuild" as const };
     const j = van();
-    const C = credits(j, federal, o, buildLines(j, federal, o).gov);
+    const C = credits(j, ca, o, buildLines(j, ca, o).gov);
     const bcPtt = C.atClosing.filter((c) => c.group === "bcPtt");
     expect(bcPtt).toHaveLength(1);
     expect(bcPtt[0].st).toBe("applied");
@@ -98,7 +98,7 @@ describe("BC newly-built-home exemption", () => {
     // rendered as a sentence telling the buyer another rebate paid more, and here none did.
     const o = { ...base, price: 1150000, ftb: true, ptype: "newbuild" as const };
     const j = van();
-    const C = credits(j, federal, o, buildLines(j, federal, o).gov);
+    const C = credits(j, ca, o, buildLines(j, ca, o).gov);
     const bcPtt = C.atClosing.filter((c) => c.group === "bcPtt");
     expect(bcPtt).toHaveLength(2);
     expect(bcPtt.map((c) => c.amount)).toEqual([0, 0]);
@@ -122,14 +122,14 @@ describe("BC property transfer tax structure", () => {
     // residential portion above $3M. Same arithmetic for a wholly residential property, but the
     // flat bracket could not express a mixed-class one or name the two levies separately.
     const o = { ...base, price: 4000000 };
-    const gov = buildLines(van(), federal, o).gov;
+    const gov = buildLines(van(), ca, o).gov;
     expect(gov.find((l) => l.key === "li_pttFurther")?.amount).toBeCloseTo(20000, 2);
   });
 
   it("charges the same total as the flat 5% schedule it replaced", () => {
     // The split is a STRUCTURE fix, not a value fix. If this ever changes, the number moved.
     const o = { ...base, price: 4000000 };
-    const gov = buildLines(van(), federal, o).gov;
+    const gov = buildLines(van(), ca, o).gov;
     const ptt = gov
       .filter((l) => l.key === "li_ptt" || l.key === "li_pttFurther")
       .reduce((t, l) => t + l.amount, 0);
@@ -142,18 +142,18 @@ describe("BC property transfer tax structure", () => {
     // threshold, so without `when: { overPrice }` the Closing Costs page carried a
     // "Further 2% tax — $0" row for every BC buyer under $3M.
     const o = { ...base, price: 2500000 };
-    const gov = buildLines(van(), federal, o).gov;
+    const gov = buildLines(van(), ca, o).gov;
     expect(gov.find((l) => l.key === "li_pttFurther")).toBeUndefined();
     expect(gov.find((l) => l.key === "li_ptt")?.amount).toBeCloseTo(53000, 2);
   });
 
   it("omits it at exactly $3M — the statute says 'over $3,000,000'", () => {
-    const gov = buildLines(van(), federal, { ...base, price: 3000000 }).gov;
+    const gov = buildLines(van(), ca, { ...base, price: 3000000 }).gov;
     expect(gov.find((l) => l.key === "li_pttFurther")).toBeUndefined();
   });
 
   it("includes it one dollar above the threshold", () => {
-    const gov = buildLines(van(), federal, { ...base, price: 3000001 }).gov;
+    const gov = buildLines(van(), ca, { ...base, price: 3000001 }).gov;
     expect(gov.find((l) => l.key === "li_pttFurther")?.amount).toBeCloseTo(0.02, 2);
   });
 });

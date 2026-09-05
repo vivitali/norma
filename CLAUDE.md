@@ -378,8 +378,10 @@ renders the raw key when one is missing, which reaches a French reader as `RentV
 5. Open issues below
 
 **The data is now verified — [#5](https://github.com/vivitali/norma/issues/5) is done.** Every one
-of the 14 jurisdiction records and `federal.ts` carries a `provenance` map naming the document each
-figure was checked against, that document's date, and how far it can be trusted.
+of the 14 jurisdiction records and the federal rules record (`src/domain/rules/ca.ts` since the
+country seam landed; `federal.ts` at the time this verification pass shipped) carries a
+`provenance` map naming the document each figure was checked against, that document's date, and
+how far it can be trusted.
 `UNVERIFIED_BENCHMARK`, `UNVERIFIED_PROP_TAX` and `PROVISIONAL_DERIVATION` have **zero call sites**.
 `/sources` renders the whole inventory from that data, grouped per jurisdiction.
 
@@ -426,6 +428,28 @@ calculation change**. `affordmath.com/en/affordability` redirects permanently (3
 covers all eleven routes across all four locales under their new prefix. This is the seam the rest
 of the US-market spec builds on; no `rules/us.ts`, no second country in `COUNTRIES`, and no US
 jurisdiction data exist yet.
+
+**The country seam landed in the domain layer next** — implementation order step 2, a pure
+refactor with **no behaviour change** (`src/domain/golden.test.ts` freezes engine output across
+three jurisdictions as the regression net; it stayed green through the whole branch).
+`src/domain/federal.ts` is gone; Canada's rules are `src/domain/rules/ca.ts`, reached through
+`RULES: Record<Country, CountryRules>` in `src/domain/rules/index.ts`. `FederalRules` split into
+`CountryRulesBase` (the fields every market needs, same shape, different values — `rates`,
+`stressTest`, `gds`/`tds`, `marginal`, `appreciation`, `investReturn`, `capGainsInclusion`, …) and
+`CaRules` (fields with no US counterpart to widen into — `cmhc`, `minDown`, `fhsa`, `hbp`,
+`rrspCap`, `gstFthb`, `heatAllowance`). Every engine function is typed against the narrower of the
+two it actually needs — `CountryRulesBase` where it reads only shared fields, `CaRules` where it
+reads a Canada-only one, directly or transitively. That transitivity is the finding worth
+remembering: `amortization()`, `rentVsBuy()` and `scenario()` read no Canada-only field
+themselves, but each calls `financing()` or `closingTotal()`, which do — so all three are
+`CaRules`-typed despite looking generic on their own signature. This is deliberate, not a gap: it
+is what makes step 3 (`rules/us.ts`) compile-driven rather than a hunt, because a function honestly
+typed against `CountryRulesBase` cannot silently start reading a Canada-only field later.
+`Jurisdiction` gained `country: Country`; `mortgage: { kind: "term"; termYears; renews: true } |
+{ kind: "toMaturity"; renews: false }` is the discriminated union pages must branch on, never on
+`country` — a future renewing country gets the Canadian treatment for free, and a page that forgets
+the second arm fails to compile once it has a value. `useRules()`/`useCountry()` (client
+components) and `rulesFor(country)` (server, and `/sources`) replace every `import { federal }`.
 
 **Open issues:**
 - ~~[#1](https://github.com/vivitali/norma/issues/1)~~ — **closed by this branch.** Ukrainian and
@@ -550,6 +574,11 @@ pending in `design-reference/` for later phases.
 
 - Don't hardcode province rules inline in components — they live in `src/domain/jurisdictions/*.ts`,
   one typed file per jurisdiction, ported from `design-reference/hbt-data.js`. See the Phase 1 spec.
+  Don't hardcode COUNTRY rules inline either — Canada's live in `src/domain/rules/ca.ts`, reached
+  through `RULES: Record<Country, CountryRules>` in `src/domain/rules/index.ts` (`useRules()` /
+  `useCountry()` in client components, `rulesFor(country)` where there is a `country` but no React
+  context). `federal.ts` and the module-level `federal` singleton are gone; nothing in `src/`
+  imports a country's rules by a bare name anymore.
 - Don't add a deploy target or CI workflow without asking — monetization (above) is still open.
 - **A figure may leave the app only if `src/domain` records a verification date covering it.**
   The home page carries `FAQPage` structured data, whose whole function is to make claims

@@ -3,8 +3,8 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { rentVsBuy, rowAt } from "@/domain/engine";
-import { federal } from "@/domain/federal";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
+import { useRules } from "@/hooks/use-country";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
@@ -38,6 +38,7 @@ export default function RentVsBuyPage() {
   // The ask that replaces the answer where nobody publishes a price.
   const tInputs = useTranslations("Inputs");
   const [jurisdiction] = useJurisdiction();
+  const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     RENT_VS_BUY_SECTIONS,
@@ -49,8 +50,8 @@ export default function RentVsBuyPage() {
   const pct = usePercent();
 
   const resolved = useMemo(
-    () => resolveInputs(stored, jurisdiction, federal),
-    [stored, jurisdiction],
+    () => resolveInputs(stored, jurisdiction, rules),
+    [stored, jurisdiction, rules],
   );
 
   const input = useMemo(
@@ -84,15 +85,15 @@ export default function RentVsBuyPage() {
     [resolved],
   );
 
-  const result = useMemo(() => rentVsBuy(jurisdiction, federal, input), [jurisdiction, input]);
+  const result = useMemo(() => rentVsBuy(jurisdiction, rules, input), [jurisdiction, rules, input]);
   /**
    * The same comparison with appreciation switched off. Needed to answer the one
    * question the headline verdict cannot: is buying winning on shelter costs, or
    * only on a forecast of the housing market?
    */
   const flat = useMemo(
-    () => rentVsBuy(jurisdiction, federal, { ...input, appreciationOn: false }),
-    [jurisdiction, input],
+    () => rentVsBuy(jurisdiction, rules, { ...input, appreciationOn: false }),
+    [jurisdiction, rules, input],
   );
 
   const hold = resolved.holding;
@@ -365,11 +366,11 @@ export default function RentVsBuyPage() {
                 {/*
                   The largest single one-time figure in the whole model, and it
                   was never printed. It is `rentVsBuy()`'s own `sellingCost`, not
-                  `homeValue * federal.sellingCost` recomputed here: the engine
+                  `homeValue * rules.sellingCost` recomputed here: the engine
                   nets exactly this amount off the equity row directly below, and a
                   page that re-derives it agrees only until the engine's model
                   changes. It needs no provenance entry of its own beyond the
-                  estimate mark `sellingCost` already carries in federal.ts.
+                  estimate mark `sellingCost` already carries in rules/ca.ts.
                 */}
                 <PanelRow
                   label={t("cSelling")}
@@ -631,7 +632,7 @@ export default function RentVsBuyPage() {
             {/*
               The two controls with the largest effect on the verdict, and until
               now the reader could not see what either of them selected: six
-              rates, none of them anywhere on the page, while federal.ts's own
+              rates, none of them anywhere on the page, while rules/ca.ts's own
               note says the three tiers exist "so the reader can see how much the
               answer depends on it".
 
@@ -659,9 +660,9 @@ export default function RentVsBuyPage() {
             />
             <NoteLine tight>
               {t("apprRates", {
-                a: pct(federal.appreciation.inflation * 100),
-                b: pct(federal.appreciation.shelter * 100),
-                c: pct(federal.appreciation.flat * 100),
+                a: pct(rules.appreciation.inflation * 100),
+                b: pct(rules.appreciation.shelter * 100),
+                c: pct(rules.appreciation.flat * 100),
               })}
               <Provenance kind="estimate" />
             </NoteLine>
@@ -677,9 +678,9 @@ export default function RentVsBuyPage() {
             />
             <NoteLine tight>
               {t("retRates", {
-                a: pct(federal.investReturn.cash * 100),
-                b: pct(federal.investReturn.balanced * 100),
-                c: pct(federal.investReturn.growth * 100),
+                a: pct(rules.investReturn.cash * 100),
+                b: pct(rules.investReturn.balanced * 100),
+                c: pct(rules.investReturn.growth * 100),
               })}
               <Provenance kind="estimate" />
             </NoteLine>

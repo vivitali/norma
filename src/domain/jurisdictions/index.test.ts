@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { readFieldPath } from "../provenance";
-import { jurisdictions, getJurisdiction, defaultJurisdiction } from "./index";
+import {
+  jurisdictions,
+  getJurisdiction,
+  defaultJurisdiction,
+  jurisdictionsOf,
+  defaultJurisdictionOf,
+} from "./index";
 
 const VALID_PROVINCES = new Set([
   "ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "PE", "NL", "YT", "NT", "NU",
@@ -14,6 +20,15 @@ describe("jurisdictions", () => {
   it("has unique ids", () => {
     const ids = jurisdictions.map((j) => j.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("has country \"ca\" on every jurisdiction", () => {
+    // All 14 records are Canadian today; this is the invariant that fails the
+    // instant a jurisdiction is added without a country, rather than silently
+    // defaulting one in.
+    for (const j of jurisdictions) {
+      expect(j.country, j.id).toBe("ca");
+    }
   });
 
   it("has a valid province code on every jurisdiction", () => {
@@ -122,6 +137,18 @@ describe("jurisdictions", () => {
   it("exposes a default jurisdiction that is itself one of the listed jurisdictions", () => {
     expect(jurisdictions).toContain(defaultJurisdiction);
     expect(getJurisdiction(defaultJurisdiction.id)).toBe(defaultJurisdiction);
+  });
+
+  it("filters to one country's jurisdictions, in registry order", () => {
+    const ca = jurisdictionsOf("ca");
+    expect(ca).toEqual(jurisdictions);
+    for (const j of ca) expect(j.country).toBe("ca");
+  });
+
+  it("resolves a country's default to one of its own jurisdictions", () => {
+    const def = defaultJurisdictionOf("ca");
+    expect(def).toBe(defaultJurisdiction);
+    expect(jurisdictionsOf("ca")).toContain(def);
   });
 });
 

@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import type { Jurisdiction } from "@/domain/types";
 import type { PropertyType, Residency } from "@/domain/types";
-import { federal } from "@/domain/federal";
 import { maxAmortYears } from "@/domain/engine";
+import { useRules } from "@/hooks/use-country";
 import { useMoney, usePercent } from "@/lib/format";
 import { NumberField } from "@/components/number-field";
 import { NoteLine } from "@/components/tool-page";
@@ -131,6 +131,7 @@ export function PurchaseInputs({
   const tProv = useTranslations("Provinces");
   const fmt = useMoney();
   const pct = usePercent();
+  const rules = useRules();
   /**
    * null when there is no price to model at all — see `pricePlaceholder`.
    *
@@ -165,7 +166,7 @@ export function PurchaseInputs({
    * the note says what it would take to get it — the same gesture, in the same words,
    * as the Affordability screen's own amortization control.
    */
-  const amortCap = maxAmortYears(federal, {
+  const amortCap = maxAmortYears(rules, {
     dpPct: dpPctEffective,
     price: effectivePrice ?? 0,
     ftb: ftbEffective,
@@ -256,11 +257,11 @@ export function PurchaseInputs({
         out of the sentence; the condition is stated qualitatively instead, and every
         term in it is one the reader can check.
       */}
-      {amortYears !== undefined && amortCap < federal.maxAmortFtbInsured ? (
+      {amortYears !== undefined && amortCap < rules.maxAmortFtbInsured ? (
         <NoteLine tone="caution" tight>
           {t("amortCapped", {
-            n: federal.maxAmortFtbInsured,
-            p: pct(federal.minDown.uninsuredRate * 100),
+            n: rules.maxAmortFtbInsured,
+            p: pct(rules.minDown.uninsuredRate * 100),
           })}
         </NoteLine>
       ) : null}

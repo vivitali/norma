@@ -1,4 +1,4 @@
-import type { FederalRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
+import type { CaRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
 import { defaultContractRate, minDown, rentComparable } from "@/domain/engine";
 import type { ToolFormState } from "./shared-inputs";
 
@@ -178,7 +178,7 @@ export interface ResolvedInputs {
 export function resolveInputs(
   stored: ToolFormState,
   j: Jurisdiction,
-  F: FederalRules,
+  F: CaRules,
 ): ResolvedInputs {
   const income1 = stored.income1 ?? DEFAULT_INCOME_1;
   const income2 = stored.income2 ?? 0;
