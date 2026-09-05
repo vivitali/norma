@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COUNTRIES, type Country } from "@/i18n/countries";
+import { COUNTRIES, type Country, type Language } from "@/i18n/countries";
 import { redirects } from "./redirects";
 
 /**
@@ -8,7 +8,7 @@ import { redirects } from "./redirects";
  * `@opennextjs/aws`, at two different versions), not one this project declares, so
  * importing it directly would make this test's correctness depend on hoisting.
  *
- * `redirects()` only ever emits two shapes, so this stays a translation of the actual
+ * `redirects()` only ever emits three shapes, so this stays a translation of the actual
  * `source` strings rather than a hardcoded assumption about what they say:
  * - a `(a|b|c)` capture group for the constrained `:lang` segment, with an optional
  *   `/:path*` tail. `:path*` is zero-or-more *path segments*, which is why Next needs
@@ -16,6 +16,10 @@ import { redirects } from "./redirects";
  *   slash plus at least one character when present, mirrored here as `(?:/.+)?`.
  * - a literal, non-dynamic segment (a bare country's `source`, e.g. "/ca") — no
  *   capture group, no wildcard tail, matches only that exact path.
+ * - a literal two-segment `/<country>/<invalid-language>` source (an invalid pair,
+ *   from `invalidLanguagePairRedirects()`), with an optional literal `/:path*` tail —
+ *   same shape as the bare literal above, one segment deeper, with the same optional
+ *   tail the dynamic case has.
  */
 function matches(source: string, path: string): boolean {
   const dynamic = /^\/:lang\(([^)]+)\)(\/:path\*)?$/.exec(source);
@@ -26,6 +30,12 @@ function matches(source: string, path: string): boolean {
   }
   if (/^\/[a-z0-9-]+$/i.test(source)) {
     return source === path;
+  }
+  const pair = /^(\/[a-z0-9-]+\/[a-z0-9-]+)(\/:path\*)?$/i.exec(source);
+  if (pair) {
+    const [, literal, hasPathTail] = pair;
+    const tail = hasPathTail ? "(?:/.+)?" : "";
+    return new RegExp(`^${literal}${tail}$`).test(path);
   }
   throw new Error(`redirects.test.ts does not know this source shape: ${source}`);
 }
@@ -120,5 +130,58 @@ describe("redirects", () => {
       expect(matches(rule.source, "/us/en/affordability")).toBe(false);
       expect(matches(rule.source, "/us/es/capacidad-de-compra")).toBe(false);
     }
+  });
+
+  describe("invalid (country, language) pairs", () => {
+    const ALL_LANGUAGES: Language[] = Array.from(
+      new Set((Object.keys(COUNTRIES) as Country[]).flatMap((c) => COUNTRIES[c].languages)),
+    );
+
+    it("redirects every (country, language-not-in-that-country) pair to the country's own default language", () => {
+      for (const country of Object.keys(COUNTRIES) as Country[]) {
+        const profile = COUNTRIES[country];
+        const [defaultLanguage] = profile.languages;
+        const countryLanguages: readonly Language[] = profile.languages;
+        const invalidLanguages = ALL_LANGUAGES.filter((l) => !countryLanguages.includes(l));
+        for (const lang of invalidLanguages) {
+          const bare = rules.find((r) => matches(r.source, `${profile.segment}/${lang}`));
+          expect(bare, `${profile.segment}/${lang}`).toBeDefined();
+          expect(bare?.destination).toBe(`${profile.segment}/${defaultLanguage}`);
+          expect(bare?.permanent).toBe(true);
+
+          const withPath = rules.find((r) =>
+            matches(r.source, `${profile.segment}/${lang}/affordability`),
+          );
+          expect(withPath, `${profile.segment}/${lang}/affordability`).toBeDefined();
+          expect(withPath?.destination).toBe(`${profile.segment}/${defaultLanguage}/:path*`);
+          expect(withPath?.permanent).toBe(true);
+        }
+      }
+    });
+
+    it("redirects /us/fr/affordability and /us/uk to the US default language, concretely", () => {
+      const frRule = rules.find((r) => matches(r.source, "/us/fr/affordability"));
+      expect(frRule).toBeDefined();
+      expect(frRule?.destination).toBe("/us/en/:path*");
+
+      const ukRule = rules.find((r) => matches(r.source, "/us/uk"));
+      expect(ukRule).toBeDefined();
+      expect(ukRule?.destination).toBe("/us/en");
+    });
+
+    it("leaves every valid (country, language) pair untouched", () => {
+      for (const country of Object.keys(COUNTRIES) as Country[]) {
+        const profile = COUNTRIES[country];
+        for (const lang of profile.languages) {
+          for (const rule of rules) {
+            expect(matches(rule.source, `${profile.segment}/${lang}`), rule.source).toBe(false);
+            expect(
+              matches(rule.source, `${profile.segment}/${lang}/affordability`),
+              rule.source,
+            ).toBe(false);
+          }
+        }
+      }
+    });
   });
 });

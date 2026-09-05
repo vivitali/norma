@@ -291,6 +291,63 @@ while IFS=$'\t' read -r segment default_prefix; do
   esac
 done <<< "$COUNTRY_PROBES"
 
+# Invalid (country, language) pairs — a language real somewhere in the registry but
+# not one THIS country ships, e.g. "/us/fr" (us only ships en/es; fr is ca's). Without
+# src/lib/redirects.ts's invalidLanguagePairRedirects(), next-intl's middleware treats
+# the whole prefix as unrecognized, negotiates a default locale, and PREPENDS it —
+# "/ca/en/us/fr/affordability" — which then 404s, in the wrong country. Derived from
+# COUNTRIES here too, never hardcoded to "/us/fr", so a language or country added to
+# the registry is covered for free.
+read -r -d '' INVALID_LANG_SCRIPT <<'JS' || true
+import { pathToFileURL } from "node:url";
+const root = process.argv[1];
+const countriesUrl = pathToFileURL(`${root}/src/i18n/countries.ts`).href;
+const { COUNTRIES, defaultPrefixes } = await import(countriesUrl);
+const defaults = defaultPrefixes();
+const allLanguages = [...new Set(Object.values(COUNTRIES).flatMap((c) => c.languages))];
+for (const country of Object.keys(COUNTRIES)) {
+  const profile = COUNTRIES[country];
+  const invalid = allLanguages.filter((l) => !profile.languages.includes(l));
+  for (const lang of invalid) {
+    console.log(`${profile.segment}/${lang}\t${defaults[country]}`);
+  }
+}
+JS
+
+if ! INVALID_LANG_PROBES=$(node --input-type=module -e "$INVALID_LANG_SCRIPT" "$ROOT"); then
+  echo "FAIL  cannot derive invalid (country, language) pairs from src/i18n/countries.ts"
+  exit 1
+fi
+
+while IFS=$'\t' read -r invalid_prefix default_prefix; do
+  [ -n "$invalid_prefix" ] || continue
+  # Must ultimately resolve to a real prerendered page in the SAME country, not a
+  # cross-country 404.
+  check_status "$invalid_prefix"
+  check_status "$invalid_prefix/affordability"
+
+  # And the first hop has to land directly on the country's own default language --
+  # never on another country's, which is the actual defect this check exists to catch.
+  IFS=$'\t' read -r status location < <(redirect_probe "$BASE$invalid_prefix")
+  case "$status" in
+    3??)
+      case "$location" in
+        "$default_prefix"*)
+          echo "ok    $invalid_prefix -> $status $location"
+          ;;
+        *)
+          echo "FAIL  $invalid_prefix -> $status $location (expected Location starting with $default_prefix)"
+          FAILED=1
+          ;;
+      esac
+      ;;
+    *)
+      echo "FAIL  $invalid_prefix -> $status ${location:-<no redirect>} (expected a 3xx)"
+      FAILED=1
+      ;;
+  esac
+done <<< "$INVALID_LANG_PROBES"
+
 if [ -z "$FR_PREFIX" ]; then
   echo "FAIL  fr-CA is not in the locale registry; cannot verify Accept-Language negotiation"
   FAILED=1
