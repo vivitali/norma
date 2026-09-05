@@ -977,8 +977,8 @@
     "nHurdleBody_us": "L'intérêt hypothécaire peut être déductible si vous détaillez vos déductions, mais la plupart des acheteurs prennent la déduction forfaitaire et n'en tirent rien — voir Louer ou acheter pour savoir si détailler vaut le coup à vos chiffres. Dans tous les cas, comparez le taux hypothécaire aux rendements de placement après impôt, pas bruts.",
     "nOrderTitle_us": "Remplissez d'abord les comptes avantagés fiscalement",
     "nOrderBody_us": "Un IRA ou un 401(k) — surtout avec une contrepartie de l'employeur — bat généralement le remboursement anticipé du prêt avant tout le reste.",
-    "cGds_us": "DTI initial",
-    "cTds_us": "DTI global",
+    "cGds_us": "DTI logement",
+    "cTds_us": "DTI total",
     "whyPremTax_us": "Ici, l’assurance hypothécaire privée est une charge mensuelle, pas une prime versée à la clôture, donc elle n’ajoute rien au comptant nécessaire à la clôture.",
     "cashWhy_us": "Un scénario moins cher que vous ne pouvez pas financer n’est pas une option. Le comptant à la clôture est recalculé par colonne, car la mise de fonds elle-même en est la plus grosse ligne et augmente dans chaque colonne qui la relève.",
     "approvalWhy_us": "L’admissibilité est évaluée au taux contractuel ; aucune marge de taux fédérale n’est ajoutée ici. Une colonne peut être abordable et refusée quand même."
