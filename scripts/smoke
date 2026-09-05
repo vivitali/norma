@@ -146,25 +146,41 @@ while IFS=$'\t' read -r locale prefix probe; do
   # passing while a deployed origin silently drops an edge-only behavior — "verify
   # against a deployed response, not the build output." Following -L here would make
   # this indistinguishable from the /affordability check two lines up.
-  lang="${prefix##*/}"
-  IFS=$'\t' read -r status location < <(redirect_probe "$BASE/$lang/affordability")
-  case "$status" in
-    3??)
-      case "$location" in
-        "$prefix"*)
-          echo "ok    /$lang/affordability -> $status $location"
-          ;;
-        *)
-          echo "FAIL  /$lang/affordability -> $status $location (expected Location starting with $prefix)"
-          FAILED=1
-          ;;
-      esac
-      ;;
-    *)
-      echo "FAIL  /$lang/affordability -> $status ${location:-<no redirect>} (expected a 3xx)"
-      FAILED=1
-      ;;
+  #
+  # CA ONLY. `src/lib/redirects.ts`'s own comment is explicit: `LANG_PATTERN` covers
+  # only `ca`'s pre-migration languages, because CA is the only country that ever had a
+  # root-level (no-country-segment) URL to be compatible with — a second country never
+  # shipped bare `/en/...` links for anyone to have bookmarked. `en` and `es` are each
+  # shared by TWO countries today, so this bare form is inherently ambiguous and, by
+  # that file's design, always resolves to `/ca/...` — checking it against the US
+  # prefix here asserted something that was never true and could not be made true
+  # without breaking the CA compatibility redirect for everyone who bookmarked it.
+  # Verified once, under CA's own iteration of this loop, is enough.
+  case "$prefix" in
+    /ca/*) run_legacy_check=1 ;;
+    *) run_legacy_check=0 ;;
   esac
+  if [ "$run_legacy_check" = "1" ]; then
+    lang="${prefix##*/}"
+    IFS=$'\t' read -r status location < <(redirect_probe "$BASE/$lang/affordability")
+    case "$status" in
+      3??)
+        case "$location" in
+          "$prefix"*)
+            echo "ok    /$lang/affordability -> $status $location"
+            ;;
+          *)
+            echo "FAIL  /$lang/affordability -> $status $location (expected Location starting with $prefix)"
+            FAILED=1
+            ;;
+        esac
+        ;;
+      *)
+        echo "FAIL  /$lang/affordability -> $status ${location:-<no redirect>} (expected a 3xx)"
+        FAILED=1
+        ;;
+    esac
+  fi
 
   # French is the one guaranteed to carry a slug (uk carries none; es omits rrsp-hbp's).
   # Scoped to "fr-CA" specifically rather than "any French locale" because this repo
