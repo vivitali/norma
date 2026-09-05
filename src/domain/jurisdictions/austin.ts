@@ -175,11 +175,18 @@ export const austin: Jurisdiction = {
       note: "Midpoint of the dossier's own $500-$1,000 Austin appraisal-fee range (dossier C9) — same no-publisher gap as fees.survey.",
     },
     "fees.recording": {
-      conf: "high",
+      // The PER-PAGE rate is high (fetched directly off the Clerk's own page, internally
+      // consistent — unlike Houston's, which needed a secondary aggregator over an inconsistent
+      // extraction). But this FIELD holds a COMBINED total across two instruments (deed + deed
+      // of trust) at an assumed page count each, which the dossier itself grades "assumption for
+      // the page-count estimate specifically" (dossier C6) — the rate being high does not
+      // promote the combined dollar figure this field actually stores. Never promote a figure
+      // past the dossier's own grade (see SKILL.md's fees.titleIns trap).
+      conf: "assumption",
       asOf: "2026",
       src: TRAVIS_CLERK,
       url: TRAVIS_CLERK_URL,
-      note: "$25 first page + $4 each additional page + $0.25/name over 5, Travis County Clerk, fetched directly and internally consistent (dossier C6). $123 models the dossier's own worked combined total for a warranty deed plus a uniform deed of trust (roughly $110-$135) — the per-page fee is high; the page-count combination itself is this dossier's own estimate, so the FIGURE carries assumption-level uncertainty even though its RATE inputs are high.",
+      note: "$25 first page + $4 each additional page + $0.25/name over 5, Travis County Clerk, fetched directly and internally consistent (dossier C6). $123 models the dossier's own worked combined total for a warranty deed (2-3 pages) plus a uniform deed of trust with riders (15-20 pages), roughly $110-$135 — no publisher states a 'typical total,' so the page-count combination is this dossier's own modelled estimate.",
     },
     "insurance": {
       conf: "medium",
