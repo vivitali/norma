@@ -41,7 +41,9 @@ describe("LocalePairsOf", () => {
     void _rejected;
   });
 
-  it("derives the real Locale as the ca-only pairs COUNTRIES declares today", () => {
-    expectTypeOf<Locale>().toEqualTypeOf<"en-CA" | "fr-CA" | "uk-CA" | "es-CA">();
+  it("derives the real Locale as the pairs COUNTRIES declares today", () => {
+    expectTypeOf<Locale>().toEqualTypeOf<
+      "en-CA" | "fr-CA" | "uk-CA" | "es-CA" | "en-US" | "es-US"
+    >();
   });
 });

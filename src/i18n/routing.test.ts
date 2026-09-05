@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { getPathname } from "@/i18n/navigation";
-import { allLocales, localePrefixes } from "./countries";
+import { allLocales, localePrefixes, COUNTRIES, type Country } from "./countries";
 import { routing } from "./routing";
 
 describe("routing", () => {
-  it("supports four Canadian locales with en-CA as default", () => {
-    expect(routing.locales).toEqual(["en-CA", "fr-CA", "uk-CA", "es-CA"]);
+  it("supports every registered country's locales with en-CA as default", () => {
+    expect(routing.locales).toEqual(["en-CA", "fr-CA", "uk-CA", "es-CA", "en-US", "es-US"]);
     expect(routing.defaultLocale).toBe("en-CA");
   });
 
@@ -23,6 +23,8 @@ describe("routing", () => {
       "fr-CA": "/ca/fr",
       "uk-CA": "/ca/uk",
       "es-CA": "/ca/es",
+      "en-US": "/us/en",
+      "es-US": "/us/es",
     });
   });
 });
@@ -49,14 +51,21 @@ describe("routing.pathnames", () => {
     }
   });
 
-  it("gives every non-root route a Spanish slug, except the one with nothing to translate", () => {
+  it("gives every non-root route a Spanish slug for EVERY Spanish locale, except the one with nothing to translate", () => {
     // /rrsp-hbp keeps the English acronyms: RRSP and HBP are the names on the reader's
-    // own Canadian bank and tax paperwork, so a Spanish slug would name nothing.
+    // own Canadian bank and tax paperwork, so a Spanish slug would name nothing — and
+    // it has no US analogue at all, so es-US never enters the picture for it either.
     for (const [key, value] of Object.entries(routing.pathnames)) {
       if (key === "/" || key === "/rrsp-hbp") continue;
-      expect(value, `${key} has no Spanish slug`).toHaveProperty("es-CA");
+      expect(value, `${key} has no es-CA slug`).toHaveProperty("es-CA");
+      expect(value, `${key} has no es-US slug`).toHaveProperty("es-US");
+      // Same slug for both — a slug is a fact about the LANGUAGE, not the country
+      // segment in front of it (US-market spec, Decision 3).
+      const v = value as Record<string, string>;
+      expect(v["es-US"], `${key}: es-CA and es-US slugs differ`).toBe(v["es-CA"]);
     }
     expect(routing.pathnames["/rrsp-hbp"]).not.toHaveProperty("es-CA");
+    expect(routing.pathnames["/rrsp-hbp"]).not.toHaveProperty("es-US");
   });
 
   it("gives Ukrainian no slugs at all, so every route falls back to the English one", () => {
@@ -72,13 +81,15 @@ describe("routing.pathnames", () => {
     );
   });
 
-  it("omits en-CA, because a missing locale falls back to the canonical key", () => {
+  it("omits en-CA and en-US, because a missing locale falls back to the canonical key", () => {
     // Verified in next-intl 4.13.7: getLocalizedTemplate is
     //   pathnameConfig[locale] || internalTemplate
-    // Writing en-CA explicitly would be redundant and would drift when a key is renamed.
+    // Writing en-CA/en-US explicitly would be redundant and would drift when a key is
+    // renamed.
     for (const value of Object.values(routing.pathnames)) {
       if (typeof value === "string") continue;
       expect(value).not.toHaveProperty("en-CA");
+      expect(value).not.toHaveProperty("en-US");
     }
   });
 
@@ -97,6 +108,9 @@ describe("routing.pathnames", () => {
     expect(getPathname({ href: "/affordability", locale: "en-CA" })).toBe(
       "/ca/en/affordability",
     );
+    expect(getPathname({ href: "/affordability", locale: "en-US" })).toBe(
+      "/us/en/affordability",
+    );
   });
 
   it.each([
@@ -112,6 +126,21 @@ describe("routing.pathnames", () => {
     "resolves %s to the Spanish path /ca/es%s",
     (href, esSlug) => {
       expect(getPathname({ href, locale: "es-CA" })).toBe(`/ca/es${esSlug}`);
+    },
+  );
+
+  it.each([
+    ["/affordability", "/capacidad-de-compra"],
+    ["/closing-costs", "/gastos-de-cierre"],
+    ["/down-payment", "/pago-inicial"],
+    ["/amortization", "/amortizacion"],
+    ["/rent-vs-buy", "/alquilar-o-comprar"],
+    ["/scenarios", "/escenarios"],
+    ["/sources", "/fuentes"],
+  ] satisfies Array<[keyof typeof routing.pathnames, string]>)(
+    "resolves %s to the SAME Spanish path under /us/es%s — a slug is a language fact",
+    (href, esSlug) => {
+      expect(getPathname({ href, locale: "es-US" })).toBe(`/us/es${esSlug}`);
     },
   );
 
@@ -142,5 +171,19 @@ describe("two-segment locale prefixes", () => {
     expect(getPathname({ href: "/", locale: "en-CA" })).toBe("/ca/en");
     expect(getPathname({ href: "/", locale: "fr-CA" })).toBe("/ca/fr");
     expect(getPathname({ href: "/sources", locale: "uk-CA" })).toBe("/ca/uk/sources");
+    expect(getPathname({ href: "/", locale: "en-US" })).toBe("/us/en");
+    expect(getPathname({ href: "/sources", locale: "es-US" })).toBe("/us/es/fuentes");
+  });
+});
+
+describe("the US country", () => {
+  it("ships English and Spanish only — no French, no Ukrainian", () => {
+    expect(COUNTRIES.us.languages).toEqual(["en", "es"]);
+  });
+
+  it("is a real registry entry, not a hardcoded second case", () => {
+    const countries = Object.keys(COUNTRIES) as Country[];
+    expect(countries).toContain("us");
+    expect(countries).toContain("ca");
   });
 });

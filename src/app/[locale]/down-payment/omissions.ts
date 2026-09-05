@@ -24,3 +24,15 @@
 export const OMISSIONS_NAMESPACE = "DownPayment";
 
 export const NOT_MODELLED = ["omSeasoning", "omOneBuyerCaps"] as const;
+
+/**
+ * US: `omOneBuyerCaps` names a CA-only mechanic (`F.hbp.max` applied once), which
+ * has no US analogue at all — there is no HBP to cap. `omIraTip` replaces it:
+ * `rules.programs.fha` isn't the only US down-payment programme this page's engine
+ * call leaves unmodelled — the IRA first-time-buyer $10,000 penalty exception and a
+ * 401(k) loan are real sources `waterfall()` does not read (see its own doc comment,
+ * "IRA first-time-buyer $10,000 penalty exception ... NOT modelled"). `omSeasoning`
+ * stays: every lender, in either country, asks where money came from and how long
+ * it has sat there.
+ */
+export const NOT_MODELLED_US = ["omSeasoning", "omIraTip"] as const;

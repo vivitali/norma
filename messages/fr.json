@@ -2,11 +2,14 @@
   "Metadata": {
     "home": {
       "title": "Quelle maison pouvez-vous vous permettre ? — AffordMath",
-      "description": "Ce que vous pouvez réellement vous permettre d’acheter au Canada, calculé sur le revenu net et les coûts réels, selon les règles de votre province."
+      "description": "Ce que vous pouvez réellement vous permettre d’acheter au Canada, calculé sur le revenu net et les coûts réels, selon les règles de votre province.",
+      "title_us": "Combien de maison pouvez-vous vous permettre? — AffordMath",
+      "description_us": "Voyez ce que vous pouvez vraiment vous permettre d'acheter aux États-Unis — revenu net réel, coûts réels, règles fiscales de votre État."
     },
     "affordability": {
       "title": "Calculateur d’abordabilité — le coût réel",
-      "description": "Deux plafonds côte à côte — ce qu’un prêteur approuverait, et ce qui tient dans votre budget mensuel réel. Règles fiscales provinciales incluses."
+      "description": "Deux plafonds côte à côte — ce qu’un prêteur approuverait, et ce qui tient dans votre budget mensuel réel. Règles fiscales provinciales incluses.",
+      "description_us": "Deux plafonds côte à côte : ce qu'un prêteur approuverait, et ce que votre budget mensuel réel permet. Règles fiscales de votre État et comté incluses."
     },
     "sources": {
       "title": "Sources et provenance — AffordMath",
@@ -20,11 +23,13 @@
     },
     "closingCosts": {
       "title": "Calculateur des frais de clôture — ce que vous devez",
-      "description": "Chaque frais de clôture par province : droits de mutation, frais juridiques, ajustements, et quels remboursements arrivent le jour même."
+      "description": "Chaque frais de clôture par province : droits de mutation, frais juridiques, ajustements, et quels remboursements arrivent le jour même.",
+      "description_us": "Chaque frais de clôture : taxe foncière, titre, séquestre, ajustements — et ce que le Texas facture au lieu d'une taxe de mutation."
     },
     "downPayment": {
       "title": "Sources de mise de fonds — l’argent le moins cher d’abord",
-      "description": "CELIAPP, comptant, RAP, CELI, don, puis placements. Voyez ce que chaque source vous coûte et ce qu’elle laisse derrière."
+      "description": "CELIAPP, comptant, RAP, CELI, don, puis placements. Voyez ce que chaque source vous coûte et ce qu’elle laisse derrière.",
+      "description_us": "Comptant, don, IRA/401(k), puis autres placements. Le coût de chaque source et ce qu'elle laisse derrière."
     },
     "rrspHbp": {
       "title": "RAP — remboursement d’impôt, règles et remboursement",
@@ -32,11 +37,14 @@
     },
     "amortization": {
       "title": "Amortissement et renouvellement — le choc de paiement",
-      "description": "On ne fixe pas un taux pour toute la durée du prêt. Voyez l’effet d’un renouvellement à un taux plus élevé sur le paiement et sur le coût total."
+      "description": "On ne fixe pas un taux pour toute la durée du prêt. Voyez l’effet d’un renouvellement à un taux plus élevé sur le paiement et sur le coût total.",
+      "title_us": "Calendrier d'amortissement — chaque versement",
+      "description_us": "Un prêt fixe de 30 ans, versement par versement. Solde, intérêts et PMI par année, et la valeur d'annuler la PMI."
     },
     "rentVsBuy": {
       "title": "Louer ou acheter au Canada — tout dépend de la durée",
-      "description": "L’année de rentabilité est le seul chiffre qui tranche. Comparez la richesse finale des deux côtés, avec un test de marché plat et les frais de vente."
+      "description": "L’année de rentabilité est le seul chiffre qui tranche. Comparez la richesse finale des deux côtés, avec un test de marché plat et les frais de vente.",
+      "title_us": "Louer ou acheter aux États-Unis — tout dépend de la durée"
     },
     "scenarios": {
       "title": "Scénarios de mise de fonds — 5, 10, 20 ou 25 %",
@@ -91,13 +99,37 @@
     "faqQ_eligibility": "Puis-je acheter une habitation au Canada sans être citoyen ni résident permanent ?",
     "faqA_eligibility": "Parfois, et cette question précède tous les chiffres de ce site. Une loi fédérale limite quels non-Canadiens peuvent acheter une propriété résidentielle au Canada, avec des exceptions qui dépendent du statut d’immigration et de l’endroit où se trouve la propriété. Elle est à durée limitée et a été prolongée par règlement : consultez la règle en vigueur plutôt qu’un résumé. Par ailleurs, certaines provinces imposent un droit de mutation plus élevé aux acheteurs non-résidents : celui de la Nouvelle-Écosse est appliqué ici, ceux de l’Ontario et de la Colombie-Britannique ne sont pas modélisés du tout.",
     "faqQ_verified": "Les chiffres sont-ils vérifiés ?",
-    "faqA_verified": "En grande partie, et chaque chiffre le précise. Chacun est accompagné d’une fiche de provenance : le document consulté, la date de ce document, et jusqu’où l’on peut s’y fier. La plupart ont été relevés dans le barème de l’organisme lui-même. D’autres sont des valeurs par défaut que nous avons choisies et que nous déclarons, car les honoraires juridiques, les inspections et les frais de déménagement n’ont aucun éditeur officiel au Canada. Quelques-uns restent vides faute de publication, et l’application vous les demande plutôt que d’en inventer. La page des sources énumère chaque chiffre avec son document et sa date. Vérifiez tout ce sur quoi vous vous apprêtez à agir."
+    "faqA_verified": "En grande partie, et chaque chiffre le précise. Chacun est accompagné d’une fiche de provenance : le document consulté, la date de ce document, et jusqu’où l’on peut s’y fier. La plupart ont été relevés dans le barème de l’organisme lui-même. D’autres sont des valeurs par défaut que nous avons choisies et que nous déclarons, car les honoraires juridiques, les inspections et les frais de déménagement n’ont aucun éditeur officiel au Canada. Quelques-uns restent vides faute de publication, et l’application vous les demande plutôt que d’en inventer. La page des sources énumère chaque chiffre avec son document et sa date. Vérifiez tout ce sur quoi vous vous apprêtez à agir.",
+    "eyebrow_us": "États-Unis · Houston, TX",
+    "rulesHeading_us": "Des règles texanes, pas des moyennes nationales",
+    "rulesIntro_us": "Houston (comté de Harris) est modélisée avec son propre taux de taxe foncière, son exonération de résidence principale et ses conventions de frais de clôture — pas un chiffre national unique valable pour chaque État.",
+    "rulesTxHomesteadLabel": "Exonération de résidence",
+    "rulesTxHomestead": "L'exonération de résidence principale du district scolaire du comté de Harris protège 140 000 $ de la valeur d'une résidence principale de la portion HISD de la taxe foncière (en date du 2025-11-04).",
+    "rulesTxNoTransferLabel": "Aucune taxe de mutation",
+    "rulesTxNoTransfer": "Le Texas ne prélève aucune taxe de mutation immobilière au niveau de l'État. Les frais de clôture passent plutôt par l'assurance titres et les frais d'enregistrement du comté.",
+    "rulesTxPmiLabel": "Assurance hypothécaire",
+    "rulesTxPmi": "Sous 20 % de mise de fonds, l'acheteur paie une assurance hypothécaire privée chaque mois plutôt qu'une prime unique financée dans le prêt — annulable une fois le seuil de mise de fonds atteint.",
+    "rulesNote_us": "C'est pourquoi la réponse dépend du marché où vous achetez, et pourquoi un chiffre national unique serait faux dès que vous changez d'État.",
+    "faqQ_afford_us": "Combien de maison puis-je me permettre aux États-Unis?",
+    "faqA_preapproval_us": "Une préapprobation teste le revenu brut par rapport aux ratios d'endettement de base et global (28/36 est la règle classique). Elle ne soustrait pas la taxe foncière, l'assurance habitation, les frais de copropriété, les services publics et l'entretien qui accompagnent la maison, et elle ne tient pas compte de ce que vous voulez garder pour le reste du mois. L'écart entre les deux chiffres atteint plusieurs centaines de dollars par mois.",
+    "faqQ_stressTest_us": "Les États-Unis ont-ils un test de résistance hypothécaire comme au Canada?",
+    "faqA_stressTest_us": "Aucun test de résistance fédéral ne s'applique à une hypothèque américaine — vous êtes qualifié selon votre taux contractuel réel, pas un plancher réglementaire plus élevé. Les prêteurs plafonnent plutôt votre ratio d'endettement, et un prêt au-delà de 80 % de la valeur du bien porte généralement une assurance hypothécaire privée (PMI) jusqu'à ce que votre mise de fonds atteigne le seuil d'annulation.",
+    "faqQ_jurisdiction_us": "Est-ce que cela fonctionne ailleurs qu'à Houston, au Texas?",
+    "faqA_jurisdiction_us": "Pour l'instant, seule Houston (comté de Harris), au Texas, est modélisée — avec son propre taux de taxe foncière, son exonération de résidence et ses conventions de frais de clôture, pas une moyenne nationale. L'exonération de résidence principale du district scolaire du comté de Harris protège 140 000 $ de la valeur d'une résidence principale (en date du 2025-11-04), et le Texas ne prélève aucune taxe de mutation immobilière au niveau de l'État; d'autres États qui en ont une ne sont pas encore modélisés.",
+    "faqQ_eligibility_us": "Puis-je acheter une maison aux États-Unis si je ne suis pas citoyen?",
+    "faqA_eligibility_us": "Cet outil ne modélise aucune restriction fédérale de citoyenneté ou d'immigration sur l'achat d'un bien résidentiel américain — ce n'est pas la même question que soulève la loi fédérale canadienne, et confirmer votre propre situation dépasse ce que ce calculateur fait. Le financement en tant que non-citoyen est une question distincte, avec sa propre réponse selon le prêteur.",
+    "faqA_verified_us": "La plupart, et chaque chiffre indique lequel. Chacun porte une fiche de sourçage : le document contre lequel il a été vérifié, la date de ce document, et le degré de confiance qu'on peut lui accorder. La plupart proviennent directement du barème de l'autorité émettrice — l'IRS, la FHFA, l'enquête PMMS de Freddie Mac, le Texas Department of Insurance, les entités fiscales du comté de Harris. D'autres sont des valeurs par défaut que nous avons choisies et divulguées, car les frais de clôture et de déménagement n'ont pas de source officielle. Quelques-unes restent vides parce que personne ne les publie, et l'application vous les demande plutôt que d'en inventer une. La page des sources répertorie chaque chiffre avec son document et sa date. Vérifiez tout ce sur quoi vous êtes sur le point d'agir."
   },
   "AppHeader": {
     "theme": "Thème",
     "changeLanguage": "Changer de langue",
     "brand": "AffordMath",
-    "changeLocation": "Changer de lieu"
+    "changeLocation": "Changer de lieu",
+    "changeCountry": "Changer de pays"
+  },
+  "Countries": {
+    "ca": "Canada",
+    "us": "États-Unis"
   },
   "Nav": {
     "menu": "Outils",
@@ -123,6 +155,7 @@
     "montreal": "Montréal",
     "calgary": "Calgary",
     "saskatoon": "Saskatoon",
+    "houston": "Houston",
     "nb": "Nouveau-Brunswick",
     "nl": "Terre-Neuve-et-Labrador",
     "pe": "Île-du-Prince-Édouard",
@@ -138,6 +171,7 @@
       "montreal": "Montréal",
       "calgary": "Calgary",
       "saskatoon": "Saskatoon",
+      "houston": "Houston",
       "nb": "le Nouveau-Brunswick",
       "nl": "Terre-Neuve-et-Labrador",
       "pe": "l’Île-du-Prince-Édouard",
@@ -204,6 +238,7 @@
     "cUtilities": "Services et chauffage, mensuel",
     "cCondoFee": "Frais de condo, mensuel",
     "cFunds": "Fonds disponibles",
+    "cPmi": "PMI",
     "keyLever": "Levier clé",
     "impactPre": "Cette dette réduit ce qu’un prêteur approuvera d’environ",
     "impactNone": "Aucune dette mensuelle saisie. Chaque 100 $ d’obligation vous coûterait environ",
@@ -214,7 +249,9 @@
     "mComfort": "Ce que vous pourriez porter confortablement",
     "mQualInc": "Revenu admissible, après décote",
     "mStressRate": "Taux admissible du test de résistance",
+    "mStressRate_us": "Taux admissible",
     "mStressWhy": "Le plus élevé de {floor} ou de votre taux contractuel plus deux points. Vous devez porter le paiement à ce taux, pas à celui qu’on vous offre.",
+    "mNoStressTest": "Aucun test de résistance fédéral ne s’applique à un prêt hypothécaire américain. Vous êtes admissible au taux qui vous a réellement été offert.",
     "mFactor": "Paiement mensuel par 1 $ de prêt",
     "mFactorWhy": "Les prêts canadiens sont composés semestriellement, non mensuellement.",
     "mGdsAllow": "Coût mensuel de logement maximal",
@@ -273,12 +310,19 @@
     "gapWhy": "Deux plafonds, côte à côte, à la même échelle. Votre prix cible se situe entre les deux — ou au-delà des deux.",
     "mWhy": "Rien ne vous est caché ici. Chaque chiffre remonte à une donnée saisie ou à une règle datée.",
     "gdsShort": "logement sur revenu",
+    "dtiFrontAbbr": "ABD",
+    "dtiFrontAbbr_us": "Frontal",
     "tdsShort": "toute dette sur revenu",
+    "dtiBackAbbr": "ATD",
+    "dtiBackAbbr_us": "Global",
     "limitWord": "limite",
     "impactNoneFree": "Aucune dette mensuelle — et à ce prix, les 100 premiers dollars ne vous coûteraient rien : c’est le coût du logement qui limite.",
     "belowMinimum": "Relevé au minimum légal pour ce prix : {p} · {a}",
     "ckApGds": "L’ABD plafonne les frais de logement à {a} par mois — la limite qu’un prêteur applique avant même de compter vos autres dettes.",
+    "ckApGds_us": "Le ratio d’endettement frontal plafonne les frais de logement à {a} par mois — la limite qu’un prêteur applique avant même de compter vos autres dettes.",
     "ckApTds": "L’ATD plafonne logement et dettes ensemble à {a} par mois, et {d} par mois de dettes s’y imputent.",
+    "ckApTds_us": "Le ratio d’endettement global plafonne logement et dettes ensemble à {a} par mois, et {d} par mois de dettes s’y imputent.",
+    "fhaTip": "Un prêt FHA permet une mise de fonds aussi basse que {p} au lieu du minimum conventionnel modélisé ici — non modélisé sur cette page : la FHA facture sa propre prime d’assurance hypothécaire initiale et annuelle à la place du PMI, et cet écran ne calcule pas ce montant.",
     "xClosing": "Chaque ligne derrière ce montant de frais de clôture — droits de mutation, frais juridiques, crédits reçus le jour même — se trouve sur <link>la page des frais de clôture</link>, calculée à partir de ces mêmes chiffres.",
     "xDownPayment": "D’où pourraient venir ces {a} — CELIAPP, comptant, RAP, dans l’ordre qui coûte le moins — c’est la question de <link>la page de la mise de fonds</link>.",
     "xScenariosSome": "À {p} de mise de fonds, un prêteur approuverait. <link>La page des scénarios</link> compare les quatre.",
@@ -331,9 +375,12 @@
     "rebOverCeiling": "Cette exonération cesse au-dessus d’un certain prix, et le vôtre le dépasse.",
     "cmhcPremium": "Prime d’assurance prêt hypothécaire SCHL",
     "addedToLoan": "ajoutée au prêt, non payée comptant",
+    "pmiMonthly": "PMI · mensuelle",
     "mortgageAmount": "Montant du prêt hypothécaire",
     "insuredNote": "Sous 20 %, votre prêt doit être assuré, et la prime est ajoutée au prêt.",
     "uninsuredNote": "À 20 % ou plus, aucune prime d’assurance ne s’applique, ni la taxe sur celle-ci.",
+    "insuredNote_us": "Sous 20 % de mise de fonds, vous payez une assurance hypothécaire privée (PMI) chaque mois, jusqu’à son annulation possible.",
+    "uninsuredNote_us": "À 20 % ou plus, aucune PMI ne s’applique.",
     "li_lttProv": "Droits de mutation immobilière — provincial",
     "li_lttMuni": "Droits de mutation immobilière — municipal",
     "li_ptt": "Taxe sur le transfert de propriété",
@@ -396,6 +443,7 @@
     "tagYours": "Vos chiffres",
     "tagTypical": "Chiffres typiques",
     "groupLine": "{name} {a} — le plus élevé de {n, plural, one {# ligne} other {# lignes}}",
+    "groupLineNone": "Aucune taxe de mutation ici",
     "xDownPayment": "<link>La page de la mise de fonds</link> classe vos comptes face à cette facture, l’argent le moins cher d’abord.",
     "xDownPaymentAsk": "<link>La page de la mise de fonds</link> peut classer vos comptes face à cette facture, l’argent le moins cher d’abord, dès que vous indiquez ce que contient chacun.",
     "ex_pttFurther": "La Colombie-Britannique perçoit 2 % supplémentaires sur la valeur résidentielle d'une propriété au-delà de 3 millions de dollars, en sus de la taxe générale sur les mutations immobilières.",
@@ -465,6 +513,8 @@
     "closingCosts": "Frais de clôture",
     "grpAtClosing": "Réduit votre comptant à la clôture",
     "netCash": "Comptant net à la clôture, après les crédits appliqués ce jour-là",
+    "pmiNotUpfront": "Le PMI de {a} par mois commence après la clôture, pas avant — il ne fait pas partie de ce que vous devez réunir ici, et il s’arrête de lui-même vers le mois {n}.",
+    "pmiNotUpfrontNoEnd": "Le PMI de {a} par mois commence après la clôture, pas avant — il ne fait pas partie de ce que vous devez réunir ici.",
     "breakdown": "D’où vient l’argent",
     "expandAll": "Tout ouvrir",
     "collapseAll": "Tout fermer",
@@ -495,6 +545,7 @@
     "notModelledLine": "{n, plural, one {# élément} other {# éléments}} que cette page ne modélise pas. Personne n’en publie de montant, alors ils sont nommés ici plutôt que devinés.",
     "omSeasoning": "D’où vient l’argent, et depuis combien de temps il est là. Un prêteur demandera des relevés couvrant la période précédant la clôture, et tout ce qui est arrivé récemment d’ailleurs que de vos propres comptes devra être expliqué — un don exige une lettre signée, un virement de l’étranger exige une piste documentaire. Jusqu’où chaque prêteur remonte relève de sa politique et aucun ne la publie : aucune durée n’est donc indiquée ici.",
     "omOneBuyerCaps": "Les plafonds d’un seul acheteur. Le maximum du Régime d’accession à la propriété et le solde du CELIAPP ci-dessus sont appliqués une seule fois, comme ceux d’un acheteur unique. Si vous achetez à deux, chacun peut avoir ses propres droits — mais ce calculateur ne demande jamais si le second acheteur est aussi un premier acheteur, alors il ne double rien à votre place.",
+    "omIraTip": "Options IRA et 401(k). Un premier acheteur peut retirer jusqu’à 10 000 $ d’un IRA traditionnel ou Roth sans la pénalité habituelle de retrait anticipé, et un prêt sur 401(k) est une autre source que beaucoup de régimes permettent — aucune des deux n’est modélisée ci-dessus, et ni l’une ni l’autre ne remplace des liquidités déjà en main sans son propre coût ou ses propres conditions de remboursement.",
     "secCalc": "Comment ce chiffre est calculé",
     "calcLine": "Ce qu'il vous faut, et ce que chaque compte couvre",
     "calcWhy": "D'abord la cible, puis les comptes mobilisés dans l'ordre où ils le sont — l'argent le moins coûteux d'abord, pour voir de quel solde dépend réellement le manque.",
@@ -577,6 +628,7 @@
     "presetPlus4": "Quatre points de plus",
     "contractNow": "Votre taux actuel — un taux fixe",
     "rPayNow": "Paiement du premier terme",
+    "rPayNow_us": "Paiement mensuel",
     "rPayAfter": "Paiement après le premier renouvellement",
     "rChange": "Variation mensuelle",
     "rAnnual": "Par année, au paiement plus élevé",
@@ -591,6 +643,10 @@
     "shockDownTag": "Le paiement baisse",
     "shockDown": "Au renouvellement, votre paiement baisse de {amt} par mois.",
     "shockDownSub": "Agréable, mais ne budgétez pas là-dessus. Une baisse des taux est le scénario où vous pouvez vous tromper sans danger ; une hausse, non.",
+    "usFixedHead": "Votre taux est fixé à {rate} pour toute la durée du prêt.",
+    "usFixedSub": "Un prêt hypothécaire américain à 30 ans fixe ne se renouvelle pas — il n’y a aucun réajustement de taux à anticiper, et rien de tel n’est modélisé ici.",
+    "usFixedTag": "fixe jusqu’à échéance",
+    "holdsToMaturity": "Votre taux reste à ce niveau jusqu'au remboursement complet — un prêt américain garde un taux fixe unique pour toute sa durée et ne se repositionne jamais.",
     "riskTitle": "Le risque de renouvellement est le plus grand risque non modélisé d’un prêt canadien",
     "riskBody": "Le test de résistance à l’origine vérifie que vous pourriez porter le paiement à deux points au-dessus de votre taux. C’est un test unique qui ne vous suit pas. À chaque renouvellement, vous revenez au marché sans aucune protection, et personne ne refait le test pour vous. C’est ce mécanisme qui brise les budgets : non pas l’achat, mais le renouvellement cinq ou dix ans plus tard. Planifiez le paiement que vous auriez à un taux nettement plus élevé, et considérez tout taux inférieur comme de la chance plutôt qu’une prévision.",
     "tableTitle": "Année par année",
@@ -599,6 +655,7 @@
     "cPayment": "Paiement mensuel",
     "cInterest": "Intérêts",
     "cPrincipal": "Capital",
+    "cPmi": "PHI",
     "cBalance": "Solde en fin d’année",
     "legendInterest": "Intérêts payés cette année",
     "legendPrincipal": "Capital remboursé cette année",
@@ -607,6 +664,7 @@
     "termMark": "Renouvellement",
     "termLabel": "Terme",
     "setupLine": "Prêt {mort} · premier terme à {rate} fixe · renouvellements à {ren}",
+    "setupLine_us": "Prêt {mort} · fixe à {rate} pour toute la durée du prêt",
     "termNote": "Votre taux est fixé pour le terme, pas pour l’amortissement : sur les {amort} années ci-dessus, {term, plural, one {# est au prix d’aujourd’hui} other {# sont au prix d’aujourd’hui}}, et le reste est <jump>refixé à chaque renouvellement</jump>.",
     "adjust": "Ajuster vos chiffres",
     "altText": "Barres empilées des intérêts et du capital payés chaque année sur {n} ans. Les intérêts dominent les premières années. {flipSentence} Les années de renouvellement sont marquées.",
@@ -620,6 +678,7 @@
     "expandAll": "Tout ouvrir",
     "collapseAll": "Tout fermer",
     "paymentWhy": "Le premier terme est établi au taux d’aujourd’hui. C’est le paiement que vous feriez réellement, sur le prêt une fois la prime d’assurance ajoutée.",
+    "paymentWhy_us": "Ce taux tient pour toute la durée du prêt. C’est le paiement que vous feriez réellement, plus l’assurance hypothécaire privée tant qu’elle s’applique, facturée à part plutôt qu’ajoutée au prêt.",
     "interestWhy": "Les intérêts plus la prime d’assurance forment le vrai prix de l’emprunt. Ce n’est pas la maison : c’est ce que coûte son financement.",
     "scheduleWhy": "Les intérêts dominent les premières années, le capital les dernières. Les années de renouvellement sont marquées : c’est là que le paiement change.",
     "termYears": "Durée du terme",
@@ -628,6 +687,7 @@
     "premium": "Prime d’assurance ajoutée au prêt",
     "costOfBorrowing": "Coût de l’emprunt",
     "mortgageAmount": "Montant du prêt",
+    "pmiMonthly": "Assurance hypothécaire privée, mensuelle",
     "payoffYear": "Remboursé l’année {n}",
     "noRenewalSet": "Aucun taux de renouvellement défini — l’échéancier suppose le taux d’aujourd’hui pour tout le prêt.",
     "tagYours": "Vos chiffres",
@@ -643,7 +703,10 @@
     "calcLoan": "Prêt hypothécaire",
     "calcAmortYears": "Amortissement",
     "calcBalanceAtRenewal": "Solde au renouvellement",
-    "calcAmortLeft": "Amortissement restant"
+    "calcAmortLeft": "Amortissement restant",
+    "title_us": "Calendrier d'amortissement",
+    "scheduleWhy_us": "Les intérêts dominent les premières années et le capital les suivantes — c'est ce basculement que montre ce graphique.",
+    "altText_us": "Barres empilées des intérêts et du capital versés chaque année sur {n} ans. Les intérêts dominent les premières années. {flipSentence}"
   },
   "RentVsBuy": {
     "title": "Louer ou acheter",
@@ -698,6 +761,8 @@
     "cMaint": "Réserve d’entretien",
     "cSelling": "Frais de vente",
     "cRenter": "Sorties du locataire",
+    "cPmi": "PMI",
+    "cTaxBenefit": "Avantage fiscal",
     "cBalance": "Solde du prêt",
     "cEquity": "Valeur nette, après frais de vente",
     "cBuyW": "Patrimoine achat",
@@ -728,6 +793,8 @@
     "collapseAll": "Tout fermer",
     "verdictWhy": "Acheter n’est ni meilleur ni pire dans l’abstrait. L’année de rentabilité est le seul chiffre qui tranche, et votre horizon est ce à quoi elle se compare.",
     "outlayWhy": "Ce que chaque option décaisse réellement chaque année. Après l’année de remboursement, le paiement hypothécaire cesse et les sorties du propriétaire chutent — c’est précisément là que la courbe d’achat s’accélère.",
+    "stdDeductionTip": "La plupart des acheteurs optent pour la déduction forfaitaire et ne tirent rien de la déduction des intérêts hypothécaires. À vos chiffres, l'option détaillée vaut {amt} par an.",
+    "stdDeductionNone": "La plupart des acheteurs optent pour la déduction forfaitaire et ne tirent rien de la déduction des intérêts hypothécaires — y compris vous, à vos chiffres cette année.",
     "wealthWhy": "La richesse finale, des deux côtés. L’avoir net est déduit des frais de vente : une richesse qu’on ne peut réaliser sans payer un courtier n’est pas une richesse acquise.",
     "assumptionsWhy": "Tout modèle laisse des choses de côté. Voici celles qui comptent, nommées plutôt qu’enfouies, des deux côtés.",
     "upFront": "Capital engagé au départ",
@@ -749,6 +816,7 @@
     "calcTraceCaption": "Année {n} — comment ce chiffre est obtenu",
     "calcLedgerCaption": "Tableau année par année : chaque coût, les deux portefeuilles et l'avantage cumulé, pour chaque année modélisée.",
     "calcTaxCredits": "Remboursements reçus à l'impôt, capitalisés",
+    "calcTaxCredits_us": "Avantage de la déduction d'intérêts hypothécaires, cumulé",
     "calcUpfrontGrown": "Capital initial, capitalisé au rendement",
     "calcBuying": "Acheter",
     "calcRenting": "Louer",
@@ -763,7 +831,10 @@
     "cHomeValue": "Valeur de la propriété",
     "upFrontNote": "L'argent qu'il fallait fournir le jour de la clôture, {up}, investi à la place.",
     "calcInvestedBuy": "Excédent investi, achat",
-    "calcInvestedRent": "Excédent investi, location"
+    "calcInvestedRent": "Excédent investi, location",
+    "mismatchSub_us": "Le seul loyer publié pour {city} est le loyer équitable de marché (HUD) pour un deux-chambres, {rent} par mois. Vous évaluez une maison, donc ce chiffre répond à une autre question. Indiquez ce que coûterait en location un bien comme celui évalué ci-dessus.",
+    "rentMismatchTag_us": "Le HUD publie {rent} comme loyer équitable de marché pour un deux-chambres — un logement plus petit que celui évalué ci-dessus",
+    "leverNote_us": "La mise de fonds détermine le prêt, si la PMI s'applique et le taux contractuel obtenu. L'amortissement détermine l'année de remboursement indiquée sur le graphique."
   },
   "Scenarios": {
     "title": "Scénarios de mise de fonds",
@@ -783,6 +854,7 @@
     "rBaseLoan": "Prêt de base",
     "rLtv": "Ratio prêt-valeur",
     "rPremRate": "Taux de la prime SCHL",
+    "rPmiMonthly": "Assurance hypothécaire privée (mensuelle)",
     "rPremAmt": "Prime SCHL",
     "rTotalMort": "Prêt total",
     "rContract": "Taux contractuel",
@@ -804,8 +876,11 @@
     "rDebtsTotal": "Dettes mensuelles, toutes sources",
     "qualNote": "Les champs de revenu et de dettes ici sont les vôtres. Le revenu d’un coacheteur, les autres revenus et les paiements d’auto, d’études et de carte de crédit se saisissent sur la page d’abordabilité — les deux totaux en haut du tableau ci-dessus les incluent déjà, alors tout ce que vous inscrivez ici s’y ajoute.",
     "rStressPay": "Paiement au taux de résistance",
+    "rStressPay_us": "Paiement au taux qualifiant",
     "rGds": "Ratio ABD",
+    "rGds_us": "Taux d’endettement logement (DTI)",
     "rTds": "Ratio ATD",
+    "rTds_us": "Taux d’endettement total (DTI)",
     "rResult": "Un prêteur approuverait-il ?",
     "rInterest": "Intérêts totaux payés",
     "rBorrowCost": "Intérêts plus prime",
@@ -843,6 +918,7 @@
     "fFunds": "Fonds disponibles",
     "minDownNote": "Le minimum légal est de {lo} sur les premiers {a} et {hi} sur la portion au-delà. À ce prix, cela fait {b} ; toute colonne inférieure est relevée.",
     "minDownNoteFlat": "À partir de {cap}, aucun assureur ne couvre le prêt : le minimum légal est donc de {p} du prix, sans paliers. À ce prix, cela fait {b} ; toute colonne inférieure est relevée.",
+    "minDownNoteUs": "La mise de fonds minimale est de {pFtb} du prix pour un premier acheteur, {pOther} sinon — un taux fixe, pas un barème par palier. À ce prix, cela fait {b} ; toute colonne inférieure est relevée.",
     "whyPremium": "La prime est un pourcentage du prêt, fixé par la tranche prêt-valeur à l’origine, plus 20 points de base pour un amortissement de 30 ans. Elle est ajoutée au prêt, donc vous payez des intérêts dessus pendant toute la durée.",
     "whyContract": "Les prêts assurés sont tarifés sous les prêts non assurés, car le risque du prêteur est couvert. Verser 20 % supprime la prime mais vous place au taux plus élevé.",
     "whyPremTax": "Certaines provinces taxent la prime d’assurance. La prime peut être financée ; la taxe non — elle se paie comptant à la clôture et varie selon la colonne.",
@@ -877,7 +953,14 @@
     "cTds": "ATD",
     "cLifetime": "Coût d'emprunt",
     "cScenario": "Scénario",
-    "cModelled": "Modélisé à"
+    "cModelled": "Modélisé à",
+    "lifetimeWhy_us": "Intérêts plus le coût du PMI, sur toute la durée du prêt. C'est là que le mensuel le moins cher cesse souvent d'être le moins cher au total. Cela suppose que le taux contractuel d'aujourd'hui tient pour tout le prêt fixe de 30 ans — un prêt fixe américain n'a ni terme ni renouvellement, donc c'est le vrai coût total, pas une estimation jusqu'à une future révision.",
+    "nHurdleTitle_us": "Le taux hypothécaire est généralement l'obstacle après impôt",
+    "nHurdleBody_us": "L'intérêt hypothécaire peut être déductible si vous détaillez vos déductions, mais la plupart des acheteurs prennent la déduction forfaitaire et n'en tirent rien — voir Louer ou acheter pour savoir si détailler vaut le coup à vos chiffres. Dans tous les cas, comparez le taux hypothécaire aux rendements de placement après impôt, pas bruts.",
+    "nOrderTitle_us": "Remplissez d'abord les comptes avantagés fiscalement",
+    "nOrderBody_us": "Un IRA ou un 401(k) — surtout avec une contrepartie de l'employeur — bat généralement le remboursement anticipé du prêt avant tout le reste.",
+    "cGds_us": "DTI initial",
+    "cTds_us": "DTI global"
   },
   "Provenance": {
     "rule": "règle",

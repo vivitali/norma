@@ -1,5 +1,5 @@
 import { defineRouting } from "next-intl/routing";
-import { allLocales, localePrefixes } from "./countries";
+import { allLocales, localePrefixes, languageOf, type Language, type Locale } from "./countries";
 
 /**
  * This file imports `next-intl/routing`, so it needs `node_modules` installed to
@@ -48,20 +48,43 @@ import { allLocales, localePrefixes } from "./countries";
  * two URL segments (`/ca/en`), which next-intl's `prefixes` map accepts as an arbitrary string;
  * internally the middleware still rewrites to a single `/en-CA/...` segment, so the filesystem
  * stays `src/app/[locale]/...` with no second dynamic segment. Verified in routing.test.ts.
+ *
+ * **Slugs are declared once per LANGUAGE, not per locale**, and expanded below to every
+ * locale that speaks it — `es-CA` and `es-US` share `/capacidad-de-compra`, because a slug is
+ * a fact about the language, not the country segment in front of it (US-market spec, Decision
+ * 3: "a country is a registry entry", applied one level down to languages within it). Writing
+ * `"es-CA": "..."` a second time for `"es-US"` would be the exact two-locale-coincidence mistake
+ * CLAUDE.md already records for `locale !== "en"`. `perLanguage()` reads `COUNTRIES` via
+ * `allLocales()`/`languageOf()`, so a locale this app doesn't serve can never receive a slug and
+ * a language absent from the map (Ukrainian, everywhere; Spanish, on `/rrsp-hbp`) is skipped
+ * for every locale that speaks it — including a future one.
  */
+function perLanguage(slugs: Partial<Record<Language, string>>): Partial<Record<Locale, string>> {
+  const result: Partial<Record<Locale, string>> = {};
+  for (const locale of allLocales()) {
+    const slug = slugs[languageOf(locale)];
+    if (slug) result[locale] = slug;
+  }
+  return result;
+}
+
 export const routing = defineRouting({
   locales: allLocales(),
   defaultLocale: "en-CA",
   localePrefix: { mode: "always", prefixes: localePrefixes() },
   pathnames: {
     "/": "/",
-    "/affordability": { "fr-CA": "/abordabilite", "es-CA": "/capacidad-de-compra" },
-    "/closing-costs": { "fr-CA": "/frais-de-cloture", "es-CA": "/gastos-de-cierre" },
-    "/down-payment": { "fr-CA": "/mise-de-fonds", "es-CA": "/pago-inicial" },
-    "/rrsp-hbp": { "fr-CA": "/reer-rap" },
-    "/amortization": { "fr-CA": "/amortissement", "es-CA": "/amortizacion" },
-    "/rent-vs-buy": { "fr-CA": "/louer-ou-acheter", "es-CA": "/alquilar-o-comprar" },
-    "/scenarios": { "fr-CA": "/scenarios", "es-CA": "/escenarios" },
-    "/sources": { "fr-CA": "/sources", "es-CA": "/fuentes" },
+    "/affordability": perLanguage({ fr: "/abordabilite", es: "/capacidad-de-compra" }),
+    "/closing-costs": perLanguage({ fr: "/frais-de-cloture", es: "/gastos-de-cierre" }),
+    "/down-payment": perLanguage({ fr: "/mise-de-fonds", es: "/pago-inicial" }),
+    // No US analogue exists at all (US-market spec, "Out of scope") — this route is still
+    // declared here (next-intl needs a pathname config to resolve `Link` on it from ANY
+    // locale, including US ones, even though no US page will ever render it), but with no
+    // Spanish slug, same as today: RRSP and HBP name Canadian paperwork.
+    "/rrsp-hbp": perLanguage({ fr: "/reer-rap" }),
+    "/amortization": perLanguage({ fr: "/amortissement", es: "/amortizacion" }),
+    "/rent-vs-buy": perLanguage({ fr: "/louer-ou-acheter", es: "/alquilar-o-comprar" }),
+    "/scenarios": perLanguage({ fr: "/scenarios", es: "/escenarios" }),
+    "/sources": perLanguage({ fr: "/sources", es: "/fuentes" }),
   },
 });

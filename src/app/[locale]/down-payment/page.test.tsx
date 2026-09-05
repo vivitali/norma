@@ -282,3 +282,18 @@ describe("Down payment — with no published price there is no target", () => {
     expect(screen.getByRole("button", { name: /The funding order/ })).toBeInTheDocument();
   });
 });
+
+describe("Down payment — the RRSP-HBP cross-link", () => {
+  it("links to RRSP-HBP for a Canadian reader", () => {
+    renderPage("en-CA");
+    expect(document.querySelector('[data-cross="sentence"]')).not.toBeNull();
+  });
+
+  it("omits the RRSP-HBP cross-link for a US reader — the route has no US page", () => {
+    // RRSP-HBP is Canada-only (US-market spec, "absent from the US navigation"); the
+    // hbp row itself is already dropped from visibleRows for the US, but the trace
+    // link at the foot of the waterfall pointed at it unconditionally.
+    renderPage("en-US");
+    expect(document.querySelector('[data-cross="sentence"]')).toBeNull();
+  });
+});

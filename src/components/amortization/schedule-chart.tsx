@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 import type { AmortizationResult } from "@/domain/engine";
 import { useMoney } from "@/lib/format";
+import { useRules } from "@/hooks/use-country";
+import { countryKey } from "@/lib/country-key";
 
 /**
  * Interest and principal stacked per year, with renewal years marked.
@@ -18,10 +20,11 @@ import { useMoney } from "@/lib/format";
 export function ScheduleChart({ result }: { result: AmortizationResult }) {
   const t = useTranslations("Amortization");
   const fmt = useMoney();
+  const rules = useRules();
   const peak = Math.max(...result.rows.map((r) => r.interest + r.principal), 1);
   const flip = result.rows.find((r) => r.principal > r.interest)?.t ?? null;
 
-  const alt = t("altText", {
+  const alt = t(countryKey("altText", rules.country), {
     n: result.rows.length,
     flipSentence: flip === null ? t("altNoFlip") : t("altFlip", { n: flip }),
   });
@@ -51,10 +54,18 @@ export function ScheduleChart({ result }: { result: AmortizationResult }) {
           <span aria-hidden="true" className="size-[7px] rounded-full bg-ac/30" />
           {t("legendInterest")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span aria-hidden="true" className="size-[7px] rounded-full bg-caution" />
-          {t("termMark")}
-        </span>
+        {/*
+          `row.renewed` is never true on a toMaturity mortgage (see `amortizationToMaturity`'s
+          own doc comment), so the caution bar never actually appears in the chart above for
+          the US — a legend entry for a colour that never renders is not a legend, it is a
+          claim about a mechanism this mortgage does not have.
+        */}
+        {rules.mortgage.renews ? (
+          <span className="flex items-center gap-1.5">
+            <span aria-hidden="true" className="size-[7px] rounded-full bg-caution" />
+            {t("termMark")}
+          </span>
+        ) : null}
         {flip !== null ? <span>{`${t("flipLabel")} · ${t("yearWord", { n: flip })}`}</span> : null}
         <span className="sr-only">{alt}</span>
         <span>{`${t("totalPaid")}: ${fmt(result.totalPaid)}`}</span>

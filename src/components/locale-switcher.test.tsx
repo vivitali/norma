@@ -2,7 +2,7 @@ import { describe, expect, it, vi, afterEach } from "vitest";
 import { screen, cleanup, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
-import { routing } from "@/i18n/routing";
+import { localesForCountry } from "@/i18n/countries";
 import { LOCALES } from "@/lib/locales";
 import { LocaleSwitcher } from "./locale-switcher";
 
@@ -28,15 +28,17 @@ describe("LocaleSwitcher", () => {
     expect(screen.getByRole("combobox", { name: "Change language" })).toHaveTextContent("EN");
   });
 
-  it("offers every configured locale, and nothing else", async () => {
-    // Read off `routing.locales` rather than listed here: the whole point of the
-    // rebuild is that a fifth locale needs no edit to this component or this test.
+  it("offers every locale of the CURRENT COUNTRY, and nothing else", async () => {
+    // Read off localesForCountry(activeLocale) rather than the full registry: the
+    // active locale here is "en-CA" (mocked useParams above), so this must offer only
+    // Canada's four locales — not the US's en-US/es-US too, which would be a language
+    // the reader cannot actually reach the current page in.
     const user = userEvent.setup();
     renderWithIntl(<LocaleSwitcher />);
     await user.click(screen.getByRole("combobox"));
     const options = screen.getAllByRole("option");
     expect(options.map((o) => o.textContent)).toEqual(
-      routing.locales.map((locale) => LOCALES[locale].label),
+      localesForCountry("en-CA").map((locale) => LOCALES[locale].label),
     );
   });
 

@@ -146,25 +146,41 @@ while IFS=$'\t' read -r locale prefix probe; do
   # passing while a deployed origin silently drops an edge-only behavior — "verify
   # against a deployed response, not the build output." Following -L here would make
   # this indistinguishable from the /affordability check two lines up.
-  lang="${prefix##*/}"
-  IFS=$'\t' read -r status location < <(redirect_probe "$BASE/$lang/affordability")
-  case "$status" in
-    3??)
-      case "$location" in
-        "$prefix"*)
-          echo "ok    /$lang/affordability -> $status $location"
-          ;;
-        *)
-          echo "FAIL  /$lang/affordability -> $status $location (expected Location starting with $prefix)"
-          FAILED=1
-          ;;
-      esac
-      ;;
-    *)
-      echo "FAIL  /$lang/affordability -> $status ${location:-<no redirect>} (expected a 3xx)"
-      FAILED=1
-      ;;
+  #
+  # CA ONLY. `src/lib/redirects.ts`'s own comment is explicit: `LANG_PATTERN` covers
+  # only `ca`'s pre-migration languages, because CA is the only country that ever had a
+  # root-level (no-country-segment) URL to be compatible with — a second country never
+  # shipped bare `/en/...` links for anyone to have bookmarked. `en` and `es` are each
+  # shared by TWO countries today, so this bare form is inherently ambiguous and, by
+  # that file's design, always resolves to `/ca/...` — checking it against the US
+  # prefix here asserted something that was never true and could not be made true
+  # without breaking the CA compatibility redirect for everyone who bookmarked it.
+  # Verified once, under CA's own iteration of this loop, is enough.
+  case "$prefix" in
+    /ca/*) run_legacy_check=1 ;;
+    *) run_legacy_check=0 ;;
   esac
+  if [ "$run_legacy_check" = "1" ]; then
+    lang="${prefix##*/}"
+    IFS=$'\t' read -r status location < <(redirect_probe "$BASE/$lang/affordability")
+    case "$status" in
+      3??)
+        case "$location" in
+          "$prefix"*)
+            echo "ok    /$lang/affordability -> $status $location"
+            ;;
+          *)
+            echo "FAIL  /$lang/affordability -> $status $location (expected Location starting with $prefix)"
+            FAILED=1
+            ;;
+        esac
+        ;;
+      *)
+        echo "FAIL  /$lang/affordability -> $status ${location:-<no redirect>} (expected a 3xx)"
+        FAILED=1
+        ;;
+    esac
+  fi
 
   # French is the one guaranteed to carry a slug (uk carries none; es omits rrsp-hbp's).
   # Scoped to "fr-CA" specifically rather than "any French locale" because this repo
@@ -174,6 +190,56 @@ while IFS=$'\t' read -r locale prefix probe; do
     FR_PREFIX="$prefix"
   fi
 done <<< "$PROBES"
+
+# RRSP-HBP specifically, in BOTH directions: `ROUTE_COUNTRIES["/rrsp-hbp"]` is the one
+# route this app restricts by country today (US-market spec, "absent from the US
+# navigation"), and every check above is scoped to "/" and "/affordability", which both
+# exist in every country -- so a build that prerendered the WRONG set of route x locale
+# pairs (serving RRSP-HBP to the US, or 404-ing it for Canada) would still pass every
+# check above. Derived from `routeLocales("/rrsp-hbp", ...)` rather than hardcoded to
+# "ca"/"us", so a second restricted route or a third country needs no new script --
+# see src/lib/route-guard.ts, the runtime half of this same table.
+read -r -d '' RRSP_AVAILABILITY_SCRIPT <<'JS' || true
+import { pathToFileURL } from "node:url";
+const root = process.argv[1];
+const countriesUrl = pathToFileURL(`${root}/src/i18n/countries.ts`).href;
+const ogManifestUrl = pathToFileURL(`${root}/src/lib/og-manifest.ts`).href;
+const { allLocales, localePrefixes } = await import(countriesUrl);
+const { routeLocales } = await import(ogManifestUrl);
+const locales = allLocales();
+const prefixes = localePrefixes();
+const available = new Set(routeLocales("/rrsp-hbp", locales));
+for (const locale of locales) {
+  console.log(`${prefixes[locale]}\t${available.has(locale) ? "1" : "0"}`);
+}
+JS
+
+if ! RRSP_PROBES=$(node --input-type=module -e "$RRSP_AVAILABILITY_SCRIPT" "$ROOT"); then
+  echo "FAIL  cannot read RRSP-HBP availability from src/lib/og-manifest.ts"
+  FAILED=1
+  RRSP_PROBES=""
+fi
+
+while IFS=$'\t' read -r prefix available; do
+  [ -n "$prefix" ] || continue
+  path="$prefix/rrsp-hbp"
+  status=$(fetch_status "$BASE$path")
+  if [ "$available" = "1" ]; then
+    if [ "$status" = "200" ]; then
+      echo "ok    $path -> 200"
+    else
+      echo "FAIL  $path -> $status (expected 200 -- ROUTE_COUNTRIES lists this locale's country)"
+      FAILED=1
+    fi
+  else
+    if [ "$status" = "404" ]; then
+      echo "ok    $path -> 404 (no page for this country)"
+    else
+      echo "FAIL  $path -> $status (expected 404 -- RRSP-HBP has no page for this country)"
+      FAILED=1
+    fi
+  fi
+done <<< "$RRSP_PROBES"
 
 # Bare country segments ("/ca") name no language yet. Without a redirect they fall
 # through to next-intl's own locale negotiation, which treats "ca" as an unrecognized

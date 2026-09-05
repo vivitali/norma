@@ -100,7 +100,25 @@ describe("redirects", () => {
 
   it("leaves an unregistered country segment alone", () => {
     for (const rule of rules) {
-      expect(matches(rule.source, "/us")).toBe(false);
+      expect(matches(rule.source, "/mx")).toBe(false);
+    }
+  });
+
+  it("redirects the bare US segment to its default-language prefix", () => {
+    // US-market spec: the bare-country rule is derived from COUNTRIES via
+    // defaultPrefixes(), so a second registered country gets this redirect for free —
+    // this is the assertion that promise actually held once "us" landed in the registry.
+    const rule = rules.find((r) => matches(r.source, "/us"));
+    expect(rule).toBeDefined();
+    expect(rule?.destination).toBe("/us/en");
+    expect(rule?.permanent).toBe(true);
+  });
+
+  it("never matches a /us/<language> or deeper path, so a redirected request cannot loop", () => {
+    for (const rule of rules) {
+      expect(matches(rule.source, "/us/en")).toBe(false);
+      expect(matches(rule.source, "/us/en/affordability")).toBe(false);
+      expect(matches(rule.source, "/us/es/capacidad-de-compra")).toBe(false);
     }
   });
 });

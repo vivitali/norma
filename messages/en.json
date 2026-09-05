@@ -2,11 +2,14 @@
   "Metadata": {
     "home": {
       "title": "How much house can you afford in Canada? — AffordMath",
-      "description": "See what you can genuinely afford to buy in Canada — from real net income and real carrying costs, with your province's rules applied."
+      "description": "See what you can genuinely afford to buy in Canada — from real net income and real carrying costs, with your province's rules applied.",
+      "title_us": "How much house can you afford? — AffordMath",
+      "description_us": "See what you can genuinely afford to buy in the US — from real take-home pay and real carrying costs, with your state's tax and cost rules applied."
     },
     "affordability": {
       "title": "Affordability calculator — real cost, not pre-approval",
-      "description": "Two ceilings side by side: what a lender would approve, and what fits your actual monthly budget. Your province's tax and cost rules included."
+      "description": "Two ceilings side by side: what a lender would approve, and what fits your actual monthly budget. Your province's tax and cost rules included.",
+      "description_us": "Two ceilings side by side: what a lender would approve, and what fits your actual monthly budget. Your state and county's tax and cost rules included."
     },
     "sources": {
       "title": "Sources and provenance — AffordMath",
@@ -20,11 +23,13 @@
     },
     "closingCosts": {
       "title": "Closing costs calculator — what you owe on closing day",
-      "description": "Every closing cost line by province: land transfer tax, legal fees, adjustments, and which rebates actually arrive on closing day."
+      "description": "Every closing cost line by province: land transfer tax, legal fees, adjustments, and which rebates actually arrive on closing day.",
+      "description_us": "Every closing cost line: property tax, title and escrow fees, adjustments, and what Texas charges instead of a transfer tax."
     },
     "downPayment": {
       "title": "Down payment sources — the cheapest money first",
-      "description": "FHSA, cash, RRSP Home Buyers' Plan, TFSA, gift, then investments. See what each source costs you and what it leaves behind."
+      "description": "FHSA, cash, RRSP Home Buyers' Plan, TFSA, gift, then investments. See what each source costs you and what it leaves behind.",
+      "description_us": "Cash, gift, IRA/401(k), then other investments. See what each source costs you and what it leaves behind."
     },
     "rrspHbp": {
       "title": "RRSP Home Buyers' Plan — refund, rules and repayment",
@@ -32,11 +37,14 @@
     },
     "amortization": {
       "title": "Amortization and renewal — the payment shock nobody models",
-      "description": "You do not lock a rate for the life of the loan. See what renewing into a higher rate does to the payment, and what it costs over the mortgage."
+      "description": "You do not lock a rate for the life of the loan. See what renewing into a higher rate does to the payment, and what it costs over the mortgage.",
+      "title_us": "Amortization schedule — every payment to payoff",
+      "description_us": "A 30-year fixed mortgage, payment by payment. See the balance, interest and PMI cost by year, and what PMI cancellation is worth."
     },
     "rentVsBuy": {
       "title": "Rent vs buy in Canada — it depends how long you stay",
-      "description": "The break-even year is the only number that decides it. Compare terminal wealth both ways, with a flat-market test and the costs of selling included."
+      "description": "The break-even year is the only number that decides it. Compare terminal wealth both ways, with a flat-market test and the costs of selling included.",
+      "title_us": "Rent vs buy in the US — it depends how long you stay"
     },
     "scenarios": {
       "title": "Down payment scenarios — 5, 10, 20 or 25 percent",
@@ -91,13 +99,37 @@
     "faqQ_eligibility": "Can I buy a home in Canada if I am not a citizen or permanent resident?",
     "faqA_eligibility": "Sometimes, and that question comes before every number on this site. A federal Act limits which non-Canadians may purchase residential property in Canada, with exceptions that turn on immigration status and on where the property is. It is time-limited and has been extended by regulation, so check the current rule rather than a summary of it. Separately, some provinces charge a higher land transfer tax to buyers who are not residents: Nova Scotia’s is applied here, and Ontario’s and British Columbia’s are not modelled at all.",
     "faqQ_verified": "Are the numbers verified?",
-    "faqA_verified": "Most of them, and every figure says which. Each one carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted. Most were read off the issuing authority's own schedule. Others are modelling defaults we chose and disclose, because legal fees, inspections and moving costs have no authoritative publisher in Canada. A few are left empty because nobody publishes them at all, and the app asks you for those rather than inventing one. The sources page lists every figure with its document and date. Confirm anything you are about to act on."
+    "faqA_verified": "Most of them, and every figure says which. Each one carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted. Most were read off the issuing authority's own schedule. Others are modelling defaults we chose and disclose, because legal fees, inspections and moving costs have no authoritative publisher in Canada. A few are left empty because nobody publishes them at all, and the app asks you for those rather than inventing one. The sources page lists every figure with its document and date. Confirm anything you are about to act on.",
+    "eyebrow_us": "United States · Houston, TX",
+    "rulesHeading_us": "Texas rules, not national averages",
+    "rulesIntro_us": "Houston (Harris County) is modelled with its own property tax rate, homestead exemption and closing-cost conventions — not a single national number standing in for every state.",
+    "rulesTxHomesteadLabel": "Homestead exemption",
+    "rulesTxHomestead": "Harris County's school-district homestead exemption shields $140,000 of a primary residence's value from the HISD portion of the property tax bill (as of 2025-11-04).",
+    "rulesTxNoTransferLabel": "No transfer tax",
+    "rulesTxNoTransfer": "Texas charges no state real estate transfer tax on a home sale. Closing costs run through title insurance and county recording fees instead.",
+    "rulesTxPmiLabel": "Mortgage insurance",
+    "rulesTxPmi": "Below 20% down, a buyer pays private mortgage insurance monthly rather than a one-time premium financed into the loan — cancellable once equity clears the threshold.",
+    "rulesNote_us": "Which is why the answer depends on the market you buy in, and why a single national figure would be wrong the moment you cross a state line.",
+    "faqQ_afford_us": "How much house can I afford in the US?",
+    "faqA_preapproval_us": "A pre-approval tests gross income against front-end and back-end debt-to-income ratios (28/36 is the classic guideline). It does not subtract the property tax, homeowners insurance, HOA fees, utilities and maintenance that arrive with the house, and it takes no view on what you want the rest of your month to contain. The gap between the two figures runs to several hundred dollars a month.",
+    "faqQ_stressTest_us": "Does the US have a mortgage stress test like Canada's?",
+    "faqA_stressTest_us": "No federal stress test applies to a US mortgage — you qualify against your actual contract rate, not a higher regulatory floor. Lenders instead cap your debt-to-income ratio, and a loan above 80% loan-to-value usually carries private mortgage insurance (PMI) until your equity clears the threshold to cancel it.",
+    "faqQ_jurisdiction_us": "Does this work outside Houston, Texas?",
+    "faqA_jurisdiction_us": "Right now, Houston (Harris County), Texas is the only US market modelled — its own property tax rate, homestead exemption and closing-cost conventions, not a national average. Harris County's school-district homestead exemption shields $140,000 of a primary residence's value (as of 2025-11-04), and Texas charges no state real estate transfer tax at all; other states that do are not modelled yet.",
+    "faqQ_eligibility_us": "Can I buy a home in the US if I am not a citizen?",
+    "faqA_eligibility_us": "This tool does not model any federal citizenship or immigration restriction on buying US residential property — that is a different question from the one Canada's federal Act raises, and confirming your own situation is outside what this calculator does. Financing as a non-citizen is a separate question with its own lender-specific answer.",
+    "faqA_verified_us": "Most of them, and every figure says which. Each one carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted. Most were read off the issuing authority's own schedule — the IRS, FHFA, Freddie Mac's PMMS, the Texas Department of Insurance, Harris County's own taxing entities. Others are modelling defaults we chose and disclose, because closing fees and moving costs have no authoritative publisher. A few are left empty because nobody publishes them at all, and the app asks you for those rather than inventing one. The sources page lists every figure with its document and date. Confirm anything you are about to act on."
   },
   "AppHeader": {
     "theme": "Theme",
     "changeLanguage": "Change language",
     "brand": "AffordMath",
-    "changeLocation": "Change location"
+    "changeLocation": "Change location",
+    "changeCountry": "Change country"
+  },
+  "Countries": {
+    "ca": "Canada",
+    "us": "United States"
   },
   "Nav": {
     "menu": "Tools",
@@ -123,6 +155,7 @@
     "montreal": "Montréal",
     "calgary": "Calgary",
     "saskatoon": "Saskatoon",
+    "houston": "Houston",
     "nb": "New Brunswick",
     "nl": "Newfoundland and Labrador",
     "pe": "Prince Edward Island",
@@ -138,6 +171,7 @@
       "montreal": "Montréal",
       "calgary": "Calgary",
       "saskatoon": "Saskatoon",
+      "houston": "Houston",
       "nb": "New Brunswick",
       "nl": "Newfoundland and Labrador",
       "pe": "Prince Edward Island",
@@ -204,6 +238,7 @@
     "cUtilities": "Utilities and heat, monthly",
     "cCondoFee": "Condo or strata fee, monthly",
     "cFunds": "Funds available",
+    "cPmi": "PMI",
     "keyLever": "Key lever",
     "impactPre": "This debt reduces what a lender will approve by about",
     "impactNone": "No monthly debts entered. Every $100 of obligation would cost you roughly",
@@ -214,7 +249,9 @@
     "mComfort": "What you could comfortably carry",
     "mQualInc": "Qualifying income, after haircut",
     "mStressRate": "Stress test qualifying rate",
+    "mStressRate_us": "Qualifying rate",
     "mStressWhy": "The greater of {floor} or your contract rate plus two points. You must carry the payment at this rate, not the one you are offered.",
+    "mNoStressTest": "No federal stress test applies to a US mortgage. You qualify at the rate you were actually offered.",
     "mFactor": "Monthly payment per $1 of mortgage",
     "mFactorWhy": "Canadian mortgages compound semi-annually, not monthly.",
     "mGdsAllow": "Maximum monthly housing cost",
@@ -274,11 +311,18 @@
     "mWhy": "Nothing here is hidden from you. Every figure traces back to an input or a dated rule.",
     "gdsShort": "housing over income",
     "tdsShort": "all debt over income",
+    "dtiFrontAbbr": "GDS",
+    "dtiFrontAbbr_us": "Front-end",
+    "dtiBackAbbr": "TDS",
+    "dtiBackAbbr_us": "Back-end",
     "limitWord": "limit",
     "impactNoneFree": "No monthly debts entered — and at this price the first $100 would cost you nothing, because housing cost is the binding constraint.",
     "belowMinimum": "Raised to the legal minimum for this price: {p} · {a}",
     "ckApGds": "GDS caps housing cost at {a} a month — the limit a lender applies before your other debts count.",
+    "ckApGds_us": "Front-end DTI caps housing cost at {a} a month — the limit a lender applies before your other debts count.",
     "ckApTds": "TDS caps housing and debts together at {a} a month, and {d} a month of debts count against it.",
+    "ckApTds_us": "Back-end DTI caps housing and debts together at {a} a month, and {d} a month of debts count against it.",
+    "fhaTip": "An FHA loan allows as little as {p} down instead of the conventional minimum modelled here — not modelled on this page: FHA charges its own upfront and annual mortgage insurance premium in place of PMI, and this screen does not compute that figure.",
     "xClosing": "Every line behind that closing-costs figure — transfer tax, legal fees, which credits arrive on the day — is on <link>the closing-costs page</link>, computed from these numbers.",
     "xDownPayment": "Where the {a} could come from — FHSA, cash, the Home Buyers' Plan, in the order that costs least — is <link>the down-payment page</link>'s question.",
     "xScenariosSome": "At {p} down a lender would approve. <link>The scenarios page</link> compares all four.",
@@ -331,9 +375,12 @@
     "rebOverCeiling": "This exemption stops above a set price, and your price is above it.",
     "cmhcPremium": "CMHC insurance premium",
     "addedToLoan": "added to the loan, not paid in cash",
+    "pmiMonthly": "PMI · monthly",
     "mortgageAmount": "Mortgage amount",
     "insuredNote": "Below 20% your mortgage must be insured, and the premium is added to the loan.",
     "uninsuredNote": "At 20% or more no insurance premium applies, and no tax on it either.",
+    "insuredNote_us": "Below 20% down you pay private mortgage insurance (PMI) monthly, until it can be cancelled.",
+    "uninsuredNote_us": "At 20% down or more, no PMI applies at all.",
     "li_lttProv": "Provincial land transfer tax",
     "li_lttMuni": "Municipal land transfer tax",
     "li_ptt": "Property transfer tax",
@@ -396,6 +443,7 @@
     "tagYours": "Your figures",
     "tagTypical": "Typical figures",
     "groupLine": "{name} {a} — largest of {n, plural, one {# line} other {# lines}}",
+    "groupLineNone": "No transfer tax here",
     "xDownPayment": "<link>The down-payment page</link> orders your accounts against this bill, cheapest money first.",
     "xDownPaymentAsk": "<link>The down-payment page</link> can order your accounts against this bill, cheapest money first, once you say what is in each.",
     "ex_pttFurther": "British Columbia levies a further 2% on the residential value of a property above $3 million, on top of the general property transfer tax.",
@@ -465,6 +513,8 @@
     "closingCosts": "Closing costs",
     "grpAtClosing": "Reduces your cash at closing",
     "netCash": "Net cash at closing, after credits applied that day",
+    "pmiNotUpfront": "PMI of {a} a month starts after closing, not before it — it is not part of what you need to assemble here, and it stops on its own around month {n}.",
+    "pmiNotUpfrontNoEnd": "PMI of {a} a month starts after closing, not before it — it is not part of what you need to assemble here.",
     "breakdown": "Where it comes from",
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
@@ -495,6 +545,7 @@
     "notModelledLine": "{n, plural, one {# thing} other {# things}} this page does not model. Nobody publishes a figure for them, so they are named here rather than guessed at.",
     "omSeasoning": "Where the money came from, and how long it has been there. A lender will ask for statements covering the period before closing, and anything that arrived recently from outside your own accounts has to be explained — a gift needs a signed letter, money sent from another country needs a paper trail. How far back each lender looks is its own policy and none of them publish it, so no period is named here.",
     "omOneBuyerCaps": "One buyer’s limits. The Home Buyers’ Plan maximum and the FHSA balance above are applied once, as a single buyer’s. If two of you are buying, each of you may have your own room — but whether the second buyer is also a first-time buyer is something this calculator never asks, so it does not double anything on your behalf.",
+    "omIraTip": "IRA and 401(k) options. A first-time buyer may withdraw up to $10,000 from a traditional or Roth IRA without the usual early-withdrawal penalty, and a 401(k) loan is a separate source many plans allow — neither is modelled above, and neither substitutes for cash you already have without its own cost or repayment terms.",
     "secCalc": "How this was calculated",
     "calcLine": "What you need, and what each account covers",
     "calcWhy": "The target first, then the accounts drawn against it in the order they are drawn — cheapest money first, so the reader can see which balance the shortfall actually turns on.",
@@ -577,6 +628,7 @@
     "presetPlus4": "Four points up",
     "contractNow": "Your rate now — a fixed quote",
     "rPayNow": "Payment for the first term",
+    "rPayNow_us": "Monthly payment",
     "rPayAfter": "Payment after the first renewal",
     "rChange": "Monthly change",
     "rAnnual": "A year, at the higher payment",
@@ -591,6 +643,10 @@
     "shockDownTag": "Payment falls",
     "shockDown": "At renewal your payment falls by {amt} a month.",
     "shockDownSub": "Pleasant, but do not budget on it. Rates falling is the scenario you can afford to be wrong about; rates rising is not.",
+    "usFixedHead": "Your rate is fixed at {rate} for the life of the loan.",
+    "usFixedSub": "A US 30-year fixed mortgage does not renew — there is no rate reset to plan for, and none is modelled here.",
+    "usFixedTag": "fixed to maturity",
+    "holdsToMaturity": "Your rate holds at this figure until the loan is paid off — a US mortgage has one fixed rate for its whole term and never reprices.",
     "riskTitle": "Renewal risk is the largest unmodelled risk in a Canadian mortgage",
     "riskBody": "A stress test at origination checks you could carry the payment at two points above your rate. It is a one-time test, and it does not follow you. At every renewal you re-enter the market with no protection at all, and nobody re-runs the test for you. This is the mechanism that breaks household budgets: not the purchase, the renewal five or ten years later. Plan for the payment you would face at a materially higher rate, and treat any rate below that as good luck rather than a forecast.",
     "tableTitle": "Year by year",
@@ -599,6 +655,7 @@
     "cPayment": "Monthly payment",
     "cInterest": "Interest",
     "cPrincipal": "Principal",
+    "cPmi": "PMI",
     "cBalance": "Balance at year end",
     "legendInterest": "Interest paid that year",
     "legendPrincipal": "Principal paid that year",
@@ -607,6 +664,7 @@
     "termMark": "Renewal",
     "termLabel": "Term",
     "setupLine": "Mortgage {mort} · first term at {rate} fixed · renewals at {ren}",
+    "setupLine_us": "Mortgage {mort} · fixed at {rate} for the life of the loan",
     "termNote": "Your rate is fixed for the term, not for the amortization: of the {amort} years above, {term, plural, one {# is priced today} other {# are priced today}}, and the rest is <jump>repriced at every renewal</jump>.",
     "adjust": "Adjust your numbers",
     "altText": "Stacked bars of interest and principal paid each year over {n} years. Interest dominates the early years. {flipSentence} Renewal years are marked.",
@@ -620,6 +678,7 @@
     "expandAll": "Expand all",
     "collapseAll": "Collapse all",
     "paymentWhy": "The first term is priced today. This is the payment you would actually make, on the mortgage after the insurance premium is added to it.",
+    "paymentWhy_us": "This rate holds for the whole loan. This is the payment you would actually make, plus PMI while it applies, billed alongside it rather than added to the loan.",
     "interestWhy": "Interest plus the insurance premium is the true price of borrowing. It is not part of the house; it is what the house costs to finance.",
     "scheduleWhy": "Interest dominates the early years and principal the later ones. The renewal years are marked, because that is where the payment changes.",
     "termYears": "Term length",
@@ -628,6 +687,7 @@
     "premium": "Insurance premium added to the loan",
     "costOfBorrowing": "Cost of borrowing",
     "mortgageAmount": "Mortgage amount",
+    "pmiMonthly": "PMI, monthly",
     "payoffYear": "Paid off in year {n}",
     "noRenewalSet": "No renewal rate set — the schedule assumes today’s rate for the whole loan.",
     "tagYours": "Your figures",
@@ -643,7 +703,10 @@
     "calcLoan": "Mortgage",
     "calcAmortYears": "Amortization",
     "calcBalanceAtRenewal": "Balance at renewal",
-    "calcAmortLeft": "Amortization left"
+    "calcAmortLeft": "Amortization left",
+    "title_us": "Amortization schedule",
+    "scheduleWhy_us": "Interest dominates the early years and principal the later ones — that shift is what this chart shows.",
+    "altText_us": "Stacked bars of interest and principal paid each year over {n} years. Interest dominates the early years. {flipSentence}"
   },
   "RentVsBuy": {
     "title": "Rent versus buy",
@@ -698,6 +761,8 @@
     "cMaint": "Maintenance reserve",
     "cSelling": "Cost of selling",
     "cRenter": "Renter outlay",
+    "cPmi": "PMI",
+    "cTaxBenefit": "Tax benefit",
     "cBalance": "Mortgage balance",
     "cEquity": "Home equity, net of selling cost",
     "cBuyW": "Buy wealth",
@@ -728,6 +793,8 @@
     "collapseAll": "Collapse all",
     "verdictWhy": "Buying is not better or worse in the abstract. The break-even year is the only number that decides it, and your horizon is what it is measured against.",
     "outlayWhy": "What each side actually pays out each year. Past the payoff year the mortgage payment stops and owner outlay drops — which is exactly where the buy line steepens.",
+    "stdDeductionTip": "Most buyers take the standard deduction and get nothing extra from the mortgage-interest deduction. At your numbers, itemising is worth {amt} a year.",
+    "stdDeductionNone": "Most buyers take the standard deduction and get nothing extra from the mortgage-interest deduction — including you, at your numbers this year.",
     "wealthWhy": "Terminal wealth, both ways. Equity is net of selling cost, because wealth you cannot realise without paying an agent is not wealth you have.",
     "assumptionsWhy": "Every model leaves things out. These are the ones that matter, named rather than buried, on both sides.",
     "upFront": "Capital deployed up front",
@@ -749,6 +816,7 @@
     "calcTraceCaption": "Year {n} — how this figure was built",
     "calcLedgerCaption": "Year-by-year ledger: every cost, both portfolios and the running advantage, for each year modelled.",
     "calcTaxCredits": "Rebates received at tax time, grown",
+    "calcTaxCredits_us": "Mortgage-interest deduction benefit, grown",
     "calcUpfrontGrown": "Upfront capital, grown at the return",
     "calcBuying": "Buying",
     "calcRenting": "Renting",
@@ -763,7 +831,10 @@
     "cHomeValue": "Home value",
     "upFrontNote": "The cash you had to produce on closing day, {up}, invested instead.",
     "calcInvestedBuy": "Invested surplus, buying",
-    "calcInvestedRent": "Invested surplus, renting"
+    "calcInvestedRent": "Invested surplus, renting",
+    "mismatchSub_us": "The only rent published for {city} is HUD's two-bedroom Fair Market Rent, {rent} a month. You are pricing a house, so that figure answers a different question. Enter what a home like the one above would rent for.",
+    "rentMismatchTag_us": "HUD publishes {rent} as the Fair Market Rent for a two-bedroom apartment — a smaller home than the one priced above",
+    "leverNote_us": "Down payment sets the loan, whether PMI applies, and which contract rate you get. Amortization sets the payoff year marked on the chart."
   },
   "Scenarios": {
     "title": "Down payment scenarios",
@@ -784,6 +855,7 @@
     "rLtv": "Loan-to-value",
     "rPremRate": "CMHC premium rate",
     "rPremAmt": "CMHC premium",
+    "rPmiMonthly": "PMI (monthly)",
     "rTotalMort": "Total mortgage",
     "rContract": "Contract rate",
     "rPi": "Principal and interest",
@@ -804,8 +876,11 @@
     "rDebtsTotal": "Monthly debts, all sources",
     "qualNote": "The income and debts fields here are your own. A co-buyer’s income, other income, and car, student and credit-card payments are entered on the affordability page — the two totals at the top of the table above already include them, so anything you type here adds to them.",
     "rStressPay": "Stress-tested payment",
+    "rStressPay_us": "Payment at the qualifying rate",
     "rGds": "GDS ratio",
+    "rGds_us": "Front-end DTI ratio",
     "rTds": "TDS ratio",
+    "rTds_us": "Back-end DTI ratio",
     "rResult": "Would a lender approve?",
     "rInterest": "Total interest paid",
     "rBorrowCost": "Interest plus premium",
@@ -843,6 +918,7 @@
     "fFunds": "Funds available",
     "minDownNote": "The legal minimum is {lo} on the first {a} and {hi} on the portion above it. At this price that is {b}, so any lower column is raised to meet it.",
     "minDownNoteFlat": "At or above {cap} no insurer will cover the mortgage, so the legal minimum is {p} of the price with no tiers. At this price that is {b}, so any lower column is raised to meet it.",
+    "minDownNoteUs": "The minimum down payment is {pFtb} of the price for a first-time buyer, {pOther} otherwise — a flat rate, not a tiered schedule. At this price that is {b}, so any lower column is raised to meet it.",
     "whyPremium": "The premium is a percentage of the loan, set by the loan-to-value band at origination, plus 20 basis points for a 30-year amortization. It is added to the mortgage, so you pay interest on it for the full term.",
     "whyContract": "Insured mortgages price below uninsured ones, because the lender’s risk is covered. Putting 20% down removes the premium but moves you to the higher rate.",
     "whyPremTax": "Some provinces charge sales tax on the insurance premium. The premium can be financed; the tax on it cannot, so it is cash on closing day and it varies by column.",
@@ -877,7 +953,14 @@
     "cTds": "TDS",
     "cLifetime": "Cost of borrowing",
     "cScenario": "Scenario",
-    "cModelled": "Modelled at"
+    "cModelled": "Modelled at",
+    "lifetimeWhy_us": "Interest plus the PMI cost, over the whole mortgage. This is where the cheapest monthly usually stops being the cheapest overall. It assumes today's contract rate holds for the entire 30-year loan — a US fixed-rate mortgage has no term and never renews, so this is the real lifetime cost, not an estimate to some future reset.",
+    "nHurdleTitle_us": "The mortgage rate is the after-tax hurdle, usually",
+    "nHurdleBody_us": "Mortgage interest can be deductible if you itemize, but most buyers take the standard deduction and get nothing extra from it — see Rent vs Buy for whether itemising is worth it at your own numbers. Either way, compare the mortgage rate against after-tax investment returns, not gross ones.",
+    "nOrderTitle_us": "Fill tax-advantaged room first",
+    "nOrderBody_us": "An IRA or 401(k) — especially with an employer match — usually beats prepaying the mortgage before you weigh anything else.",
+    "cGds_us": "Front DTI",
+    "cTds_us": "Back DTI"
   },
   "Provenance": {
     "rule": "rule",

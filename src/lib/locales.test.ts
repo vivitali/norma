@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { routing } from "@/i18n/routing";
+import { COUNTRIES, localesForCountry, type Country } from "@/i18n/countries";
 import { CATALOGUES } from "@/test/catalogues";
 import { LOCALES, localeProfile } from "./locales";
 
@@ -31,9 +32,16 @@ describe("the locale table", () => {
     }
   });
 
-  it("gives every locale a distinct switcher label", () => {
-    const labels = Object.values(LOCALES).map((l) => l.label);
-    expect(new Set(labels).size).toBe(labels.length);
+  it("gives every locale a distinct switcher label WITHIN ITS OWN COUNTRY", () => {
+    // Not globally distinct: LocaleSwitcher only ever offers one country's locales at
+    // once (localesForCountry), so "en-CA" and "en-US" sharing the label "EN" is fine
+    // — they never appear together in the same dropdown. What must not happen is two
+    // locales of the SAME country sharing a label.
+    for (const country of Object.keys(COUNTRIES) as Country[]) {
+      const labels = localesForCountry(`${COUNTRIES[country].languages[0]}-${country.toUpperCase()}` as never)
+        .map((locale) => LOCALES[locale].label);
+      expect(new Set(labels).size, country).toBe(labels.length);
+    }
   });
 
   it("gives every locale a catalogue of its own, not another locale's", () => {

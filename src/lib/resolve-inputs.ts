@@ -1,4 +1,4 @@
-import type { CaRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
+import type { CountryRules, Jurisdiction, PropertyType, Residency } from "@/domain/types";
 import { defaultContractRate, minDown, rentComparable } from "@/domain/engine";
 import type { ToolFormState } from "./shared-inputs";
 
@@ -178,7 +178,7 @@ export interface ResolvedInputs {
 export function resolveInputs(
   stored: ToolFormState,
   j: Jurisdiction,
-  F: CaRules,
+  F: CountryRules,
 ): ResolvedInputs {
   const income1 = stored.income1 ?? DEFAULT_INCOME_1;
   const income2 = stored.income2 ?? 0;
@@ -214,8 +214,13 @@ export function resolveInputs(
   // percentage that lands a rounding error under the floor is not a reader
   // asking for something illegal. Expressed in dollars, not percentage points,
   // because that is the unit the rule is written in.
-  const floorPct = price > 0 ? (minDown(F, price) / price) * 100 : stored.dpPct;
-  const belowMinimum = price > 0 && (price * stored.dpPct) / 100 < minDown(F, price) - 0.5;
+  // `stored.ftb` — not a resolved/effective value — because that is the one this schedule
+  // actually branches on for the US (`programs.conventional.minDownFtb` vs `.minDown`, see
+  // `minDown()`'s own doc comment); every call site below needs the same third argument or
+  // a first-time buyer would see the 5% floor everywhere except the one control that asks.
+  const floorPct = price > 0 ? (minDown(F, price, stored.ftb) / price) * 100 : stored.dpPct;
+  const belowMinimum =
+    price > 0 && (price * stored.dpPct) / 100 < minDown(F, price, stored.ftb) - 0.5;
   const dpPct = belowMinimum ? floorPct : stored.dpPct;
   const car = stored.car ?? 0;
   const student = stored.student ?? 0;
@@ -282,9 +287,14 @@ export function resolveInputs(
     taxIncome: stored.taxIncome ?? income1 + income2 + otherIncome,
 
     // Contributing the federal maximum is the only non-arbitrary starting point:
-    // any smaller figure would be a recommendation about how much to put in.
-    hbpContribution: stored.hbpContribution ?? F.hbp.max,
-    hbpWithdraw: stored.hbpWithdraw ?? stored.hbpContribution ?? F.hbp.max,
+    // any smaller figure would be a recommendation about how much to put in. The HBP
+    // has no US analogue — RRSP-HBP is a Canada-only route (US-market spec) — so a
+    // US call has no honest maximum to fall back to; these two fields simply go
+    // unread on that branch rather than crash resolving inputs for every OTHER page,
+    // every one of which calls this same function.
+    hbpContribution: stored.hbpContribution ?? (F.country === "ca" ? F.hbp.max : 0),
+    hbpWithdraw:
+      stored.hbpWithdraw ?? stored.hbpContribution ?? (F.country === "ca" ? F.hbp.max : 0),
 
     termYears: stored.termYears,
     renewalRate: stored.renewalRate,

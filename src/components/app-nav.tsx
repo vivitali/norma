@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { NAV, builtEntries } from "@/lib/routes";
+import { useCountry } from "@/hooks/use-country";
 import { cn } from "@/lib/utils";
 
 /**
@@ -53,15 +54,20 @@ import { cn } from "@/lib/utils";
 export function AppNav() {
   const t = useTranslations("Nav");
   const pathname = usePathname();
+  const country = useCountry();
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const groups = NAV.map((group) => ({ group, entries: builtEntries(group) })).filter(
-    ({ entries }) => entries.length > 0,
-  );
+  // Filtered by `entry.countries`: RRSP-HBP has no US analogue (US-market spec, "absent
+  // from the US navigation"), so a US reader would otherwise see a menu entry whose page
+  // 404s the moment they follow it.
+  const groups = NAV.map((group) => ({
+    group,
+    entries: builtEntries(group).filter((entry) => entry.countries.includes(country)),
+  })).filter(({ entries }) => entries.length > 0);
 
   const close = useCallback((restoreFocus: boolean) => {
     setOpen(false);

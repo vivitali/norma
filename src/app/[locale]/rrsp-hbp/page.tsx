@@ -3,7 +3,7 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { hbpPlay } from "@/domain/engine";
-import { regionOf } from "@/domain/types";
+import { regionOf, type CaRules } from "@/domain/types";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useRules } from "@/hooks/use-country";
@@ -30,6 +30,17 @@ export default function RrspHbpPage() {
   const t = useTranslations("RrspHbp");
   const [jurisdiction] = useJurisdiction();
   const rules = useRules();
+  /**
+   * RRSP-HBP has no US analogue — the design spec's own decision ("RRSP-HBP is
+   * absent from the US navigation"). `rrsp-hbp/layout.tsx`'s `assertRouteAvailable`
+   * is the real gate: it 404s the route itself for a non-CA locale before this
+   * component ever mounts, so this cast documents an invariant the router already
+   * enforces rather than papering over an unhandled case. It is a plain assertion,
+   * not an `if (rules.country !== "ca") return …` early return, because every hook
+   * below (`useSharedState`, `useSections`, `useMemo`) must run unconditionally on
+   * every render — an early return before them is a rules-of-hooks violation.
+   */
+  const caRules = rules as CaRules;
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     RRSP_HBP_SECTIONS,
@@ -56,13 +67,13 @@ export default function RrspHbpPage() {
    */
   const play = useMemo(
     () =>
-      hbpPlay(rules, {
+      hbpPlay(caRules, {
         contribution: resolved.hbpContribution,
         income: resolved.taxIncome,
         prov: regionOf(jurisdiction),
         withdrawAmount: resolved.hbpWithdraw,
       }),
-    [rules, resolved.hbpContribution, resolved.hbpWithdraw, resolved.taxIncome, jurisdiction],
+    [caRules, resolved.hbpContribution, resolved.hbpWithdraw, resolved.taxIncome, jurisdiction],
   );
   const rate = play.marginalRate;
 
@@ -178,7 +189,7 @@ export default function RrspHbpPage() {
             */}
             <PanelRow
               label={t("rrspCap")}
-              value={fmt(rules.rrspCap)}
+              value={fmt(caRules.rrspCap)}
               provenance={<Provenance kind="rule" />}
             />
             <NoteLine>{t("rrspRoomNote")}</NoteLine>
@@ -362,7 +373,7 @@ export default function RrspHbpPage() {
                 note: t("refundWhy"),
               },
               { label: t("withdraw"), value: fmt(play.withdraw), rule: true },
-              { label: t("calcRepayYears"), value: String(rules.hbp.repayYears), op: "divide" },
+              { label: t("calcRepayYears"), value: String(caRules.hbp.repayYears), op: "divide" },
               { label: t("calcRepay"), value: fmt(play.repayAnnual), op: "equals" },
             ]}
           />,

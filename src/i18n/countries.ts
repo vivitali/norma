@@ -49,6 +49,13 @@ export interface CountryProfile {
 
 export const COUNTRIES = {
   ca: { segment: "/ca", languages: ["en", "fr", "uk", "es"] },
+  /**
+   * The US does not inherit Canada's locale set (design spec, "Locales per country"):
+   * French and Ukrainian have no particular claim on a US audience, while Spanish plainly
+   * does. `en` first so `defaultPrefixes()` and the locale switcher's default ordering
+   * both resolve `en-US` as the US default, the same way `en-CA` is Canada's.
+   */
+  us: { segment: "/us", languages: ["en", "es"] },
 } as const satisfies Record<string, CountryProfile>;
 
 export type Country = keyof typeof COUNTRIES;

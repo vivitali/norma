@@ -265,12 +265,20 @@ pattern that resembles one. The same applies to any future assertion over render
    both required** and a test enforces each; Ukrainian deliberately takes none (see the
    conventions above). A route added with only a French slug fails the suite.
 2. `src/lib/routes.ts` — the nav entry and its `built` flag
-3. `src/lib/sections.ts` — the page's section registry, added to `SECTION_REGISTRIES` so the
+3. `src/lib/og-manifest.ts` — `ROUTE_COUNTRIES[route]`, the `Country[]` this route exists in
+   (re-exported through `src/lib/seo.ts` and `src/lib/routes.ts`). Every route lists both
+   registered countries unless it genuinely has no counterpart in one of them — `/rrsp-hbp` is
+   the one exception today. This is what `NAV` filters by, what `assertRouteAvailable` 404s by,
+   and what the sitemap and hreflang scope by; a route that skips this line is offered to a
+   country whose page for it does not exist.
+4. `src/lib/sections.ts` — the page's section registry, added to `SECTION_REGISTRIES` so the
    message-key test covers it. **Add it when the page ships, not before**: a registry naming a
    namespace that does not exist yet cannot be checked, and a test that skips it is not a test.
-4. `src/lib/seo.ts` — `INDEXABLE_ROUTES`, plus `Metadata.<page>` copy and the page's entry in
-   `seo-copy.test.ts`'s `PAGES`
-5. `src/app/[locale]/<route>/layout.tsx` — metadata only. `page.tsx` is a client component and
+5. `src/lib/seo.ts` — `INDEXABLE_ROUTES`, plus `Metadata.<page>` copy and the page's entry in
+   `seo-copy.test.ts`'s `PAGES`. If the page's title or description differs by country, fork it
+   through `countryKey()` in the route's `layout.tsx` (below) rather than writing two pages —
+   `seo-copy.test.ts`'s 60/155 caps check the `_us` fork too, wherever one exists.
+6. `src/app/[locale]/<route>/layout.tsx` — metadata only. `page.tsx` is a client component and
    cannot export `generateMetadata`.
 
 **Every page that computes an answer can show its work.** `src/components/calc/calc-trace.tsx`
@@ -450,6 +458,59 @@ typed against `CountryRulesBase` cannot silently start reading a Canada-only fie
 `country` — a future renewing country gets the Canadian treatment for free, and a page that forgets
 the second arm fails to compile once it has a value. `useRules()`/`useCountry()` (client
 components) and `rulesFor(country)` (server, and `/sources`) replace every `import { federal }`.
+
+**The US market landed on top of that seam, market data then UI.** `src/domain/rules/us.ts` is
+the second `CountryRules` entry (`RULES.us`), and `src/domain/jurisdictions/houston.ts` is the
+first — and so far only — US jurisdiction: Houston (Harris County), Texas, `country: "us"`,
+`mortgage: { kind: "toMaturity", renews: false }`. Every page reads the union through the same
+`useRules()`/`rulesFor()` seam the domain refactor built; nothing imports a country's rules by
+name. `src/i18n/routing.ts` and `src/i18n/countries.ts` gained the `en-US`/`es-US` locale pair
+(`/us/<language>`, mirroring `/ca/<language>`) and `ROUTE_COUNTRIES` (re-exported from
+`src/lib/og-manifest.ts` through `src/lib/seo.ts`) names, per route, which countries carry it —
+every route lists both today except `/rrsp-hbp`, which is Canada-only (`UsRules` has no `hbp`
+field, and the design spec calls it out by name: "RRSP-HBP is absent from the US navigation").
+`src/lib/route-guard.ts`'s `assertRouteAvailable`, called from every route's `layout.tsx`, turns
+"absent from this country" into a build-time 404 rather than a page Cloudflare would otherwise
+serve: `notFound()` during static generation produces a prerendered 404 (`status: 404` in that
+path's `.meta` file, verified against `next start`, not just the build log — the build's own
+summary line still lists the path, so the manifest is not where this gets checked), never a
+Worker invocation. `src/lib/routes.ts`'s `NAV` filters by the same table, so a US reader is never
+offered a card that would 404.
+
+**Pages branch on `rules.country` or `rules.mortgage.renews`, never on a hardcoded country
+string, and the choice between the two is not interchangeable** — see the domain-seam paragraph
+above for `mortgage.renews` (Amortization's renewal section, Rent vs Buy's compounding). Reading
+`rules.country` directly is right where the fork is genuinely about which country this is (GDS/TDS
+vs DTI naming, CMHC vs PMI, which down-payment sources exist) rather than about a mechanical
+property every future `toMaturity` country would also lack.
+
+**Copy that differs by country is forked through one helper, `src/lib/country-key.ts`'s
+`countryKey(base, country)`** — `${base}_us` for the US, `base` unchanged otherwise. It is
+deliberately not reached for on every `t()` call: most copy is country-neutral, and the doc
+comment on the helper itself says to keep the forked-key surface small and let a coverage test
+enumerate it rather than hedge everywhere "just in case". There is no runtime fallback — a missing
+`_us` key renders next-intl's own `Namespace.key_us` fallback string, which is exactly how the
+vocabulary contract below catches a fork applied without its message ever being written. The
+FAQPage-schema case on Home needed something more selective than a blanket fork: three of its six
+questions are genuinely country-neutral, so `home-content.tsx` exports a small `homeFaqKey()`
+wrapping `countryKey()` around a fixed set of forked keys, and `page.tsx`'s JSON-LD builder calls
+the SAME function — the two are asserted to mark up the same questions
+(`src/app/[locale]/page.test.tsx`), which only holds if both read off identical key logic.
+
+**The vocabulary contract is the test that actually enforces all of the above.**
+`page-contracts.test.tsx`'s "US vocabulary contract" renders every US-available page at a Houston
+seed (`en-US` — `pickJurisdiction` only honours a stored `jurId` belonging to the render locale's
+own country, so seeding Houston without a US locale silently falls back to the Canadian default
+and tests nothing) and asserts none of CMHC, GDS, TDS, "land transfer", FHSA, HBP or TFSA appears,
+literally, anywhere in the rendered text — and the converse at a Winnipeg seed for PMI, DTI and
+"homestead". It is written as one `it.each` over the page list, not one assertion per page, and it
+has already caught real leaks more than once: a rent-vs-buy mismatch banner that named CMHC
+unconditionally, an Amortization chart legend and alt text that claimed a renewal this mortgage
+cannot have, and a Scenarios lifetime-cost row and ledger column headers that forked their
+row-level sibling but not themselves. `locale-render.test.tsx`'s `LOCALES` is `routing.locales`
+(now six, not four), so every page render already covers `en-US`/`es-US` too, for the missing-key
+and garbage-value classes of defect; the vocabulary contract is the one check for wrong-but-present
+copy that renders without error.
 
 **Open issues:**
 - ~~[#1](https://github.com/vivitali/norma/issues/1)~~ — **closed by this branch.** Ukrainian and

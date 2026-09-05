@@ -1490,9 +1490,18 @@ export type HbpResult = ReturnType<typeof hbpPlay>;
  */
 export function rentComparable(j: Jurisdiction, ptype: PropertyType): boolean {
   if (j.rentBasis === undefined) return false;
-  // The one basis the dataset holds. `newbuild` reads the house benchmark
-  // (see `benchmarkPrice`), so it inherits the house answer.
-  return j.rentBasis === "apartment2br" && ptype === "condo";
+  // Two bases, both a two-bedroom apartment average — CMHC's on the Canadian
+  // records, HUD's Fair Market Rent on the US ones (Houston: dossier A-something,
+  // `rentBasis: "fmr2br"`) — either is comparable to a CONDO purchase and neither
+  // is comparable to a house. `newbuild` reads the house benchmark (see
+  // `benchmarkPrice`), so it inherits the house answer on both bases.
+  //
+  // This was `=== "apartment2br"` alone until a Houston-seeded Rent vs Buy test
+  // (`page-contracts.test.tsx`) caught it: `RentBasis` has carried `"fmr2br"`
+  // since the US jurisdiction record shipped, but this function never learned the
+  // second value, so Houston printed the "wrong dwelling type" mismatch ask on
+  // EVERY property type — condo included — and could never answer at all.
+  return (j.rentBasis === "apartment2br" || j.rentBasis === "fmr2br") && ptype === "condo";
 }
 
 export interface RentVsBuyInput extends ClosingInput {
@@ -1600,6 +1609,11 @@ export interface RentVsBuyRow {
   /** US only: whether itemising beat the standard deduction THIS year — most buyers, per the
    * design spec's own framing, get nothing from the deduction. */
   itemizedBeatsStandard?: boolean;
+  /** US only: PMI actually charged THIS year, already folded into `ownerOutlay` — broken out
+   * here so a screen can show the line item without re-deriving it from `fin.monthlyInsurance`
+   * and `fin.insuranceMonths` a second time. Undefined on the Canadian branch, whose CMHC
+   * premium is a one-time amount financed into the loan, not a recurring cost. */
+  pmi?: number;
 }
 
 /**
@@ -1922,7 +1936,7 @@ function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
       homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
-      deductionBenefit, itemizedBeatsStandard,
+      deductionBenefit, itemizedBeatsStandard, pmi,
     });
   }
 
@@ -2010,6 +2024,11 @@ export function scenario(j: Jurisdiction, F: CountryRules, o: ScenarioInput) {
     pi,
     propTax,
     insurance: o.insuranceAnnual / 12,
+    // Always 0 on this (Canadian) branch — CMHC's premium is financed into the loan, not
+    // billed monthly. See `monthly.pmi` on `scenarioToMaturity` below for the US figure;
+    // both use the SAME key so a Scenarios column can render one PMI row for either
+    // country without branching on which shape `monthly` is.
+    pmi: 0,
     utilities: o.utilities,
     condoFee: o.condoFee,
     maintenance,
@@ -2095,6 +2114,9 @@ function scenarioToMaturity(j: Jurisdiction, F: UsRules, o: ScenarioInput) {
     pi,
     propTax,
     insurance: o.insuranceAnnual / 12,
+    // PMI — see `monthly.pmi`'s comment on the Canadian branch above for why this is the
+    // same key rather than a US-only field.
+    pmi: fin.monthlyInsurance,
     utilities: o.utilities,
     condoFee: o.condoFee,
     maintenance,
