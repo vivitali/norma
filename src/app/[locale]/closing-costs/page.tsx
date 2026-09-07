@@ -561,7 +561,7 @@ export default function ClosingCostsPage() {
           is written against.
         */}
         {resolved.ptype === "newbuild" ? (
-          <NoteLine tone="caution">{t("newBuildPriceNote")}</NoteLine>
+          <NoteLine tone="caution">{t(countryKey("newBuildPriceNote", rules.country))}</NoteLine>
         ) : null}
       </section>
 

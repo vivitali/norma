@@ -477,6 +477,7 @@
     "omAdjustments": "Adjustments other than property tax. Condo fees, prepaid utilities and fuel left in the tank are all settled by the day, counted from your closing date. This calculator never asks for a closing date, so it prices none of them — your lawyer’s statement of adjustments is where they turn up.",
     "omNewBuild": "A builder’s own extras. Development levies, utility and meter hookups, grading or lot deposits and new-home warranty enrolment are commonly charged on top of the agreed price. Some are published and most are not, so pricing only the published ones would look authoritative while still understating the group. Your agreement of purchase and sale should cap them — that clause is worth reading before you sign.",
     "newBuildPriceNote": "No publisher produces a new-build price level in Canada, so the price modelled here is this city’s resale house benchmark until you replace it with the builder’s own.",
+    "newBuildPriceNote_us": "No publisher produces a new-build price level in this market, so the price modelled here is this city’s resale house benchmark until you replace it with the builder’s own.",
     "secCalc": "How this was calculated",
     "calcLine": "Every line, added up",
     "calcWhy": "The cash figure at the top of this page, operand by operand. Each group is the total of the section that lists it, so a figure here can be traced to the document it came from.",
