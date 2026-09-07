@@ -759,6 +759,7 @@
     "years": "{n, plural, one {# año} other {# años}}",
     "apprInflation": "Inflación",
     "apprShelter": "Crecimiento del costo de vivienda, FP Canada",
+    "apprShelter_us": "Crecimiento del costo de vivienda a largo plazo",
     "apprFlat": "Prueba de mercado plano",
     "apprRates": "Inflación {a} al año · crecimiento del costo de vivienda {b} · mercado plano {c}.",
     "retCash": "Efectivo y ahorro de alto interés",

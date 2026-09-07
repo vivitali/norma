@@ -759,6 +759,7 @@
     "years": "{n, plural, one {# an} other {# ans}}",
     "apprInflation": "Inflation",
     "apprShelter": "Croissance du coût du logement, FP Canada",
+    "apprShelter_us": "Croissance du coût du logement à long terme",
     "apprFlat": "Test du marché plat",
     "apprRates": "Inflation {a} par année · croissance du coût du logement {b} · marché plat {c}.",
     "retCash": "Liquidités et épargne à intérêt élevé",

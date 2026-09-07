@@ -759,6 +759,7 @@
     "years": "{n, plural, one {# year} other {# years}}",
     "apprInflation": "Inflation",
     "apprShelter": "FP Canada shelter growth",
+    "apprShelter_us": "Long-run shelter growth",
     "apprFlat": "Flat market test",
     "apprRates": "Inflation {a} a year · shelter growth {b} · flat market {c}.",
     "retCash": "Cash and high-interest savings",

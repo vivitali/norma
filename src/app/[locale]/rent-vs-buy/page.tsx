@@ -708,7 +708,7 @@ export default function RentVsBuyPage() {
               onChange={(apprKey) => update({ apprKey })}
               options={[
                 { value: "inflation" as const, label: t("apprInflation") },
-                { value: "shelter" as const, label: t("apprShelter") },
+                { value: "shelter" as const, label: t(countryKey("apprShelter", rules.country)) },
                 { value: "flat" as const, label: t("apprFlat") },
               ]}
             />
