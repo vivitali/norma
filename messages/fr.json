@@ -796,6 +796,7 @@
     "favBuy": "Non pris en compte, en faveur de l’achat",
     "favRent": "Non pris en compte, en faveur de la location",
     "fb1": "Au Canada, les gains sur une résidence principale sont libres d’impôt à 100 %. Les gains de placement ne le sont pas. Si le rendement ci-dessus est avant impôt, la comparaison penche injustement vers la location.",
+    "fb1_us": "Jusqu’à 250 000 $ de gain sur une résidence principale (500 000 $ pour une déclaration conjointe) sont exonérés d’impôt fédéral sous l’exclusion pour vente résidentielle ; les gains de placement ne le sont pas, et les gains au-delà de ce seuil sont aussi imposés. Si le rendement ci-dessus est avant impôt, la comparaison penche injustement vers la location.",
     "fb2": "Épargne forcée. Un paiement hypothécaire est obligatoire ; investir l’écart est optionnel, et peu de gens s’y tiennent dix ans. Le modèle suppose une discipline parfaite du locataire.",
     "fb3": "Sécurité d’occupation, liberté de rénover, aucun risque de propriétaire. Réel, mais non financier.",
     "fb4": "Un prêt hypothécaire est un levier. Vous contrôlez l’actif entier en n’ayant versé qu’une fraction de sa valeur.",

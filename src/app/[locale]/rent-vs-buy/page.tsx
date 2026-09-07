@@ -467,7 +467,16 @@ export default function RentVsBuyPage() {
               "",
               t("assumptionsWhy"),
               <>
-                {notCaptured(t("favBuy"), FAVOURS_BUYING.map((k) => t(k)))}
+                {notCaptured(
+                  t("favBuy"),
+                  // Only `fb1` (the principal-residence capital-gains item)
+                  // differs by country -- Canada's exemption is unlimited,
+                  // the US's is IRC $sec121, capped and requires an ownership
+                  // and use test -- so it alone is routed through countryKey();
+                  // fb2-4 stay single keys, same discipline as WHY_FORKED in
+                  // sources-content.tsx.
+                  FAVOURS_BUYING.map((k) => t(k === "fb1" ? countryKey(k, rules.country) : k)),
+                )}
                 {notCaptured(t("favRent"), FAVOURS_RENTING.map((k) => t(k)))}
               </>,
             )}

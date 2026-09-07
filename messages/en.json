@@ -796,6 +796,7 @@
     "favBuy": "Not captured, and these favour buying",
     "favRent": "Not captured, and these favour renting",
     "fb1": "In Canada, gains on a principal residence are 100% tax-free. Investment gains are not. If the return above is a pre-tax figure, this comparison is unfairly tilted toward renting.",
+    "fb1_us": "Up to $250,000 of gain on a primary residence ($500,000 filing jointly) is tax-free under the federal home-sale exclusion; investment gains are not, and gains above that threshold are taxed too. If the return above is a pre-tax figure, this comparison is unfairly tilted toward renting.",
     "fb2": "Forced savings. A mortgage payment is compulsory; investing the difference is optional, and most people do not sustain it for ten years. The model assumes perfect discipline from the renter.",
     "fb3": "Security of tenure, freedom to renovate, and no landlord risk. Real, but not financial.",
     "fb4": "A mortgage is leverage. You control the whole asset having put down a fraction of its value.",
