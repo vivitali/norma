@@ -527,6 +527,7 @@
     "srcTfsaWhy": "No tax to withdraw. The contribution room comes back, but not until the next calendar year.",
     "srcGift": "Gift",
     "srcGiftWhy": "Not taxable in Canada. Your lender will want a signed letter saying it is a gift, not a loan.",
+    "srcGiftWhy_us": "Not taxable. Your lender will want a signed gift letter saying it is a gift, not a loan.",
     "srcNonreg": "Non-registered investments",
     "srcNonregWhy": "Selling realises a capital gain. Half of it is added to your income and taxed at your marginal rate — which is why it is last.",
     "monthlySavings": "Monthly savings toward the purchase",

@@ -527,6 +527,7 @@
     "srcTfsaWhy": "Sin impuesto al retirar. El espacio de aportación vuelve, pero no hasta el próximo año natural.",
     "srcGift": "Regalo",
     "srcGiftWhy": "No tributa en Canadá. Su prestamista pedirá una carta firmada que diga que es un regalo, no un préstamo.",
+    "srcGiftWhy_us": "No tributa. Su prestamista pedirá una carta de regalo firmada que diga que es un regalo, no un préstamo.",
     "srcNonreg": "Inversiones no registradas",
     "srcNonregWhy": "Vender realiza una plusvalía. La mitad se suma a su ingreso y tributa a su tasa marginal: por eso va la última.",
     "monthlySavings": "Ahorro mensual destinado a la compra",

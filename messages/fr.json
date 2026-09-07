@@ -527,6 +527,7 @@
     "srcTfsaWhy": "Aucun impôt au retrait. Le droit de cotisation revient, mais seulement l’année civile suivante.",
     "srcGift": "Don",
     "srcGiftWhy": "Non imposable au Canada. Votre prêteur exigera une lettre signée attestant qu’il s’agit d’un don, non d’un prêt.",
+    "srcGiftWhy_us": "Non imposable. Votre prêteur exigera une lettre de don signée attestant qu’il s’agit d’un don, non d’un prêt.",
     "srcNonreg": "Placements non enregistrés",
     "srcNonregWhy": "La vente réalise un gain en capital. La moitié s’ajoute à votre revenu et est imposée à votre taux marginal — d’où sa dernière place.",
     "monthlySavings": "Épargne mensuelle pour l’achat",
