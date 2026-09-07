@@ -11,12 +11,20 @@
  * person's title and contact details. The title is translated (it is a role, not a name) and lives
  * in `Legal.officerTitle`; the name and address are here.
  *
- * DELIBERATE, and recorded rather than left to be discovered: the contact address is the owner's
- * personal one, chosen over a role address on the domain when this shipped. It is published
- * unobfuscated in a `mailto:` on two indexable, prerendered, sitemapped pages, in both locales.
- * That is a legitimate choice for a sole proprietorship — s. 3.1 asks only that the officer be
- * reachable — but it is a choice, and swapping it for `privacy@affordmath.com` later means
- * changing this file and nothing else.
+ * The addresses are ROLE addresses on the site's own domain, and that is deliberate. They were
+ * the owner's personal mailbox when the legal pages first shipped — a legitimate choice for a
+ * sole proprietorship, since s. 3.1 asks only that the officer be reachable — but they are
+ * published unobfuscated in a `mailto:` on two indexable, prerendered, sitemapped pages in every
+ * locale, which is a spam-harvester's ideal target and ties a personal inbox to the site forever.
+ * A role address survives incorporation, a change of officer, and handing the project on.
+ *
+ * THE CONSTRAINT THAT OUTRANKS ALL OF THAT: an address published here must actually receive mail.
+ * s. 3.1 requires the officer to be reachable, and a privacy request that bounces is a legal
+ * failure, not an inconvenience — and a silent one, because the sender gets the rejection and we
+ * never learn a request was made. affordmath.com published a null MX (`MX 0 .`, RFC 7505) and
+ * `v=spf1 -all` — an explicit "this domain sends and receives no mail" — so routing had to exist
+ * BEFORE these values changed. If you edit this file, verify delivery first; `dig MX affordmath.com`
+ * returning `0 .` means every address below is a black hole.
  */
 export interface LegalParty {
   name: string;
@@ -26,14 +34,14 @@ export interface LegalParty {
 /** Named on /terms as the person who operates the site. Sole proprietorship, so it is a person. */
 export const OPERATOR: LegalParty = {
   name: "Vitalii Vasinkevych",
-  email: "vasinkevych@gmail.com",
+  email: "hello@affordmath.com",
 };
 
 /** Named on /privacy under Private Sector Act s. 3.1. The same person, while this stays a sole
  * proprietorship — kept as its own constant so incorporating means editing OPERATOR alone. */
 export const PRIVACY_OFFICER: LegalParty = {
   name: "Vitalii Vasinkevych",
-  email: "vasinkevych@gmail.com",
+  email: "privacy@affordmath.com",
 };
 
 /**
