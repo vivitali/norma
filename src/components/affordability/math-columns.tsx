@@ -113,7 +113,10 @@ export function MathColumns({
           <MathRow label={`${t("mLess")} · ${t("cUtilities")}`} value={`− ${fmt(result.monthly.utilities)}`} />
         ) : null}
         {result.monthly.condoFee > 0 ? (
-          <MathRow label={`${t("mLess")} · ${t("cCondoFee")}`} value={`− ${fmt(result.monthly.condoFee)}`} />
+          <MathRow
+            label={`${t("mLess")} · ${t(countryKey("cCondoFee", rules.country))}`}
+            value={`− ${fmt(result.monthly.condoFee)}`}
+          />
         ) : null}
         <MathRow label={t("mBudget")} value={fmt(result.budget)} strong />
         <MathRow
