@@ -775,19 +775,6 @@ describe("US vocabulary contract", () => {
   /** `Countries.ca`/`Countries.us` — see the CA_ONLY_VOCAB comment above. */
   const COUNTRY_SWITCHER_LABELS = ["Canada", "United States"];
 
-  /**
-   * Home's FAQ deliberately asks and answers a handful of comparison questions BY
-   * NAME — "Does the US have a mortgage stress test like Canada's?" (`Home.faqQ_
-   * stressTest_us`/`faqA_stressTest_us`, `faqA_eligibility_us`'s "a different
-   * question from the one Canada's federal Act raises") — the exact pattern CLAUDE.md
-   * documents for `homeFaqKey`'s selective fork: real search-driven questions a US
-   * reader arrives with, answered by naming the Canadian concept they are asking
-   * about. That is not a vocabulary leak; it is the fork working. Every OTHER page
-   * and Home's own non-FAQ copy still gets the full check — this exemption is scoped
-   * to Home alone, for exactly the two words its reviewed FAQ pair needs.
-   */
-  const HOME_FAQ_CONTRAST_EXEMPT = ["Canad", "stress"];
-
   async function expandAll() {
     const user = userEvent.setup();
     for (const button of screen.queryAllByRole("button", { expanded: false })) {
@@ -815,7 +802,6 @@ describe("US vocabulary contract", () => {
       );
       const text = await expandAll();
       for (const word of CA_ONLY_VOCAB) {
-        if (name === "Home" && HOME_FAQ_CONTRAST_EXEMPT.includes(word)) continue;
         expect(text, `${name}: "${word}" leaked into a Houston-seeded, en-US render`).not.toContain(word);
       }
     },
