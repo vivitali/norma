@@ -7,6 +7,8 @@ import { regionOf } from "@/domain/types";
 import { CalcTrace } from "@/components/calc/calc-trace";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useRules } from "@/hooks/use-country";
+import type { Country } from "@/i18n/countries";
+import { countryKey } from "@/lib/country-key";
 import { useSections } from "@/hooks/use-sections";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS, type ToolFormState } from "@/lib/shared-inputs";
@@ -45,6 +47,19 @@ const SOURCE_LABEL: Record<SourceKey, string> = {
   gift: "srcGift",
   nonreg: "srcNonreg",
 };
+
+/**
+ * The one call site below serves all six sources' "Why" copy, and only
+ * `srcGiftWhy` names Canada ("Not taxable in Canada") — fhsa/hbp/tfsa never
+ * render on a US call (`visibleRows` filters them out) and cash/nonreg are
+ * country-neutral, so only gift's key is routed through `countryKey`. Same
+ * discipline as `whyKey` in sources-content.tsx: fork the one key that needs
+ * it, not the whole shared call site.
+ */
+function sourceWhyKey(source: SourceKey, country: Country): string {
+  const base = `${SOURCE_LABEL[source]}Why`;
+  return base === "srcGiftWhy" ? countryKey(base, country) : base;
+}
 
 export default function DownPaymentPage() {
   const t = useTranslations("DownPayment");
@@ -349,7 +364,7 @@ export default function DownPaymentPage() {
                       site cannot read an unguarded CA-only field off this pattern.
                     */}
                     <p className="pt-1 text-[12px] leading-[1.55] text-ink3 text-pretty">
-                      {t(`${SOURCE_LABEL[row.key]}Why`, {
+                      {t(sourceWhyKey(row.key, rules.country), {
                         y: rules.country === "ca" ? rules.hbp.repayYears : 0,
                         a: rules.country === "ca" ? fmt(rules.fhsa.annual) : "",
                         l: rules.country === "ca" ? fmt(rules.fhsa.lifetime) : "",

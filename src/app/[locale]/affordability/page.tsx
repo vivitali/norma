@@ -184,7 +184,7 @@ export default function AffordabilityPage() {
   const condoFeeField = (
     <NumberField
       id="condoFee-inline"
-      label={t("cCondoFee")}
+      label={t(countryKey("cCondoFee", rules.country))}
       value={stored.condoFee}
       placeholder={resolved.condoFee}
       min={0}
@@ -511,7 +511,7 @@ export default function AffordabilityPage() {
               ) : null}
               <PanelRow label={t("cUtilities")} value={fmt(result.monthly.utilities)} provenance={<Provenance kind="estimate" />} />
               {result.monthly.condoFee > 0 ? (
-                <PanelRow label={t("cCondoFee")} value={fmt(result.monthly.condoFee)} />
+                <PanelRow label={t(countryKey("cCondoFee", rules.country))} value={fmt(result.monthly.condoFee)} />
               ) : null}
               <PanelRow label={t("mMaint")} value={fmt(result.monthly.maintenance)} provenance={<Provenance kind="estimate" />} />
               <PanelRow label={t("mTotal")} value={fmt(result.monthly.total)} strong />
