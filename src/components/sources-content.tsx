@@ -122,6 +122,14 @@ function SourceList({ entries }: { entries: readonly SourceEntry[] }) {
           {entry.notes.map((note) => (
             <p
               key={note}
+              // Marks this paragraph as raw `src/domain` provenance text, not
+              // UI copy — see page-contracts.test.tsx's vocabulary contract,
+              // which excludes these from the CA_ONLY_VOCAB scan. The notes are
+              // an English-only verification record (CLAUDE.md), and several
+              // legitimately compare a US figure's derivation to "the Canadian
+              // record" by name; that is not the same defect as a translated
+              // LABEL naming Canada.
+              data-source-note
               className="mt-1.5 text-[10.5px] leading-[1.65] break-words text-ink3 text-pretty"
             >
               {note}

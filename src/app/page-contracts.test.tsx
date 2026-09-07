@@ -17,6 +17,7 @@ import AmortizationPage from "./[locale]/amortization/page";
 import RentVsBuyPage from "./[locale]/rent-vs-buy/page";
 import ScenariosPage from "./[locale]/scenarios/page";
 import { HomeContent } from "@/components/home-content";
+import { SourcesContent } from "@/components/sources-content";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
@@ -746,15 +747,27 @@ describe("US vocabulary contract", () => {
     return <HomeContent country="ca" />;
   }
 
+  // Sources is not in PAGES either, for the same reason Home isn't: it takes no
+  // stored jurisdiction-derived props to speak of beyond the seeded `jurId`
+  // already handled generically below, so `<SourcesContent />` slots directly
+  // into the same `[name, Page]` shape the it.each blocks already use.
+  function HoustonSources() {
+    return <SourcesContent />;
+  }
+  function WinnipegSources() {
+    return <SourcesContent />;
+  }
+
   // Every term below is checked as a literal substring, case-sensitively: these are real
   // English words this app's own copy uses (not a pattern that merely resembles one), the
   // same discipline `locale-render.test.tsx`'s own leaked-key check applies to message keys.
   // "Canad" (not "Canada"/"Canadian" separately) catches both spellings in one entry;
   // "province"/"provincial" are kept as two entries because neither is a substring of the
-  // other. The country switcher's own labels ("Canada"/"United States", `Countries.ca`/
-  // `Countries.us`) legitimately appear on every page regardless of which country is
-  // seeded, so they are stripped out of the rendered text before scanning rather than
-  // exempted term-by-term, which would have to be re-derived every time a label changed.
+  // other. "FP Canada", "Bank of Canada" and "CREA" are redundant with "Canad" as a plain
+  // substring match, but are named explicitly anyway: a bare "Canad" reads as an incidental
+  // catch, and a reviewer scanning this list should see the specific Canadian publishers this
+  // app's own copy has actually named by mistake (RentVsBuy.apprShelter did, until it was
+  // forked) without having to reconstruct that history.
   const CA_ONLY_VOCAB = [
     "CMHC",
     "GDS",
@@ -769,11 +782,11 @@ describe("US vocabulary contract", () => {
     "provincial",
     "strata",
     "stress",
+    "FP Canada",
+    "Bank of Canada",
+    "CREA",
   ];
   const US_ONLY_VOCAB = ["PMI", "DTI", "homestead", "Texas", "HOA"];
-
-  /** `Countries.ca`/`Countries.us` — see the CA_ONLY_VOCAB comment above. */
-  const COUNTRY_SWITCHER_LABELS = ["Canada", "United States"];
 
   async function expandAll() {
     const user = userEvent.setup();
@@ -781,13 +794,42 @@ describe("US vocabulary contract", () => {
       await user.click(button);
     }
     let text = document.body.textContent ?? "";
-    for (const label of COUNTRY_SWITCHER_LABELS) {
-      text = text.split(label).join(" ");
+    // Scoped to the country switcher's OWN combobox element(s), never a blind
+    // `text.split("Canada").join(" ")` over the whole page: that used to strip
+    // every literal occurrence of "Canada"/"United States" from the rendered
+    // text on the theory that `CountrySwitcher` legitimately renders one of
+    // them on every page. It doesn't — `AppHeader`/`CountrySwitcher` lives in
+    // the root `[locale]/layout.tsx`, not in any of the route components these
+    // tests render directly — and the blanket strip silently ATE a real leak:
+    // "FP Canada shelter growth" contains "Canada" as a substring, so the
+    // switcher exemption erased it before the CA_ONLY_VOCAB scan below ever
+    // ran, and RentVsBuy.apprShelter shipped naming a Canadian publisher to
+    // every US reader undetected (see that commit's message). None of these
+    // renders mount the switcher today, so this loop is a no-op; it stays
+    // scoped — rather than deleted outright — so a future page that DOES
+    // render it inline can't reopen the same blind spot.
+    for (const combobox of screen.queryAllByRole("combobox")) {
+      const label = combobox.textContent;
+      if (label) text = text.split(label).join(" ");
+    }
+    // `/sources` prints `src/domain`'s own provenance notes verbatim
+    // (CLAUDE.md: "the notes are the verification record, kept in English...")
+    // — an audit trail, not translated UI copy — and several of `rules/us.ts`'s
+    // own notes legitimately compare a US figure's derivation to "the Canadian
+    // record" or "CMHC's 50% convention" by name, exactly the methodological
+    // cross-reference CLAUDE.md documents as intentional. Scanning those would
+    // fail the contract for content this task never asked to be reworded, so
+    // they're excluded by the `data-source-note` marker `sources-content.tsx`
+    // puts on every note paragraph — the same scoping discipline
+    // `locale-render.test.tsx` already applies to its own leaked-key check.
+    for (const note of document.querySelectorAll("[data-source-note]")) {
+      const content = note.textContent;
+      if (content) text = text.split(content).join(" ");
     }
     return text;
   }
 
-  it.each([...HOUSTON_PAGES, ["Home", HoustonHome] as const])(
+  it.each([...HOUSTON_PAGES, ["Home", HoustonHome] as const, ["Sources", HoustonSources] as const])(
     "%s: US wording, no Canadian vocabulary, under a Houston seed",
     async (name, Page) => {
       window.localStorage.setItem(
@@ -807,7 +849,7 @@ describe("US vocabulary contract", () => {
     },
   );
 
-  it.each([...PAGES, ["Home", WinnipegHome] as const])(
+  it.each([...PAGES, ["Home", WinnipegHome] as const, ["Sources", WinnipegSources] as const])(
     "%s: Canadian wording, no US vocabulary, under a Winnipeg seed",
     async (name, Page) => {
       window.localStorage.setItem(
@@ -825,4 +867,46 @@ describe("US vocabulary contract", () => {
       }
     },
   );
+
+  /**
+   * The two it.each blocks above scan RENDERED page bodies. Neither one sees a
+   * page's `<title>`/meta description: `generateMetadata` runs server-side in
+   * Next's own async layout.tsx (not `page.tsx`, which is what these tests
+   * render — see `AffordabilityPage`'s own file for the split), so it never
+   * reaches jsdom's `document.body` here at all. That gap is exactly how
+   * RentVsBuy's `title_us`/`description_us` pair could have named a Canadian
+   * publisher and shipped invisibly to this contract — checked directly here
+   * instead, straight off the catalogue `generateMetadata` actually reads.
+   */
+  describe("Metadata: <title>/description carry no cross-country vocabulary", () => {
+    const LOCALES = ["en", "fr", "uk", "es"] as const;
+
+    function metadataLeaves(locale: string): Array<{ path: string; value: string }> {
+      const messages = JSON.parse(readFileSync(`messages/${locale}.json`, "utf8"));
+      const metadata = messages.Metadata as Record<string, Record<string, unknown>>;
+      return Object.entries(metadata).flatMap(([page, entries]) =>
+        Object.entries(entries)
+          .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+          .map(([key, value]) => ({ path: `${page}.${key}`, value })),
+      );
+    }
+
+    it.each(LOCALES)("%s: no Canadian vocabulary in a US (_us) Metadata entry", (locale) => {
+      for (const { path, value } of metadataLeaves(locale)) {
+        if (!path.endsWith("_us")) continue;
+        for (const word of CA_ONLY_VOCAB) {
+          expect(value, `Metadata.${path} (${locale}) contains "${word}": ${value}`).not.toContain(word);
+        }
+      }
+    });
+
+    it.each(LOCALES)("%s: no US vocabulary in a base (Canadian) Metadata entry", (locale) => {
+      for (const { path, value } of metadataLeaves(locale)) {
+        if (path.endsWith("_us")) continue;
+        for (const word of US_ONLY_VOCAB) {
+          expect(value, `Metadata.${path} (${locale}) contains "${word}": ${value}`).not.toContain(word);
+        }
+      }
+    });
+  });
 });
