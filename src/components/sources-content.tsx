@@ -7,6 +7,7 @@ import { jurisdictionsOf } from "@/domain/jurisdictions";
 import type { Confidence } from "@/domain/types";
 import { useJurisdiction } from "@/hooks/use-jurisdiction";
 import { useCountry, useRules } from "@/hooks/use-country";
+import type { Country } from "@/i18n/countries";
 import { useSections } from "@/hooks/use-sections";
 import { SOURCES_SECTIONS } from "@/lib/sections";
 import {
@@ -18,6 +19,7 @@ import {
   type SourceEntry,
 } from "@/lib/provenance-view";
 import { dotClass, type Tone } from "@/lib/tone";
+import { countryKey } from "@/lib/country-key";
 import { SectionRow } from "@/components/affordability/section-row";
 import { SectionsHeader } from "@/components/tool-page";
 import { cn } from "@/lib/utils";
@@ -183,7 +185,9 @@ export function SourcesContent() {
         {/* The two anchors the provenance marks link to. */}
         <div id="rule" tabIndex={-1} className="rounded-lg border border-border bg-card p-3">
           <Explainer heading={t("ruleHeading")}>
-            <p className="max-w-prose text-[11.5px] text-muted-foreground">{t("ruleBody")}</p>
+            <p className="max-w-prose text-[11.5px] text-muted-foreground">
+              {t(countryKey("ruleBody", country))}
+            </p>
           </Explainer>
         </div>
         <div id="estimate" tabIndex={-1} className="rounded-lg border border-border bg-card p-3">
@@ -237,7 +241,7 @@ export function SourcesContent() {
               name={t(def.labelKey)}
               tone={group.tone}
               line={t("sourcedOf", { n: group.sourced, total: group.total })}
-              why={t(WHY[group.id])}
+              why={t(whyKey(group.id, country))}
               open={isOpen(group.id)}
               onToggle={() => toggle(group.id)}
             >
@@ -274,6 +278,19 @@ const WHY: Record<string, string> = {
   market: "whyMarket",
   fees: "whyFees",
 };
+
+/**
+ * Only `whyCharges` genuinely differs by country — it names "the province",
+ * and Houston has a state, not a province. The other five panel-openers are
+ * country-neutral prose, so keeping the forked-key surface to this one entry
+ * (rather than wrapping every `WHY[group.id]` in `countryKey`) matches
+ * `country-key.ts`'s own doc comment: fork only where the wording changes.
+ */
+const WHY_FORKED = new Set(["whyCharges"]);
+function whyKey(id: string, country: Country): string {
+  const base = WHY[id];
+  return WHY_FORKED.has(base) ? countryKey(base, country) : base;
+}
 
 function Explainer({
   id,
