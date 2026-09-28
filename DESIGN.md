@@ -127,7 +127,7 @@ keep the sizes above.
 | `PanelRow` | A derivation row: hairline-separated, never boxed. |
 | `NumberField` | The one number input. `type="text"`, `inputMode="decimal"`, derived defaults as **placeholder**, empty commits `null`. |
 | `SegmentedGroup` | Radiogroup with roving tabindex for down payment, amortization, property type and the Rent vs Buy assumptions. A Select would hide four short options behind a popover — true while the options stay short, which is a translation constraint and not a given. Each button carries `min-w-0` and `text-center`: options sit in one row, so the control's minimum width is the sum of the longest single WORD in each label, and a flex item defaults to `min-width: auto`. Ukrainian exceeded the 256px budget at 320px on two of these controls before their labels were shortened. An option the purchase cannot have is **struck through at 55% opacity and marked `aria-disabled`**, never with the `disabled` attribute: the checked option is this radiogroup's only tab stop, and the engine gates rather than clamping, so the unavailable option can be the checked one. `line-through` is what says "not on offer" in that state, where a lower-opacity selected style is indistinguishable from the unselected style beside it. The component renders no reason — the caller does, as a `NoteLine`, and a struck option with nothing saying why is a dead end. |
-| `GapBand` | Two ceilings on one scale. Three markers at three heights; the lender ceiling is pinned right, not positioned by value. |
+| `GapBand` | Two ceilings on one scale. Three markers at three heights, every one positioned by its value on the scale (`ceilingPct` included). |
 | `Gauges` | GDS and TDS on a shared 60% axis with the limit ticked. `role="img"` with a full label. |
 | `MathColumns` | Both derivations. A row whose input is zero is **absent**, not a zero row. |
 | `Provenance` | The `rule` / `estimate` mark. Describes derivation, never verification. |
@@ -218,9 +218,13 @@ reader's life. Renters get a front door — Home's second CTA, and the nav's
 
 Comfort, ceiling and target routinely land within a few percent of one another. The
 previous version positioned all three labels by value in one band of pixels and they
-overlapped into unreadable text. Here comfort sits above the bar, target below it, and
-the ceiling is pinned to the right edge — the top of the scale by definition, so it can
-never collide with the two markers that move.
+overlapped into unreadable text. Here comfort sits above the bar, target just below it
+and the lender ceiling on its own third row, each at its own `left` percentage — so
+collisions are impossible by construction, whatever the values. The ceiling is **not**
+pinned to the right edge: the scale is `max(comfort, ceiling, price) x 1.03`, so the
+ceiling is the top of it only when it happens to be the largest, and in the default
+Winnipeg and Toronto states it is not. A marker near either end takes `markerAlign`, which
+moves its label onto the bar rather than off the end of it.
 
 ### 5.3 The ask, where there is no answer
 

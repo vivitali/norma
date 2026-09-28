@@ -703,3 +703,75 @@ describe("Affordability — the math column labels its figures with the reader's
     expect(screen.queryByText(/at 20% down/)).not.toBeInTheDocument();
   });
 });
+
+describe("Affordability — honest states at the edges", () => {
+  const seed = (o: object) => window.localStorage.setItem("norma.inputs.v2", JSON.stringify(o));
+  const openAll = async (user: ReturnType<typeof userEvent.setup>) => {
+    const btn = screen.getByRole("button", { name: /expand all|tout ouvrir|tout déplier|Розгорнути|Abrir todo/i });
+    await user.click(btn);
+  };
+
+  it("does not render a passing 0% ratio when there is no income", () => {
+    seed({ jurId: "winnipeg", income1: 0, income2: null, otherIncome: null, price: 300000 });
+    renderPage();
+    expect(screen.getAllByText(/No income entered/).length).toBeGreaterThan(0);
+    expect(screen.queryByText("0.0%")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("img", { name: /GDS —/ }).length).toBe(1);
+  });
+
+  it("names the default price as typical, and keeps 'entered' for an entered one", () => {
+    seed({ jurId: "winnipeg", income1: 20000 });
+    const { unmount } = renderPage();
+    expect(screen.queryByText(/price you entered/)).not.toBeInTheDocument();
+    expect(screen.getByText(/typical price for this place/)).toBeInTheDocument();
+    unmount();
+    cleanup();
+    seed({ jurId: "winnipeg", income1: 20000, price: 900000 });
+    renderPage();
+    expect(screen.getByText(/price you entered/)).toBeInTheDocument();
+  });
+
+  it("labels the monthly insurance deduction as monthly, and never 'annual'", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await openAll(user);
+    expect(screen.getAllByText(/Home insurance, monthly/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText(/Home insurance, annual\s*$/)).toBeInTheDocument(); // the input, untouched
+  });
+
+  it("formats the payment factors with the locale's decimal mark in French", async () => {
+    const user = userEvent.setup();
+    renderPage("fr-CA");
+    await openAll(user);
+    expect(document.body.textContent ?? "").not.toMatch(/\d\.\d{6}/);
+    expect(document.body.textContent ?? "").toMatch(/0,00\d{4}/);
+  });
+
+  it("states no empirical claim in the gap-zone copy and does not call the down payment 'separate'", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await openAll(user);
+    expect(document.body.textContent).not.toMatch(/Most people who get into trouble/);
+    expect(document.body.textContent).not.toMatch(/Separate from the down payment/);
+    expect(screen.getByText(/both due on closing day/)).toBeInTheDocument();
+  });
+
+  it("carries the FHA note once in en-US, without saying 'not modelled' twice", async () => {
+    const user = userEvent.setup();
+    seed({ jurId: "houston" });
+    renderPage("en-US");
+    await openAll(user);
+    const note = screen.getByText(/FHA loan allows/);
+    expect(note.textContent).not.toMatch(/conventional minimum modelled here/);
+    expect(note.textContent?.match(/not model/g) ?? []).toHaveLength(1);
+  });
+});
+
+describe("Affordability — ask state spacing", () => {
+  it("gives the inputs their own top gap when the sections are absent", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nu" }));
+    renderPage();
+    const heading = screen.getByText("Adjust your numbers");
+    expect(heading.closest(".pt-8")).not.toBeNull();
+  });
+});
