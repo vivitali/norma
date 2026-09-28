@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatLocaleNumber } from "@/lib/number-format";
+import { localeProfile } from "@/lib/locales";
 import { minDown, scenario, type ScenarioResult } from "@/domain/engine";
 import { countryKey } from "@/lib/country-key";
 import { CalcLedger } from "@/components/calc/calc-trace";
@@ -33,6 +35,7 @@ export default function ScenariosPage() {
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
+  const locale = localeProfile(useLocale()).intl;
 
   const resolved = useMemo(
     () => resolveInputs(stored, jurisdiction, rules),
@@ -111,7 +114,7 @@ export default function ScenariosPage() {
         t("recTwentySub", {
           save: fmt(rec.saving),
           extra: fmt(rec.extraCash),
-          ret: `${rec.returnOnExtra.toFixed(2)}×`,
+          ret: `${formatLocaleNumber(rec.returnOnExtra, locale, 2)}×`,
         })
       : rec.kind === "only"
         ? t("recOnlySub", {
@@ -132,7 +135,10 @@ export default function ScenariosPage() {
   const headline =
     rec.kind === "twenty" || rec.kind === "only"
       ? columns.find((c) => c.dpPct === recommendedPct)!
-      : columns[0];
+      : // No recommendation: describe the column the reader actually chose (when it
+        // is one of the compared percents), so the hero agrees with Affordability
+        // for the same inputs. Otherwise the first column.
+        (columns.find((c) => c.dpPct === stored.dpPct) ?? columns[0]);
 
   const section = (id: string, tone: Tone, line: string, figure: string, why: string, body: ReactNode) => {
     const def = SCENARIOS_SECTIONS.find((entry) => entry.id === id)!;
@@ -305,7 +311,7 @@ export default function ScenariosPage() {
       value: (c) => {
         const extra = c.net - columns[0].net;
         return extra > 0
-          ? `${((columns[0].costOfBorrowing - c.costOfBorrowing) / extra).toFixed(2)}×`
+          ? `${formatLocaleNumber((columns[0].costOfBorrowing - c.costOfBorrowing) / extra, locale, 2)}×`
           : "—";
       },
     },
@@ -376,7 +382,7 @@ export default function ScenariosPage() {
         <>
           <PendingFigures pending={!hydrated}>
           <AnswerHead
-            eyebrow={t("title")}
+            eyebrow={`${t("title")} · ${t("column", { p: pct(headline.dpPct) })}`}
             figure={fmt(headline.monthly.total)}
             pulseKey={jurisdiction.id}
             head={head}

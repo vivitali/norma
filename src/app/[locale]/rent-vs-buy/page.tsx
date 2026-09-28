@@ -218,7 +218,7 @@ export default function RentVsBuyPage() {
               result.breakEven === null ? "" : t("crossYear", { n: result.breakEven }),
               t("verdictWhy"),
               <>
-                <WealthChart result={result} />
+                <WealthChart result={result} holding={hold} />
                 <p className="pb-2 text-[12.5px] text-ink3">{t("byHorizonNote")}</p>
                 <div
                   // min-w-0 is load-bearing: this is a flex item, and `min-width: auto` is
@@ -527,10 +527,13 @@ export default function RentVsBuyPage() {
                     ...(atHorizon.rp > 0
                       ? [{ label: t("calcInvestedRent"), value: fmt(atHorizon.rp), op: "plus" as const }]
                       : []),
-                    // `minus`, so the final `=` is followable: the difference IS
-                    // buying less renting, and two bare subtotals stacked above an
-                    // equals sign left the reader to guess which way round.
-                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), op: "minus", strong: true },
+                    // Renting is its own subtotal (upfront + invested surplus), so
+                    // the last block is a real subtraction: Buying − Renting =
+                    // Difference, every line an operand of the sum shown. Both
+                    // subtotals read off the same result object as the headline.
+                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), op: "equals", rule: true, strong: true },
+                    { label: t("calcBuying"), value: fmt(atHorizon.buyW), rule: true },
+                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), op: "minus" },
                     { label: t("calcDifference"), value: fmt(atHorizon.adv), op: "equals", rule: true, strong: true },
                   ]}
                 />
@@ -684,6 +687,10 @@ export default function RentVsBuyPage() {
               value={stored.rentInflation}
               min={0}
               max={20}
+              // The stored figure is used as typed (2.5 stays 2.5), so it is
+              // displayed as typed: one decimal, never rounded to a whole number.
+              dp={1}
+              suffix="%"
               onCommit={(next) => update({ rentInflation: next ?? 0 })}
             />
             <SegmentedGroup

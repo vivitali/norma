@@ -252,7 +252,7 @@ export function CompareGrid({
         tabIndex={0}
         className="relative flex min-w-0 snap-x snap-mandatory gap-3 overflow-x-auto pb-1 sm:hidden"
       >
-        {columns.map((column) => {
+        {columns.map((column, ci) => {
           const isYours = column.dpPct === yoursPct;
           return (
             <li
@@ -260,7 +260,7 @@ export function CompareGrid({
               ref={isYours ? ownCardRef : undefined}
               aria-current={isYours ? "true" : undefined}
               className={cn(
-                "w-full shrink-0 snap-center rounded-lg border p-3",
+                "w-[85%] shrink-0 snap-center rounded-lg border p-3",
                 isYours ? "border-acbr bg-acbg" : "border-border bg-card",
               )}
             >
@@ -277,6 +277,9 @@ export function CompareGrid({
                 {column.dpPct === recommendedPct ? (
                   <span className="eyebrow text-ink2">{t("recommended")}</span>
                 ) : null}
+                <span className="micro ml-auto text-ink2">
+                  {t("cardOf", { n: ci + 1, total: columns.length })}
+                </span>
               </p>
               {column.belowMinimum ? (
                 <p className="micro pt-1 text-caution">

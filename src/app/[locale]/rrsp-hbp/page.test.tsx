@@ -171,7 +171,9 @@ describe("RRSP → HBP — the rules", () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /The repayment/);
-    expect(screen.getByText(`Year ${ca.hbp.repayYears}`)).toBeInTheDocument();
+    expect(screen.getByText(`Repayment year ${ca.hbp.repayYears}`)).toBeInTheDocument();
+    // The note and the rows count the same thing: year 1 is the first repayment year.
+    expect(screen.getByText(/year 1 is your first repayment year/)).toBeInTheDocument();
   });
 });
 
