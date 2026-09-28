@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
 import { maxAmortYears } from "@/domain/engine";
@@ -8,7 +8,6 @@ import { useRules } from "@/hooks/use-country";
 import type { Jurisdiction } from "@/domain/types";
 import { regionOf } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
-import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
 import type { ToolFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
 import { countryKey } from "@/lib/country-key";
@@ -61,6 +60,9 @@ export function InputGroups({
   const fmt = useMoney();
   const pct = usePercent();
   const rules = useRules();
+  // Revealing the second-applicant field is UI state, not data: `income2` is an unknown and
+  // stays null until the reader commits a number (PRODUCT.md Principle 2).
+  const [addingIncome2, setAddingIncome2] = useState(false);
 
   /**
    * The longest amortization this purchase can actually be written at.
@@ -114,13 +116,13 @@ export function InputGroups({
             min={0}
             onCommit={(income1) => update({ income1 })}
           />
-          {stored.income2 === null ? (
+          {stored.income2 === null && !addingIncome2 ? (
             <div className="flex flex-col gap-1">
               <Button
                 type="button"
                 variant="outline"
                 className="min-h-11 justify-start text-[12px] sm:min-h-9"
-                onClick={() => update({ income2: DEFAULT_INCOME_2 })}
+                onClick={() => setAddingIncome2(true)}
               >
                 {t("cAddApp")}
               </Button>
@@ -132,6 +134,7 @@ export function InputGroups({
                 id="income2"
                 label={t("cApp2")}
                 value={stored.income2}
+                autoFocus={addingIncome2}
                 min={0}
                 onCommit={(income2) => update({ income2 })}
               />
@@ -139,7 +142,10 @@ export function InputGroups({
                 type="button"
                 variant="ghost"
                 className="min-h-11 self-start text-[11px] sm:min-h-8"
-                onClick={() => update({ income2: null })}
+                onClick={() => {
+                  setAddingIncome2(false);
+                  update({ income2: null });
+                }}
               >
                 {t("cRemove")}
               </Button>
@@ -211,7 +217,7 @@ export function InputGroups({
             min={0}
             onCommit={(otherDebt) => update({ otherDebt })}
           />
-          <ImpactRow result={result} debts={resolved.debts} />
+          <ImpactRow result={result} debts={resolved.debts} priceKnown={resolved.priceKnown} />
         </Group>
 
         <Group legend={t("cPurchase")}>
@@ -242,8 +248,8 @@ export function InputGroups({
             whether a publisher produces one. One fact, `priceKnown`, in both places.
           */}
           {resolved.benchmark !== null ? (
-            <span className="-mt-1 text-[10.5px] text-ink3">
-              {jurisdiction.city ?? tProv(regionOf(jurisdiction))} · {fmt(resolved.benchmark)}
+            <span className="-mt-1 text-[11.5px] text-ink3">
+              {tJur(jurisdiction.id)} · {fmt(resolved.benchmark)}
             </span>
           ) : resolved.priceKnown ? null : (
             <span className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">

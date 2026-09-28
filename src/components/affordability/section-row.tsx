@@ -57,9 +57,12 @@ export function SectionRow({
            * the fixed 180px column again. It used to be flex-none at every
            * width — sized to max-content and unable to shrink — so a long name
            * ("Le jeu REER → Régime d'accession à la propriété" is a real one)
-           * beside a two-word figure ran off a 320px screen.
+           * beside a two-word figure ran off a 320px screen. `min-w-min` keeps it from
+           * shrinking under its longest word (uk "Комфорт" broke to "Комфор/т" beside a wide
+           * figure); the figure has min-w-0 and yields instead. `max-w-full` still lets
+           * break-word split a single word wider than the whole row.
            */}
-          <span className="min-w-0 flex-1 text-[16.5px] font-semibold tracking-[-0.015em] sm:w-[180px] sm:flex-none">
+          <span className="max-w-full min-w-min flex-1 text-[16.5px] font-semibold tracking-[-0.015em] sm:w-[180px] sm:flex-none">
             {name}
           </span>
           <span className="hidden min-w-0 flex-1 text-[13.5px] leading-[1.45] text-ink2 sm:block">

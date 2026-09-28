@@ -234,7 +234,7 @@ describe("the 30-year amortization", () => {
     expect(cautions(container)).toHaveLength(1);
     const options = container.querySelectorAll('[role="radio"][aria-disabled="true"]');
     expect(options).toHaveLength(1);
-    expect(options[0].textContent).toBe(en.Inputs.years.replace("{n}", "30"));
+    expect(options[0].textContent).toBe("30 years");
   });
 
   it("reads eligibility off app state, not off which controls the page happens to render", () => {

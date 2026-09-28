@@ -20,8 +20,15 @@ export function JurisdictionPicker() {
 
   return (
     <Select value={jurisdiction.id} onValueChange={setJurId}>
-      <SelectTrigger aria-label={t("changeLocation")} className="w-auto">
-        <SelectValue>{tJur(jurisdiction.id)}</SelectValue>
+      {/*
+        Below sm the trigger fills its `min-w-0 flex-1` wrapper instead of sizing to its label, so a
+        long name ("Terre-Neuve-et-Labrador") truncates with an ellipsis INSIDE the trigger rather
+        than overflowing under the country switcher. The full name stays in the dropdown.
+      */}
+      <SelectTrigger aria-label={t("changeLocation")} className="w-full min-w-0 sm:w-auto">
+        <SelectValue className="min-w-0">
+          <span className="block truncate">{tJur(jurisdiction.id)}</span>
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {jurisdictionsOf(country).map((j) => (

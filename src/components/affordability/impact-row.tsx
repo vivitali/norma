@@ -15,8 +15,22 @@ import { cn } from "@/lib/utils";
  * zero whenever GDS binds, and reading that as "no monthly debts entered" tells
  * a user with $50 in the field directly above that they entered nothing.
  */
-export function ImpactRow({ result, debts }: { result: AffordabilityResult; debts: number }) {
+export function ImpactRow({
+  result,
+  debts,
+  priceKnown = true,
+}: {
+  result: AffordabilityResult;
+  debts: number;
+  /**
+   * False in the ask state (no benchmark, nothing typed). The two "binding constraint" lines
+   * say "at this price", which then refers to a price that does not exist, so they swap to
+   * price-free wording. Affordability's headline is income-derived and keeps answering.
+   */
+  priceKnown?: boolean;
+}) {
   const t = useTranslations("Affordability");
+  const tInputs = useTranslations("Inputs");
   const fmt = useMoney();
 
   // debtCapacity === 0 has THREE meanings, not two. Beyond "no debts" and
@@ -43,11 +57,11 @@ export function ImpactRow({ result, debts }: { result: AffordabilityResult; debt
     state === "costly"
       ? { label: t("impactPre"), figure: `− ${fmt(result.debtCapacity)}`, foot: t("impactFoot") }
       : state === "notBinding"
-        ? { label: t("impactNoneBinding"), figure: null, foot: t("impactNoneBindingFoot") }
+        ? { label: priceKnown ? t("impactNoneBinding") : tInputs("impactNoneBindingNoPrice"), figure: null, foot: t("impactNoneBindingFoot") }
         : state === "noClaim"
           ? { label: t("impactFoot"), figure: null, foot: null }
           : state === "noneFree"
-            ? { label: t("impactNoneFree"), figure: null, foot: t("impactNoneBindingFoot") }
+            ? { label: priceKnown ? t("impactNoneFree") : tInputs("impactNoneFreeNoPrice"), figure: null, foot: t("impactNoneBindingFoot") }
             : { label: t("impactNone"), figure: fmt(result.capacityPer100), foot: t("perHundred") };
 
   return (

@@ -775,3 +775,21 @@ describe("Affordability — ask state spacing", () => {
     expect(heading.closest(".pt-8")).not.toBeNull();
   });
 });
+
+describe("Affordability — a second applicant is asked for, never assumed", () => {
+  it("reveals an empty focused field and writes nothing to storage", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: "Add a second applicant" }));
+    const income2 = screen.getByLabelText("Applicant 2, gross annual");
+    expect(income2).toHaveValue("");
+    expect(income2).toHaveFocus();
+    const blob = window.localStorage.getItem("norma.inputs.v2");
+    expect(blob === null || JSON.parse(blob).income2 == null).toBe(true);
+  });
+
+  it("names the jurisdiction, translated, in the price hint", () => {
+    renderPage();
+    expect(screen.getByText(/^Winnipeg · \$/)).toBeInTheDocument();
+  });
+});

@@ -13,8 +13,6 @@ import type { ToolFormState } from "./shared-inputs";
  * in a product whose whole thesis is that its numbers trace to something.
  */
 export const DEFAULT_INCOME_1 = 75000;
-/** Only written when the user adds a second applicant — never assumed. */
-export const DEFAULT_INCOME_2 = 45000;
 export const DEFAULT_COMFORT_CEILING = 2700;
 export const DEFAULT_INSURANCE_ANNUAL = 1500;
 export const DEFAULT_UTILITIES = 300;
