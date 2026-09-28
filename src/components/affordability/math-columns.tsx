@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
 import { useRules } from "@/hooks/use-country";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
-import { useMoney, usePercent } from "@/lib/format";
+import { useDecimal, useMoney, usePercent } from "@/lib/format";
 import { countryKey } from "@/lib/country-key";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +49,7 @@ export function MathColumns({
   const t = useTranslations("Affordability");
   const fmt = useMoney();
   const pct = usePercent();
+  const dec = useDecimal();
   const rules = useRules();
 
   return (
@@ -70,7 +71,7 @@ export function MathColumns({
         />
         <MathRow
           label={t("mFactor")}
-          value={result.fq.toFixed(6)}
+          value={dec(result.fq, 6)}
           why={t(countryKey("mFactorWhy", rules.country))}
         />
         <MathRow
@@ -105,7 +106,7 @@ export function MathColumns({
         <MathRow label={t("mStated")} value={fmt(resolved.comfortCeiling)} />
         {result.monthly.insurance > 0 ? (
           <MathRow
-            label={`${t("mLess")} · ${t("cInsurance")}`}
+            label={`${t("mLess")} · ${t("insuranceMonthly")}`}
             value={`− ${fmt(result.monthly.insurance)}`}
           />
         ) : null}
@@ -121,7 +122,7 @@ export function MathColumns({
         <MathRow label={t("mBudget")} value={fmt(result.budget)} strong />
         <MathRow
           label={`${t("mFactorContract")} · ${pct(resolved.contractRate, 2)}`}
-          value={result.fc.toFixed(6)}
+          value={dec(result.fc, 6)}
         />
         <MathRow label={t("mComfortPrice", { p: pct(resolved.dpPct) })} value={fmt(result.comfort)} strong />
         <MathRow label={t("mDownReq")} value={fmt(result.comfortDown)} />

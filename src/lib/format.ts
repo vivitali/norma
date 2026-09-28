@@ -30,3 +30,14 @@ export function usePercent() {
     return spaced ? `${v} %` : `${v}%`;
   };
 }
+
+/**
+ * Locale-aware plain decimal at a fixed number of places, for figures that are not
+ * money or a percentage (the payment factors). `toFixed` always prints a full stop,
+ * which sat beside "5,94 %" on the same screen in fr, uk and es.
+ */
+export function useDecimal() {
+  const { intl } = localeProfile(useLocale());
+  return (n: number, dp: number) =>
+    new Intl.NumberFormat(intl, { minimumFractionDigits: dp, maximumFractionDigits: dp }).format(n);
+}

@@ -16,11 +16,17 @@ const SHIFT = {
 /**
  * Two ceilings on one scale, with the target between them or past them both.
  *
- * The three markers sit at three different heights and the lender ceiling is
- * pinned to the right edge rather than positioned by value. That is what stops
- * them colliding: comfort, ceiling and target routinely land within a few
- * percent of each other, and v1 stacked all three labels in the same band of
- * pixels, which rendered them unreadable.
+ * Every marker is positioned by its value on the scale (`gapBand`), and the three sit
+ * at three different heights: comfort above the bar, target just below it, the lender
+ * ceiling on its own third row. The rows are what stop the labels colliding — comfort,
+ * ceiling and target routinely land within a few percent of each other, and v1 stacked
+ * all three in one band of pixels, which rendered them unreadable.
+ *
+ * The ceiling is NOT pinned to the right edge. An earlier version did, on the premise
+ * that it is the top of the scale; it is not — the scale is max(comfort, ceiling,
+ * price) x 1.03, and in the default Winnipeg state the ceiling is the lowest of the
+ * three. Pinned right it was drawn past the target while the fill ended at its true
+ * position. `markerAlign` keeps an edge value's label on the bar.
  */
 export function GapBand({ result, price }: { result: AffordabilityResult; price: number }) {
   const t = useTranslations("Affordability");
@@ -28,10 +34,11 @@ export function GapBand({ result, price }: { result: AffordabilityResult; price:
   const band = gapBand(result.comfort, result.ceiling, price);
   const comfortAlign = markerAlign(band.comfortPct);
   const targetAlign = markerAlign(band.targetPct);
+  const ceilingAlign = markerAlign(band.ceilingPct);
 
   return (
     <div className="mb-[22px] max-w-[820px]">
-      <div className="relative h-[104px]">
+      <div className="relative h-[108px]">
         <div aria-hidden="true" className="absolute inset-x-0 top-[30px] h-2 rounded-full bg-sunk" />
         <div
           aria-hidden="true"
@@ -66,11 +73,11 @@ export function GapBand({ result, price }: { result: AffordabilityResult; price:
           </span>
         </div>
 
-        {/* Pinned right, not positioned by value, AND on its own row: the ceiling
-            is the top of the scale, and the target routinely lands within a few
-            percent of it, so sharing a row would put the two labels on top of
-            each other exactly when the target is highest. */}
-        <div className="absolute top-[76px] right-0 flex items-baseline gap-2">
+        <div
+          data-testid="gap-ceiling"
+          className={cn("absolute top-[76px] flex flex-col gap-[5px]", ALIGN[ceilingAlign], SHIFT[ceilingAlign])}
+          style={{ left: `${band.ceilingPct}%` }}
+        >
           <span aria-hidden="true" className="h-[9px] w-0.5 bg-ink3" />
           <span className="text-[12.5px] whitespace-nowrap text-ink3">
             {t("stCeiling")} {fmt(result.ceiling)}

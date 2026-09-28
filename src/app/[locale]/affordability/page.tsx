@@ -20,7 +20,7 @@ import {
 } from "@/lib/affordability-view";
 import { SCENARIO_PERCENTS } from "@/lib/scenarios-view";
 import type { Tone } from "@/lib/tone";
-import { useMoney, usePercent } from "@/lib/format";
+import { useDecimal, useMoney, usePercent } from "@/lib/format";
 import { countryKey } from "@/lib/country-key";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
 import { CrossLink, TraceLabel } from "@/components/cross-link";
@@ -49,6 +49,7 @@ export default function AffordabilityPage() {
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
+  const dec = useDecimal();
 
   const resolved = useMemo(
     () => resolveInputs(stored, jurisdiction, rules),
@@ -121,13 +122,17 @@ export default function AffordabilityPage() {
       : verdict === "over"
         ? t("vOver")
         : verdict === "declined"
-          ? t("vDeclined", { a: fmt(result.comfort) })
+          ? // `stored.price === null` is the benchmark, not an entry: never say "you entered".
+            t(stored.price === null ? "vDeclinedTypical" : "vDeclined", { a: fmt(result.comfort) })
           : t("vShortCash", { a: fmt(result.comfort) });
   const sub =
     verdict === "declined"
-      ? result.tdsBinds
-        ? t("ckTds")
-        : t("ckGds")
+      ? result.qualIncome <= 0
+        ? // No limit is binding when nothing qualifies; the approval row says why.
+          t("subComfort")
+        : result.tdsBinds
+          ? t("ckTds")
+          : t("ckGds")
       : verdict === "shortCash"
         ? result.monthsToClose === null
           ? t("ckCsNo")
@@ -317,7 +322,9 @@ export default function AffordabilityPage() {
             // NOT `ckApNo + ckGds` — that was the head's first sentence plus the
             // sub-line verbatim, both a few hundred pixels above. The deciding
             // section's one always-visible line has to earn its place.
-            result.tdsBinds
+            result.qualIncome <= 0
+              ? t("noIncomeLine")
+              : result.tdsBinds
               ? t(countryKey("ckApTds", rules.country), { a: fmt(result.binding), d: fmt(resolved.debts) })
               : t(countryKey("ckApGds", rules.country), { a: fmt(result.binding) }),
             fmt(result.ceiling),
@@ -333,7 +340,7 @@ export default function AffordabilityPage() {
                 value={pct(result.qualRate, 2)}
                 provenance={<Provenance kind="rule" />}
               />
-              <PanelRow label={t("mFactor")} value={result.fq.toFixed(6)} />
+              <PanelRow label={t("mFactor")} value={dec(result.fq, 6)} />
               <PanelRow
                 label={`${t("mGdsAllow")} · ${t(countryKey("dtiFrontAbbr", rules.country))} ${pct(rules.gds)}`}
                 value={fmt(result.gdsAllow)}
@@ -418,9 +425,9 @@ export default function AffordabilityPage() {
                 through the conventional-loan math this page models.
               */}
               {rules.country === "us" ? (
-                <NoteLine tight>
-                  {t("fhaTip", { p: pct(rules.programs.fha.minDown * 100) })}
-                </NoteLine>
+                <div className="mt-[18px] max-w-[700px]">
+                  <NoteLine>{t("fhaTip", { p: pct(rules.programs.fha.minDown * 100) })}</NoteLine>
+                </div>
               ) : null}
               {/*
                 VERDICT. Declined only, and suppressed when the cash panel is
@@ -491,7 +498,7 @@ export default function AffordabilityPage() {
               {jurisdiction.id === "houston" ? (
                 <NoteLine tight>{t("propTaxCapNote")}</NoteLine>
               ) : null}
-              <PanelRow label={t("cInsurance")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
+              <PanelRow label={t("insuranceMonthly")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
               {/*
                 Same scoping note as propTaxCapNote above: wind/hail exposure is a Texas fact,
                 not a US one. `fees.insurance` is `medium` confidence (houston.ts) — a statewide
@@ -609,13 +616,17 @@ export default function AffordabilityPage() {
         </div>
       ) : null}
 
-      <InputGroups
-        stored={stored}
-        resolved={resolved}
-        result={result}
-        jurisdiction={jurisdiction}
-        update={update}
-      />
+      {/* In the ask state the sections block (which carries the page's top gap) is not
+          rendered, so the inputs' heading would butt against the hero's stat strip. */}
+      <div className={resolved.priceKnown ? undefined : "pt-8 sm:pt-[34px]"}>
+        <InputGroups
+          stored={stored}
+          resolved={resolved}
+          result={result}
+          jurisdiction={jurisdiction}
+          update={update}
+        />
+      </div>
 
       {/*
         The property tax rate is the ONLY jurisdiction figure this page displays,
