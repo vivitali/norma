@@ -20,7 +20,16 @@ import { useMoney } from "@/lib/format";
  * aria-hidden, with the same fact in text: the ending values and the crossing
  * year both appear in the caption.
  */
-export function WealthChart({ result }: { result: RentVsBuyResult }) {
+/** A 14px line sample in the legend, in the same stroke pattern as the rule it keys. */
+function Swatch({ dash, className }: { dash?: string; className: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 14 4" className={`h-1 w-3.5 shrink-0 ${className}`}>
+      <line x1="0" x2="14" y1="2" y2="2" stroke="currentColor" strokeWidth="1.5" strokeDasharray={dash} />
+    </svg>
+  );
+}
+
+export function WealthChart({ result, holding }: { result: RentVsBuyResult; holding?: number }) {
   const t = useTranslations("RentVsBuy");
   const fmt = useMoney();
 
@@ -52,6 +61,18 @@ export function WealthChart({ result }: { result: RentVsBuyResult }) {
       >
         <polyline points={path((r) => r.rentW)} fill="none" stroke="currentColor" strokeWidth="2" className="text-ink3" />
         <polyline points={path((r) => r.buyW)} fill="none" stroke="currentColor" strokeWidth="2" className="text-ac" />
+        {holding !== undefined && holding >= 1 && holding <= result.rows.length ? (
+          <line
+            x1={x(holding)}
+            x2={x(holding)}
+            y1={0}
+            y2={H}
+            stroke="currentColor"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+            className="text-ink2"
+          />
+        ) : null}
         {result.breakEven !== null ? (
           <line
             x1={x(result.breakEven)}
@@ -84,13 +105,23 @@ export function WealthChart({ result }: { result: RentVsBuyResult }) {
           <span aria-hidden="true" className="size-[7px] rounded-full bg-ink3" />
           {`${t("rentWord")} · ${t("atYear", { n: result.years })} · ${fmt(last.rentW)}`}
         </span>
-        <span>
+        {holding !== undefined ? (
+          <span className="flex items-center gap-1.5">
+            <Swatch className="text-ink2" />
+            {t("horizonLabel", { n: holding })}
+          </span>
+        ) : null}
+        <span className="flex items-center gap-1.5">
+          {result.breakEven === null ? null : <Swatch dash="3 3" className="text-pass" />}
           {result.breakEven === null
             ? t("neverAhead")
             : `${t("crossLabel")} · ${t("crossYear", { n: result.breakEven })}`}
         </span>
         {result.payoffYear !== null ? (
-          <span>{t("payoffLabel", { n: result.payoffYear })}</span>
+          <span className="flex items-center gap-1.5">
+            <Swatch dash="2 4" className="text-caution" />
+            {t("payoffLabel", { n: result.payoffYear })}
+          </span>
         ) : null}
         <span className="sr-only">{alt}</span>
       </figcaption>

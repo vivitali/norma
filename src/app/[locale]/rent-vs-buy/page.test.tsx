@@ -510,3 +510,25 @@ describe("Rent vs buy — showing the work", () => {
     expect(rateOf(5)).toMatch(/7\.00/);
   });
 });
+
+describe("Rent vs Buy — the trace is real arithmetic and the chart marks the horizon", () => {
+  it("ends in Buying − Renting = Difference, with Renting as its own subtotal", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const calc = panel("calc");
+    const labels = calc.getAllByRole("term").map((dt) => dt.textContent ?? "");
+    const tail = labels.slice(-4);
+    expect(tail[0]).toMatch(/Renting/);
+    expect(tail[1]).toMatch(/Buying/);
+    expect(tail[2]).toMatch(/Renting/);
+    expect(tail[3]).toMatch(/Difference/);
+  });
+
+  it("keys the horizon rule in the chart legend", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The verdict/);
+    expect(screen.getAllByText(/Your horizon: 10 years/).length).toBeGreaterThan(1);
+  });
+});
