@@ -353,9 +353,8 @@
   },
   "ClosingCosts": {
     "title": "Closing costs",
-    "subtitle": "What you owe on closing day, over and above the down payment.",
     "cashTotal": "Cash needed on closing day",
-    "separateNote": "Separate from the down payment, and due the same day.",
+    "separateNote": "The down payment plus closing costs, less the credits applied that day. All of it is due on closing day.",
     "downPaymentRow": "Down payment",
     "closingCosts": "Closing costs",
     "netCash": "Net cash at closing, after credits applied that day",
@@ -385,8 +384,6 @@
     "onFirst": "on the first",
     "onPortion": "on the portion from",
     "to": "to",
-    "showBrackets": "Bracket breakdown",
-    "hideBrackets": "Hide breakdown",
     "ftbOnly": "Requires first-time buyer status",
     "turnOnFtb": "Turn on first-time buyer to see what this returns.",
     "rebApplied": "Rebate applied",
@@ -444,9 +441,11 @@
     "ex_lttProv": "A provincial tax on the transfer of title, charged in progressive bands on the purchase price. Driven by: price, province, first-time buyer status.",
     "ex_lttMuni": "A second transfer tax charged by the city, stacked on top of the provincial one. Driven by: price, municipality.",
     "ex_lttProvNonRes": "Nova Scotia charges non-resident buyers a 10% provincial deed transfer tax on residential property, on top of the municipal deed transfer tax. Driven by: price, residency.",
-    "ex_titleReg": "This province charges no transfer tax. Instead the land titles office charges a registration fee that scales gently with value. Driven by: price, province.",
+    "ex_titleReg": "No land transfer tax is charged here. Instead the land titles office charges a registration fee that scales gently with value. Driven by: price, province.",
+    "ex_titleRegFlat": "A flat fee, the same at every price, that the land titles office charges for each registered document. It comes on top of the land transfer tax above. Driven by: province.",
     "ex_premTax": "Your province taxes insurance premiums. The CMHC premium is financed into the mortgage, but the tax on it is not — it is cash on closing day. Driven by: down payment, price, province.",
     "ex_taxAdj": "If the seller prepaid the year’s property tax you reimburse the unused part — and if they did not, the adjustment runs the other way and the seller credits you. This calculator has no closing date to count from, so the figure above is a flat placeholder of three months at this jurisdiction’s rate, not your adjustment. The real one is on your lawyer’s statement of adjustments.",
+    "ex_taxAdj_us": "If the seller prepaid the year’s property tax you reimburse the unused part; if they did not, the adjustment runs the other way and the seller credits you. This calculator has no closing date to count from, so the figure above is a flat placeholder of three months at this jurisdiction’s rate, not your adjustment. The real one is on your Closing Disclosure.",
     "ex_hba": "A non-refundable federal credit on your tax return the year after you buy. It does not help you on closing day. Driven by: first-time buyer status.",
     "ex_gstFthb": "A first-time buyer of a qualifying new home can have the federal GST rebated, in full up to $1M and phasing out to nil at $1.5M. This calculator does not price it, in either direction: it never adds the GST or HST a new build attracts, so refunding it here would credit you against a tax that never appeared on the bill above. Five provinces charge HST rather than GST, and the price standing behind a new build here is a resale benchmark that already includes tax — both would have to be fixed before the rebate could be a figure.",
     "ex_prepaidEscrow": "Your lender collects a few months of property tax and homeowners insurance upfront to seed your escrow account, so it always has enough on hand to pay those bills when they come due.",
@@ -477,8 +476,11 @@
     "notPricedTitle": "Not in this bill",
     "notPricedLine": "{n, plural, one {# real cost} other {# real costs}} the bill above does not price. Nobody publishes a figure for them, so this page names them rather than inventing one.",
     "omDeposit": "The deposit. Within days of an accepted offer — usually weeks or months before closing day — certified funds go to the seller’s brokerage to be held in trust. It is credited against your down payment, so nothing is missing from the total above; what is missing is the date. Money locked in a term deposit, or still crossing a border, cannot be a deposit. The amount is negotiated offer by offer, which is why no figure is shown for it.",
+    "omDeposit_us": "The deposit. Within days of an accepted offer, usually weeks before closing day, earnest money goes to the title company or escrow agent to be held. It is credited against your down payment, so nothing is missing from the total above; what is missing is the date. Money locked in a term deposit, or still crossing a border, cannot be earnest money. The amount is negotiated offer by offer, which is why no figure is shown for it.",
     "omAdjustments": "Adjustments other than property tax. Condo fees, prepaid utilities and fuel left in the tank are all settled by the day, counted from your closing date. This calculator never asks for a closing date, so it prices none of them — your lawyer’s statement of adjustments is where they turn up.",
+    "omAdjustments_us": "Adjustments other than property tax. HOA dues, prepaid utilities and fuel left in the tank are all settled by the day, counted from your closing date. This calculator never asks for a closing date, so it prices none of them. Your Closing Disclosure is where they turn up.",
     "omNewBuild": "A builder’s own extras. Development levies, utility and meter hookups, grading or lot deposits and new-home warranty enrolment are commonly charged on top of the agreed price. Some are published and most are not, so pricing only the published ones would look authoritative while still understating the group. Your agreement of purchase and sale should cap them — that clause is worth reading before you sign.",
+    "omNewBuild_us": "A builder’s own extras. Impact fees, utility and meter hookups, lot or grading deposits and new-home warranty enrolment are commonly charged on top of the agreed price, or passed through by the builder. Some are published and most are not, so pricing only the published ones would look authoritative while still understating the group. Your purchase contract should say which of them the builder covers; that clause is worth reading before you sign.",
     "newBuildPriceNote": "No publisher produces a new-build price level in Canada, so the price modelled here is this city’s resale house benchmark until you replace it with the builder’s own.",
     "newBuildPriceNote_us": "No publisher produces a new-build price level in this market, so the price modelled here is this city’s resale house benchmark until you replace it with the builder’s own.",
     "secCalc": "How this was calculated",
@@ -488,7 +490,8 @@
     "calcGov": "Taxes and government fees",
     "calcPro": "Professional and third-party fees",
     "calcAdj": "Adjustments and moving in",
-    "calcCredits": "Credits applied that day"
+    "calcCredits": "Credits applied that day",
+    "adjust": "Adjust your numbers"
   },
   "DownPayment": {
     "title": "Down payment sources",
@@ -515,7 +518,7 @@
     "reached": "Target reached in month {m}",
     "never": "Not reached within 36 months at this savings rate.",
     "already": "You already have enough. No waiting required.",
-    "balances": "What you have saved",
+    "adjust": "Adjust your numbers",
     "unrealised": "of which unrealised gain",
     "income": "Taxable income",
     "glideNote": "Assumes {r} on savings and no change to your target.",
@@ -582,7 +585,8 @@
     "calcCredits": "Credits applied that day",
     "calcDrawn": "Drawn from your accounts",
     "calcShortfall": "Still to find",
-    "calcSurplus": "Left over"
+    "calcSurplus": "Left over",
+    "notEntered": "Not entered yet"
   },
   "RrspHbp": {
     "title": "The RRSP → Home Buyers’ Plan play",

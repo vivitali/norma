@@ -78,6 +78,8 @@ const PRICE_DERIVED_HEADLINE = new Set<string>([
  */
 const SEED: Record<string, Record<string, unknown>> = {
   "Rent vs buy": { ptype: "condo" },
+  // A new build is the only state that renders `omNewBuild`, which the vocabulary contract must reach.
+  "Closing costs": { ptype: "newbuild" },
 };
 
 function seed(name: string) {
@@ -777,6 +779,9 @@ describe("US vocabulary contract", () => {
     "HBP",
     "TFSA",
     "renewal",
+    "statement of adjustments",
+    "agreement of purchase and sale",
+    "development levies",
     "Canad",
     "province",
     "provincial",

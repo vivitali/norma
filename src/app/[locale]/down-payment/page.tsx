@@ -207,10 +207,12 @@ export default function DownPaymentPage() {
             tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
             stats={[
               { label: t("downPaymentRow"), value: fmt(closing.fin.down) },
-              { label: t("closingCosts"), value: fmt(closing.total), mark: "rule" },
+              { label: t("closingCosts"), value: fmt(closing.total), mark: "estimate" },
               {
                 label: described ? t("totalDrawn") : t("totalAvailable"),
-                value: fmt(described ? flow.drawnTotal : flow.totalAvailable),
+                // No balance given is not a total of $0: that would assert empty accounts
+                // (DESIGN.md 5.2 rule 4). Say nothing is entered rather than print a figure.
+                value: described ? fmt(flow.drawnTotal) : "—",
               },
             ]}
           />
@@ -255,7 +257,7 @@ export default function DownPaymentPage() {
                 <PanelRow
                   label={<TraceLabel namespace="DownPayment" id="closingCosts" href="/closing-costs" />}
                   value={fmt(closing.total)}
-                  provenance={<Provenance kind="rule" />}
+                  provenance={<Provenance kind="estimate" />}
                 />
                 {closing.creditsAtClosing > 0 ? (
                   <PanelRow label={t("grpAtClosing")} value={`− ${fmt(closing.creditsAtClosing)}`} />
@@ -342,7 +344,9 @@ export default function DownPaymentPage() {
                           ? t("notAvailable")
                           : row.drawn > 0
                             ? fmt(row.drawn)
-                            : t("untouched")
+                            : stored[SOURCE_FIELD[row.key]] === null
+                              ? t("notEntered")
+                              : t("untouched")
                       }
                       strong={row.drawn > 0}
                     />
@@ -413,7 +417,7 @@ export default function DownPaymentPage() {
                       would report an empty account to a reader looking at their own
                       balance in the field two lines below.
                     */}
-                    {row.blocked === undefined ? (
+                    {row.blocked === undefined && stored[SOURCE_FIELD[row.key]] !== null ? (
                       <div className="flex gap-4 pt-1 text-[11.5px] text-ink3">
                         <span>
                           {t("left")}: {fmt(row.left)}
@@ -455,12 +459,18 @@ export default function DownPaymentPage() {
                 {rules.country === "ca" ? (
                   <CrossLink namespace="DownPayment" id="xRrspHbp" href="/rrsp-hbp" />
                 ) : null}
-                <PanelRow label={t("totalDrawn")} value={fmt(flow.drawnTotal)} strong />
-                {flow.shortfall > 0.5 ? (
-                  <PanelRow label={t("shortfallLabel")} value={fmt(flow.shortfall)} strong />
-                ) : (
-                  <PanelRow label={t("surplusLabel")} value={fmt(flow.surplus)} strong />
-                )}
+                {/* Totals only once something is described: before that they would read as
+                    "nothing drawn, short by the whole target" over accounts nobody described. */}
+                {described ? (
+                  <>
+                    <PanelRow label={t("totalDrawn")} value={fmt(flow.drawnTotal)} strong />
+                    {flow.shortfall > 0.5 ? (
+                      <PanelRow label={t("shortfallLabel")} value={fmt(flow.shortfall)} strong />
+                    ) : (
+                      <PanelRow label={t("surplusLabel")} value={fmt(flow.surplus)} strong />
+                    )}
+                  </>
+                ) : null}
               </>,
             )}
 
@@ -652,7 +662,7 @@ export default function DownPaymentPage() {
 
       <section aria-labelledby="dp-inputs" className="mt-8 flex flex-col gap-3">
         <h2 id="dp-inputs" className="text-[13px] font-semibold">
-          {t("balances")}
+          {t("adjust")}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <PurchaseInputs
