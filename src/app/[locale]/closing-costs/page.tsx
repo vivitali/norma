@@ -31,6 +31,9 @@ import { PurchaseInputs } from "@/components/purchase-inputs";
 import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 import { NOT_PRICED, NOT_PRICED_NEWBUILD } from "./omissions";
 
+/** Omission entries whose copy names a Canadian document or term and so has a `_us` sibling. */
+const FORKED_OMISSIONS: ReadonlySet<string> = new Set(["omDeposit", "omAdjustments", "omNewBuild"]);
+
 /** Group totals for the trace. Same reduction `closingTotal` uses, so they agree by construction. */
 function sum(items: readonly { amount: number }[]) {
   return items.reduce((t, r) => t + r.amount, 0);
@@ -480,7 +483,7 @@ export default function ClosingCostsPage() {
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {notPriced.map((key) => (
             <li key={key} className="max-w-[620px] text-[12.5px] leading-[1.6] text-ink2 text-pretty">
-              {t(key === "omAdjustments" ? countryKey(key, rules.country) : key)}
+              {t(FORKED_OMISSIONS.has(key) ? countryKey(key, rules.country) : key)}
             </li>
           ))}
         </ul>
