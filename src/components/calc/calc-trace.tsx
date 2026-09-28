@@ -92,7 +92,7 @@ export function CalcTrace({
               )}
             >
               <span aria-hidden="true" className="text-ink3 tabular-nums">
-                {line.op ? GLYPH[line.op] : ""}
+                {line.op ? GLYPH[line.op] : "\u00A0"}
               </span>
               <span className="min-w-0">
                 {/*

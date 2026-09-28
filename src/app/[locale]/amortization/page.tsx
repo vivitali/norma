@@ -339,7 +339,7 @@ export default function AmortizationPage() {
                 ) : null}
 
                 <div className="mt-4 flex max-w-[520px] flex-col gap-3">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-x-2 gap-y-3 sm:gap-y-2">
                     {presets.map((preset) => (
                       <button
                         key={preset.key}
@@ -348,8 +348,8 @@ export default function AmortizationPage() {
                         aria-pressed={stored.renewalRate === preset.value}
                         className={
                           stored.renewalRate === preset.value
-                            ? "rounded-full border border-acbr bg-acbg px-3.5 py-1.5 text-[12.5px] font-medium text-ac"
-                            : "rounded-full border border-border px-3.5 py-1.5 text-[12.5px] text-ink2 hover:border-acbr hover:text-ac"
+                            ? "relative rounded-full border border-acbr bg-acbg px-3.5 py-1.5 text-[12.5px] font-medium text-ac after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 sm:after:hidden"
+                            : "relative rounded-full border border-border px-3.5 py-1.5 text-[12.5px] text-ink2 after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 hover:border-acbr hover:text-ac sm:after:hidden"
                         }
                       >
                         {t(preset.key)}
@@ -363,6 +363,7 @@ export default function AmortizationPage() {
                     placeholder={resolved.contractRate}
                     min={0}
                     max={30}
+                    dp={2}
                     onCommit={(renewalRate) => update({ renewalRate })}
                   />
                   <SegmentedGroup

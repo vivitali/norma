@@ -7,7 +7,7 @@ import {
   STORE_KEY_V2,
   writeStored,
 } from "./storage";
-import { TOOL_KEYS } from "./shared-inputs";
+import { MAX_AMOUNT, TOOL_KEYS } from "./shared-inputs";
 
 beforeEach(() => window.localStorage.clear());
 
@@ -156,5 +156,14 @@ describe("writeStored", () => {
     writeStored(["income1"] as const, { income1: 90000 });
     const blob = JSON.parse(window.localStorage.getItem(STORE_KEY_V2)!);
     expect(blob).toMatchObject({ jurId: "toronto", income1: 90000 });
+  });
+});
+
+describe("coerceStored — money is bounded", () => {
+  it("clamps 1e300 to MAX_AMOUNT rather than letting it render as Infinity", () => {
+    expect(coerceStored({ income1: 1e300, price: 1e21 })).toEqual({
+      income1: MAX_AMOUNT,
+      price: MAX_AMOUNT,
+    });
   });
 });

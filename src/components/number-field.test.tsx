@@ -136,3 +136,31 @@ describe("NumberField", () => {
     expect(screen.getByLabelText("Down payment")).toHaveAccessibleDescription("%");
   });
 });
+
+describe("NumberField — what is shown is what is used", () => {
+  it("never displays fewer decimals than the committed value carries", () => {
+    renderWithIntl(<NumberField id="r" label="Rate" value={5.25} onCommit={vi.fn()} />);
+    expect(screen.getByLabelText("Rate")).toHaveValue("5.25");
+  });
+
+  it("uses the locale's decimal mark for those decimals", () => {
+    renderWithIntl(<NumberField id="r" label="Taux" value={5.25} onCommit={vi.fn()} />, {
+      locale: "fr-CA",
+    });
+    expect(screen.getByLabelText("Taux")).toHaveValue("5,25");
+  });
+
+  it("honours dp as a minimum, so a whole rate still reads as a rate", () => {
+    renderWithIntl(<NumberField id="r" label="Rate" value={5} dp={2} onCommit={vi.fn()} />);
+    expect(screen.getByLabelText("Rate")).toHaveValue("5.00");
+  });
+
+  it("clamps an absurd entry to MAX_AMOUNT when the caller gives no max", async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    renderWithIntl(<NumberField id="p" label="Price" value={null} onCommit={onCommit} />);
+    await user.type(screen.getByLabelText("Price"), "12345678901234567890");
+    await user.tab();
+    expect(onCommit).toHaveBeenLastCalledWith(1_000_000_000);
+  });
+});

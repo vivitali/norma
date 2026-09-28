@@ -7,6 +7,17 @@ import { Label } from "@/components/ui/label";
 import { formatLocaleNumber, parseLocaleNumber } from "@/lib/number-format";
 import { localeProfile } from "@/lib/locales";
 import { cn } from "@/lib/utils";
+import { MAX_AMOUNT } from "@/lib/shared-inputs";
+
+/** The most decimals a committed value is ever displayed with. */
+const MAX_DP = 4;
+
+/** Decimals `n` actually carries (to MAX_DP) — so a shown figure equals the one used. */
+function carriedDp(n: number): number {
+  const s = String(Number(n.toFixed(MAX_DP)));
+  const i = s.indexOf(".");
+  return i === -1 || s.includes("e") ? 0 : s.length - i - 1;
+}
 
 export interface NumberFieldProps {
   id: string;
@@ -23,6 +34,7 @@ export interface NumberFieldProps {
   suffix?: string;
   describedBy?: string;
   className?: string;
+  autoFocus?: boolean;
 }
 
 /**
@@ -40,11 +52,12 @@ export function NumberField({
   placeholder,
   onCommit,
   min,
-  max,
+  max = MAX_AMOUNT,
   dp = 0,
   suffix,
   describedBy,
   className,
+  autoFocus,
 }: NumberFieldProps) {
   const intlLocale = localeProfile(useLocale()).intl;
   /** Non-null only while the field is being edited. */
@@ -62,7 +75,7 @@ export function NumberField({
    * empty.
    */
   const display =
-    draft !== null ? draft : value === null ? "" : formatLocaleNumber(value, intlLocale, dp);
+    draft !== null ? draft : value === null ? "" : formatLocaleNumber(value, intlLocale, Math.max(dp, carriedDp(value)));
   const hint =
     placeholder === undefined ? undefined : formatLocaleNumber(placeholder, intlLocale, dp);
 
@@ -81,7 +94,7 @@ export function NumberField({
     }
     let next = parsed;
     if (min !== undefined) next = Math.max(min, next);
-    if (max !== undefined) next = Math.min(max, next);
+    next = Math.min(max, next);
     onCommit(next);
   };
 
@@ -96,6 +109,7 @@ export function NumberField({
           type="text"
           inputMode="decimal"
           className="text-right font-medium"
+          autoFocus={autoFocus}
           value={display}
           placeholder={hint}
           aria-describedby={
