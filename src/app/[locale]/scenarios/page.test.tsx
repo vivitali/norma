@@ -111,7 +111,9 @@ describe("Scenarios — the hero describes a column the reader can name", () => 
     // Cells: [5%, 10%, 20%, 25%] after the row header; 10% is the default choice.
     const tenPct = (within(row).getAllByRole("cell")[1].textContent ?? "").replace(/ · .*/, "");
     const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading.textContent).toContain("10% down");
+    // The h1 is the page name in every state; the column is captioned on the stat.
+    expect(heading.textContent).toBe("Down payment scenarios");
+    expect(document.body.textContent).toContain("True all-in monthly · 10% down");
     expect(screen.getAllByText(tenPct).length).toBeGreaterThan(1);
     const heroFigure = heading.parentElement!.textContent ?? "";
     expect(heroFigure).toContain(tenPct);

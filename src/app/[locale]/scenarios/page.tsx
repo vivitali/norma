@@ -382,14 +382,14 @@ export default function ScenariosPage() {
         <>
           <PendingFigures pending={!hydrated}>
           <AnswerHead
-            eyebrow={`${t("title")} · ${t("column", { p: pct(headline.dpPct) })}`}
+            eyebrow={t("title")}
             figure={fmt(headline.monthly.total)}
             pulseKey={jurisdiction.id}
             head={head}
             sub={sub}
             tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
             stats={[
-              { label: t("allIn"), value: fmt(headline.monthly.total), mark: "estimate" },
+              { label: `${t("allIn")} · ${t("column", { p: pct(headline.dpPct) })}`, value: fmt(headline.monthly.total), mark: "estimate" },
               { label: t("cashAtClosing"), value: fmt(headline.net), mark: "rule" },
               { label: t("rBorrowCost"), value: fmt(headline.costOfBorrowing), mark: "rule" },
             ]}
