@@ -93,12 +93,16 @@ describe("Closing costs — the answer comes first", () => {
     expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
   });
 
-  it("says the bill is separate from the down payment", () => {
-    // The single most common misunderstanding this page exists to correct.
+  it("describes the headline as down payment plus costs less credits, not as separate from the down payment", () => {
+    // The hero is total.net, which INCLUDES the down payment; a sub-line saying it is
+    // "separate from the down payment" contradicted the figure directly above it.
     renderPage();
     expect(
-      screen.getByText("Separate from the down payment, and due the same day."),
+      screen.getByText(
+        "The down payment plus closing costs, less the credits applied that day. All of it is due on closing day.",
+      ),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/Separate from the down payment/)).not.toBeInTheDocument();
   });
 
   it("renders every section of the bill", () => {
@@ -224,16 +228,18 @@ describe("Closing costs — the jurisdiction drives the bill", () => {
     await user.click(screen.getByRole("button", { name: "Expand all" }));
     // A "$0" line would assert the fee exists and happens to be nil, which is a
     // different and usually false claim than the fee not existing.
-    expect(screen.queryByText("$0")).not.toBeInTheDocument();
+    // A bracket band at 0% (e.g. the first $30,000) is a real row inside a fee, not a fee.
+    for (const el of screen.queryAllByText("$0")) {
+      expect(el.parentElement!.textContent).toMatch(/on the (first|portion)/);
+    }
   });
 
-  it("shows the bracket breakdown on demand, not by default", async () => {
+  it("shows the bracket breakdown inline, with no second show/hide toggle", async () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /Taxes and government fees/);
-    expect(screen.queryByText(/on the first/)).not.toBeInTheDocument();
-    await user.click(screen.getAllByRole("button", { name: "Bracket breakdown" })[0]);
     expect(screen.getAllByText(/on the first/).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /bracket breakdown|hide breakdown/i })).not.toBeInTheDocument();
   });
 });
 
@@ -418,5 +424,22 @@ describe("Closing costs — the residency question is on the page", () => {
     // but because it is not in the dataset, and asking a question no figure consumes
     // teaches the reader that this app's answers do not depend on its questions.
     expect(screen.queryByLabelText(/Resident of this province/)).not.toBeInTheDocument();
+  });
+});
+
+describe("Closing costs — explanations that must be true where they render", () => {
+  it("does not tell Manitoba it charges no transfer tax, and calls its registration fee flat", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "winnipeg" }));
+    renderPage();
+    expect(screen.queryByText(/charges no transfer tax/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No land transfer tax is charged here/)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/A flat fee, the same at every price/).length).toBe(2);
+  });
+
+  it("prints no $0 mortgage where nobody publishes a price", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nu" }));
+    renderPage();
+    expect(screen.queryByText("Mortgage amount")).not.toBeInTheDocument();
+    expect(screen.queryByText("$0")).not.toBeInTheDocument();
   });
 });

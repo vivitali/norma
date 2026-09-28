@@ -77,7 +77,29 @@ describe("Down payment — the waterfall", () => {
     await user.type(fhsa, "40000");
     await user.tab();
 
-    // The TFSA is still untouched: the order is by cost, not by balance.
+    // Every other source is unanswered, and an unanswered account is not "Not needed"
+    // (that asserts a balance nobody gave) nor "Left in the account: $0".
+    expect(screen.getAllByText("Not entered yet").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Not needed")).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Left in the account/).length).toBe(1);
+  });
+
+  it("says nothing is entered, rather than printing $0 available, before any balance", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    expect(screen.getAllByText("Not entered yet").length).toBe(6);
+    expect(screen.queryByText(/Left in the account/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Short by/)).not.toBeInTheDocument();
+    const stat = screen.getByText("Available in total");
+    expect(stat.parentElement!.textContent).not.toMatch(/\$0/);
+  });
+
+  it("still says a given source is not needed when the cheaper ones cover the target", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ cashSav: 900000, gift: 5000 }));
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
     expect(screen.getAllByText("Not needed").length).toBeGreaterThan(0);
   });
 
@@ -110,8 +132,9 @@ describe("Down payment — the two accounts that require first-time-buyer status
     expect(screen.getAllByText(/first-time home buyer programmes/).length).toBeGreaterThan(0);
     // And neither blocked row reports "Left in the account: $0" back at a reader
     // looking at their own balance in the field two lines below it. Four rows
-    // carry that line; the two blocked ones do not.
-    expect(screen.getAllByText(/Left in the account/).length).toBe(4);
+    // carry the row, but only the one the reader gave a balance for (cash) reports what is
+    // left; the two blocked ones and the unanswered ones do not.
+    expect(screen.getAllByText(/Left in the account/).length).toBe(1);
   });
 
   it("spends them for a first-time buyer", async () => {

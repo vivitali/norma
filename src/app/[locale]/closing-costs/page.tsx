@@ -213,7 +213,7 @@ export default function ClosingCostsPage() {
         tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
         stats={[
           { label: t("downPaymentRow"), value: fmt(total.fin.down) },
-          { label: t("closingCosts"), value: fmt(total.total), mark: "rule" },
+          { label: t("closingCosts"), value: fmt(total.total), mark: "estimate" },
           ...(creditsAtClosing > 0
             ? [{ label: t("grpAtClosing"), value: `− ${fmt(creditsAtClosing)}`, mark: "rule" as const }]
             : []),
@@ -480,7 +480,7 @@ export default function ClosingCostsPage() {
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {notPriced.map((key) => (
             <li key={key} className="max-w-[620px] text-[12.5px] leading-[1.6] text-ink2 text-pretty">
-              {t(key)}
+              {t(key === "omAdjustments" ? countryKey(key, rules.country) : key)}
             </li>
           ))}
         </ul>
@@ -496,7 +496,7 @@ export default function ClosingCostsPage() {
 
       <section aria-labelledby="cc-inputs" className="mt-8 flex flex-col gap-3">
         <h2 id="cc-inputs" className="text-[13px] font-semibold">
-          {t("subtitle")}
+          {t("adjust")}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <PurchaseInputs
@@ -515,6 +515,8 @@ export default function ClosingCostsPage() {
             jurisdiction={jurisdiction}
             onChange={update}
           />
+          {/* Derived from a price. With none, it would print a $0 mortgage (DESIGN.md 5.3). */}
+          {resolved.priceKnown ? (
           <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
             <p className="micro text-ink3">{t("mortgageAmount")}</p>
             <p className="text-[22px] font-semibold tracking-[-0.02em]">{fmt(total.fin.loan)}</p>
@@ -545,6 +547,7 @@ export default function ClosingCostsPage() {
               />
             ) : null}
           </div>
+          ) : null}
         </div>
         {/*
           What `benchmarkPrice()` does for a new build, said out loud for the first

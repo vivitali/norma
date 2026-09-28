@@ -777,6 +777,7 @@ describe("US vocabulary contract", () => {
     "HBP",
     "TFSA",
     "renewal",
+    "statement of adjustments",
     "Canad",
     "province",
     "provincial",

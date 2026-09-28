@@ -350,9 +350,8 @@
   },
   "ClosingCosts": {
     "title": "Frais de clôture",
-    "subtitle": "Ce que vous devez le jour de la clôture, en plus de la mise de fonds.",
     "cashTotal": "Comptant requis le jour de la clôture",
-    "separateNote": "Distincts de la mise de fonds, et exigibles le même jour.",
+    "separateNote": "La mise de fonds plus les frais de clôture, moins les crédits appliqués ce jour-là. Le tout est exigible le jour de la clôture.",
     "downPaymentRow": "Mise de fonds",
     "closingCosts": "Frais de clôture",
     "netCash": "Comptant net à la clôture, après les crédits appliqués ce jour-là",
@@ -382,8 +381,6 @@
     "onFirst": "sur les premiers",
     "onPortion": "sur la tranche de",
     "to": "à",
-    "showBrackets": "Détail par tranche",
-    "hideBrackets": "Masquer le détail",
     "ftbOnly": "Exige le statut d’acheteur d’une première habitation",
     "turnOnFtb": "Activez « acheteur d’une première habitation » pour voir ce que cela rapporte.",
     "rebApplied": "Remboursement appliqué",
@@ -441,9 +438,11 @@
     "ex_lttProv": "Une taxe provinciale sur le transfert de titre, calculée par tranches progressives du prix d’achat. Dépend de : le prix, la province, le statut d’acheteur d’une première habitation.",
     "ex_lttMuni": "Une deuxième taxe de mutation imposée par la ville, qui s’ajoute à celle de la province. Dépend de : le prix, la municipalité.",
     "ex_lttProvNonRes": "La Nouvelle-Écosse impose aux acheteurs non-résidents une taxe provinciale de mutation de 10 % sur les propriétés résidentielles, en plus de la taxe municipale. Dépend de : le prix, le lieu de résidence.",
-    "ex_titleReg": "Cette province n’impose aucune taxe de mutation. Le bureau des titres fonciers perçoit plutôt des frais d’enregistrement qui augmentent légèrement avec la valeur. Dépend de : le prix, la province.",
+    "ex_titleReg": "Aucune taxe de mutation n’est perçue ici. Le bureau des titres fonciers perçoit plutôt des frais d’enregistrement qui augmentent légèrement avec la valeur. Dépend de : le prix, la province.",
+    "ex_titleRegFlat": "Des frais fixes, identiques à tous les prix, que le bureau des titres fonciers perçoit pour chaque document enregistré. Ils s’ajoutent à la taxe de mutation ci-dessus. Dépend de : la province.",
     "ex_premTax": "Votre province taxe les primes d’assurance. La prime SCHL est financée dans le prêt, mais la taxe sur celle-ci ne l’est pas — elle se paie comptant à la clôture. Dépend de : la mise de fonds, le prix, la province.",
     "ex_taxAdj": "Si le vendeur a payé d’avance les taxes de l’année, vous lui remboursez la portion non utilisée — et s’il ne l’a pas fait, le rajustement joue en sens inverse et c’est lui qui vous crédite. Ce calculateur n’a aucune date de clôture à partir de laquelle compter : le chiffre ci-dessus est donc un montant indicatif fixe de trois mois au taux de cette juridiction, et non votre rajustement. Le vrai figure sur l’état des rajustements de votre notaire ou avocat.",
+    "ex_taxAdj_us": "Si le vendeur a payé d’avance les taxes de l’année, vous lui remboursez la portion non utilisée ; s’il ne l’a pas fait, le rajustement joue en sens inverse et c’est lui qui vous crédite. Ce calculateur n’a aucune date de clôture à partir de laquelle compter : le chiffre ci-dessus est donc un montant indicatif fixe de trois mois au taux de cette juridiction, et non votre rajustement. Le vrai figure sur votre Closing Disclosure (divulgation de clôture).",
     "ex_hba": "Un crédit fédéral non remboursable à votre déclaration l’année suivant l’achat. Il ne vous aide pas le jour de la clôture. Dépend de : le statut d’acheteur d’une première habitation.",
     "ex_gstFthb": "Un acheteur d’une première habitation neuve admissible peut se faire rembourser la TPS fédérale, en totalité jusqu’à 1 M$ et en diminution jusqu’à zéro à 1,5 M$. Ce calculateur ne le chiffre dans aucun sens : il n’ajoute jamais la TPS ou la TVH qu’attire une habitation neuve, alors le rembourser ici vous créditerait d’une taxe qui n’a jamais figuré sur la facture ci-dessus. Cinq provinces perçoivent la TVH plutôt que la TPS, et le prix retenu ici pour une habitation neuve est un prix de référence de revente qui inclut déjà la taxe — il faudrait corriger les deux avant que le remboursement puisse devenir un chiffre.",
     "ex_prepaidEscrow": "Votre prêteur perçoit d’avance quelques mois de taxe foncière et d’assurance habitation pour alimenter votre compte séquestre, afin qu’il dispose toujours de fonds suffisants pour payer ces factures à l’échéance.",
@@ -475,6 +474,7 @@
     "notPricedLine": "{n, plural, one {# coût réel} other {# coûts réels}} que la facture ci-dessus ne chiffre pas. Personne n’en publie de montant, alors cette page les nomme plutôt que d’en inventer un.",
     "omDeposit": "Le dépôt. Dans les jours qui suivent une offre acceptée — souvent des semaines ou des mois avant la clôture — des fonds certifiés sont remis à l’agence du vendeur pour être détenus en fiducie. Ils s’imputent sur votre mise de fonds : rien ne manque au total ci-dessus, c’est la date qui manque. De l’argent immobilisé dans un dépôt à terme, ou encore en route depuis l’étranger, ne peut pas servir de dépôt. Le montant se négocie offre par offre, et c’est pourquoi aucun chiffre n’est affiché.",
     "omAdjustments": "Les rajustements autres que la taxe foncière. Frais de copropriété, services payés d’avance et carburant restant dans le réservoir se règlent au jour près, à partir de votre date de clôture. Ce calculateur ne demande jamais de date de clôture : il n’en chiffre donc aucun. C’est l’état des rajustements de votre notaire ou avocat qui les fera apparaître.",
+    "omAdjustments_us": "Rajustements autres que les taxes foncières. Les cotisations d’association de propriétaires (HOA), les services publics payés d’avance et le mazout resté dans le réservoir se règlent au jour près, à compter de votre date de clôture. Ce calculateur ne demande jamais de date de clôture : il n’en chiffre donc aucun. Votre Closing Disclosure est l’endroit où ils apparaissent.",
     "omNewBuild": "Les suppléments du constructeur. Redevances de développement, raccordements de services et de compteurs, dépôts de nivellement ou de terrain et adhésion au régime de garantie des maisons neuves s’ajoutent couramment au prix convenu. Quelques-uns sont publiés, la plupart ne le sont pas : ne chiffrer que les premiers aurait l’air rigoureux tout en sous-estimant l’ensemble. Votre contrat de vente devrait les plafonner — cette clause mérite d’être lue avant de signer.",
     "newBuildPriceNote": "Aucun éditeur ne publie de niveau de prix pour le neuf au Canada : le prix modélisé ici est donc le prix de référence des maisons de revente de cette ville, jusqu’à ce que vous le remplaciez par celui du constructeur.",
     "newBuildPriceNote_us": "Aucun éditeur ne publie de niveau de prix pour le neuf sur ce marché : le prix modélisé ici est donc le prix de référence des maisons de revente de cette ville, jusqu’à ce que vous le remplaciez par celui du constructeur.",
@@ -485,7 +485,8 @@
     "calcGov": "Taxes et frais gouvernementaux",
     "calcPro": "Honoraires professionnels et frais de tiers",
     "calcAdj": "Ajustements et emménagement",
-    "calcCredits": "Crédits appliqués ce jour-là"
+    "calcCredits": "Crédits appliqués ce jour-là",
+    "adjust": "Ajuster vos chiffres"
   },
   "DownPayment": {
     "title": "Sources de la mise de fonds",
@@ -512,7 +513,7 @@
     "reached": "Objectif atteint au mois {m}",
     "never": "Non atteint en 36 mois à ce rythme d’épargne.",
     "already": "Vous avez déjà assez. Aucune attente nécessaire.",
-    "balances": "Ce que vous avez épargné",
+    "adjust": "Ajuster vos chiffres",
     "unrealised": "dont gain non réalisé",
     "income": "Revenu imposable",
     "glideNote": "Suppose {r} sur l’épargne et aucun changement à votre objectif.",
@@ -579,7 +580,8 @@
     "calcCredits": "Crédits appliqués ce jour-là",
     "calcDrawn": "Puisé dans vos comptes",
     "calcShortfall": "Reste à trouver",
-    "calcSurplus": "Excédent"
+    "calcSurplus": "Excédent",
+    "notEntered": "Pas encore saisi"
   },
   "RrspHbp": {
     "title": "Le jeu REER → Régime d’accession à la propriété",

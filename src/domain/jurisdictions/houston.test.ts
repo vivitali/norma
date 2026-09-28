@@ -22,7 +22,7 @@ describe("houston — no transfer tax, empty government charges group", () => {
     expect(houston.transfer).toEqual([]);
   });
 
-  it("buildLines() degrades to an empty gov group with no crash and no phantom row", () => {
+  it("buildLines() has no transfer line; the county recording fee is the one government fee", () => {
     const lines = buildLines(houston, us, {
       price: 350000,
       dpPct: 10,
@@ -32,7 +32,9 @@ describe("houston — no transfer tax, empty government charges group", () => {
       elsewhere: false,
       residency: "resident",
     });
-    expect(lines.gov).toEqual([]);
+    // Filed under government fees, not professional fees, at the same amount.
+    expect(lines.gov).toEqual([{ key: "li_recording", amount: 35 }]);
+    expect(lines.pro.some((l) => l.key === "li_recording")).toBe(false);
   });
 
   it("credits() reports no rebates, with an explanation for why", () => {

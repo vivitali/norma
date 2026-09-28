@@ -350,9 +350,8 @@
   },
   "ClosingCosts": {
     "title": "Gastos de cierre",
-    "subtitle": "Lo que debe pagar el día del cierre, además del pago inicial.",
     "cashTotal": "Efectivo necesario el día del cierre",
-    "separateNote": "Aparte del pago inicial, y se pagan el mismo día.",
+    "separateNote": "El pago inicial más los gastos de cierre, menos los créditos que se aplican ese día. Todo se paga el día del cierre.",
     "downPaymentRow": "Pago inicial",
     "closingCosts": "Gastos de cierre",
     "netCash": "Efectivo neto al cierre, tras los créditos aplicados ese día",
@@ -382,8 +381,6 @@
     "onFirst": "sobre los primeros",
     "onPortion": "sobre la parte de",
     "to": "a",
-    "showBrackets": "Desglose por tramos",
-    "hideBrackets": "Ocultar desglose",
     "ftbOnly": "Requiere ser comprador de primera vivienda",
     "turnOnFtb": "Active «comprador de primera vivienda» para ver lo que devuelve.",
     "rebApplied": "Reembolso aplicado",
@@ -441,9 +438,11 @@
     "ex_lttProv": "Un impuesto provincial sobre la transferencia del título, cobrado en tramos progresivos del precio de compra. Depende de: precio, provincia y condición de primera vivienda.",
     "ex_lttMuni": "Un segundo impuesto de transferencia que cobra la ciudad, sumado al provincial. Depende de: precio y municipio.",
     "ex_lttProvNonRes": "Nueva Escocia cobra a los compradores no residentes un impuesto provincial del 10 % sobre la escritura de una vivienda, además del impuesto municipal sobre la escritura. Depende de: precio y residencia.",
-    "ex_titleReg": "Esta provincia no cobra impuesto de transferencia. En su lugar, el registro de la propiedad cobra una tasa que crece suavemente con el valor. Depende de: precio y provincia.",
+    "ex_titleReg": "Aquí no se cobra impuesto de transferencia. En su lugar, el registro de la propiedad cobra una tasa que crece suavemente con el valor. Depende de: precio y provincia.",
+    "ex_titleRegFlat": "Una tasa fija, igual a cualquier precio, que el registro de la propiedad cobra por cada documento inscrito. Se suma al impuesto de transferencia de arriba. Depende de: la provincia.",
     "ex_premTax": "Su provincia grava las primas de seguro. La prima CMHC se financia dentro de la hipoteca, pero el impuesto sobre ella no: es efectivo el día del cierre. Depende de: pago inicial, precio y provincia.",
     "ex_taxAdj": "Si el vendedor pagó por adelantado el impuesto predial del año, usted le reembolsa la parte no usada; y si no lo pagó, el ajuste corre en sentido contrario y es él quien le abona a usted. Esta calculadora no tiene una fecha de cierre desde la que contar, así que la cifra de arriba es un valor fijo orientativo de tres meses a la tasa de esta jurisdicción, no su ajuste. El real está en el estado de ajustes de su abogado.",
+    "ex_taxAdj_us": "Si el vendedor pagó por adelantado el impuesto predial del año, usted le reembolsa la parte no usada; y si no lo pagó, el ajuste corre en sentido contrario y es él quien le abona a usted. Esta calculadora no tiene una fecha de cierre desde la que contar, así que la cifra de arriba es un valor fijo orientativo de tres meses a la tasa de esta jurisdicción, no su ajuste. El real aparece en su Closing Disclosure (divulgación de cierre).",
     "ex_hba": "Un crédito federal no reembolsable en su declaración del año siguiente a la compra. No le ayuda el día del cierre. Depende de: condición de primera vivienda.",
     "ex_gstFthb": "Un comprador de primera vivienda de obra nueva que cumpla los requisitos puede recuperar el GST federal, íntegro hasta $1M y reduciéndose hasta cero en $1.5M. Esta calculadora no lo cuantifica en ningún sentido: nunca añade el GST ni el HST que grava una obra nueva, así que devolverlo aquí le abonaría un impuesto que nunca apareció en la factura de arriba. Cinco provincias cobran HST en lugar de GST, y el precio que hay detrás de una obra nueva aquí es una referencia de reventa que ya incluye impuestos; habría que arreglar ambas cosas antes de que el reembolso pudiera ser una cifra.",
     "ex_prepaidEscrow": "Su prestamista cobra por adelantado algunos meses de impuesto predial y seguro de vivienda para abastecer su cuenta en garantía, de modo que siempre haya fondos suficientes para pagar esas facturas cuando venzan.",
@@ -475,6 +474,7 @@
     "notPricedLine": "{n, plural, one {# costo real} other {# costos reales}} que la factura de arriba no cuantifica. Nadie publica una cifra para ellos, así que esta página los nombra en lugar de inventarla.",
     "omDeposit": "El depósito. A los pocos días de una oferta aceptada, y normalmente semanas o meses antes del cierre, se entregan fondos certificados a la agencia del vendedor para mantenerlos en fideicomiso. Se acreditan contra su pago inicial, así que al total de arriba no le falta nada: le falta la fecha. El dinero inmovilizado en un depósito a plazo, o todavía cruzando una frontera, no puede servir de depósito. El importe se negocia oferta por oferta, y por eso aquí no se muestra ninguna cifra.",
     "omAdjustments": "Los ajustes distintos del impuesto predial. Las cuotas de condominio, los servicios pagados por adelantado y el combustible que queda en el tanque se liquidan por días, contados desde su fecha de cierre. Esta calculadora nunca pide una fecha de cierre, así que no cuantifica ninguno: aparecerán en el estado de ajustes de su abogado.",
+    "omAdjustments_us": "Ajustes distintos del impuesto predial. Las cuotas de la HOA, los servicios prepagados y el combustible que queda en el tanque se liquidan por día, contando desde su fecha de cierre. Esta calculadora nunca pide una fecha de cierre, así que no calcula ninguno. Su Closing Disclosure es donde aparecen.",
     "omNewBuild": "Los extras del constructor. Cargos de urbanización, conexiones de servicios y contadores, depósitos de nivelación o de lote y el alta en la garantía de vivienda nueva se suelen cobrar por encima del precio acordado. Algunos se publican y la mayoría no, así que cuantificar solo los publicados parecería riguroso y aun así subestimaría el conjunto. Su contrato de compraventa debería ponerles un tope: vale la pena leer esa cláusula antes de firmar.",
     "newBuildPriceNote": "Nadie publica un nivel de precios de obra nueva en Canadá, así que el precio modelado aquí es el precio de referencia de casas de reventa de esta ciudad, hasta que lo sustituya por el del constructor.",
     "newBuildPriceNote_us": "Nadie publica un nivel de precios de obra nueva en este mercado, así que el precio modelado aquí es el precio de referencia de casas de reventa de esta ciudad, hasta que lo sustituya por el del constructor.",
@@ -485,7 +485,8 @@
     "calcGov": "Impuestos y tasas gubernamentales",
     "calcPro": "Honorarios profesionales y de terceros",
     "calcAdj": "Ajustes y mudanza",
-    "calcCredits": "Créditos aplicados ese día"
+    "calcCredits": "Créditos aplicados ese día",
+    "adjust": "Ajustar sus cifras"
   },
   "DownPayment": {
     "title": "Fuentes del pago inicial",
@@ -512,7 +513,7 @@
     "reached": "Objetivo alcanzado en el mes {m}",
     "never": "No se alcanza en 36 meses a este ritmo de ahorro.",
     "already": "Ya tiene suficiente. No hace falta esperar.",
-    "balances": "Lo que tiene ahorrado",
+    "adjust": "Ajustar sus cifras",
     "unrealised": "de lo cual plusvalía no realizada",
     "income": "Ingreso gravable",
     "glideNote": "Supone {r} sobre el ahorro y ningún cambio en su objetivo.",
@@ -579,7 +580,8 @@
     "calcCredits": "Créditos aplicados ese día",
     "calcDrawn": "Retirado de sus cuentas",
     "calcShortfall": "Falta por conseguir",
-    "calcSurplus": "Sobrante"
+    "calcSurplus": "Sobrante",
+    "notEntered": "Aún no ingresado"
   },
   "RrspHbp": {
     "title": "La jugada RRSP → Plan de Compradores de Vivienda",

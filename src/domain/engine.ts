@@ -442,6 +442,11 @@ export function buildLines(j: Jurisdiction, F: CountryRules, o: ClosingInput) {
   }
 
   const f = j.fees;
+  // US only. The county clerk's recording fee is a GOVERNMENT fee, so it belongs in the taxes-and-
+  // government-fees group with the transfer lines, not among the professional fees: Houston's
+  // `transfer: []` otherwise showed that group at $0 while its own copy says the clerk sets
+  // recording fees. Same amount, same total; only the group it is filed under changes.
+  if (f.recording != null) gov.push({ key: "li_recording", amount: f.recording });
   const pro: LineItem[] = [];
   pro.push({
     key:
@@ -470,7 +475,6 @@ export function buildLines(j: Jurisdiction, F: CountryRules, o: ClosingInput) {
   // US only — a survey and a county recording fee, neither of which any Canadian record
   // carries. Absent, not zero, on every record that lacks them (matches `locCert`/`titleIns`).
   if (f.survey != null) pro.push({ key: "li_survey", amount: f.survey });
-  if (f.recording != null) pro.push({ key: "li_recording", amount: f.recording });
 
   const adj: LineItem[] = [
     { key: "li_taxAdj", ex: "ex_taxAdj", amount: propertyTaxAnnual(j, o.price) / 4 },

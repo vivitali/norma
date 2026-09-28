@@ -28,10 +28,10 @@ export const winnipeg: Jurisdiction = {
       kind: "brackets",
       brackets: [[30000, 0], [90000, 0.005], [150000, 0.01], [200000, 0.015], [null, 0.02]],
     },
-    { key: "li_titleReg", ex: "ex_titleReg", tier: "provincial", kind: "fixed", amount: 137 },
+    { key: "li_titleReg", ex: "ex_titleRegFlat", tier: "provincial", kind: "fixed", amount: 137 },
     // Winnipeg carried no mortgage registration line at all while Saskatoon and Calgary both
     // did, so every cross-city comparison was wrong in a systematic direction.
-    { key: "li_mortReg", ex: "ex_titleReg", tier: "provincial", kind: "fixed", amount: 137 },
+    { key: "li_mortReg", ex: "ex_titleRegFlat", tier: "provincial", kind: "fixed", amount: 137 },
   ],
   // Combined federal + provincial marginal rate, Manitoba 2026. The FALL above $400,000 is
   // real, not a transcription slip: Manitoba's basic-personal-amount clawback surcharge runs
