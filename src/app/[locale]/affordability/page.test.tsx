@@ -752,6 +752,8 @@ describe("Affordability — honest states at the edges", () => {
     renderPage();
     await openAll(user);
     expect(document.body.textContent).not.toMatch(/Most people who get into trouble/);
+    // The comfort budget may be the default the reader never set: the zone copy must not say "you set".
+    expect(document.body.textContent).not.toMatch(/budget you set/);
     expect(document.body.textContent).not.toMatch(/Separate from the down payment/);
     expect(screen.getByText(/both due on closing day/)).toBeInTheDocument();
   });

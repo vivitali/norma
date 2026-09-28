@@ -44,7 +44,10 @@ export function LocaleSwitcher() {
       value={activeLocale}
       onValueChange={(locale) => router.replace(pathname, { locale: locale as Locale })}
     >
-      <SelectTrigger aria-label={t("changeLanguage")} className="w-auto">
+      <SelectTrigger
+        aria-label={`${t("changeLanguage")}: ${LOCALES[activeLocale]?.label ?? activeLocale}`}
+        className="w-auto"
+      >
         <SelectValue>{LOCALES[activeLocale]?.label ?? activeLocale}</SelectValue>
       </SelectTrigger>
       <SelectContent>

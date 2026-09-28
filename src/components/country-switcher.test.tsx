@@ -29,14 +29,14 @@ describe("CountrySwitcher", () => {
   it("renders both entries", async () => {
     const user = userEvent.setup();
     renderWithIntl(<CountrySwitcher />);
-    await user.click(screen.getByRole("combobox", { name: "Change country" }));
+    await user.click(screen.getByRole("combobox", { name: /^Change country:/ }));
     const options = screen.getAllByRole("option");
     expect(options.map((o) => o.textContent)).toEqual(["Canada", "United States"]);
   });
 
   it("shows the active country on the trigger", () => {
     renderWithIntl(<CountrySwitcher />);
-    expect(screen.getByRole("combobox", { name: "Change country" })).toHaveTextContent("Canada");
+    expect(screen.getByRole("combobox", { name: /^Change country:/ })).toHaveTextContent("Canada");
   });
 
   it("marks the active country as selected", async () => {
@@ -84,7 +84,7 @@ describe("CountrySwitcher", () => {
     // rather than restated, so this control gives way exactly where LocaleSwitcher's
     // trigger already does, as long as it renders the SAME shadcn Select the rule targets.
     renderWithIntl(<CountrySwitcher />);
-    expect(screen.getByRole("combobox", { name: "Change country" })).toHaveAttribute(
+    expect(screen.getByRole("combobox", { name: /^Change country:/ })).toHaveAttribute(
       "data-slot",
       "select-trigger",
     );

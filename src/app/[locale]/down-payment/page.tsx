@@ -211,8 +211,10 @@ export default function DownPaymentPage() {
               {
                 label: described ? t("totalDrawn") : t("totalAvailable"),
                 // No balance given is not a total of $0: that would assert empty accounts
-                // (DESIGN.md 5.2 rule 4). Say nothing is entered rather than print a figure.
-                value: described ? fmt(flow.drawnTotal) : "—",
+                // (DESIGN.md 5.2 rule 4). Say nothing is entered rather than print a figure —
+                // in words, not a bare em-dash, which reads as a rendering fault at figure
+                // size (DESIGN.md 5.3).
+                value: described ? fmt(flow.drawnTotal) : t("notEntered"),
               },
             ]}
           />

@@ -25,7 +25,15 @@ export function JurisdictionPicker() {
         long name ("Terre-Neuve-et-Labrador") truncates with an ellipsis INSIDE the trigger rather
         than overflowing under the country switcher. The full name stays in the dropdown.
       */}
-      <SelectTrigger aria-label={t("changeLocation")} className="w-full min-w-0 sm:w-auto">
+      {/*
+        The accessible name carries the current value, not just the action: below sm the
+        visible name may be truncated, and a voice-control user says what they SEE
+        (WCAG 2.5.3, label in name). A combobox takes no name from its content.
+      */}
+      <SelectTrigger
+        aria-label={`${t("changeLocation")}: ${tJur(jurisdiction.id)}`}
+        className="w-full min-w-0 sm:w-auto"
+      >
         <SelectValue className="min-w-0">
           <span className="block truncate">{tJur(jurisdiction.id)}</span>
         </SelectValue>

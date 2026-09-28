@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/lib/locales";
@@ -88,11 +88,15 @@ describe("Down payment — the waterfall", () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /The funding order/);
-    expect(screen.getAllByText("Not entered yet").length).toBe(6);
+    // Six sources in the funding order, scoped so the hero stat below is not counted with them.
+    expect(within(document.getElementById("waterfall")!).getAllByText("Not entered yet").length).toBe(6);
     expect(screen.queryByText(/Left in the account/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Short by/)).not.toBeInTheDocument();
+    // The stat says so in words: not $0 (an empty account) and not a bare em-dash (a render fault).
     const stat = screen.getByText("Available in total");
     expect(stat.parentElement!.textContent).not.toMatch(/\$0/);
+    expect(stat.parentElement!.textContent).toContain("Not entered yet");
+    expect(stat.parentElement!.textContent).not.toContain("—");
   });
 
   it("still says a given source is not needed when the cheaper ones cover the target", async () => {
