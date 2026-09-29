@@ -366,7 +366,7 @@ existed on no screen in any locale and Halifax's 10% non-resident deed transfer 
 fire. A component test supplies the prop the product is missing. When a control's whole purpose is
 to reach a figure, the assertion that it is REACHED belongs on the page.
 
-**Copy that names a source is domain data and is English.** `Provenance.src` and `.note` have no
+**Copy that names a source is domain data and is English.** `Provenance.src`, `.note` and `.summary` have no
 i18n mechanism, so they render untranslated on **three of the four** locales — the cost of this
 went up when uk and es shipped, and it is now the largest untranslated surface in the product.
 `/sources` discloses it in every locale, and the Affordability footer's label says its citation is
@@ -375,9 +375,19 @@ see the raised items). Machine-glossing a verification record would be worse tha
 translating them properly is real separate work. If you surface a `src` or `note` anywhere new,
 the disclosure has to travel with it.
 
-One consequence to watch: `/sources` prints those English notes verbatim, and one of them
-(`federal.ts`) discusses a message key by name. Any test that greps rendered output for a leaked
-key must therefore be scoped to the namespaces the page under test actually renders — see
+**`note` is for the next maintainer; `summary` is for the reader, and `/sources` shows only the
+summary.** A note is a verification log — which document, which fetch, which review finding it
+settled — and it stays in `src/domain` so the next person can re-verify without re-deriving.
+`summary` says the same figure in one or two plain sentences with no new facts and the same
+numbers. `src/domain/provenance-summaries.test.ts` requires a summary on every entry that has a
+note, caps it at 320 characters, rejects code, file, review and field-path jargon, and fails if
+any sentence repeats inside one `/sources` row: every figure citing one document folds into that
+document's row, so a caveat written once per field (Winnipeg's eight school divisions) reads eight
+times. Say it once, on one entry.
+
+One consequence to watch: `/sources` prints English domain text verbatim, and a note or summary
+can name a message key. Any test that greps rendered output for a leaked key must therefore be
+scoped to the namespaces the page under test actually renders — see
 `src/app/locale-render.test.tsx`.
 
 **Copy is mined from `design-reference/`, en and fr, never newly written.** (uk and es were
