@@ -52,6 +52,53 @@ export const RELEASES: readonly Release[] = [
     ],
   },
   {
+    id: "2026-09-28-seattle",
+    date: "2026-09-28",
+    countries: ["us"],
+    jurisdictions: ["seattle"],
+    summary: "sumSeattle",
+    items: [
+      { key: "seattleAdded", href: { pathname: "/affordability" } },
+      { key: "seattleSaleTax", href: { pathname: "/rent-vs-buy", hash: "wealth" } },
+    ],
+  },
+  {
+    id: "2026-09-28-clearer",
+    date: "2026-09-28",
+    countries: ["ca", "us"],
+    summary: "sumClearer",
+    items: [
+      { key: "firstVisit" },
+      { key: "adjustJump" },
+      { key: "lowIncome", href: { pathname: "/affordability" } },
+      { key: "mathReproduces", href: { pathname: "/affordability", hash: "math" } },
+      { key: "closingLeads", href: { pathname: "/closing-costs" } },
+      { key: "renewalControls", href: { pathname: "/amortization", hash: "renewal" } },
+    ],
+  },
+  {
+    id: "2026-09-28-tax-brackets",
+    date: "2026-09-28",
+    countries: ["ca"],
+    summary: "sumTaxBrackets",
+    items: [
+      { key: "taxBrackets", href: { pathname: "/rrsp-hbp", hash: "refund" } },
+      { key: "ukFont" },
+    ],
+  },
+  {
+    id: "2026-09-28-reading",
+    date: "2026-09-28",
+    countries: ["ca", "us"],
+    summary: "sumReading",
+    items: [
+      { key: "sourcesReadable", href: { pathname: "/sources" } },
+      { key: "keyboard" },
+      { key: "clearNumbers" },
+      { key: "homeExample", href: { pathname: "/" } },
+    ],
+  },
+  {
     id: "2026-09-28-answers",
     date: "2026-09-28",
     countries: ["ca", "us"],
@@ -89,7 +136,10 @@ export const RELEASES: readonly Release[] = [
     date: "2026-09-28",
     countries: ["us"],
     summary: "sumUsClosing",
-    items: [{ key: "usWording", href: { pathname: "/closing-costs" } }],
+    items: [
+      { key: "usWording", href: { pathname: "/closing-costs" } },
+      { key: "loanTerm", href: { pathname: "/amortization" } },
+    ],
   },
   {
     id: "2026-09-28-phones-and-fields",
