@@ -98,11 +98,8 @@ function grossPropertyTax(j: Jurisdiction, price: number): number {
 
 /**
  * The principal-residence credit printed on the bill (`PropertyTax.credit` — Manitoba's HATC):
- * the lesser of its amount and the slice it is capped against. Exact per price. The closed-form
- * ceiling solve in `affordability()` instead adds the full `amount` back as a constant through
- * `propertyTaxCredit()` — exact wherever the cap binds (in Winnipeg School Division, any price
- * above ~$222,000: 1,600 ÷ 0.0071973), which is everywhere the solve lands for any income the
- * GDS/TDS limits let reach it; below that it overstates the credit by at most the difference.
+ * the lesser of its amount and the slice it is capped against. Exact per price, and
+ * `solveWithBillCredit()` inverts it exactly for the ceiling solves.
  */
 function billCredit(j: Jurisdiction, price: number): number {
   const credit = j.propTax.credit;
@@ -136,14 +133,35 @@ export function propertyTaxRate(j: Jurisdiction): number {
  * carries no flat exemption.
  */
 export function propertyTaxCredit(j: Jurisdiction): number {
-  const exemptions = j.propTax.exemptions ?? [];
-  const homestead = exemptions.reduce(
+  const exemptions = j.propTax.exemptions;
+  if (!exemptions) return 0;
+  return exemptions.reduce(
     (sum, ex) => sum + (ex.kind === "flatAmount" ? ex.amount * ex.appliesToRate : 0),
     0,
   );
-  // A bill credit (Manitoba's HATC) enters the same way: a constant dollar amount off the tax,
-  // taken at its cap — see `billCredit()` for when that is exact.
-  return homestead + (j.propTax.credit?.amount ?? 0);
+}
+
+/**
+ * Solves `denom × p − billCredit(p) / 12 = budget` for the price `p` — the ceiling equations of
+ * `affordability()`, where `budget` is the monthly dollars left for price-driven costs and
+ * `denom` the monthly cost per dollar of price (payment, property tax at the full rate,
+ * maintenance). Without a bill credit that is `budget / denom`.
+ *
+ * With one (Manitoba's HATC, `min(amount, price × slice)`) the cost is piecewise linear, so
+ * this solves exactly rather than taking the credit at its cap: first assume the cap binds;
+ * if the resulting price is too low for the slice to reach the cap, the credit is the slice
+ * itself and folds into the rate instead. The two branches meet at `amount / slice`, where
+ * both give the same price, so exactly one is consistent. Taking the full credit everywhere
+ * overstated a low-income ceiling by up to ~4% (~$43 a month at a $150,000 solve in Winnipeg
+ * School Division, where the cap binds only above ~$222,000).
+ */
+export function solveWithBillCredit(j: Jurisdiction, budget: number, denom: number): number {
+  if (budget <= 0) return 0;
+  const credit = j.propTax.credit;
+  if (!credit) return budget / denom;
+  const capped = (budget + credit.amount / 12) / denom;
+  if (capped * credit.appliesToRate >= credit.amount) return capped;
+  return budget / (denom - credit.appliesToRate / 12);
 }
 
 /**
@@ -908,13 +926,21 @@ export function affordability(j: Jurisdiction, F: CountryRules, o: Affordability
     // count — and the full fee two lines below, because that is what the household pays.
     // Both are correct and they are not the same figure; the screen has to say so, which is
     // why the share is a named federal rule with provenance rather than a bare 0.5.
-    return Math.max(0, (binds - heatAllowance - o.condoFee * F.condoFeeInclusion + propTaxCreditMonthly) / denomLender);
+    return solveWithBillCredit(
+      j,
+      binds - heatAllowance - o.condoFee * F.condoFeeInclusion + propTaxCreditMonthly,
+      denomLender,
+    );
   };
   const ceiling = ceilingCarrying(o.debts);
 
   const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee + propTaxCreditMonthly;
   const denomComfort = financed * fc + propertyTaxRate(j) / 12 + F.maintenanceReserve / 12;
-  const comfort = Math.max(0, budget) / denomComfort;
+  const comfort = solveWithBillCredit(j, budget, denomComfort);
+  // The bill credit actually earned at the comfort price, monthly. Reported, and added into
+  // `budget` below, so the printed derivation (budget ÷ cost per dollar = comfort) holds exactly
+  // on either side of the credit's cap — see solveWithBillCredit().
+  const comfortTaxCredit = billCredit(j, comfort) / 12;
 
   // The target price, actually financed at the actual down payment.
   const cc = closingTotal(j, F, {
@@ -982,7 +1008,8 @@ export function affordability(j: Jurisdiction, F: CountryRules, o: Affordability
     tdsBinds,
     ceiling,
     comfort,
-    budget,
+    budget: budget + comfortTaxCredit,
+    comfortTaxCredit,
     monthly,
     cc,
     gdsAtTarget,

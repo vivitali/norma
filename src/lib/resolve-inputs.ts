@@ -30,15 +30,6 @@ export const DEFAULT_UTILITIES = 300;
 export const DEFAULT_RENT = 1500;
 
 /**
- * The fraction of earned income that becomes new RRSP room each year (before the annual
- * dollar limit). It stands behind the RRSP-HBP contribution's derived default only, and
- * is deliberately NOT quoted as a fact anywhere: no `provenance` entry in src/domain
- * covers it, so under the FAQ rule it may not travel. The default is a starting point the
- * reader overwrites, not a recommendation about how much to contribute.
- */
-export const RRSP_ROOM_RATE = 0.18;
-
-/**
  * The benchmark price standing behind an untouched price field, or `null` where the
  * jurisdiction has none published.
  *
@@ -256,7 +247,10 @@ export function resolveInputs(
   const taxIncome = stored.taxIncome ?? income1 + income2 + otherIncome;
   const hbpContribution =
     stored.hbpContribution ??
-    (F.country === "ca" ? Math.round(Math.min(F.rrspCap, RRSP_ROOM_RATE * taxIncome)) : 0);
+    // CRA's deduction-limit rule (rules/ca.ts `rrspRoomRate`, with its provenance): the lesser
+    // of the annual dollar limit and 18% of earned income — applied to the income the page has,
+    // as a default the reader overwrites, not a recommendation about how much to contribute.
+    (F.country === "ca" ? Math.round(Math.min(F.rrspCap, F.rrspRoomRate * taxIncome)) : 0);
   const publishedRent = j.rent != null && j.rent > 0 ? j.rent : null;
 
   return {

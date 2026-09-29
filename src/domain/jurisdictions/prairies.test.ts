@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLines, propertyTaxAnnual } from "../engine";
+import { affordability, buildLines, propertyTaxAnnual } from "../engine";
 import { ca } from "../rules/ca";
 import { getJurisdiction } from "./index";
 
@@ -221,3 +221,50 @@ describe("figures deliberately left alone", () => {
     expect(yyc().provenance["transfer.0.base"]?.src).toMatch(/64\.1\(2\)/);
   });
 });
+
+describe("Winnipeg's capped tax credit in the ceiling solves", () => {
+  const input = (comfortCeiling: number, income1: number) => ({
+    income1,
+    income2: 0,
+    otherIncome: 0,
+    haircut: 0,
+    debts: 0,
+    amortYears: 25,
+    comfortCeiling,
+    insuranceAnnual: 1200,
+    utilities: 200,
+    condoFee: 0,
+    contractRate: 4.29,
+    price: 300000,
+    dpPct: 10,
+    ftb: true,
+    ptype: "house" as const,
+    elsewhere: false,
+    residency: "resident" as const,
+    funds: null,
+    save: null,
+  });
+
+  it.each([
+    ["below the cap", 1100, 30000],
+    ["above the cap", 3200, 140000],
+  ])("solves exactly %s", (_case, comfortCeiling, income1) => {
+    const j = wpg();
+    const r = affordability(j, ca, input(comfortCeiling, income1));
+    // The monthly cost the comfort price implies, with the credit taken EXACTLY at that price,
+    // must equal the budget the reader set: nothing overstated where the school tax is under
+    // $1,600, nothing understated above it.
+    const perDollar = r.fc * financedFractionFor(r) + ca.maintenanceReserve / 12;
+    const base = comfortCeiling - 1200 / 12 - 200;
+    expect(r.comfort * perDollar + propertyTaxAnnual(j, r.comfort) / 12).toBeCloseTo(base, 4);
+    // And the reported budget is the one the printed derivation divides.
+    expect(r.budget).toBeCloseTo(base + r.comfortTaxCredit, 6);
+    if (_case === "below the cap") expect(r.comfortTaxCredit).toBeLessThan(1600 / 12);
+    else expect(r.comfortTaxCredit).toBeCloseTo(1600 / 12, 6);
+  });
+});
+
+/** The financed fraction the engine used, recovered from its own outputs (loan ÷ price at comfort). */
+function financedFractionFor(r: { comfortPI: number; comfort: number; fc: number }): number {
+  return r.comfortPI / (r.comfort * r.fc);
+}

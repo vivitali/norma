@@ -57,10 +57,11 @@ export default function GlobalNotFound() {
               </div>
             </header>
             <main className="mx-auto w-full max-w-[1100px] flex-1 px-5 pt-11 pb-16 sm:px-10">
-              <h1 className="eyebrow mb-5 text-ac">404</h1>
-              <p className="max-w-[560px] text-[24px] leading-[1.3] font-semibold tracking-[-0.02em] sm:text-[28px]">
+              {/* The sentence is the heading: a bare "404" names nothing to a screen reader. */}
+              <p className="eyebrow mb-5 text-ac">404</p>
+              <h1 className="max-w-[560px] text-[24px] leading-[1.3] font-semibold tracking-[-0.02em] sm:text-[28px]">
                 {c.body}
-              </p>
+              </h1>
               <p className="mt-6 text-[14.5px]">
                 <a href={c.ctaHref} className="text-ac underline underline-offset-2">
                   {c.cta}

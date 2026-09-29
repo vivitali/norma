@@ -119,6 +119,14 @@ export function MathColumns({
             value={`− ${fmt(result.monthly.condoFee)}`}
           />
         ) : null}
+        {result.comfortTaxCredit > 0 ? (
+          // Winnipeg's Homeowners Affordability Tax Credit, at the comfort price: without this row
+          // the budget below would not be the three rows above it.
+          <MathRow
+            label={`${t("mPlus")} · ${t("taxCreditMonthly")}`}
+            value={`+ ${fmt(result.comfortTaxCredit)}`}
+          />
+        ) : null}
         <MathRow label={t("mBudget")} value={fmt(result.budget)} strong />
         <MathRow
           label={`${t("mFactorContract")} · ${pct(resolved.contractRate, 2)}`}

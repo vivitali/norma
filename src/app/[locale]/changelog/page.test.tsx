@@ -67,6 +67,18 @@ describe("/changelog", () => {
       unmount();
     });
 
+    if (country === "us") {
+      it(`says nothing about Canada or its addresses to a US reader, in ${locale}`, async () => {
+        // The US vocabulary contract greps a fixed list of Canadian programme names; a changelog
+        // can leak by talking ABOUT Canada instead ("US pages no longer mention Canada").
+        const { container, unmount } = await renderPage(locale);
+        const text = container.textContent ?? "";
+        expect(text).not.toMatch(/Canad/);
+        expect(text).not.toMatch(/\/ca\//);
+        unmount();
+      });
+    }
+
     it(`shows only releases that concern ${country}, newest first, in ${locale}`, async () => {
       const { container, unmount } = await renderPage(locale);
       const text = container.textContent ?? "";

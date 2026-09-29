@@ -82,6 +82,7 @@ export const ca: CaRules = {
   fhsa: { annual: 8000, lifetime: 40000 },
   hbp: { max: 60000, repayYears: 15, graceYears: 2, ruleDays: 89 },
   rrspCap: 33810,
+  rrspRoomRate: 0.18,
   capGainsInclusion: 0.5,
   gains: { kind: "inclusion", rate: 0.5 },
   marginal: {
@@ -200,6 +201,13 @@ export const ca: CaRules = {
       note: 'CRA states this as an 89-day period, not 90 — five times on the withdrawal page and again in the T1036 worksheet: "certain rules limit the deduction of your RRSP contributions made during the 89-day period before you made a withdrawal under the HBP, and you may not be able to deduct part or all of the RRSP contributions made during this period." Corrected from the industry\'s 90-day rounding to CRA\'s own 89 here, in Metadata.rrspHbp.description, and in the RrspHbp copy, in all four locale files, together, so the value and the copy cannot disagree. CRA\'s rule is also narrower than a plain holding period: it restricts the DEDUCTIBILITY of a contribution made in the window, not the ability to withdraw — the withdrawal itself is never blocked.',
     },
     rrspCap: { conf: "high", asOf: "2026", src: `${CRA_LIMITS} (2026 RRSP dollar limit)` },
+    rrspRoomRate: {
+      conf: "high",
+      asOf: "2026-01-29",
+      src: "CRA, How contributions affect your RRSP deduction limit: 'The lesser of … 18% of your earned income in the previous year [or] the annual RRSP limit'",
+      url: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans/contributing-a-rrsp-prpp/contributions-affect-your-rrsp-prpp-deduction-limit.html",
+      note: "The rule counts PREVIOUS-year earned income, plus any unused room carried forward and less pension adjustments; the RRSP-HBP page applies 18% to the income it has only to choose a default contribution the reader can overwrite.",
+    },
     capGainsInclusion: {
       conf: "high",
       asOf: "2025-03-21",

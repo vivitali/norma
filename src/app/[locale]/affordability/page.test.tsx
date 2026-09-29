@@ -540,9 +540,17 @@ describe("Affordability — with no published price, it keeps the ceiling and as
     renderPage();
     expect(getJurisdiction("yt")!.bench.house).toBeNull();
     expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
-    // Yukon's lender ceiling sits below the comfort price, so the head names the cap
-    // rather than the plain "comfortably afford" sentence (decision: name the binding limit).
-    expect(screen.getAllByText(/A lender caps you at|You can comfortably afford about/).length).toBeGreaterThan(0);
+    // The head follows whichever limit binds at Yukon's defaults — computed here from the same
+    // inputs, so this asserts the ONE branch that applies rather than accepting either.
+    const [j, rules] = [getJurisdiction("yt")!, RULES.ca];
+    const r = affordability(j, rules, resolveInputs(TOOL_DEFAULTS, j, rules));
+    if (r.comfort > r.ceiling) {
+      expect(screen.getAllByText(/A lender caps you at/).length).toBeGreaterThan(0);
+      expect(screen.queryByText(/You can comfortably afford about/)).not.toBeInTheDocument();
+    } else {
+      expect(screen.getAllByText(/You can comfortably afford about/).length).toBeGreaterThan(0);
+      expect(screen.queryByText(/A lender caps you at/)).not.toBeInTheDocument();
+    }
   });
 
   it("says why nothing is being checked, and drops the checks rather than answering them", () => {

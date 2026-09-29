@@ -715,6 +715,13 @@ export interface CaRules extends CountryRulesBase {
   fhsa: { annual: number; lifetime: number };
   hbp: { max: number; repayYears: number; graceYears: number; ruleDays: number };
   rrspCap: number;
+  /**
+   * New RRSP room as a share of the previous year's earned income, before `rrspCap` — CRA's
+   * deduction limit is the lesser of the two. Read only for the RRSP-HBP contribution's derived
+   * default (resolveInputs), which applies it to the income the page has; the reader's own limit
+   * is on their notice of assessment.
+   */
+  rrspRoomRate: number;
   gstFthb: { rate: number; fullTo: number; zeroAt: number; cap: number };
   hba: number;
   /**

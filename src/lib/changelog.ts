@@ -82,8 +82,14 @@ export const RELEASES: readonly Release[] = [
       { key: "closingWording", href: { pathname: "/closing-costs" } },
       { key: "dpNotEntered", href: { pathname: "/down-payment", hash: "waterfall" } },
       { key: "scenariosYourColumn", href: { pathname: "/scenarios", hash: "monthly" } },
-      { key: "usWording", href: { pathname: "/closing-costs" } },
     ],
+  },
+  {
+    id: "2026-09-28-us-closing",
+    date: "2026-09-28",
+    countries: ["us"],
+    summary: "sumUsClosing",
+    items: [{ key: "usWording", href: { pathname: "/closing-costs" } }],
   },
   {
     id: "2026-09-28-phones-and-fields",
@@ -119,9 +125,17 @@ export const RELEASES: readonly Release[] = [
     summary: "sumUsLaunch",
     items: [
       { key: "usMarket", href: { pathname: "/affordability" } },
-      { key: "countryAddresses" },
       { key: "legalPages", href: { pathname: "/privacy" } },
     ],
+  },
+  {
+    // Canada only: the /ca/ prefix was a migration Canadian readers lived through; US pages
+    // launched under /us/ and never had the old addresses.
+    id: "2026-09-05-addresses",
+    date: "2026-09-05",
+    countries: ["ca"],
+    summary: "sumAddresses",
+    items: [{ key: "countryAddresses" }],
   },
   {
     id: "2026-09-05-hbp-rule",

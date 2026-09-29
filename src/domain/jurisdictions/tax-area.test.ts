@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Jurisdiction } from "../types";
-import { propertyTaxAnnual, propertyTaxCredit } from "../engine";
+import { propertyTaxAnnual, propertyTaxCredit, solveWithBillCredit } from "../engine";
 import { winnipeg } from "./winnipeg";
 import { withTaxArea } from "./index";
 
@@ -62,8 +62,22 @@ describe("a capped bill credit", () => {
     expect(propertyTaxAnnual(b, 200_000)).toBeCloseTo(200_000 * 0.015 - 400, 6);
   });
 
-  it("enters the closed-form ceiling solve at its full amount", () => {
-    expect(propertyTaxCredit(base)).toBe(1000);
+  it("is not a constant homestead credit", () => {
+    // It is capped per price, so the ceiling solves invert it exactly (solveWithBillCredit)
+    // rather than adding it back as a constant.
+    expect(propertyTaxCredit(base)).toBe(0);
+  });
+
+  it("is inverted exactly on both sides of the cap", () => {
+    const denom = 0.006 + 0.01 / 12; // payment per $ + full-rate tax per $, monthly
+    // The cap binds (price × 0.004 >= 1,000 above $250,000): the solved price reproduces the budget.
+    for (const budget of [3000, 1200, 400]) {
+      const p = solveWithBillCredit(base, budget, denom);
+      const cost = p * 0.006 + propertyTaxAnnual(base, p) / 12;
+      expect(cost, `budget ${budget}`).toBeCloseTo(budget, 6);
+    }
+    expect(solveWithBillCredit(base, 0, denom)).toBe(0);
+    expect(solveWithBillCredit(base, -5, denom)).toBe(0);
   });
 
   it("never makes a tax bill negative", () => {
