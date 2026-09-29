@@ -30,6 +30,15 @@ export const DEFAULT_UTILITIES = 300;
 export const DEFAULT_RENT = 1500;
 
 /**
+ * The fraction of earned income that becomes new RRSP room each year (before the annual
+ * dollar limit). It stands behind the RRSP-HBP contribution's derived default only, and
+ * is deliberately NOT quoted as a fact anywhere: no `provenance` entry in src/domain
+ * covers it, so under the FAQ rule it may not travel. The default is a starting point the
+ * reader overwrites, not a recommendation about how much to contribute.
+ */
+export const RRSP_ROOM_RATE = 0.18;
+
+/**
  * The benchmark price standing behind an untouched price field, or `null` where the
  * jurisdiction has none published.
  *
@@ -238,6 +247,10 @@ export function resolveInputs(
   // comparable published figure and the page must ask rather than answer from the
   // wrong series. See `rentComparable`.
   const comparable = rentComparable(j, stored.ptype);
+  const taxIncome = stored.taxIncome ?? income1 + income2 + otherIncome;
+  const hbpContribution =
+    stored.hbpContribution ??
+    (F.country === "ca" ? Math.round(Math.min(F.rrspCap, RRSP_ROOM_RATE * taxIncome)) : 0);
   const publishedRent =
     j.rent != null && j.rent > 0 && comparable ? j.rent : null;
 
@@ -282,17 +295,20 @@ export function resolveInputs(
     nonregGain: stored.nonregGain ?? 0,
     // The household income already given, rather than a second question asking
     // for the same fact in different words.
-    taxIncome: stored.taxIncome ?? income1 + income2 + otherIncome,
+    taxIncome,
 
-    // Contributing the federal maximum is the only non-arbitrary starting point:
-    // any smaller figure would be a recommendation about how much to put in. The HBP
-    // has no US analogue — RRSP-HBP is a Canada-only route (US-market spec) — so a
-    // US call has no honest maximum to fall back to; these two fields simply go
-    // unread on that branch rather than crash resolving inputs for every OTHER page,
-    // every one of which calls this same function.
-    hbpContribution: stored.hbpContribution ?? (F.country === "ca" ? F.hbp.max : 0),
-    hbpWithdraw:
-      stored.hbpWithdraw ?? stored.hbpContribution ?? (F.country === "ca" ? F.hbp.max : 0),
+    // The starting point is what one year of room can plausibly be: the lower of the
+    // annual RRSP dollar limit and 18% of the income the page itself uses. It used to be
+    // the HBP maximum ($60,000), which exceeds the annual dollar limit the same panel
+    // prints — a contribution almost no reader has room for. Still not a recommendation:
+    // it is a placeholder the reader overwrites, and null keeps meaning "use the default".
+    // The HBP has no US analogue — RRSP-HBP is a Canada-only route (US-market spec) — so a
+    // US call has no honest figure to fall back to; these two fields simply go unread on
+    // that branch rather than crash resolving inputs for every OTHER page.
+    hbpContribution,
+    // Withdrawing what was contributed is the only default that cannot exceed it
+    // (hbpPlay clamps the withdrawal to the contribution and to the HBP maximum anyway).
+    hbpWithdraw: stored.hbpWithdraw ?? hbpContribution,
 
     termYears: stored.termYears,
     renewalRate: stored.renewalRate,

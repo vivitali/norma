@@ -652,6 +652,7 @@
     "calcContribution": "Cotisation REER",
     "calcBandTop": "Revenu avant la déduction",
     "calcBandBottom": "Revenu après",
+    "calcMarginalNote": "Le remboursement est calculé tranche par tranche à partir des taux fédéral et provincial combinés. Les crédits et prestations qui varient avec le revenu ne sont pas modélisés : considérez-le comme une estimation.",
     "calcRefund": "Impôt sur cette tranche",
     "calcRepay": "À rembourser chaque année",
     "calcRepayYears": "Années de remboursement"

@@ -352,6 +352,7 @@ export default function RrspHbpPage() {
           t("calcLine"),
           "",
           t("calcWhy"),
+          <>
           <CalcTrace
             caption={t("calcTraceCaption")}
             lines={[
@@ -376,7 +377,10 @@ export default function RrspHbpPage() {
               { label: t("calcRepayYears"), value: String(caRules.hbp.repayYears), op: "divide" },
               { label: t("calcRepay"), value: fmt(play.repayAnnual), op: "equals" },
             ]}
-          />,
+          />
+          {/* One flat marginal rate prices the whole deduction; say so where the maths is shown. */}
+          <NoteLine>{t("calcMarginalNote")}</NoteLine>
+          </>,
         )}
       </div>
 

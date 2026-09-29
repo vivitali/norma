@@ -122,9 +122,9 @@ describe("RRSP → HBP — the clamp is explained, not printed as $0", () => {
 
 describe("RRSP → HBP — the room the reader may not have", () => {
   it("shows the RRSP dollar limit beside the HBP maximum", async () => {
-    // The contribution field defaults to the $60,000 HBP maximum, which is 78%
-    // above the most anyone's room can grow in a year — a figure the app already
-    // held at conf `high` and no screen had ever displayed.
+    // The contribution default is now min(annual limit, 18% of income), so it never
+    // exceeds the annual limit printed here; the limit was once contradicted by a
+    // $60,000 default, 78% above what anyone's room can grow in a year.
     const user = userEvent.setup();
     renderPage();
     await open(user, /The refund/);
@@ -187,5 +187,23 @@ describe("RRSP → HBP — French", () => {
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(document.body.textContent).not.toMatch(/RrspHbp\./);
     expect(screen.getAllByText(/Régime d’accession|RAP/).length).toBeGreaterThan(0);
+  });
+});
+
+describe("RRSP → HBP — the default contribution and the refund's method", () => {
+  it("opens on a contribution below the annual limit, not the $60,000 HBP maximum", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The refund/);
+    const field = document.getElementById("hbpContribution") as HTMLInputElement;
+    expect(field.value).toBe("");
+    expect(field.placeholder.replace(/[^\d]/g, "")).toBe("13500");
+  });
+
+  it("says in the calculation that the refund is an estimate from combined rates", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    expect(screen.getByText(/worked out bracket by bracket/)).toBeInTheDocument();
   });
 });

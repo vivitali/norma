@@ -16,6 +16,27 @@ const winnipeg = getJurisdiction("winnipeg")!;
 const vancouver = getJurisdiction("vancouver")!;
 const untouched = TOOL_DEFAULTS;
 
+describe("resolveInputs — the RRSP-HBP contribution default", () => {
+  it("is the lower of the annual RRSP limit and 18% of the income the page uses", () => {
+    expect(resolveInputs(untouched, winnipeg, ca).hbpContribution).toBe(13500);
+    const rich = { ...untouched, income1: 400000 };
+    expect(resolveInputs(rich, winnipeg, ca).hbpContribution).toBe(ca.rrspCap);
+    // Follows the taxable-income field, which is what the page prints and uses.
+    expect(resolveInputs({ ...untouched, taxIncome: 50000 }, winnipeg, ca).hbpContribution).toBe(9000);
+  });
+
+  it("never exceeds the annual limit the same panel prints, and the withdrawal follows it", () => {
+    const r = resolveInputs(untouched, winnipeg, ca);
+    expect(r.hbpContribution).toBeLessThanOrEqual(ca.rrspCap);
+    expect(r.hbpWithdraw).toBe(r.hbpContribution);
+    expect(resolveInputs({ ...untouched, hbpContribution: 20000 }, winnipeg, ca).hbpWithdraw).toBe(20000);
+  });
+
+  it("keeps null meaning 'use the default' and lets the reader overwrite it", () => {
+    expect(resolveInputs({ ...untouched, hbpContribution: 40000 }, winnipeg, ca).hbpContribution).toBe(40000);
+  });
+});
+
 describe("resolveInputs", () => {
   it("derives price from the city benchmark for the chosen property type", () => {
     // A Winnipeg user and a Vancouver user must not both start at $450,000.

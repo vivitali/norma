@@ -652,6 +652,7 @@
     "calcContribution": "Aportación al RRSP",
     "calcBandTop": "Ingreso antes de la deducción",
     "calcBandBottom": "Ingreso después",
+    "calcMarginalNote": "El reembolso se calcula tramo por tramo con las tasas federal y provincial combinadas. No se modelan los créditos ni los beneficios que cambian con el ingreso, así que tómelo como una estimación.",
     "calcRefund": "Impuesto sobre ese tramo",
     "calcRepay": "A devolver cada año",
     "calcRepayYears": "Años para devolverlo"

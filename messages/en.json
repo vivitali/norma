@@ -652,6 +652,7 @@
     "calcContribution": "RRSP contribution",
     "calcBandTop": "Income before the deduction",
     "calcBandBottom": "Income after it",
+    "calcMarginalNote": "The refund is worked out bracket by bracket from combined federal and provincial rates. Credits and benefits that change with income are not modelled, so treat it as an estimate.",
     "calcRefund": "Tax on that band",
     "calcRepay": "Repayable each year",
     "calcRepayYears": "Years to repay over"
