@@ -32,6 +32,19 @@ Consequences that are load-bearing, not stylistic:
   disclosure type. A section *is* the disclosure.
 - **Inputs hide nothing behind a second gesture.** The advanced fields sit under a
   quiet label in the same column.
+- **A first visit opens no section.** The section whose check produced the verdict opens on
+  arrival only once the reader has given something (`isPersonalised`); before that, the answer
+  head and its stats carry the verdict. A red derivation open on arrival, built on inputs the
+  reader never gave, was the first thing every new visitor met — on a phone it also pushed the
+  inputs ~1,500px down. A hash arrival still opens its section.
+- **The way back to the inputs is part of the answer.** `AnswerHead`'s "Adjust your numbers"
+  jumps to the page's inputs block (`id="adjust"`) and focuses its first field, and the tag
+  under the answer names the assumption the figure rests on and jumps to the field that
+  replaces it. Neither is a disclosure: they reveal nothing, they move focus.
+- **Where inputs live.** A field the page's own question is about lives IN PLACE, where the
+  sentence that needs it is (§5.3's `InlineAsk`); the shared purchase inputs live together in
+  "Adjust your numbers" at the end of the page, reached by the jump above. A page does not grow
+  a second copy of a field it already asks for in place.
 
 ## 2. Colour
 
@@ -93,15 +106,25 @@ the last thing a headline figure can afford to do.
 | Hero stat value / gauge value | 22px / 17px | 600 | −0.02em |
 | Panel row | 13.5px | 400 / 600 strong | — |
 | Math row | 13px | 400 / 600 strong | — |
-| Micro (limit notes, stat labels, legends) | 11.5–12.5px | 400 | `.micro` |
-| Fine print (footnotes, unit suffixes, chart legends) | 10.5px | 400 | — |
+| Micro (limit notes, stat labels, legends, footnotes, unit suffixes, chart labels) | 11.5–12.5px | 400 | `.micro` |
 | Body base | 13.5px | 400 | — |
 
-The fine-print tier is documented rather than corrected: it is in use at twelve call sites
-across six files, which makes it a real tier the spec had simply never recorded. Ten carry
-`--ink3`, which clears 4.5:1 on every surface in both themes; two carry `--caution`, and
-one inherits its colour from the row it sits in. If the tier should not exist, the fix is to
-raise those call sites to 11.5px — not to leave the spec and the code disagreeing.
+**11.5px is the floor for text that carries meaning.** A 10.5px "fine print" tier existed and
+was retired in the second UX pass (PR #54): two independent reviews found dates, the selected
+column's label, chart annotations and field hints at 10.5px — sizes readers need, not
+decoration — and this document's own earlier note said the fix, if the tier should not exist,
+was to raise the call sites. The eyebrow stays 11px because it is uppercase, tracked and
+semibold, which reads larger than its size.
+
+**Cyrillic has its own face: Golos Text.** Archivo ships no Cyrillic, so Ukrainian used to fall
+back to Arial mid-sentence while its digits stayed in Archivo. Golos Text (Cyrillic subset, loaded
+through `next/font`, not preloaded) sits after Archivo in `--font-sans`/`--font-heading`: Latin and
+numerals stay Archivo, and unicode-range subsetting means only pages with Cyrillic download it. The
+stack names the FAMILIES first (`"Archivo", "Golos Text", var(--font-archivo, system-ui), …`)
+because next/font appends a local Arial fallback face to each variable, and that face would catch
+Cyrillic before Golos ever did; the production build emits the plain family names (checked in
+`.next/static/**/*.css`). The `var(…, system-ui)` fallbacks keep the declaration valid on the global
+404, which defines neither variable.
 
 **Form controls have a 16px floor** (`--control-font-size`), applied through `.control`.
 Below 16px iOS Safari zooms the viewport on focus, and this page has twelve fields. The
@@ -292,11 +315,24 @@ externally (see PRODUCT.md).
 - Bars and gauges are `role="img"` with labels carrying the value and the limit.
 - A hash arrival moves focus to the section it names, not only the scroll position.
 
+## 7.1 Tables and charts on a phone
+
+- **Decisive columns first.** A table that scrolls on a phone leads with the columns that
+  answer the question (the winner, the advantage, the balance) and drops columns that are
+  constant down the table; everything else is reachable by scrolling.
+- **Scrollable means keyboard-reachable.** Every horizontally scrolling table wrapper is a
+  `role="region"` with `tabIndex={0}` and a label naming the table.
+- **Charts carry quiet axes** — a few gridlines and ticks in `--ink3` at the micro size — and
+  label their markers directly. Markers ("pulls ahead", "renewal", "paid off") are ink dash
+  styles, never state colours: §2 reserves pass/caution/blocked for state.
+
 ## 8. What this system will not do
 
 - **No filled semantic panels.** State is a dot and a figure colour.
 - **No second accent.** Indigo carries every non-state emphasis.
-- **No elevation.** If two things need separating, use a hairline or space.
+- **No elevation.** If two things need separating, use a hairline or space. The one exception
+  is a popover that floats OVER content — a Select's list — which keeps a light shadow and ring,
+  because a hairline cannot separate a surface from the one beneath it.
 - **No mono numerals.** Archivo tabular, hero to table row.
 - **No second disclosure mechanism.** If something needs to be reachable, it becomes a
   section or it lives inside one.
