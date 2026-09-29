@@ -12,7 +12,7 @@ web
 
 The situation is mid-decision, not pre-decision: a person usually arrives with a listing price in mind and a lender's pre-approval figure that feels too high to live on. The job is to find out **what they can genuinely carry**, as distinct from what a bank will lend them.
 
-First-time buyers are the most common case and the product is built to serve them well — `ftb` defaults true, first-time-buyer rebates are modelled in all 14 jurisdictions, and an RRSP-HBP tool is planned — but the product does **not** assume first purchase or inexperience. Move-up buyers, refinancers and renters get the same answers from the same engine.
+First-time buyers are the most common case and the product is built to serve them well — `ftb` defaults true, first-time-buyer rebates are modelled in every Canadian jurisdiction that offers one, and the RRSP-HBP tool models the Home Buyers' Plan — but the product does **not** assume first purchase or inexperience. Move-up buyers, refinancers and renters get the same answers from the same engine.
 
 ## Product Purpose
 
@@ -30,20 +30,20 @@ The name states the method: the product does the actual arithmetic — net incom
 
 ## Operating Context
 
-- **14 jurisdictions**, each with its own land transfer tax structure, rebates, professional-fee conventions and market benchmarks. Ontario stacks a municipal tax on the provincial one; Alberta has no transfer tax at all and charges land-titles registration instead; Manitoba has the tax but no first-time-buyer rebate. These are not variations on a template.
-- **English and French**, locale-prefixed (`/en`, `/fr`), with French route slugs planned so a francophone is not served an English URL. Quebec is a serious market and organic search is the realistic acquisition channel.
+- **Two markets.** Canada: **14 jurisdictions**, each with its own land transfer tax structure, rebates, professional-fee conventions and market benchmarks. Ontario stacks a municipal tax on the provincial one; Alberta has no transfer tax at all and charges land-titles registration instead; Manitoba has the tax but no first-time-buyer rebate; Winnipeg's property tax depends on the reader's school division and nets Manitoba's Homeowners Affordability Tax Credit. The US: Houston and Austin (Texas) so far, added one metro at a time through the `add-state` skill. These are not variations on a template.
+- **Four languages.** Canada ships English, French, Ukrainian and Spanish under `/ca/<language>`; the US ships English and Spanish under `/us/<language>`. French and Spanish have their own route slugs so a reader is not served an English URL; Ukrainian deliberately uses the English slugs (CLAUDE.md). Quebec is a serious market and organic search is the realistic acquisition channel.
 - **No account, no sign-in, no server.** Inputs live in one `localStorage` blob and never leave the device.
 - Served as **static assets from Cloudflare Workers**; every page route is prerendered, which is a cost constraint as much as a performance one.
-- **Nine planned surfaces.** Built: Home, Affordability, `/sources`. Planned: Closing Costs, Down Payment, RRSP-HBP, Amortization, Rent vs Buy, Scenarios. Each tool stands alone — nothing is gated behind another.
+- **Every planned surface is built.** Home, Affordability, Closing Costs, Down Payment, RRSP-HBP (Canada only), Amortization, Rent vs Buy, Scenarios and Sources, plus Privacy, Terms and a Changelog. Each tool stands alone — nothing is gated behind another.
 
 ## Capabilities and Constraints
 
 - `src/domain/` is the single source of truth for every number. No calculation in a component, no province rule inline.
 - Every page route must stay prerendered; a build-time guard enforces it.
 - All user-facing copy goes through `messages/*.json`. No hardcoded strings.
-- **Every jurisdiction figure is currently an unverified placeholder** carried over from the source prototype, not sourced from 2026 government data. The in-app disclosure says so on every screen that renders one, and no copy anywhere may imply otherwise. Verification is real, un-started work.
+- **Every jurisdiction figure carries its provenance**: the document it was checked against, that document's date, and a confidence grade (`high`, `medium`, `low`, `assumption`, `none` — see CLAUDE.md for why `assumption` and `none` are different in kind). `/sources` renders the whole inventory. Some figures remain assumptions nobody publishes (most professional fees), and some are deliberately absent because nobody publishes them (territorial prices); the app says so in place and never computes around an unpublished figure. Re-verification is ongoing work — Winnipeg was re-checked end to end on 2026-09-28.
 - **Monetization is undecided.** Referral and lead-generation revenue are *not* ruled out — the user declined to make that exclusion binding. Do not bake "always free" into copy, architecture or feature gating, and do not assume donations are the model.
-- **Open tension worth naming:** users are buyers *and renters equally*, but Rent vs Buy is currently sequenced late, after five buying tools. That ordering was set before this was confirmed and should be revisited.
+- **Buyers and renters are equal users.** Rent vs Buy is built and is a front door of its own (Home's second call to action and the nav's `afford` group), not a side trip inside a buying funnel.
 
 ## Brand Commitments
 
@@ -61,8 +61,8 @@ The name states the method: the product does the actual arithmetic — net incom
 ## Evidence on Hand
 
 - `design-reference/` — a working prototype from a prior design session: a pure calculation engine, a 14-jurisdiction rules dataset, and 8 designed screens in 4 languages. Reference material to port from; not runnable React, not a component library, and never a design-system source.
-- `src/domain/` — the ported engine, federal rules and all 14 jurisdictions. **Unverified placeholder figures.**
-- **No users, no traffic, no testimonials, no press, no benchmarks, no revenue.** Nothing has been published. Future work must not fabricate any of these, and must not imply the product is in use.
+- `src/domain/` — the engine, the per-country rules (`rules/ca.ts`, `rules/us.ts`) and every jurisdiction, each figure with dated provenance.
+- **The site is public at affordmath.com.** There are no testimonials, press, benchmarks or revenue on record, and no usage figures in this repo. Future work must not fabricate any of these, and must not imply adoption it cannot show.
 
 ## Product Principles
 
