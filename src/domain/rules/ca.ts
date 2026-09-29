@@ -85,15 +85,29 @@ export const ca: CaRules = {
   rrspRoomRate: 0.18,
   capGainsInclusion: 0.5,
   gains: { kind: "inclusion", rate: 0.5 },
+  // Combined federal + provincial MARGINAL rates, 2026, per [upper limit | null, rate] row —
+  // including the basic personal amounts (the 0% band at the bottom, the federal BPA phase-down
+  // between $181,440 and $258,482) and each province's low-income reductions and surtaxes, which is
+  // why some tables FALL at the end of a claw-back band. Excludes the Ontario Health Premium,
+  // payroll contributions and every credit other than the BPAs. Source and cross-check: see the
+  // `marginal` provenance entry and docs/superpowers/research/2026-09-28-ca-combined-marginal-rates.md.
   marginal: {
-    MB: [[47564, 0.248], [58522, 0.2675], [101200, 0.3325], [117000, 0.379], [181400, 0.434], [258500, 0.464], [null, 0.504]],
-    ON: [[52886, 0.2005], [58522, 0.2415], [105775, 0.2965], [117000, 0.3389], [181400, 0.4341], [253414, 0.4841], [null, 0.5353]],
-    BC: [[49279, 0.2006], [58522, 0.227], [98560, 0.287], [113158, 0.317], [181400, 0.407], [258500, 0.457], [null, 0.535]],
-    QC: [[53255, 0.2653], [58522, 0.3153], [106495, 0.3612], [117000, 0.4112], [129590, 0.4571], [181400, 0.4746], [null, 0.5331]],
-    AB: [[60000, 0.24], [117000, 0.305], [181400, 0.36], [241974, 0.42], [362961, 0.44], [null, 0.48]],
-    SK: [[54000, 0.245], [58522, 0.26], [117000, 0.335], [181400, 0.43], [258500, 0.46], [null, 0.475]],
-    NS: [[32074, 0.2379], [58522, 0.3], [64181, 0.345], [117000, 0.43], [181400, 0.47], [null, 0.54]],
-    CA: [[55000, 0.245], [58522, 0.27], [110000, 0.335], [117000, 0.38], [181400, 0.435], [258500, 0.465], [null, 0.51]],
+    AB: [[16452, 0], [22769, 0.14], [58523, 0.22], [61200, 0.285], [117045, 0.305], [154259, 0.36], [181440, 0.38], [185111, 0.4129], [246813, 0.4229], [258482, 0.4329], [370220, 0.47], [null, 0.48]],
+    BC: [[16452, 0], [25537, 0.14], [25570, 0.196], [44952, 0.2316], [50363, 0.196], [58523, 0.217], [100728, 0.282], [115648, 0.31], [117045, 0.3279], [140430, 0.3829], [181440, 0.407], [190405, 0.4399], [258482, 0.4609], [265545, 0.498], [null, 0.535]],
+    MB: [[15780, 0], [16452, 0.108], [47000, 0.248], [58523, 0.2675], [100000, 0.3325], [117045, 0.379], [181440, 0.434], [200000, 0.4669], [258482, 0.4755], [400000, 0.5125], [null, 0.504]],
+    NB: [[16452, 0], [22358, 0.14], [49592, 0.264], [52333, 0.234], [58523, 0.28], [104666, 0.345], [117045, 0.365], [181440, 0.42], [193861, 0.4529], [258482, 0.4879], [null, 0.525]],
+    NL: [[16452, 0], [22772, 0.14], [24191, 0.227], [29454, 0.387], [44678, 0.227], [58523, 0.285], [89354, 0.35], [117045, 0.363], [159528, 0.418], [181440, 0.438], [223340, 0.4709], [258482, 0.4909], [285319, 0.528], [570638, 0.538], [1141275, 0.543], [null, 0.548]],
+    NS: [[15220, 0], [16452, 0.1379], [21000, 0.2779], [30995, 0.2279], [58523, 0.2895], [61991, 0.3545], [97417, 0.3717], [117045, 0.38], [157124, 0.435], [181440, 0.47], [258482, 0.5029], [null, 0.54]],
+    NT: [[16452, 0], [18198, 0.14], [53003, 0.199], [58523, 0.226], [106009, 0.291], [117045, 0.327], [172346, 0.382], [181440, 0.4005], [258482, 0.4334], [null, 0.4705]],
+    NU: [[16452, 0], [19659, 0.14], [55801, 0.18], [58523, 0.21], [111602, 0.275], [117045, 0.295], [181439, 0.35], [258482, 0.4079], [null, 0.445]],
+    ON: [[16452, 0], [18930, 0.14], [24870, 0.241], [53891, 0.1905], [58523, 0.2315], [94901, 0.2965], [107785, 0.3148], [111810, 0.3389], [117045, 0.3791], [150000, 0.4341], [181440, 0.4497], [220000, 0.4826], [258482, 0.4982], [null, 0.5353]],
+    PE: [[16452, 0], [18684, 0.14], [23000, 0.235], [30000, 0.285], [33928, 0.235], [58523, 0.2747], [65820, 0.3397], [106890, 0.371], [117045, 0.3812], [142250, 0.4362], [181440, 0.45], [200000, 0.4829], [258482, 0.4929], [null, 0.53]],
+    QC: [[16452, 0], [18952, 0.1169], [54345, 0.2569], [58523, 0.3069], [108680, 0.3612], [117045, 0.4112], [132245, 0.4571], [181440, 0.4746], [258482, 0.5021], [null, 0.5331]],
+    SK: [[16452, 0], [20381, 0.14], [54532, 0.245], [58523, 0.265], [117045, 0.33], [155805, 0.385], [181440, 0.405], [258482, 0.4379], [null, 0.475]],
+    YT: [[16452, 0], [58523, 0.204], [117045, 0.295], [181440, 0.369], [258482, 0.4223], [500000, 0.458], [null, 0.48]],
+    // Federal only — every jurisdiction above has its own table, so this is reached only for a
+    // region code that has none. Never an invented "average province".
+    CA: [[16452, 0], [58523, 0.14], [117045, 0.205], [181440, 0.26], [258482, 0.2929], [null, 0.33]],
   },
   marginalFallbackKey: "CA",
   sellingCost: 0.05,
@@ -265,8 +279,11 @@ export const ca: CaRules = {
       note: "A default, no longer read by any screen: the contract rate derives from dpPct against rates.insured / rates.uninsured. Kept so the field is not silently authoritative. It sits between the best insured and best uninsured 5-year fixed, so it models a broker-shopped borrower rather than a branch customer.",
     },
     marginal: {
-      conf: "assumption",
-      note: "Every bracket and combined rate here is an unverified prototype carry-over. Out of scope for the 2026-08-24 pass, which covered federal parameters only; the tables need their own per-jurisdiction sourcing against CRA and each provincial finance authority before marginalRate() is ported. Recorded as an assumption rather than `none` because the field holds a value; the gap is tracked on #3.",
+      conf: "medium",
+      src: "EY, Combined federal and provincial personal income tax rates — 2026 (one table per jurisdiction; rates reflect budget proposals and news releases to 2026-06-15), statutory rates cross-checked against CRA's 2026 tax rates and T4032 (Manitoba edition)",
+      asOf: "2026-06-15",
+      url: "https://www.ey.com/content/dam/ey-unified-site/ey-com/en-ca/services/tax/tax-calculators/2026/ey-tax-rates-manitoba-2026-06-15.pdf",
+      note: "Re-sourced 2026-09-28, replacing unverified prototype tables that had no 0% band, stale or invented thresholds (Manitoba's 47,564/101,200 are 47,000/100,000 — indexation frozen since 2025) and a made-up fallback read by six provinces and territories. Every row reproduces from CRA's statutory rates by shown arithmetic (federal 14/20.5/26/29/33% + provincial, +0.29 points for the federal BPA phase-down between $181,440 and $258,482). Medium, not high, because the low-income-reduction claw-backs (ON, BC, NB, NL, NS, PE), Ontario's surtax and Manitoba's BPA claw-back ($200,000–$400,000) come from EY's notes only. Excludes the Ontario Health Premium, payroll contributions and every credit except the basic personal amounts. Worked arithmetic per row: docs/superpowers/research/2026-09-28-ca-combined-marginal-rates.md.",
     },
   },
 };
