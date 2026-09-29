@@ -607,22 +607,22 @@ export default function AffordabilityPage() {
                 Houston-specific, not US-wide: the Tax Code s.23.23 homestead appraisal cap
                 (houston.ts's own `propTax.exemptions` provenance note) does not bind in the
                 purchase year, when the appraised value IS the purchase price — it only limits
-                growth from the next reassessment onward. Gated on the jurisdiction rather than
-                `rules.country === "us"` because this is a Texas statute, not a US-market fact;
-                Houston is the only US jurisdiction today, so the two happen to coincide, but a
-                second US jurisdiction must not inherit this note for free.
+                growth from the next reassessment onward. Gated on the STATE rather than
+                `rules.country === "us"`: this is a Texas statute (Tax Code §23.23), true for
+                Houston and Austin alike and for no Washington record — Seattle has no homestead
+                exemption at all.
               */}
-              {jurisdiction.id === "houston" ? (
+              {jurisdiction.country === "us" && jurisdiction.state === "TX" ? (
                 <NoteLine tight>{t("propTaxCapNote")}</NoteLine>
               ) : null}
               <PanelRow label={t("insuranceMonthly")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
               {/*
-                Same scoping note as propTaxCapNote above: wind/hail exposure is a Texas fact,
-                not a US one. `fees.insurance` is `medium` confidence (houston.ts) — a statewide
-                TDI average, not Harris-County-specific — so this says shop around rather than
-                quoting the number the row above it already shows.
+                Same scoping as propTaxCapNote above: wind/hail exposure is a Texas fact, not a US
+                one, and both Texas records (houston.ts, austin.ts) carry the SAME statewide TDI
+                average, which is what "This figure is a statewide average" claims. Seattle's
+                insurance figure is a different, Washington-level assumption, so it gets no note.
               */}
-              {jurisdiction.id === "houston" ? (
+              {jurisdiction.country === "us" && jurisdiction.state === "TX" ? (
                 <NoteLine tight>{t("insuranceHighNote")}</NoteLine>
               ) : null}
               {/*

@@ -927,4 +927,15 @@ describe("Affordability — a default budget is never presented as the reader's 
     renderPage("en-US");
     expect(document.body.textContent).not.toMatch(/Texas|homestead exemption/);
   });
+
+  it.each(["houston", "austin"])("shows the Texas statewide notes on %s, a Texas record", async (jurId) => {
+    // Both notes are STATE facts (the §23.23 homestead cap; the TDI statewide insurance average
+    // both Texas records carry), so every Texas metro gets them, not Houston alone.
+    const user = userEvent.setup();
+    seed({ jurId, income1: 75000 });
+    renderPage("en-US");
+    await user.click(screen.getByRole("button", { name: /Comfort/ }));
+    expect(screen.getByText(/Texas caps how much a home's appraised value can rise/)).toBeInTheDocument();
+    expect(screen.getByText(/Texas homeowners insurance tends to run high/)).toBeInTheDocument();
+  });
 });
