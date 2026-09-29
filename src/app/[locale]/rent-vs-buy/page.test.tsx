@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/lib/locales";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
+import { getJurisdiction } from "@/domain/jurisdictions";
 import RentVsBuyPage from "./page";
 import { FAVOURS_BUYING, FAVOURS_RENTING } from "./omissions";
 
@@ -397,25 +398,38 @@ describe("Rent vs buy — breaking the mortgage early", () => {
 
 
 describe("Rent vs buy — an apartment rent cannot price a house", () => {
-  it("asks for a rent instead of weighing a house against a two-bedroom apartment", () => {
-    // The default property type. Toronto publishes a rent — $2,045, CMHC's
-    // two-bedroom purpose-built apartment average — and prices a $1,455,200
-    // detached house beside it. Running the comparison across that gap produced a
-    // verdict about two different lives, and it was the page's DEFAULT state.
-    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "house" }));
+  // PINNED ASSERTION CHANGED (decision 4): a house at an apartment-basis published rent used to
+  // open on an ASK with no verdict. It now answers on arrival, using the published apartment rent
+  // as a clearly LABELLED default, and asks for the reader's own rent in place. The rule it
+  // preserves is unchanged and is asserted below for the places nobody publishes a rent.
+  it("answers a house on arrival with the published apartment rent, labelled as such", () => {
+    // Toronto publishes a rent — CMHC's two-bedroom apartment average — and prices a
+    // detached house beside it.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "toronto", ptype: "house" }));
     renderPage();
-    expect(screen.getByText(/What would a comparable home rent for\?/)).toBeInTheDocument();
-    expect(screen.queryByText(/wins for your horizon/)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+    expect(screen.getByText("Uses CMHC’s apartment rent")).toBeInTheDocument();
+    expect(screen.getByText(/CMHC’s average two-bedroom apartment rent for Toronto/)).toBeInTheDocument();
+    expect(screen.getByText(/not what a house like the one above would rent for/)).toBeInTheDocument();
   });
 
-  it("says a rent IS published and what it measures, rather than that none exists", () => {
-    // Two different sentences. "Nobody publishes a rent for here" is true of the
-    // territories; here one is published and measures a smaller home, which is what
-    // tells the reader the figure they type has to be for a comparable one.
-    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "house" }));
+  it("keeps asking for the reader's own rent in place, and typing replaces the default", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "toronto", ptype: "house" }));
     renderPage();
-    expect(screen.getByText(/two-bedroom apartment average/)).toBeInTheDocument();
-    expect(screen.queryByText(/No published rent for/)).not.toBeInTheDocument();
+    const inline = document.getElementById("rent-inline") as HTMLInputElement;
+    expect(inline.placeholder.replace(/[^\d]/g, "")).toBe(String(getJurisdiction("toronto")!.rent));
+    await user.type(inline, "4200");
+    await user.tab();
+    expect(screen.queryByText("Uses CMHC’s apartment rent")).not.toBeInTheDocument();
+    expect(document.getElementById("rent-inline")).toBeNull();
+  });
+
+  it("does not offer a labelled default where nobody publishes a rent", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "yt", ptype: "condo" }));
+    renderPage();
+    expect(screen.queryByText("Uses CMHC’s apartment rent")).not.toBeInTheDocument();
+    expect(document.getElementById("rent-inline")).toBeNull();
   });
 
   it("answers again as soon as the reader gives a rent of their own", () => {

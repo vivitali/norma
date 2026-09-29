@@ -148,7 +148,8 @@ export interface ResolvedInputs {
   rent: number;
   /**
    * Whether the rent being compared against is a real figure — the reader's own,
-   * or one this jurisdiction's record publishes. A stored **0** is not a rent,
+   * or one this jurisdiction's record publishes (of ANY dwelling basis: see
+   * `rentBasisMismatch`, which says when it is the wrong dwelling and must be labelled). A stored **0** is not a rent,
    * for the same reason a stored 0 is not a price.
    *
    * False for the six records that carry no rent. `rent` then falls back to
@@ -158,9 +159,11 @@ export interface ResolvedInputs {
    */
   rentKnown: boolean;
   /**
-   * True when a rent IS published here but measures a different dwelling than the
-   * one being priced — an apartment against a house. Distinct from `!rentKnown`
-   * alone, which is also true where nobody publishes anything.
+   * True when the rent in use is the one PUBLISHED here (the reader typed none) and it
+   * measures a different dwelling than the one being priced — an apartment against a
+   * house. `rentKnown` is true then: the page answers with it, labelled as an apartment
+   * rent, and asks for the reader's own in place. Nothing published at all is the
+   * `!rentKnown` case, and that still asks and does not answer.
    */
   rentBasisMismatch: boolean;
   /** Fraction, not a percentage — the engine takes fractions. */
@@ -241,18 +244,20 @@ export function resolveInputs(
   // same rungs a blank field does: the figure published for here, then DEFAULT_RENT, which
   // keeps the arithmetic defined while `rentKnown` stops the page printing anything from it.
   const storedRent = stored.rent !== null && stored.rent > 0 ? stored.rent : null;
-  // A published rent only counts when it describes the dwelling being priced. Every
-  // rent in the dataset is a CMHC two-bedroom APARTMENT average and `bench.house`
-  // beside it is a detached house, so for a house or a new build there is no
-  // comparable published figure and the page must ask rather than answer from the
-  // wrong series. See `rentComparable`.
+  // A published rent is a real figure whatever it measures, so it is always a usable
+  // DEFAULT — but it only describes the dwelling being priced when `rentComparable`. Every
+  // rent in the dataset is a two-bedroom APARTMENT average and `bench.house` beside it is a
+  // detached house, so for a house or a new build the figure is answered from and LABELLED as
+  // the wrong series (`rentBasisMismatch`), and the page asks for the reader's own rent in
+  // place beside it. What may never happen is computing around a figure nobody publishes:
+  // where `j.rent` is null there is no published rent, `rentKnown` stays false and the page
+  // asks instead of answering.
   const comparable = rentComparable(j, stored.ptype);
   const taxIncome = stored.taxIncome ?? income1 + income2 + otherIncome;
   const hbpContribution =
     stored.hbpContribution ??
     (F.country === "ca" ? Math.round(Math.min(F.rrspCap, RRSP_ROOM_RATE * taxIncome)) : 0);
-  const publishedRent =
-    j.rent != null && j.rent > 0 && comparable ? j.rent : null;
+  const publishedRent = j.rent != null && j.rent > 0 ? j.rent : null;
 
   return {
     price,

@@ -21,7 +21,7 @@ import { WealthChart } from "@/components/rent-vs-buy/wealth-chart";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
-import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { AnswerHead, FigureFooter, InlineAsk, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 import { FAVOURS_BUYING, FAVOURS_RENTING } from "./omissions";
 import { CalcLedger, CalcTrace } from "@/components/calc/calc-trace";
 import { Label } from "@/components/ui/label";
@@ -174,7 +174,16 @@ export default function RentVsBuyPage() {
             pulseKey={jurisdiction.id}
             head={head}
             sub={caveat ? `${sub} ${caveat}` : sub}
-            tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+            tag={
+              // The rent in use is a PUBLISHED apartment figure, not the reader's and not a
+              // house rent: say so in the tag, where the reader sees which rent the verdict
+              // rests on. Once they type their own, this falls back to the usual tag.
+              resolved.rentBasisMismatch
+                ? t(countryKey("rentDefaultTag", rules.country))
+                : isPersonalised(stored)
+                  ? t("tagYours")
+                  : t("tagTypical")
+            }
             stats={[
               {
                 label: t("crossLabel"),
@@ -197,6 +206,29 @@ export default function RentVsBuyPage() {
             ]}
           />
           </PendingFigures>
+
+          {/*
+            The default is a published apartment rent standing in for a house rent. The
+            answer above is honest about that only if the reader can replace it where they
+            read it: same key as the field in the inputs below, so typing here changes both.
+          */}
+          {resolved.rentBasisMismatch ? (
+            <InlineAsk
+              prompt={t(countryKey("rentDefaultAsk", rules.country), {
+                city: tJur(`at.${jurisdiction.id}`),
+                rent: fmt(resolved.rent),
+              })}
+            >
+              <NumberField
+                id="rent-inline"
+                label={t("dRent")}
+                value={stored.rent}
+                placeholder={resolved.rent}
+                min={0}
+                onCommit={(rent) => update({ rent })}
+              />
+            </InlineAsk>
+          ) : null}
 
           <div className="pt-8 sm:pt-[34px]">
             <SectionsHeader
@@ -608,20 +640,6 @@ export default function RentVsBuyPage() {
           head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
           sub={tInputs("noPriceSub")}
         />
-      ) : resolved.rentBasisMismatch ? (
-        // A rent IS published here — it just measures a two-bedroom apartment while
-        // the price above is a detached house. That is a different sentence from
-        // "nobody publishes a rent for here", and the difference is what tells the
-        // reader the figure they type has to be for the home they would actually
-        // rent instead of this one.
-        <AnswerHead
-          eyebrow={t("title")}
-          head={t("mismatchHead")}
-          sub={t(countryKey("mismatchSub", rules.country), {
-            city: tJur(`at.${jurisdiction.id}`),
-            rent: fmt(jurisdiction.rent ?? 0),
-          })}
-        />
       ) : (
         <AnswerHead
           eyebrow={t("title")}
@@ -674,10 +692,10 @@ export default function RentVsBuyPage() {
                     Nunavut" for a figure CMHC never surveyed is the invented figure this
                     product exists not to ship, and it was the more specific for naming the
                     territory. Either a rent published for here, or no published rent at all. */}
-                {resolved.rentKnown
-                  ? t("rentTag", { city: tJur(`at.${jurisdiction.id}`) })
-                  : resolved.rentBasisMismatch
-                    ? t(countryKey("rentMismatchTag", rules.country), { rent: fmt(jurisdiction.rent ?? 0) })
+                {resolved.rentBasisMismatch
+                  ? t(countryKey("rentMismatchTag", rules.country), { rent: fmt(jurisdiction.rent ?? 0) })
+                  : resolved.rentKnown
+                    ? t("rentTag", { city: tJur(`at.${jurisdiction.id}`) })
                     : t("rentUnknownTag", { city: tJur(`at.${jurisdiction.id}`) })}
               </p>
             ) : null}

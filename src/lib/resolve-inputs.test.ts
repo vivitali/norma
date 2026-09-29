@@ -157,16 +157,17 @@ describe("resolveInputs", () => {
     expect(r.rent).toBe(winnipeg.rent ?? DEFAULT_RENT);
   });
 
-  it("will not price a HOUSE against the apartment rent published for the city", () => {
-    // The published figure is real and correct for what it measures; it just does
-    // not measure this. `bench.house` beside it is a detached house, and running
-    // the comparison across that gap produced a verdict about two different lives
-    // — silently, on the page's default property type.
+  it("answers a HOUSE with the published apartment rent, flagged as a different dwelling", () => {
+    // PINNED ASSERTION CHANGED (decision 4): this used to require rentKnown false and the
+    // DEFAULT_RENT placeholder, so a house opened on an ask. The published figure is real
+    // for what it measures, so it is now the default — labelled via `rentBasisMismatch`,
+    // and replaced the moment the reader types their own. What stays false is `rentKnown`
+    // where NOTHING is published (next test).
     const r = resolveInputs(untouched, winnipeg, ca);
     expect(winnipeg.rent).toBeGreaterThan(0);
-    expect(r.rentKnown).toBe(false);
+    expect(r.rentKnown).toBe(true);
     expect(r.rentBasisMismatch).toBe(true);
-    expect(r.rent).toBe(DEFAULT_RENT);
+    expect(r.rent).toBe(winnipeg.rent);
   });
 
   it("tells a mismatch apart from a city nobody surveyed", () => {
@@ -177,6 +178,11 @@ describe("resolveInputs", () => {
     const r = resolveInputs({ ...untouched, ptype: "condo" }, yt, ca);
     expect(r.rentKnown).toBe(false);
     expect(r.rentBasisMismatch).toBe(false);
+    // And a HOUSE there: still nothing to compute around.
+    const house = resolveInputs(untouched, yt, ca);
+    expect(house.rentKnown).toBe(false);
+    expect(house.rentBasisMismatch).toBe(false);
+    expect(house.rent).toBe(DEFAULT_RENT);
   });
 
   it("takes the reader's own rent for any dwelling, mismatch or not", () => {
