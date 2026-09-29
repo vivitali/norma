@@ -701,8 +701,10 @@ beside a legitimately-estimated inspection fee, indistinguishable. Don't.
 - `federal.rates.insured` / `.uninsured` are `medium` and cannot do better: no official publisher
   exists for 5-year *fixed* contract rates. The Bank of Canada's only broker series is variable, and
   its "conventional mortgage: 5-year" is a *posted* rate near 6%, not comparable.
-- The verification notes in `src/domain` render in English on the French `/sources`. They are domain
-  data with no i18n mechanism; the page says so in French. Translating them is a real separate job.
+- The reader summaries in `src/domain` render in English on the French, Ukrainian and Spanish
+  `/sources`. They are domain data with no i18n mechanism; the page says so in each language.
+  Translating them is a real separate job — smaller now that a summary, not the verification
+  note, is what a reader sees.
 
 ## Open product decisions
 
@@ -761,6 +763,6 @@ pending in `design-reference/` for later phases.
   figures are now read off the issuing authority's own documents. It is **not** zero, and lifting
   the gate is a judgement call for the owner, not an automatic consequence — Halifax's benchmark is
   still `medium`, the fixed contract rates cannot be primary-sourced at all, and the `/sources`
-  notes are still English-only on the French page. Decide deliberately; do not treat "#5 landed" as
+  summaries are still English-only on the French, Ukrainian and Spanish pages. Decide deliberately; do not treat "#5 landed" as
   the answer. Gate and split recorded in
   [#12](https://github.com/vivitali/norma/issues/12).
