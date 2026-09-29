@@ -62,6 +62,15 @@ function panel(id: string) {
   return within(document.getElementById(id)!);
 }
 
+/**
+ * A rent low enough that buying never pulls ahead within forty years at Winnipeg's benchmark.
+ * These tests used to get that case from the city's defaults; the 2026-09-28 re-verification
+ * (August prices, the $1,600 Homeowners Affordability Tax Credit) moved the default break-even
+ * inside forty years, so the case is now seeded explicitly rather than inherited by accident.
+ */
+const seedRentingAlwaysWins = () =>
+  window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ rent: 1100 }));
+
 beforeEach(() => {
   window.localStorage.clear();
   seedAnswerable();
@@ -83,12 +92,12 @@ describe("Rent vs buy — the horizon decides", () => {
   });
 
   it("flips the verdict on the rent being compared against", async () => {
-    // The comparison has to be sensitive to the one input it is ABOUT. At the
-    // placeholder rent for this city the numbers favour renting and there is no
-    // break-even inside forty years; against a rent twice as high, buying pulls
-    // ahead within a few years. A page that answered the same either way would
-    // be decoration.
+    // The comparison has to be sensitive to the one input it is ABOUT. At a low
+    // rent the numbers favour renting and there is no break-even inside forty
+    // years; against a rent roughly three times as high, buying pulls ahead within
+    // a few years. A page that answered the same either way would be decoration.
     const user = userEvent.setup();
+    seedRentingAlwaysWins();
     renderPage();
     expect(screen.getAllByText(/Renting wins/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/never pulls ahead/).length).toBeGreaterThan(0);
@@ -107,13 +116,14 @@ describe("Rent vs buy — the horizon decides", () => {
     // buying TRAILS by $648,135 read as an advantage OF $648,135 -- a wrong
     // number under a correct label, which is worse than either alone.
     const user = userEvent.setup();
+    seedRentingAlwaysWins();
     renderPage();
     await open(user, /The verdict/);
     const table = screen.getAllByRole("table")[0];
     const advantages = [...table.querySelectorAll("tbody tr")].map(
       (tr) => tr.children[3].textContent ?? "",
     );
-    // On the placeholder figures buying never pulls ahead, so every row is negative.
+    // At the seeded rent buying never pulls ahead, so every row is negative.
     expect(advantages.every((v) => v.includes("−"))).toBe(true);
   });
 
@@ -206,7 +216,8 @@ describe("Rent vs buy — an absent break-even is a finding, not a blank", () =>
     // "Buying pulls ahead — · Buying never pulls ahead within 40 years" read as
     // a rendering fault: an em-dash where the figure goes, and a note that
     // contradicted the label above it. `note` is a short qualifier, never the
-    // answer. Against a house at an apartment-level rent there is no break-even.
+    // answer. At the seeded low rent there is no break-even.
+    seedRentingAlwaysWins();
     renderPage();
     // Innermost match: getAllByText matches ancestors too, in document order.
     const label = screen.getAllByText(/Buying pulls ahead/).at(-1)!;

@@ -116,7 +116,8 @@ describe("SourcesContent", () => {
     });
     expect(mill).toHaveAttribute("href", expect.stringContaining("assessment.winnipeg.ca"));
     expect(mill).toHaveAttribute("rel", "noreferrer");
-    expect(screen.getAllByText(/as of 2026-07/).length).toBeGreaterThan(0);
+    // The board's August 2026 release, re-verified 2026-09-28.
+    expect(screen.getAllByText(/as of 2026-08/).length).toBeGreaterThan(0);
   });
 
   it("shows the note, which is usually the most useful sentence about a figure", async () => {
