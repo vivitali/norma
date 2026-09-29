@@ -1211,7 +1211,7 @@
     "notFoundPage": "Une adresse mal tapée mène maintenant à une vraie page dans votre langue, au lieu d’une erreur brute.",
     "changelogPage": "Cette page, et une note discrète en pied de page qui y renvoie quand quelque chose change.",
     "sumRrspDefault": "Le RAP ne suppose plus une cotisation de 60 000 $",
-    "rrspDefault": "La cotisation par défaut est maintenant le moindre du plafond REER annuel et de 18 % du revenu ; entrez la vôtre pour la remplacer.",
+    "rrspDefault": "RAP : la cotisation par défaut est maintenant le moindre du plafond REER annuel et de 18 % du revenu ; entrez la vôtre pour la remplacer.",
     "sumCostsAndGap": "Frais de clôture plus clairs, bande d’écart, Scénarios",
     "gapBand": "Capacité d’achat : la limite du prêteur est maintenant placée à sa propre valeur sur la bande d’écart, et non au bord droit.",
     "closingWording": "Frais de clôture et Mise de fonds disent maintenant clairement quels totaux incluent la mise de fonds et lesquels ne l’incluent pas.",

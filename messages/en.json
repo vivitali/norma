@@ -1211,7 +1211,7 @@
     "notFoundPage": "A mistyped address now gets a proper page in your language instead of a bare error.",
     "changelogPage": "This page, and a quiet note in the footer that points to it when something changes.",
     "sumRrspDefault": "RRSP-HBP no longer assumes a $60,000 contribution",
-    "rrspDefault": "The contribution now defaults to the lower of the annual RRSP limit and 18% of income; enter yours to replace it.",
+    "rrspDefault": "RRSP-HBP: the contribution now defaults to the lower of the annual RRSP limit and 18% of income; enter yours to replace it.",
     "sumCostsAndGap": "Clearer closing costs, gap band, Scenarios column",
     "gapBand": "Affordability: the lender limit is now marked at its own value on the gap band, not at the right edge.",
     "closingWording": "Closing Costs and Down Payment now say plainly which totals include the down payment and which do not.",

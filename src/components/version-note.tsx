@@ -68,7 +68,9 @@ export function VersionNote({
   if (!relevant) return null;
 
   return (
-    <p className="relative flex flex-wrap items-center gap-x-1.5 text-[11.5px] leading-[1.65] text-ink3">
+    // Inline text, not a flex row: when the line wraps on a phone, the separator stays at the
+    // end of the summary and "What changed" starts the next line, instead of a line opening on "·".
+    <p className="relative text-[11.5px] leading-[1.65] text-ink3 text-pretty">
       <span
         aria-hidden={isNew ? undefined : true}
         className={`absolute top-[0.6em] -left-3 size-1.5 rounded-full bg-ac ${isNew ? "" : "invisible"}`}
@@ -76,10 +78,8 @@ export function VersionNote({
       >
         {isNew ? <span className="sr-only">{newLabel}</span> : null}
       </span>
-      <span>
-        {relevant.updated} — {relevant.summary}
-      </span>
-      <span aria-hidden="true">·</span>
+      {relevant.updated} — {relevant.summary}
+      <span aria-hidden="true"> ·</span>{" "}
       <Link
         href="/changelog"
         className="underline decoration-border underline-offset-2 transition-colors hover:text-ink hover:decoration-current"

@@ -1211,7 +1211,7 @@
     "notFoundPage": "Una dirección mal escrita ahora lleva a una página real en su idioma, en lugar de un error sin más.",
     "changelogPage": "Esta página, y una nota discreta al pie que remite a ella cuando algo cambia.",
     "sumRrspDefault": "RRSP-HBP ya no supone un aporte de $60,000",
-    "rrspDefault": "El aporte por defecto es ahora el menor entre el límite anual del RRSP y el 18 % del ingreso; ingrese el suyo para reemplazarlo.",
+    "rrspDefault": "RRSP-HBP: el aporte por defecto es ahora el menor entre el límite anual del RRSP y el 18 % del ingreso; ingrese el suyo para reemplazarlo.",
     "sumCostsAndGap": "Gastos de cierre más claros, banda de brecha, Escenarios",
     "gapBand": "Capacidad de compra: el límite del prestamista ahora se marca en su propio valor en la banda de brecha, no en el borde derecho.",
     "closingWording": "Gastos de cierre y Pago inicial ahora dicen con claridad qué totales incluyen el pago inicial y cuáles no.",

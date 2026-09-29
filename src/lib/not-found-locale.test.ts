@@ -37,6 +37,7 @@ describe("notFoundScript", () => {
     expect(runAt("/ca/fr/nimporte")).toBe("fr-CA");
     expect(runAt("/us/es/nada/aqui")).toBe("es-US");
     expect(document.documentElement.lang).toBe("es-US");
+    expect(document.title).toBe("Página no encontrada — AffordMath");
   });
 
   it("does not match a prefix that is only a string prefix", () => {

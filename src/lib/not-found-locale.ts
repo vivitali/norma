@@ -56,10 +56,11 @@ export function notFoundCopies(): NotFoundCopy[] {
 
 /**
  * Runs first in <body>: applies the reader's theme (this page bypasses the layout, so
- * next-themes never runs here — same `theme` key, same `.dark` class) and marks the locale
- * whose copy to show. The CSS in global-not-found.tsx hides every other locale's block.
+ * next-themes never runs here — same `theme` key, same `.dark` class), marks the locale whose
+ * copy to show, and sets the tab title in that locale's language (the static <title> is the
+ * fallback's). The CSS in global-not-found.tsx hides every other locale's block.
  */
 export function notFoundScript(copies: readonly NotFoundCopy[]): string {
-  const table = copies.map((c) => [c.prefix, c.locale, c.lang]);
-  return `(function(t){try{var s=localStorage.getItem("theme");if(s==="dark"||(s!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}var p=location.pathname;for(var i=0;i<t.length;i++){var x=t[i][0];if(p===x||p.indexOf(x+"/")===0){document.documentElement.setAttribute("data-nf",t[i][1]);document.documentElement.lang=t[i][1];return}}})(${JSON.stringify(table)})`;
+  const table = copies.map((c) => [c.prefix, c.locale, c.title]);
+  return `(function(t){try{var s=localStorage.getItem("theme");if(s==="dark"||(s!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}var p=location.pathname;for(var i=0;i<t.length;i++){var x=t[i][0];if(p===x||p.indexOf(x+"/")===0){document.documentElement.setAttribute("data-nf",t[i][1]);document.documentElement.lang=t[i][1];document.title=t[i][2];return}}})(${JSON.stringify(table)})`;
 }
