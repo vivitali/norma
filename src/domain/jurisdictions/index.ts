@@ -60,7 +60,7 @@ export const defaultJurisdiction: Jurisdiction = defaultJurisdictionOf("ca");
  *
  * `PropertyTax.areas` stores every area's rates; the record's own `publishedRate`/`effective`
  * (and the credit's cap slice) are the default area's. This swaps in the chosen area's, and
- * points the published-rate provenance at that area's own entry (`propTax.areas.<id>`), so every
+ * points the published-rate provenance at that area's own entry (`propTax.areas.list.<i>.publishedRate`), so every
  * engine function and every "where this figure came from" line reads the reader's division
  * without knowing areas exist. An unknown, absent or default id returns the record unchanged —
  * the same object, so a memo keyed on it stays stable.
@@ -68,9 +68,10 @@ export const defaultJurisdiction: Jurisdiction = defaultJurisdictionOf("ca");
 export function withTaxArea(j: Jurisdiction, areaId: string | null | undefined): Jurisdiction {
   const areas = j.propTax.areas;
   if (!areas || !areaId || areaId === areas.default) return j;
-  const area = areas.list.find((a) => a.id === areaId);
-  if (!area) return j;
-  const areaProvenance = j.provenance[`propTax.areas.${area.id}`];
+  const index = areas.list.findIndex((a) => a.id === areaId);
+  if (index < 0) return j;
+  const area = areas.list[index];
+  const areaProvenance = j.provenance[`propTax.areas.list.${index}.publishedRate`];
   return {
     ...j,
     propTax: {

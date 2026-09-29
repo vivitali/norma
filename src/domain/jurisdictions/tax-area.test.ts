@@ -26,7 +26,7 @@ const base: Jurisdiction = {
   },
   provenance: {
     ...winnipeg.provenance,
-    "propTax.areas.b": { conf: "high", src: "Area B's own rate", asOf: "2026" },
+    "propTax.areas.list.1.publishedRate": { conf: "high", src: "Area B's own rate", asOf: "2026" },
   },
 };
 
@@ -68,5 +68,42 @@ describe("a capped bill credit", () => {
 
   it("never makes a tax bill negative", () => {
     expect(propertyTaxAnnual(base, 0)).toBe(0);
+  });
+});
+
+describe("Winnipeg's school divisions", () => {
+  const areas = winnipeg.propTax.areas!;
+
+  it("lists the eight divisions the City levies for, with the default first-class", () => {
+    expect(areas.list).toHaveLength(8);
+    expect(areas.default).toBe("winnipeg-sd");
+    expect(areas.list.map((a) => a.id)).toContain("pembina-trails");
+  });
+
+  it("keeps the record's own rates equal to its default division's", () => {
+    const def = areas.list.find((a) => a.id === areas.default)!;
+    expect(def.publishedRate).toBeCloseTo(winnipeg.propTax.publishedRate, 9);
+    expect(def.effective).toBeCloseTo(winnipeg.propTax.effective, 9);
+  });
+
+  it("derives every division's effective rate from its published rate and the 45% portion", () => {
+    for (const a of areas.list) {
+      expect(a.effective, a.id).toBeCloseTo(a.publishedRate * winnipeg.propTax.assessmentRatio, 12);
+      expect(a.schoolEffective, a.id).toBeLessThan(a.effective);
+    }
+  });
+
+  it("matches the City's 2026 published combined rates at the ends of the range", () => {
+    const rate = (id: string) => areas.list.find((a) => a.id === id)!.publishedRate;
+    expect(rate("pembina-trails")).toBeCloseTo(0.025223, 9);
+    expect(rate("seven-oaks")).toBeCloseTo(0.02953, 9);
+  });
+
+  it("carries a dated, high-confidence source for every division", () => {
+    for (const [i, a] of areas.list.entries()) {
+      const prov = winnipeg.provenance[`propTax.areas.list.${i}.publishedRate`];
+      expect(prov?.conf, a.id).toBe("high");
+      expect(prov?.asOf, a.id).toBe("2026");
+    }
   });
 });

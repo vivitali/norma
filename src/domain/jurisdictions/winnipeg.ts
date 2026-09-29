@@ -1,7 +1,48 @@
-import type { Jurisdiction, JurisdictionFees } from "../types";
+import type { Jurisdiction, JurisdictionFees, Provenance, TaxArea } from "../types";
 import { feesProvenance } from "../provenance";
 
 const fees: JurisdictionFees = { lawyer: 1800, titleIns: 350, inspect: 600, appraisal: 400, statusCert: 100, moving: 1500, setup: 3000 };
+
+/**
+ * Winnipeg's eight school divisions, 2026. Each levies its own school mill rate on top of the one
+ * municipal rate (13.372); residential property pays no Education Support Levy. The reader picks
+ * theirs (`withTaxArea` in ./index.ts); the record's own rates below are Winnipeg School
+ * Division's, the default. Division scolaire franco-manitobaine does not appear: the City's table
+ * lists exactly these eight levying divisions.
+ */
+const MILL_RATES_URL = "https://assessment.winnipeg.ca/Asmttax/pdfs/rates/HistoricalCombinedMillRates.pdf";
+const MUNICIPAL_MILLS = 13.372;
+const PORTION = 0.45;
+const DIVISIONS: readonly (readonly [id: string, name: string, schoolMills: number])[] = [
+  ["winnipeg-sd", "Winnipeg", 15.994],
+  ["louis-riel", "Louis Riel", 14.653],
+  ["pembina-trails", "Pembina Trails", 11.851],
+  ["river-east-transcona", "River East Transcona", 13.368],
+  ["st-james-assiniboia", "St. James-Assiniboia", 13.848],
+  ["seven-oaks", "Seven Oaks", 16.158],
+  ["seine-river", "Seine River", 14.156],
+  ["interlake", "Interlake", 12.236],
+];
+const combinedMills = (school: number) => Math.round((MUNICIPAL_MILLS + school) * 1000) / 1000;
+const TAX_AREAS: readonly TaxArea[] = DIVISIONS.map(([id, , school]) => ({
+  id,
+  publishedRate: combinedMills(school) / 1000,
+  effective: (combinedMills(school) / 1000) * PORTION,
+  schoolEffective: (school / 1000) * PORTION,
+}));
+const areaProvenance: Record<string, Provenance> = Object.fromEntries(
+  // Keyed by the field path, index-based like `transfer.1.amount`, so the provenance test can
+  // resolve it; `withTaxArea` reads the chosen division's entry by the same path.
+  DIVISIONS.map(([, name, school], i) => [
+    `propTax.areas.list.${i}.publishedRate`,
+    {
+      conf: "high",
+      src: `City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division — ${name}, ${combinedMills(school).toFixed(3)} mills (municipal ${MUNICIPAL_MILLS.toFixed(3)} + school ${school.toFixed(3)})`,
+      asOf: "2026",
+      url: MILL_RATES_URL,
+    },
+  ]),
+);
 
 export const winnipeg: Jurisdiction = {
   id: "winnipeg",
@@ -19,7 +60,13 @@ export const winnipeg: Jurisdiction = {
   // Manitoba taxes a PORTIONED assessment: the residential class portion is 45%, and the mill
   // rates are applied to that, not to full value. 29.366 mills x 0.45 = 0.0132147 on market
   // value. The mill rate is the Winnipeg School Division's — one of eight; see provenance.
-  propTax: { effective: 0.0132147, publishedRate: 0.029366, assessmentRatio: 0.45, basis: "portioned" },
+  propTax: {
+    effective: 0.0132147,
+    publishedRate: 0.029366,
+    assessmentRatio: 0.45,
+    basis: "portioned",
+    areas: { default: "winnipeg-sd", list: TAX_AREAS },
+  },
   transfer: [
     {
       key: "li_lttProv",
@@ -53,6 +100,7 @@ export const winnipeg: Jurisdiction = {
   },
   provenance: {
     ...feesProvenance(fees),
+    ...areaProvenance,
     // 5x Saskatoon's 550 and Calgary's 600 for the same field. Left at 3000 deliberately: a
     // suspected transcription error is not a licence to substitute a number no source supports.
     "fees.setup": {
