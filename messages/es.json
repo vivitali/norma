@@ -1026,6 +1026,12 @@
     "ruleTitle": "Procede de una regla de las tablas — ver fuentes",
     "estimateTitle": "Estimación local o del hogar — ver fuentes"
   },
+  "ToolPage": {
+    "adjust": "Ajustar sus cifras",
+    "statePass": "comprobación superada",
+    "stateCaution": "por poco",
+    "stateBlocked": "comprobación no superada"
+  },
   "Inputs": {
     "taxArea": "Distrito escolar",
     "taxAreaNote": "Aquí el impuesto predial depende del distrito escolar donde está la vivienda: de {lo} a {hi} del precio al año.",

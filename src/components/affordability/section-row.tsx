@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { dotClass, figureClass, type Tone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +41,13 @@ export function SectionRow({
   onToggle,
   children,
 }: SectionRowProps) {
+  const tTool = useTranslations("ToolPage");
   const panelId = `${id}-panel`;
+  // The dot is the only carrier of a section's verdict and it is aria-hidden, so a screen reader
+  // heard "Approval $366,989" with no word for "a lender would decline". One generic word per
+  // state, spoken after the name; "none" has no verdict to speak.
+  const stateWord =
+    tone === "pass" ? tTool("statePass") : tone === "caution" ? tTool("stateCaution") : tone === "blocked" ? tTool("stateBlocked") : null;
   return (
     <div id={id} className="scroll-mt-3 border-t border-border">
       <h2 className="m-0">
@@ -64,6 +71,7 @@ export function SectionRow({
            */}
           <span className="max-w-full min-w-min flex-1 text-[16.5px] font-semibold tracking-[-0.015em] sm:w-[180px] sm:flex-none">
             {name}
+            {stateWord ? <span className="sr-only">, {stateWord}</span> : null}
           </span>
           <span className="hidden min-w-0 flex-1 text-[13.5px] leading-[1.45] text-ink2 sm:block">
             {line}

@@ -154,8 +154,11 @@ export interface HeadStat {
   /** Short qualifier beside the figure. Empty renders nothing. */
   note?: string;
   mark?: ProvenanceKind;
-  /** "caution" promotes the figure to the caution colour (DESIGN.md §2: state is a figure colour, never a fill). */
-  tone?: "caution";
+  /**
+   * Promotes the figure to a state colour (DESIGN.md §2: state is a figure colour, never a fill).
+   * Pass the SAME tone as the section that owns the figure, so one number never wears two colours.
+   */
+  tone?: "caution" | "blocked";
 }
 
 /**
@@ -181,6 +184,7 @@ export function AnswerHead({
   sub,
   tag,
   onTagActivate,
+  adjust,
   stats,
 }: {
   eyebrow: string;
@@ -194,8 +198,15 @@ export function AnswerHead({
    * accessible name is its text — that jumps to and focuses the field it names.
    */
   onTagActivate?: () => void;
+  /**
+   * Renders "Adjust your numbers" under the answer: a jump to the page's inputs block, which must
+   * carry `id="adjust"`, focusing its first field. Every tool page keeps its inputs below its
+   * sections, 1,300–2,300px from the figure they move on a phone; this is the way back to them.
+   */
+  adjust?: boolean;
   stats?: readonly HeadStat[];
 }) {
+  const tTool = useTranslations("ToolPage");
   return (
     <div className="pt-9 sm:pt-11">
       {/*
@@ -245,7 +256,7 @@ export function AnswerHead({
                 type="button"
                 data-slot="answer-tag"
                 onClick={onTagActivate}
-                className="eyebrow mt-4 inline-block max-w-full cursor-pointer rounded-full border border-acbr px-2.5 py-1 text-left text-ac underline decoration-dotted underline-offset-4 hover:bg-acbg"
+                className="eyebrow mt-4 inline-block min-h-11 max-w-full cursor-pointer rounded-full border border-acbr px-2.5 py-1 text-left text-ac underline decoration-dotted underline-offset-4 hover:bg-acbg sm:min-h-0"
               >
                 {tag}
               </button>
@@ -257,6 +268,25 @@ export function AnswerHead({
                 {tag}
               </p>
             )
+          ) : null}
+          {adjust ? (
+            <p className="mt-3">
+              <a
+                href="#adjust"
+                onClick={(event) => {
+                  const target = document.getElementById("adjust");
+                  if (!target) return;
+                  event.preventDefault();
+                  target.scrollIntoView({ block: "start", behavior: "smooth" });
+                  target
+                    .querySelector<HTMLElement>("input, button, [role=combobox], [role=radio][tabindex='0']")
+                    ?.focus({ preventScroll: true });
+                }}
+                className="relative text-[13px] font-medium text-ac underline underline-offset-4 after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 sm:after:hidden"
+              >
+                {tTool("adjust")}
+              </a>
+            </p>
           ) : null}
         </div>
         {/*
@@ -283,6 +313,7 @@ export function AnswerHead({
                     className={cn(
                       "text-[22px] font-semibold tracking-[-0.02em]",
                       stat.tone === "caution" && "text-caution",
+                      stat.tone === "blocked" && "text-blocked",
                     )}
                   >
                     {stat.value}

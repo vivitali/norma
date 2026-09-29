@@ -1026,6 +1026,12 @@
     "ruleTitle": "From a rule in the tables — see sources",
     "estimateTitle": "A local or household estimate — see sources"
   },
+  "ToolPage": {
+    "adjust": "Adjust your numbers",
+    "statePass": "check passes",
+    "stateCaution": "close call",
+    "stateBlocked": "check fails"
+  },
   "Inputs": {
     "taxArea": "School division",
     "taxAreaNote": "Property tax here depends on the school division the home is in: from {lo} to {hi} of the price a year.",

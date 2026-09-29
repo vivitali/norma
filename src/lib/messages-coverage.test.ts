@@ -153,6 +153,8 @@ const NAMESPACES = [
   "Legal", "Privacy", "Terms",
   // Flat like the legal pages — no section registry, so it is named here rather than skipped.
   "Changelog",
+  // Shared tool-page chrome (AnswerHead's adjust jump, SectionRow's spoken verdict).
+  "ToolPage",
 ] as const;
 
 describe("message coverage", () => {

@@ -1026,6 +1026,12 @@
     "ruleTitle": "Provient d’une règle des tables — voir les sources",
     "estimateTitle": "Estimation locale ou du ménage — voir les sources"
   },
+  "ToolPage": {
+    "adjust": "Ajuster vos chiffres",
+    "statePass": "vérification réussie",
+    "stateCaution": "de justesse",
+    "stateBlocked": "vérification non réussie"
+  },
   "Inputs": {
     "taxArea": "Division scolaire",
     "taxAreaNote": "Ici, les taxes foncières dépendent de la division scolaire où se trouve la propriété : de {lo} à {hi} du prix par année.",
