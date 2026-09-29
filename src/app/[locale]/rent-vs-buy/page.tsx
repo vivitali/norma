@@ -107,6 +107,9 @@ export default function RentVsBuyPage() {
 
   const hold = resolved.holding;
   const atHorizon = rowAt(result.rows, hold);
+  // US rows only, and only when owed: the tax on a gain above the home-sale exclusion.
+  const homeGainTax: number =
+    "homeGainTax" in atHorizon && typeof atHorizon.homeGainTax === "number" ? atHorizon.homeGainTax : 0;
   const flatAtHorizon = rowAt(flat.rows, hold);
   const buyWins = atHorizon.adv > 0;
   // The in-place rent ask is on screen (see below): it is then the only rent field.
@@ -493,6 +496,13 @@ export default function RentVsBuyPage() {
                     provenance={<Provenance kind="rule" />}
                   />
                 ) : null}
+                {homeGainTax > 0 ? (
+                  <PanelRow
+                    label={t("cHomeGainTax")}
+                    value={fmt(homeGainTax)}
+                    provenance={<Provenance kind="rule" />}
+                  />
+                ) : null}
                 <PanelRow label={t("cEquity")} value={fmt(atHorizon.equity)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cBuyW")} value={fmt(atHorizon.buyW)} strong />
                 <PanelRow label={t("cRentW")} value={fmt(atHorizon.rentW)} strong />
@@ -585,6 +595,9 @@ export default function RentVsBuyPage() {
                     { label: t("cSelling"), value: fmt(atHorizon.sellingCost), op: "minus" },
                     ...(atHorizon.saleTax
                       ? [{ label: t("cSaleTax"), value: fmt(atHorizon.saleTax), op: "minus" as const }]
+                      : []),
+                    ...(homeGainTax > 0
+                      ? [{ label: t("cHomeGainTax"), value: fmt(homeGainTax), op: "minus" as const }]
                       : []),
                     { label: t("cBalance"), value: fmt(atHorizon.balance), op: "minus" },
                     { label: t("cEquity"), value: fmt(atHorizon.equity), op: "equals", strong: true },

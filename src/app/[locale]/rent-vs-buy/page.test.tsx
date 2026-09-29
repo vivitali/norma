@@ -658,3 +658,18 @@ describe("Rent vs buy — Seattle's REET is the seller's, and the sale deducts i
     expect(panel("wealth").queryByText("Excise tax on the sale, paid by the seller")).not.toBeInTheDocument();
   });
 });
+
+describe("Rent vs buy — every term the US sale subtracts is shown", () => {
+  it("shows the tax on a gain above the home-sale exclusion when one is owed", async () => {
+    // A $2,000,000 Houston home held 40 years gains far more than the federal exclusion, so
+    // `equity` subtracts a gains tax; the trace must show it or it no longer adds up.
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "houston", price: 2000000, holding: 40, rent: 2500 }),
+    );
+    renderPage("en-US");
+    await user.click(screen.getByRole("button", { name: /Expand all/ }));
+    expect(screen.getAllByText("Tax on the gain above the home-sale exclusion").length).toBeGreaterThan(0);
+  });
+});

@@ -801,6 +801,7 @@
     "altText_us": "Stacked bars of interest and principal paid each year over {n} years. Interest dominates the early years. {flipSentence}"
   },
   "RentVsBuy": {
+    "cHomeGainTax": "Tax on the gain above the home-sale exclusion",
     "tablePhoneNote": "On a wider screen this table also shows what buying and renting are each worth at every horizon; the advantage column is the difference between the two.",
     "title": "Rent versus buy",
     "buyWord": "Buy",

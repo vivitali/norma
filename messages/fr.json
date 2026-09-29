@@ -801,6 +801,7 @@
     "pmiCancelYear": "L’assurance hypothécaire privée s’annule en année {n}, retirant {amt} par mois de chaque versement après cela."
   },
   "RentVsBuy": {
+    "cHomeGainTax": "Impôt sur le gain au-delà de l’exclusion à la vente de la résidence",
     "tablePhoneNote": "Sur un écran plus large, ce tableau montre aussi ce que valent l’achat et la location à chaque horizon; la colonne de l’avantage est l’écart entre les deux.",
     "title": "Louer ou acheter",
     "buyWord": "Acheter",

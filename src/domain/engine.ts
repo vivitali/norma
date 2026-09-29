@@ -2066,7 +2066,11 @@ function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
-      homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}), equity, buyW, rentW, adv: buyW - rentW,
+      homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}),
+      // Reported only when owed (above the federal home-sale exclusion), so the page's trace can
+      // show every term `equity` subtracts and still add up.
+      ...(homeGainTax > 0 ? { homeGainTax } : {}),
+      equity, buyW, rentW, adv: buyW - rentW,
       deductionBenefit, itemizedBeatsStandard, pmi,
     });
   }

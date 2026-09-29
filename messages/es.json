@@ -801,6 +801,7 @@
     "pmiCancelYear": "El seguro hipotecario privado se cancela en el año {n}, eliminando {amt} al mes de cada pago posterior."
   },
   "RentVsBuy": {
+    "cHomeGainTax": "Impuesto sobre la ganancia por encima de la exclusión por venta de vivienda",
     "tablePhoneNote": "En una pantalla más ancha, esta tabla también muestra cuánto vale comprar y cuánto alquilar en cada horizonte; la columna de ventaja es la diferencia entre ambos.",
     "title": "Alquilar o comprar",
     "buyWord": "Comprar",
