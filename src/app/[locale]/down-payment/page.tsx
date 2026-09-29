@@ -479,9 +479,7 @@ export default function DownPaymentPage() {
                     */}
                     {row.blocked === undefined && stored[SOURCE_FIELD[row.key]] !== null ? (
                       <div className="flex gap-4 pt-1 text-[11.5px] text-ink3">
-                        <span>
-                          {t("left")}: {fmt(row.left)}
-                        </span>
+                        <span>{t("left", { amt: fmt(row.left) })}</span>
                         {row.exhausted ? <span>{t("exhausted")}</span> : null}
                       </div>
                     ) : null}

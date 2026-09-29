@@ -214,8 +214,9 @@ function SourceList({
                 key={note}
                 // Marks this paragraph as raw `src/domain` provenance text, not
                 // UI copy — see page-contracts.test.tsx's vocabulary contract,
-                // which excludes these from the CA_ONLY_VOCAB scan. The notes are
-                // an English-only verification record (CLAUDE.md), and several
+                // which excludes these from the CA_ONLY_VOCAB scan. Each
+                // paragraph is the figure's plain-English `summary` (falling back to
+                // its maintainer `note`), English in every locale; several
                 // legitimately compare a US figure's derivation to "the Canadian
                 // record" by name; that is not the same defect as a translated
                 // LABEL naming Canada.
@@ -389,9 +390,10 @@ export function SourcesContent() {
           <VerifiedLines jurisdiction={jurisdiction} />
         </div>
         {/*
-          The notes come out of src/domain verbatim, in the language they were
-          written in. Saying so is the honest alternative to machine-glossing a
-          verification record — and to letting a French reader assume the
+          What prints under each source is its reader summary (or the maintainer
+          note where none exists), out of src/domain, in English. The detailed
+          verification record stays with the data. Saying so is the honest
+          alternative to machine-glossing that text — and to letting a French reader assume the
           English paragraph above it is a translation that failed.
         */}
         <p className="mt-1">{t("notesNote")}</p>

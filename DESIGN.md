@@ -129,8 +129,11 @@ Cyrillic before Golos ever did; the production build emits the plain family name
 **French spacing follows the Québec convention (OQLF)**, because the French reader here is
 Canadian: a non-breaking space (U+00A0) before the colon, no space before `; ? !`, and
 non-breaking spaces inside « guillemets ». Non-breaking, so a colon or a closing guillemet never
-wraps onto a line of its own at a phone width. `src/lib/french-typography.test.ts` enforces all
-three. (Numbers are Intl's business: fr-CA groups digits with U+202F, and that is correct.)
+wraps onto a line of its own at a phone width. `src/lib/french-typography.test.ts` enforces them on
+`messages/fr.json`: exactly U+00A0 before every colon (URLs and clock times exempt), no space of any kind
+before `; ? !`, and U+00A0 (not U+0020, not U+202F) after « and before ». `src/app/locale-render.test.tsx`
+applies the colon rule to every rendered fr-CA page, so a colon assembled in JSX cannot bypass it:
+put the colon inside the message, as ICU with an argument. (Numbers are Intl's business: fr-CA groups digits with U+202F, and that is correct.)
 
 **Form controls have a 16px floor** (`--control-font-size`), applied through `.control`.
 Below 16px iOS Safari zooms the viewport on focus, and this page has twelve fields. The

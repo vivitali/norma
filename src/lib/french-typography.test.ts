@@ -21,15 +21,20 @@ const offenders = (re: RegExp) =>
     .map(([path]) => path);
 
 describe("French typography (OQLF)", () => {
-  it("puts a non-breaking space, not a breakable or narrow one, before a colon", () => {
-    expect(offenders(/[  ]:/)).toEqual([]);
+  it("requires exactly a no-break space (U+00A0) before every colon", () => {
+    // Exempt: a URL scheme (`https:`) and a clock time (`10:30`), neither of which is prose.
+    const bad = leaves(fr)
+      .filter(([, text]) => /(?<!\u00A0):/.test(text.replace(/https?:|\d:\d/g, "")))
+      .map(([path]) => path);
+    expect(bad).toEqual([]);
   });
 
   it("puts no space before ; ? or !", () => {
-    expect(offenders(/[   ][;?!]/)).toEqual([]);
+    expect(offenders(/[\u0020\u00A0\u202F][;?!]/)).toEqual([]);
   });
 
-  it("keeps guillemets glued to their text with non-breaking spaces", () => {
-    expect(offenders(/« | »/)).toEqual([]);
+  it("requires a no-break space (U+00A0), not U+0020 or U+202F, inside « guillemets »", () => {
+    // Every « is followed, and every » preceded, by exactly U+00A0.
+    expect(offenders(/«(?!\u00A0)|(?<!\u00A0)»/)).toEqual([]);
   });
 });

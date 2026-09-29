@@ -179,7 +179,7 @@ export function ScheduleChart({ result }: { result: AmortizationResult }) {
             {`${t("flipLabel")} · ${t("yearWord", { n: flip })}`}
           </span>
         ) : null}
-        <span>{`${t("totalPaid")}: ${fmt(result.totalPaid)}`}</span>
+        <span>{t("totalPaidLine", { amt: fmt(result.totalPaid) })}</span>
       </figcaption>
     </figure>
   );

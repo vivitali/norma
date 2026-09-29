@@ -763,7 +763,7 @@ export default function AffordabilityPage() {
       <FigureFooter jurisdiction={jurisdiction}>
         {propTaxProv?.src ? (
           <p>
-            {t("propTaxSource")}: {propTaxProv.src}
+            {t("propTaxSource", { src: propTaxProv.src })}
             {propTaxProv.asOf ? ` (${propTaxProv.asOf})` : null}
           </p>
         ) : null}

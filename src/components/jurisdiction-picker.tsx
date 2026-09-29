@@ -49,7 +49,7 @@ export function JurisdictionPicker() {
         (WCAG 2.5.3, label in name). A combobox takes no name from its content.
       */}
       <SelectTrigger
-        aria-label={`${t("changeLocation")}: ${tJur(jurisdiction.id)}`}
+        aria-label={t("changeLocation", { name: tJur(jurisdiction.id) })}
         className="w-full min-w-0 sm:w-auto"
       >
         <SelectValue className="min-w-0">

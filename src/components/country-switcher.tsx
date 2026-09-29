@@ -75,7 +75,7 @@ export function CountrySwitcher() {
     >
       {/* Name carries both the name and the code, so it contains whichever one is visible (WCAG 2.5.3). */}
       <SelectTrigger
-        aria-label={`${t("changeCountry")}: ${tCountries(activeCountry)} (${activeCountry.toUpperCase()})`}
+        aria-label={t("changeCountry", { name: `${tCountries(activeCountry)} (${activeCountry.toUpperCase()})` })}
         className="w-auto"
       >
         {/* Below sm the trigger shows the two-letter code to save width; the dropdown and sm+ keep the name. */}

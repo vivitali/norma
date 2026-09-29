@@ -172,5 +172,21 @@ describe.each(LOCALES)("every page renders in %s", (locale) => {
     const leaked = leakableKeys(namespace).filter((key) => text.includes(key));
     expect(leaked, `${locale}: message keys rendered verbatim`).toEqual([]);
     expect(text, `${locale}: unformatted value`).not.toMatch(GARBAGE);
+
+    if (locale === "fr-CA" && namespace !== "Sources") {
+      // OQLF: every colon in French text follows U+00A0. Assert on RAW textContent — Testing
+      // Library's normaliser collapses U+00A0 to a space, so getByText cannot see the defect.
+      // English domain data is out of scope by design: `/sources` prints provenance summaries
+      // and citations in English (the whole page is skipped — its prose is mostly that), and
+      // other pages quote a citation in English (`data-source-note` nodes are dropped). Inline
+      // scripts are code, not prose. URL schemes and clock times are not prose either.
+      const clone = document.body.cloneNode(true) as HTMLElement;
+      for (const el of clone.querySelectorAll("[data-source-note], script, style")) el.remove();
+      const prose = (clone.textContent ?? "").replace(/https?:|\d:\d/g, "");
+      const bad = [...prose.matchAll(/(?<!\u00A0):/g)].map((m) =>
+        JSON.stringify(prose.slice(Math.max(0, m.index - 30), m.index + 10)),
+      );
+      expect(bad, `${locale}: colon not preceded by U+00A0`).toEqual([]);
+    }
   });
 });

@@ -225,11 +225,11 @@ describe("SourcesContent", () => {
     expect(screen.getByText(/Figures for Winnipeg verified/)).toBeVisible();
   });
 
-  it("says the notes are kept in English, rather than pretending otherwise", () => {
-    // The notes come out of src/domain verbatim. Left unexplained, a French
+  it("says the explanations are in English, rather than pretending otherwise", () => {
+    // The summaries come out of src/domain in English. Left unexplained, a French
     // reader reads an English paragraph as a translation that failed.
     render("fr-CA");
-    expect(screen.getByText(/conservées en anglais/)).toBeVisible();
+    expect(screen.getByText(/explication du chiffre en langage simple, en anglais/)).toBeVisible();
   });
 
   it("gives the French jurisdiction name its article after a preposition", () => {
