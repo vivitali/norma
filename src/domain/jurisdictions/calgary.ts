@@ -41,6 +41,7 @@ export const calgary: Jurisdiction = {
       asOf: "2026",
       url: "https://kings-printer.alberta.ca/documents/Acts/l04.pdf",
       note: "Alberta levies NO land transfer tax; what a buyer pays is this statutory transfer levy. The levies are in the Act itself, not the Tariff of Fees Regulation where you would expect them — that regulation carries only flat fees. 'or portion thereof' means round UP per $5,000 unit, which perValue's Math.ceil already does. This is the post-2024 tariff ($5 per $5,000, up from $2); confirmed unchanged. The Tariff of Fees Regulation's 90/10 fee-versus-assurance split is an internal allocation of the fee already charged, not an add-on, so the model is right to charge the levy once.",
+      summary: "Alberta has no land transfer tax; buyers pay a land titles registration levy of $50 plus $5 for each $5,000 (or part) of the price, set in the Land Titles Act. This is the current tariff, confirmed unchanged, and it is charged once.",
     },
     "transfer.1.base": {
       conf: "high",
@@ -48,6 +49,7 @@ export const calgary: Jurisdiction = {
       asOf: "2026",
       url: "https://kings-printer.alberta.ca/documents/Acts/l04.pdf",
       note: "Confirmed an exact match and unchanged. Same statute and same shape as the transfer levy, but on the loan rather than the price.",
+      summary: "The same Land Titles Act levy, $50 plus $5 for each $5,000 (or part), charged on the mortgage amount instead of the price. Confirmed unchanged.",
     },
     "propTax.publishedRate": {
       conf: "high",
@@ -55,6 +57,7 @@ export const calgary: Jurisdiction = {
       asOf: "2026",
       url: "https://www.calgary.ca/property-owners/taxes/bill-rate-calculation.html",
       note: "Verified against the City's own worked example: the 2026 median single detached assessment of $706,000 gives $2,746.76 to the City and $1,948.06 to the province, $4,694.82 in total — which is 706,000 x 0.0066499 to the cent. The provincial share jumped this year (0.0023097 in 2025), so the total rose ~7.6% while the municipal rate barely moved.",
+      summary: "The City of Calgary's 2026 residential rate: city 0.0038906 plus provincial education 0.0027593. It reproduces the City's own worked example for a $706,000 assessment to the cent. The provincial share rose this year, so total tax is up about 7.6% while the city rate barely moved.",
     },
     "propTax.assessmentRatio": {
       conf: "high",
@@ -62,12 +65,14 @@ export const calgary: Jurisdiction = {
       asOf: "2026",
       url: "https://www.calgary.ca/property-owners/taxes/bill-rate-calculation.html",
       note: "Ratio 1 and basis `market`, like BC and unlike Ontario's frozen 2016 base or the prairie portioning next door — different statutes, deliberately not harmonised. The one caveat the ratio cannot express: the valuation date is 2025-07-01, so in a market falling ~2% a year the assessment runs slightly ABOVE today's price and this record therefore slightly overstates 2026 tax.",
+      summary: "Alberta taxes homes at 100% of market value as assessed on July 1, 2025, so the rate applies to price directly. Because prices are falling about 2% a year, the assessment may sit slightly above today's price, so this slightly overstates 2026 tax.",
     },
     "propTax.effective": {
       conf: "high",
       src: "Derived: propTax.publishedRate x propTax.assessmentRatio",
       asOf: "2026",
       note: "0.0066499 x 1 = 0.0066499 against market price. The prototype's 0.00654 was ~$68/yr low on the old benchmark — small, but the exact rate is published.",
+      summary: "The published rate applied to market price, since the assessment ratio is 1. It is worked out directly from the published rate.",
     },
     "bench.house": {
       conf: "high",
@@ -75,6 +80,7 @@ export const calgary: Jurisdiction = {
       asOf: "2026-07",
       url: "https://www.creb.com/News/Media_Releases/2026/August/July_2026_Stats/",
       note: "METRIC: a quality-constant MLS® HPI benchmark, unadjusted (not seasonally adjusted). SCOPE: City of Calgary. BEWARE a widely-repeated $659,400 detached figure — that is AIRDRIE in the same release, a different geography. The prototype's $622,000 was ~16% low.",
+      summary: "CREB®'s July 2026 benchmark price for a detached home in the City of Calgary, $743,900. It is a quality-adjusted benchmark, not an average of sales. Nearby cities such as Airdrie are cheaper, so other areas will differ.",
     },
     "bench.condo": {
       conf: "high",
@@ -82,12 +88,14 @@ export const calgary: Jurisdiction = {
       asOf: "2026-07",
       url: "https://www.creb.com/News/Media_Releases/2026/August/July_2026_Stats/",
       note: "METRIC: an MLS® HPI benchmark, same basis as bench.house. The prototype's $342,000 was ~15% high in a segment CREB describes as persistently oversupplied.",
+      summary: "CREB®'s July 2026 benchmark price for an apartment condo in Calgary, $297,600, over 8% lower than a year earlier and 13% below the 2024 peak. CREB describes this segment as persistently oversupplied.",
     },
     rent: {
       conf: "high",
       src: "CMHC Rental Market Survey, Calgary CMA, two-bedroom purpose-built apartment, reliability code a",
       asOf: "2025-10",
       note: "CMHC reports the average rent of the EXISTING OCCUPIED stock, which runs below asking rents for units actually turning over. October 2025 is the newest reference period CMHC publishes dollar levels for.",
+      summary: "Average rent for a two-bedroom purpose-built apartment in Calgary from CMHC's October 2025 survey, the newest CMHC publishes. It reflects existing occupied units, which cost less than asking rents on units now turning over.",
     },
     yoy: {
       conf: "high",
@@ -95,6 +103,7 @@ export const calgary: Jurisdiction = {
       asOf: "2026-07",
       url: "https://www.creb.com/News/Media_Releases/2026/August/July_2026_Stats/",
       note: "A SIGN FLIP: the prototype said +0.028, so the app told Calgary buyers prices were rising in a market that is falling. The composite is the defensible single scalar but it collapses a wide spread — detached ~-2%, semi-detached ~0%, row ~-6%, apartment ~-8%. Load-bearing for Rent vs Buy and Amortization.",
+      summary: "The year-over-year change in Calgary's overall home price benchmark in July 2026, from CREB: prices are about 2% lower. One figure hides a wide spread, from about -2% for detached homes to about -8% for apartments.",
     },
     "taxTime.0.amount": {
       conf: "high",
@@ -102,12 +111,14 @@ export const calgary: Jurisdiction = {
       asOf: "2026",
       url: "https://www.ey.com/content/dam/ey-unified-site/ey-com/en-ca/services/tax/tax-calculators/2026/ey-tax-rates-manitoba-2026-01-15-v1.pdf",
       note: "1500 -> 1400. The $1,500 it replaces was the same credit at a 15% lowest rate. Alberta levies no provincial first-time-buyer credit, so this is the whole of the tax-time relief here.",
+      summary: "The federal home buyers' credit: a $10,000 claim at the lowest federal rate of 14%, worth $1,400. Alberta has no provincial first-time-buyer credit, so this is the only tax-time relief modelled here.",
     },
     premiumTax: {
       conf: "high",
       src: "CMHC: only Ontario, Quebec and Saskatchewan levy a provincial sales tax on mortgage default insurance premiums",
       asOf: "2026",
       note: "null is correct, and trivially so — Alberta has no provincial sales tax at all.",
+      summary: "Alberta charges no provincial sales tax at all, so there is none on mortgage default insurance premiums. Only Ontario, Quebec and Saskatchewan tax them.",
     },
   },
 };
