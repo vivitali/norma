@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLines } from "../engine";
+import { buildLines, propertyTaxAnnual } from "../engine";
 import { ca } from "../rules/ca";
 import { getJurisdiction } from "./index";
 
@@ -126,10 +126,13 @@ describe("prairie market direction", () => {
     expect(yyc().bench).toEqual({ house: 743900, condo: 297600 });
   });
 
-  it("keeps Winnipeg's benchmarks exactly as the board published them", () => {
-    // The only benchmark figures in the dataset that were already correct, to the dollar.
-    expect(wpg().bench).toEqual({ house: 454264, condo: 290522 });
-    expect(wpg().yoy).toBeCloseTo(0.02, 6);
+  it("carries Winnipeg's August 2026 averages exactly as the board published them", () => {
+    // WinnipegREALTORS' release of 2026-09-03; re-verified 2026-09-28 (research dossier
+    // docs/superpowers/research/2026-09-28-winnipeg-figures.md). yoy is the year-to-date change,
+    // the one measure detached and condo agree on — see its provenance note.
+    expect(wpg().bench).toEqual({ house: 439216, condo: 283715 });
+    expect(wpg().yoy).toBeCloseTo(0.03, 6);
+    expect(wpg().provenance["bench.house"]!.asOf).toBe("2026-08");
   });
 
   it("carries CMHC's October 2025 two-bedroom rents", () => {
@@ -176,14 +179,28 @@ describe("prairie premium tax", () => {
 });
 
 describe("figures deliberately left alone", () => {
-  it("keeps Winnipeg's suspect utility setup fee, flagged rather than invented away", () => {
-    // 3000 against Saskatoon's 550 and Calgary's 600 for the same field. Almost certainly a
-    // prototype transcription error — and still not something to replace, because no source
-    // supports any particular substitute. The disclosure is the deliverable, so it is tested.
-    expect(wpg().fees.setup).toBe(3000);
+  it("derives Winnipeg's utility setup fee from published tariffs, and says how", () => {
+    // Was 3000 and flagged as a suspected transcription error. The 2026-09-28 re-verification
+    // found no published Manitoba Hydro/Centra account-opening fee or residential deposit; the
+    // contingent charges a buyer can meet sum to about $275. Still an assumption — nobody
+    // publishes the total — so the derivation is the deliverable and is tested.
+    expect(wpg().fees.setup).toBe(300);
     const p = wpg().provenance["fees.setup"]!;
     expect(p.conf).toBe("assumption");
-    expect(p.note).toMatch(/SUSPECTED TRANSCRIPTION ERROR/);
+    expect(p.note).toMatch(/Centra/);
+    expect(p.note).toMatch(/dropped-zero/);
+    expect(p.note).not.toMatch(/SUSPECTED/);
+  });
+
+  it("nets Manitoba's Homeowners Affordability Tax Credit off Winnipeg's property tax", () => {
+    const j = wpg();
+    expect(j.propTax.credit).toMatchObject({ kind: "cappedAgainstSlice", amount: 1600 });
+    expect(j.provenance["propTax.credit"]!.conf).toBe("high");
+    // At the benchmark the school tax (~$3,161) exceeds $1,600, so the full credit applies.
+    const price = j.bench.house!;
+    expect(propertyTaxAnnual(j, price)).toBeCloseTo(price * j.propTax.effective - 1600, 6);
+    // Below ~$222,000 the school tax itself is the cap.
+    expect(propertyTaxAnnual(j, 100_000)).toBeCloseTo(100_000 * (j.propTax.effective - 0.0071973), 6);
   });
 
   it("keeps Manitoba's confirmed land transfer tax schedule", () => {
