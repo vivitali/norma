@@ -748,3 +748,31 @@ own worked example, not a publisher-stated figure, shown for scale.
    federal-only table object, not a re-typed duplicate — Texas's own comment in `us.ts` already
    states this pattern explicitly for exactly this situation), and `VALID_STATES` in
    `jurisdictions/index.test.ts`.
+
+---
+
+## Addendum (2026-09-28) — modelling decisions made while transcribing into `seattle.ts`
+
+Added during Phase 2, not new research. Nothing here is a newly fetched figure.
+
+1. **Recording fee arithmetic.** A.2's "$650-$750+" combined estimate is above what the fetched
+   per-page fees produce. Deed $303.50 first page + $1.00 x 2 extra pages (3-page deed) = $305.50;
+   deed of trust $304.50 + $1.00 x 17 extra pages (18-page uniform instrument with riders) =
+   $321.50; combined **$627.00**. The fee schedule is `high`; the page counts are this addendum's
+   own modelled estimate, so the record's `fees.recording` ($627) is graded `assumption`, exactly as
+   Austin's combined recording figure is.
+2. **Lender's policy.** `fees.titleIns` uses A.4's Old Republic "Residential Purchase Loan Policy
+   (simultaneous)" $1,070 at an $800,000 insured amount (the buyer's loan at a ~$920,000 price and
+   10% down is ~$828,000, so the figure is close but is one insurer's flat number, not scaled).
+   Graded `medium`, as A.4 grades it.
+3. **Escrow fee.** `fees.lawyer` (the title/escrow company's closing fee, as in Texas) is $1,400 =
+   half of the $2,800 fee at the $800,000 row, per A.6's 50/50 custom. Old Republic's next rows are
+   $2,900 at $900,000; the schedule above $900,000 was not fetched, so $1,400 is a floor-ish
+   estimate at a $920,000 price. `medium`.
+3b. **`fees.survey` omitted**, per A.6 (rarely required).
+4. **Units.** `propTax.effective` = 9.90845 per $1,000 / 1,000 = **0.00990845** (a FRACTION of
+   assessed value; not per-$100). REET state bands are percentages of price (1.10% = 0.011).
+5. **REET on the buyer's bill.** REET is the seller's obligation (RCW 82.45.080), so the buyer's
+   closing stack carries a `$0` "REET (paid by the seller)" line with an explanation rather than
+   omitting the tax silently. Selling-side REET is NOT modelled anywhere (see the design question
+   in the PR report): `waterfall()`'s selling cost is the 5.5% commission-style field only.
