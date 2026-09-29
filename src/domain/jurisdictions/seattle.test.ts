@@ -170,9 +170,12 @@ describe("seattle — the seller's REET, netted off the sale in Rent vs Buy", ()
     };
     const last = rentVsBuy(seattle, us, input).rows.at(-1)!;
     expect(last.saleTax).toBeCloseTo(saleTaxOn(seattle, last.homeValue), 6);
+    // IRS Pub. 523: the gain is the amount realized (sale price less selling expenses, the
+    // seller's excise tax among them) less the purchase price.
+    const gain = last.homeValue - last.sellingCost - last.saleTax! - input.price;
+    expect(last.homeGainTax ?? 0).toBeCloseTo(Math.max(0, gain - us.sec121.single) * us.gains.rate, 6);
     expect(last.equity).toBeCloseTo(
-      last.homeValue - last.sellingCost - last.saleTax! - last.balance -
-        Math.max(0, last.homeValue - input.price - us.sec121.single) * us.gains.rate,
+      last.homeValue - last.sellingCost - last.saleTax! - last.balance - (last.homeGainTax ?? 0),
       4,
     );
     const houston = getJurisdiction("houston")!;

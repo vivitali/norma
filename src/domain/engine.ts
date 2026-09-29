@@ -1689,7 +1689,11 @@ export interface RentVsBuyRow {
   strata: number;
   /** The contract rate in force this year, as a fraction. Changes at renewal. */
   rate: number;
-  /** Tax-time rebates received in year 1, grown at the investment return. */
+  /**
+   * Canada: tax-time rebates received in year 1, grown at the investment return. US: every
+   * year's itemised-deduction benefit, invested as it arrives and grown — BEFORE tax on that
+   * growth, which `buyGainsTax` carries. Either way it is the operand `buyW` adds.
+   */
   taxTimeCredits: number;
   utilities: number;
   maintenance: number;
@@ -1718,11 +1722,27 @@ export interface RentVsBuyRow {
    * such tax returns the same row shape as before.
    */
   saleTax?: number;
+  /**
+   * US only: tax on the home-sale gain above the federal exclusion, netted off `equity` beside
+   * `sellingCost`. PRESENT ONLY WHEN OWED, like `saleTax`, so the trace can show every term
+   * `equity` subtracts.
+   */
+  homeGainTax?: number;
   equity: number;
-  /** Terminal wealth if you bought. */
+  /** Terminal wealth if you bought: `equity + taxTimeCredits + bp − (buyGainsTax ?? 0)`. */
   buyW: number;
-  /** Terminal wealth if you rented. */
+  /** The up-front cash a renter keeps, grown at the investment return, before any tax on it. */
+  upFrontGrown: number;
+  /** Terminal wealth if you rented: `upFrontGrown + rp − (rentGainsTax ?? 0)`. */
   rentW: number;
+  /**
+   * US only: tax on the investment gains inside `buyW` (the grown deduction benefit and `bp`)
+   * and inside `rentW` (the grown up-front cash and `rp`), at the flat long-term rate. PRESENT
+   * ONLY WHEN NON-ZERO. Reported so the trace's subtotals add up: without them `buyW` and
+   * `rentW` net a tax no line shows.
+   */
+  buyGainsTax?: number;
+  rentGainsTax?: number;
   /** buyW − rentW. Positive means buying is ahead by this year. */
   adv: number;
   /**
@@ -1895,7 +1915,8 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
     // invested alongside everything else.
     const taxTimeCredits = cc.later * Math.pow(1 + ret, t - 1);
     const buyW = equity + taxTimeCredits + (o.investDiff ? bp : 0);
-    const rentW = upFront * Math.pow(1 + ret, t) + (o.investDiff ? rp : 0);
+    const upFrontGrown = upFront * Math.pow(1 + ret, t);
+    const rentW = upFrontGrown + (o.investDiff ? rp : 0);
 
     rows.push({
       t, opening, interest, paid, balance: bal, propTax, insurance, utilities, maintenance,
@@ -1903,7 +1924,7 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
-      homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}), equity, buyW, rentW, adv: buyW - rentW,
+      homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}), equity, buyW, upFrontGrown, rentW, adv: buyW - rentW,
     });
   }
 
@@ -1955,7 +1976,8 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
  *    face the SAME flat rate on their accumulated gain when "sold" for the wealth comparison —
  *    tracked via a running CONTRIBUTED total per portfolio (`afterGainsTax()` below), a FIFO-
  *    blind approximation rather than a lot-by-lot cost-basis simulation, disclosed here as a
- *    simplification rather than left silent.
+ *    simplification rather than left silent. The home's gain is figured as IRS Pub. 523 does,
+ *    on the amount realized (sale price less selling costs), against the purchase price.
  */
 function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
   const years = Math.max(1, o.years);
@@ -2052,25 +2074,37 @@ function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
     const homeValue = o.price * Math.pow(1 + g, t);
     const sellingCost = homeValue * F.sellingCost;
     const saleTax = saleTaxOn(j, homeValue);
-    const homeGain = Math.max(0, homeValue - o.price);
+    // IRS Pub. 523: the gain is the AMOUNT REALIZED — sale price less selling expenses ("a real
+    // estate agent's sales commission", "any other fees or costs to sell your home", which is
+    // where a seller's excise tax falls) — less the adjusted basis. Basis is the purchase price
+    // here; Pub. 523 also adds some purchase closing costs (owner's title insurance, recording
+    // and survey fees, transfer taxes), which this leaves out, so the taxed gain is slightly
+    // high rather than low.
+    const homeGain = Math.max(0, homeValue - sellingCost - saleTax - o.price);
     const taxableHomeGain = Math.max(0, homeGain - F.sec121.single);
     const homeGainTax = taxableHomeGain * flatGainsRate;
     const equity = homeValue - sellingCost - saleTax - bal - homeGainTax;
 
+    const bpHeld = o.investDiff ? bp : 0;
+    const rpHeld = o.investDiff ? rp : 0;
+    const upFrontGrown = upFront * Math.pow(1 + ret, t);
     const buyW = equity + afterGainsTax(tbp, tbpContrib) + (o.investDiff ? afterGainsTax(bp, bpContrib) : 0);
-    const rentW = afterGainsTax(upFront * Math.pow(1 + ret, t), upFront) + (o.investDiff ? afterGainsTax(rp, rpContrib) : 0);
+    const rentW = afterGainsTax(upFrontGrown, upFront) + (o.investDiff ? afterGainsTax(rp, rpContrib) : 0);
+    // What `buyW`/`rentW` just netted, as their own operands: each subtotal is then a plain sum.
+    const buyGainsTax = equity + tbp + bpHeld - buyW;
+    const rentGainsTax = upFrontGrown + rpHeld - rentW;
 
     rows.push({
       t, opening, interest, paid, balance: bal, propTax, insurance, utilities, maintenance,
-      services, strata, rate: rate0, taxTimeCredits: deductionBenefit,
+      services, strata, rate: rate0, taxTimeCredits: tbp,
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
       homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}),
-      // Reported only when owed (above the federal home-sale exclusion), so the page's trace can
-      // show every term `equity` subtracts and still add up.
       ...(homeGainTax > 0 ? { homeGainTax } : {}),
-      equity, buyW, rentW, adv: buyW - rentW,
+      equity, buyW, upFrontGrown, rentW, adv: buyW - rentW,
+      ...(buyGainsTax > 0.005 ? { buyGainsTax } : {}),
+      ...(rentGainsTax > 0.005 ? { rentGainsTax } : {}),
       deductionBenefit, itemizedBeatsStandard, pmi,
     });
   }

@@ -108,8 +108,7 @@ export default function RentVsBuyPage() {
   const hold = resolved.holding;
   const atHorizon = rowAt(result.rows, hold);
   // US rows only, and only when owed: the tax on a gain above the home-sale exclusion.
-  const homeGainTax: number =
-    "homeGainTax" in atHorizon && typeof atHorizon.homeGainTax === "number" ? atHorizon.homeGainTax : 0;
+  const homeGainTax = atHorizon.homeGainTax ?? 0;
   const flatAtHorizon = rowAt(flat.rows, hold);
   const buyWins = atHorizon.adv > 0;
   // The in-place rent ask is on screen (see below): it is then the only rent field.
@@ -616,14 +615,22 @@ export default function RentVsBuyPage() {
                     ...(atHorizon.bp > 0
                       ? [{ label: t("calcInvestedBuy"), value: fmt(atHorizon.bp), op: "plus" as const }]
                       : []),
+                    // US only, present only when owed: the tax on the growth in the two lines
+                    // above, which `buyW` nets. Without it the subtotal is not their sum.
+                    ...(atHorizon.buyGainsTax
+                      ? [{ label: t("calcGainsTax"), value: fmt(atHorizon.buyGainsTax), op: "minus" as const }]
+                      : []),
                     { label: t("calcBuying"), value: fmt(atHorizon.buyW), op: "equals", rule: true, strong: true },
                     {
                       label: t("calcUpfrontGrown"),
-                      value: fmt(atHorizon.rentW - atHorizon.rp),
+                      value: fmt(atHorizon.upFrontGrown),
                       note: t("upFrontNote", { up: fmt(result.upFront) }),
                     },
                     ...(atHorizon.rp > 0
                       ? [{ label: t("calcInvestedRent"), value: fmt(atHorizon.rp), op: "plus" as const }]
+                      : []),
+                    ...(atHorizon.rentGainsTax
+                      ? [{ label: t("calcGainsTax"), value: fmt(atHorizon.rentGainsTax), op: "minus" as const }]
                       : []),
                     // Renting is its own subtotal (upfront + invested surplus), so
                     // the last block is a real subtraction: Buying − Renting =

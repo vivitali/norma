@@ -659,10 +659,49 @@ describe("Rent vs buy — Seattle's REET is the seller's, and the sale deducts i
   });
 });
 
-describe("Rent vs buy — every term the US sale subtracts is shown", () => {
-  it("shows the tax on a gain above the home-sale exclusion when one is owed", async () => {
-    // A $2,000,000 Houston home held 40 years gains far more than the federal exclusion, so
-    // `equity` subtracts a gains tax; the trace must show it or it no longer adds up.
+/**
+ * Reads the calc trace as the arithmetic it claims to be: a line with no operator starts a sum,
+ * "+" and "−" lines move it, and every "=" line must equal it — within a dollar per operand,
+ * since each line is rounded for display. An operand the engine nets but the page does not
+ * show (the US tax on investment gains, before it was reported) fails here.
+ */
+function assertTraceAddsUp() {
+  const calc = document.getElementById("calc-panel")!;
+  const lines = [...calc.querySelector("dl")!.children].map((row) => ({
+    op: row.querySelector("dt > span[aria-hidden]")!.textContent!.trim(),
+    // Less the screen-reader copy of the operator, which leads the label cell.
+    label: row.querySelector("dt > span.min-w-0")!.textContent!.replace(/^[+\u2212\u00d7\u00f7=] /, ""),
+    value: Number(
+      row.querySelector("dd")!.textContent!.replace(/[\u2212-]/, "-").replace(/[^\d-]/g, ""),
+    ),
+  }));
+  let acc = 0;
+  let operands = 0;
+  const checked: string[] = [];
+  for (const line of lines) {
+    if (line.op === "") {
+      acc = line.value;
+      operands = 1;
+    } else if (line.op === "+") {
+      acc += line.value;
+      operands += 1;
+    } else if (line.op === "\u2212") {
+      acc -= line.value;
+      operands += 1;
+    } else if (line.op === "=") {
+      expect(Math.abs(acc - line.value), `${line.label}: ${acc} vs ${line.value}`).toBeLessThanOrEqual(operands);
+      checked.push(line.label);
+      acc = line.value;
+      operands = 1;
+    }
+  }
+  return checked;
+}
+
+describe("Rent vs buy — the calc trace adds up", () => {
+  it("US, with a home-sale gain above the exclusion: every tax the answer nets is a line", async () => {
+    // A $2,000,000 Houston home held 40 years gains far more than the federal exclusion, and
+    // both sides' portfolios grow enough to owe tax on their gains.
     const user = userEvent.setup();
     window.localStorage.setItem(
       "norma.inputs.v2",
@@ -670,6 +709,34 @@ describe("Rent vs buy — every term the US sale subtracts is shown", () => {
     );
     renderPage("en-US");
     await user.click(screen.getByRole("button", { name: /Expand all/ }));
-    expect(screen.getAllByText("Tax on the gain above the home-sale exclusion").length).toBeGreaterThan(0);
+    const calc = within(document.getElementById("calc-panel")!);
+    expect(calc.getByText("Tax on the gain above the home-sale exclusion")).toBeInTheDocument();
+    expect(calc.getAllByText("Tax on investment gains").length).toBeGreaterThan(0);
+    // The same figure in the panel above, where the reader meets it first.
+    const wealth = within(document.getElementById("wealth-panel")!);
+    expect(wealth.getByText("Tax on the gain above the home-sale exclusion")).toBeInTheDocument();
+    expect(assertTraceAddsUp()).toEqual(["Home equity, net of selling cost", "Buying", "Renting", "Difference"]);
+  });
+
+  it("US, with the gain inside the exclusion: no home-sale tax line, and still adds up", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "houston", price: 300000, holding: 10, rent: 2000 }),
+    );
+    renderPage("en-US");
+    await user.click(screen.getByRole("button", { name: /Expand all/ }));
+    expect(screen.queryByText("Tax on the gain above the home-sale exclusion")).toBeNull();
+    expect(assertTraceAddsUp().length).toBe(4);
+  });
+
+  it("Canada: no US tax lines, and still adds up", async () => {
+    const user = userEvent.setup();
+    seedAnswerable();
+    renderPage("en-CA");
+    await user.click(screen.getByRole("button", { name: /Expand all/ }));
+    expect(screen.queryByText("Tax on the gain above the home-sale exclusion")).toBeNull();
+    expect(screen.queryByText("Tax on investment gains")).toBeNull();
+    expect(assertTraceAddsUp().length).toBe(4);
   });
 });

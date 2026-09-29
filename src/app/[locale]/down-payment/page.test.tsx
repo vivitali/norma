@@ -421,3 +421,31 @@ describe("Down payment — the same thing is not said twice", () => {
     expect(within(panel).queryByText(/Add what you have in each account/)).not.toBeInTheDocument();
   });
 });
+
+describe("Down payment — a realised gain is described the way it is taxed", () => {
+  // Only the non-registered account, holding a gain, so the waterfall must draw on it.
+  const seed = (jurId: string) =>
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId, nonreg: 900000, nonregGain: 300000, income: 100000 }),
+    );
+
+  it("Canada: a fraction of the gain, at the marginal rate", async () => {
+    seed("toronto");
+    const user = userEvent.setup();
+    renderPage("en-CA");
+    await open(user, /The funding order/);
+    expect(screen.getByText(/of capital gain, 50% of it taxable at/)).toBeInTheDocument();
+  });
+
+  it("US: the whole gain at the flat long-term rate, with no inclusion step", async () => {
+    // The page used to print "15% of it taxable at 22%" here — a tax the US engine never
+    // charges: it taxes the whole gain at 15%.
+    seed("houston");
+    const user = userEvent.setup();
+    renderPage("en-US");
+    await open(user, /The funding order/);
+    expect(screen.getByText(/of capital gain, taxed at 15%$/)).toBeInTheDocument();
+    expect(screen.queryByText(/of it taxable at/)).toBeNull();
+  });
+});

@@ -463,13 +463,24 @@ export default function DownPaymentPage() {
                     {row.key === "tfsa" && row.drawn > 0 ? (
                       <p className="pt-1 text-[12px] text-caution">{t("roomLost")}</p>
                     ) : null}
+                    {/*
+                      Worded from `rules.gains`, the field `waterfall()` taxes with. Canada
+                      includes a fraction of the gain at the marginal rate; the US taxes the
+                      whole gain at a flat rate, so "15% of it taxable at 22%" described a tax
+                      the US engine never charged.
+                    */}
                     {row.gainRealised > 0 ? (
                       <p className="pt-1 text-[12px] text-caution">
-                        {t("gainRealised", {
-                          g: fmt(row.gainRealised),
-                          i: pct(rules.capGainsInclusion * 100),
-                          r: pct(flow.rate * 100, 1),
-                        })}
+                        {rules.gains.kind === "flat"
+                          ? t("gainRealisedFlat", {
+                              g: fmt(row.gainRealised),
+                              r: pct(rules.gains.rate * 100),
+                            })
+                          : t("gainRealised", {
+                              g: fmt(row.gainRealised),
+                              i: pct(rules.gains.rate * 100),
+                              r: pct(flow.rate * 100, 1),
+                            })}
                       </p>
                     ) : null}
                     {/*

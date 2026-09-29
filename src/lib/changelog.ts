@@ -48,7 +48,11 @@ export const RELEASES: readonly Release[] = [
     date: "2026-09-29",
     countries: ["us"],
     summary: "sumUsGainTax",
-    items: [{ key: "usGainTax", href: { pathname: "/rent-vs-buy", hash: "wealth" } }],
+    items: [
+      { key: "usGainTax", href: { pathname: "/rent-vs-buy", hash: "wealth" } },
+      { key: "usGainBase", href: { pathname: "/rent-vs-buy", hash: "wealth" } },
+      { key: "usTraceTaxes", href: { pathname: "/rent-vs-buy", hash: "calc" } },
+    ],
   },
   {
     id: "2026-09-29-french-spacing",
