@@ -154,6 +154,8 @@ export interface HeadStat {
   /** Short qualifier beside the figure. Empty renders nothing. */
   note?: string;
   mark?: ProvenanceKind;
+  /** "caution" promotes the figure to the caution colour (DESIGN.md §2: state is a figure colour, never a fill). */
+  tone?: "caution";
 }
 
 /**
@@ -178,6 +180,7 @@ export function AnswerHead({
   head,
   sub,
   tag,
+  onTagActivate,
   stats,
 }: {
   eyebrow: string;
@@ -186,6 +189,11 @@ export function AnswerHead({
   head: string;
   sub?: string;
   tag?: string;
+  /**
+   * When given, the tag is a button with the same pill look — one element whose
+   * accessible name is its text — that jumps to and focuses the field it names.
+   */
+  onTagActivate?: () => void;
   stats?: readonly HeadStat[];
 }) {
   return (
@@ -232,12 +240,23 @@ export function AnswerHead({
             <p className="mt-2 max-w-[560px] text-[14.5px] leading-[1.6] text-ink2 text-pretty">{sub}</p>
           ) : null}
           {tag ? (
-            <p
-              data-slot="answer-tag"
-              className="eyebrow mt-4 inline-block rounded-full border border-acbr px-2.5 py-1 text-ac"
-            >
-              {tag}
-            </p>
+            onTagActivate ? (
+              <button
+                type="button"
+                data-slot="answer-tag"
+                onClick={onTagActivate}
+                className="eyebrow mt-4 inline-block max-w-full cursor-pointer rounded-full border border-acbr px-2.5 py-1 text-left text-ac underline decoration-dotted underline-offset-4 hover:bg-acbg"
+              >
+                {tag}
+              </button>
+            ) : (
+              <p
+                data-slot="answer-tag"
+                className="eyebrow mt-4 inline-block rounded-full border border-acbr px-2.5 py-1 text-ac"
+              >
+                {tag}
+              </p>
+            )
           ) : null}
         </div>
         {/*
@@ -260,7 +279,14 @@ export function AnswerHead({
                 </div>
                 {/* The note wraps under the value rather than off the screen. */}
                 <div data-slot="answer-stat" className="flex flex-wrap items-baseline gap-x-2.5">
-                  <span className="text-[22px] font-semibold tracking-[-0.02em]">{stat.value}</span>
+                  <span
+                    className={cn(
+                      "text-[22px] font-semibold tracking-[-0.02em]",
+                      stat.tone === "caution" && "text-caution",
+                    )}
+                  >
+                    {stat.value}
+                  </span>
                   {stat.note ? (
                     <span className="text-[12px] leading-[1.35] text-ink3">{stat.note}</span>
                   ) : null}

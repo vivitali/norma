@@ -107,6 +107,53 @@ export function InputGroups({
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Group legend={t("cLimits")}>
+          <NumberField
+            id="comfortCeiling"
+            label={t("cComfortCeiling")}
+            value={stored.comfortCeiling}
+            placeholder={resolved.comfortCeiling}
+            min={0}
+            onCommit={(comfortCeiling) => update({ comfortCeiling })}
+          />
+          {/*
+            `funds` and `condoFee` are DELIBERATELY absent from this grid. Both were
+            here AND in the panel that asks for them — funds under two different
+            labels — and each ask fires on exactly the condition that leaves its twin
+            here empty, so one press of Expand all put two fields for one value on
+            screen. The in-place ask is the endorsed placement (DESIGN.md §5.3), and
+            the survivors live in the cash and comfort panels on affordability/page.tsx.
+          */}
+          <NumberField
+            id="save"
+            label={t("monthlySavings")}
+            value={stored.save}
+            min={0}
+            onCommit={(save) => update({ save })}
+          />
+          {advanced(
+            "adv-limits",
+            <>
+              <NumberField
+                id="insuranceAnnual"
+                label={t("cInsurance")}
+                value={stored.insuranceAnnual}
+                placeholder={resolved.insuranceAnnual}
+                min={0}
+                onCommit={(insuranceAnnual) => update({ insuranceAnnual })}
+              />
+              <NumberField
+                id="utilities"
+                label={t("cUtilities")}
+                value={stored.utilities}
+                placeholder={resolved.utilities}
+                min={0}
+                onCommit={(utilities) => update({ utilities })}
+              />
+            </>,
+          )}
+        </Group>
+
         <Group legend={t("cIncome")}>
           <NumberField
             id="income1"
@@ -392,53 +439,6 @@ export function InputGroups({
                   </Label>
                 </div>
               ) : null}
-            </>,
-          )}
-        </Group>
-
-        <Group legend={t("cLimits")}>
-          <NumberField
-            id="comfortCeiling"
-            label={t("cComfortCeiling")}
-            value={stored.comfortCeiling}
-            placeholder={resolved.comfortCeiling}
-            min={0}
-            onCommit={(comfortCeiling) => update({ comfortCeiling })}
-          />
-          {/*
-            `funds` and `condoFee` are DELIBERATELY absent from this grid. Both were
-            here AND in the panel that asks for them — funds under two different
-            labels — and each ask fires on exactly the condition that leaves its twin
-            here empty, so one press of Expand all put two fields for one value on
-            screen. The in-place ask is the endorsed placement (DESIGN.md §5.3), and
-            the survivors live in the cash and comfort panels on affordability/page.tsx.
-          */}
-          <NumberField
-            id="save"
-            label={t("monthlySavings")}
-            value={stored.save}
-            min={0}
-            onCommit={(save) => update({ save })}
-          />
-          {advanced(
-            "adv-limits",
-            <>
-              <NumberField
-                id="insuranceAnnual"
-                label={t("cInsurance")}
-                value={stored.insuranceAnnual}
-                placeholder={resolved.insuranceAnnual}
-                min={0}
-                onCommit={(insuranceAnnual) => update({ insuranceAnnual })}
-              />
-              <NumberField
-                id="utilities"
-                label={t("cUtilities")}
-                value={stored.utilities}
-                placeholder={resolved.utilities}
-                min={0}
-                onCommit={(utilities) => update({ utilities })}
-              />
             </>,
           )}
         </Group>

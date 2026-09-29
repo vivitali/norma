@@ -215,6 +215,7 @@
     "stComfort": "Precio cómodo",
     "stCeiling": "Techo del prestamista",
     "stCeilingNote": "Un techo, no un objetivo",
+    "stCeilingBinds": "Su límite aquí",
     "stMonthly": "Cuota mensual total real",
     "stCash": "Efectivo necesario al cierre",
     "ckApproval": "Aprobación",
@@ -349,6 +350,12 @@
     "xScenariosNone": "Ningún pago inicial arregla esto: los cuatro se rechazan a este precio. <link>La página de escenarios</link> muestra cuánto le falta a cada uno.",
     "insuranceMonthly": "Seguro de hogar, mensual",
     "vDeclinedTypical": "Podría sostener con holgura unos {a}, pero un prestamista rechazaría al precio típico de este lugar. Esto es por qué, y qué lo cambia.",
+    "vCap": "Un prestamista le limita a {c}, por debajo de los {a} que podría sostener con holgura.",
+    "vCapOver": "El precio que está probando también supera lo que podría sostener con holgura.",
+    "vCapDeclined": "Un prestamista rechazaría al precio que ingresó. Esto es por qué, y qué lo cambia.",
+    "vCapDeclinedTypical": "Un prestamista rechazaría al precio típico de este lugar. Esto es por qué, y qué lo cambia.",
+    "vCapShortCash": "Sus ingresos califican a este precio, pero aún no tiene el efectivo para cerrar.",
+    "subCap": "El precio que está probando cabe dentro de ambos límites.",
     "noIncomeLine": "No hay ingreso introducido, así que todavía no hay nada que comparar con los límites de un prestamista."
   },
   "ClosingCosts": {

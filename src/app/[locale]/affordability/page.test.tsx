@@ -5,6 +5,10 @@ import { renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/lib/locales";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { getJurisdiction } from "@/domain/jurisdictions";
+import { affordability } from "@/domain/engine";
+import { RULES } from "@/domain/rules";
+import { resolveInputs } from "@/lib/resolve-inputs";
+import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
 import AffordabilityPage from "./page";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
@@ -536,7 +540,9 @@ describe("Affordability — with no published price, it keeps the ceiling and as
     renderPage();
     expect(getJurisdiction("yt")!.bench.house).toBeNull();
     expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/You can comfortably afford about/).length).toBeGreaterThan(0);
+    // Yukon's lender ceiling sits below the comfort price, so the head names the cap
+    // rather than the plain "comfortably afford" sentence (decision: name the binding limit).
+    expect(screen.getAllByText(/A lender caps you at|You can comfortably afford about/).length).toBeGreaterThan(0);
   });
 
   it("says why nothing is being checked, and drops the checks rather than answering them", () => {
@@ -793,5 +799,51 @@ describe("Affordability — a second applicant is asked for, never assumed", () 
   it("names the jurisdiction, translated, in the price hint", () => {
     renderPage();
     expect(screen.getByText(/^Winnipeg · \$/)).toBeInTheDocument();
+  });
+});
+
+describe("Affordability — the lender limit is named when it binds", () => {
+  const seed = (o: object) => window.localStorage.setItem("norma.inputs.v2", JSON.stringify(o));
+
+  it("leads with the cap, keeps the comfort price as the hero, and promotes the ceiling stat", () => {
+    seed({ jurId: "winnipeg" });
+    renderPage();
+    const [j, rules] = [getJurisdiction("winnipeg")!, RULES.ca];
+    const r = affordability(j, rules, resolveInputs(TOOL_DEFAULTS, j, rules));
+    expect(r.comfort).toBeGreaterThan(r.ceiling);
+    expect(screen.getByText(/A lender caps you at \$[\d,]+ — below the \$[\d,]+ you could comfortably carry\./)).toBeInTheDocument();
+    expect(document.querySelector("[data-slot=answer-figure]")!.textContent).toBe(
+      `$${Math.round(r.comfort).toLocaleString("en-CA")}`,
+    );
+    expect(screen.getByText("Your limit here")).toBeInTheDocument();
+    expect(screen.queryByText("A ceiling, not a target")).not.toBeInTheDocument();
+  });
+
+  it("does not claim a cap when the ceiling is the higher figure", () => {
+    seed({ jurId: "winnipeg", comfortCeiling: 1000 });
+    renderPage();
+    expect(screen.queryByText(/A lender caps you at/)).not.toBeInTheDocument();
+    expect(screen.getByText("A ceiling, not a target")).toBeInTheDocument();
+  });
+
+  it("makes the assumption tag a button that focuses the budget field", async () => {
+    seed({ jurId: "winnipeg" });
+    renderPage();
+    const tag = screen.getByRole("button", { name: /Assuming .* income and a .* monthly budget/ });
+    await userEvent.setup().click(tag);
+    expect(document.activeElement).toBe(document.getElementById("comfortCeiling"));
+  });
+
+  it("does not link the tag once the numbers are the reader's own", () => {
+    seed({ jurId: "winnipeg", income1: 90000 });
+    renderPage();
+    expect(screen.queryByRole("button", { name: "Your numbers" })).not.toBeInTheDocument();
+  });
+
+  it("puts 'Your limits' first among the input groups", () => {
+    seed({ jurId: "winnipeg" });
+    renderPage();
+    const legends = Array.from(document.querySelectorAll("#inputs ~ * legend, section[aria-labelledby=inputs] legend")).map((l) => l.textContent);
+    expect(legends[0]).toBe("Your limits");
   });
 });

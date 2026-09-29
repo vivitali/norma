@@ -116,20 +116,38 @@ export default function AffordabilityPage() {
    * in all four locales. So both branches now open by naming the figure and then say
    * what is wrong with the target.
    */
+  // The lender's ceiling is below the comfort price: the lender, not the reader's own
+  // budget, is what limits them. The hero stays the comfort price (page.test.tsx pins
+  // it), so the sentence under it must NAME the lower limit rather than let the larger
+  // figure read as the answer. Where the ceiling is the higher one, nothing changes.
+  const lenderCaps = result.comfort > result.ceiling;
+  const cap = lenderCaps ? t("vCap", { c: fmt(result.ceiling), a: fmt(result.comfort) }) : null;
   const head =
-    verdict === "comfortable"
-      ? `${t("vComfort")} ${fmt(result.comfort)}.`
-      : verdict === "over"
-        ? t("vOver")
-        : verdict === "declined"
-          ? // `stored.price === null` is the benchmark, not an entry: never say "you entered".
-            t(stored.price === null ? "vDeclinedTypical" : "vDeclined", { a: fmt(result.comfort) })
-          : t("vShortCash", { a: fmt(result.comfort) });
+    cap !== null
+      ? verdict === "comfortable"
+        ? cap
+        : `${cap} ${
+            verdict === "over"
+              ? t("vCapOver")
+              : verdict === "declined"
+                ? // `stored.price === null` is the benchmark, not an entry: never say "you entered".
+                  t(stored.price === null ? "vCapDeclinedTypical" : "vCapDeclined")
+                : t("vCapShortCash")
+          }`
+      : verdict === "comfortable"
+        ? `${t("vComfort")} ${fmt(result.comfort)}.`
+        : verdict === "over"
+          ? t("vOver")
+          : verdict === "declined"
+            ? t(stored.price === null ? "vDeclinedTypical" : "vDeclined", { a: fmt(result.comfort) })
+            : t("vShortCash", { a: fmt(result.comfort) });
   const sub =
     verdict === "declined"
       ? result.qualIncome <= 0
         ? // No limit is binding when nothing qualifies; the approval row says why.
-          t("subComfort")
+          lenderCaps
+          ? undefined
+          : t("subComfort")
         : result.tdsBinds
           ? t("ckTds")
           : t("ckGds")
@@ -137,7 +155,27 @@ export default function AffordabilityPage() {
         ? result.monthsToClose === null
           ? t("ckCsNo")
           : t("vMonths", { n: result.monthsToClose })
-        : t("subComfort");
+        : lenderCaps
+          ? t("subCap")
+          : t("subComfort");
+
+  // Jump to the budget field and put the caret in it. A hash link would scroll but not
+  // reliably focus an <input>, and this is ~3,000px down at phone width.
+  const focusBudget = () => {
+    const el = document.getElementById("comfortCeiling");
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.focus({ preventScroll: true });
+  };
+
+  const ceilingStat = {
+    label: t("stCeiling"),
+    value: fmt(result.ceiling),
+    // When it binds, this is the reader's limit and not merely a ceiling on paper.
+    note: lenderCaps ? t("stCeilingBinds") : t("stCeilingNote"),
+    mark: "rule" as const,
+    ...(lenderCaps ? { tone: "caution" as const } : {}),
+  };
 
   /** Comfort: positive means over the ceiling you set. */
   const headroom = (n: number) => (n <= 0 ? `${fmt(-n)} ${t("headroom")}` : `${fmt(n)} ${t("over")}`);
@@ -257,7 +295,11 @@ export default function AffordabilityPage() {
         eyebrow={t("aTitle")}
         figure={fmt(result.comfort)}
         pulseKey={hydrated && isPersonalised(stored) ? `${jurisdiction.id}:yours` : jurisdiction.id}
-        head={resolved.priceKnown ? head : `${t("vComfort")} ${fmt(result.comfort)}.`}
+        head={
+          resolved.priceKnown
+            ? head
+            : (cap ?? `${t("vComfort")} ${fmt(result.comfort)}.`)
+        }
         sub={
           resolved.priceKnown
             ? sub
@@ -291,17 +333,18 @@ export default function AffordabilityPage() {
                 budget: fmt(resolved.comfortCeiling),
               })
         }
+        onTagActivate={isPersonalised(stored) ? undefined : focusBudget}
         stats={
           resolved.priceKnown
             ? [
-                { label: t("stCeiling"), value: fmt(result.ceiling), note: t("stCeilingNote"), mark: "rule" as const },
+                ceilingStat,
                 { label: t("stMonthly"), value: fmt(result.monthly.total), note: headroom(result.comfortGap), mark: "estimate" as const },
                 { label: t("stCash"), value: fmt(result.cc.net) },
               ]
             : // The lender ceiling is a price the reader's income supports, computed the
               // same way with no benchmark in it. The other two are the price's own
               // monthly cost and the cash to close on it, and both would read $0.
-              [{ label: t("stCeiling"), value: fmt(result.ceiling), note: t("stCeilingNote"), mark: "rule" as const }]
+              [ceilingStat]
         }
       />
       </PendingFigures>
