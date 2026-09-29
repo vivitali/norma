@@ -1334,6 +1334,12 @@
     "bodyContact": "This site is operated by:"
   },
   "Changelog": {
+    "sumPlainSources": "Sources, in plain words",
+    "sourcesPlain": "Sources explains each figure in a sentence or two of plain words, not in our verification notes.",
+    "sumUsGainTax": "Rent vs Buy shows the home-sale gain tax",
+    "usGainTax": "Rent vs Buy now lists the tax on a sale gain above the federal home-sale exclusion, which its result already subtracted.",
+    "sumFrenchSpacing": "French punctuation, Québec style",
+    "frenchSpacing": "French pages space punctuation the Québec way, as the Office québécois de la langue française recommends.",
     "sumSeattle": "Seattle, Washington is now covered",
     "seattleAdded": "Seattle, Washington: King County's 2026 tax rate, NWMLS median prices and HUD's fair-market rent.",
     "seattleSaleTax": "Rent vs Buy deducts Washington's real estate excise tax, which the seller pays, when you sell.",

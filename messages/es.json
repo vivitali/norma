@@ -1334,6 +1334,12 @@
     "bodyContact": "Este sitio es operado por:"
   },
   "Changelog": {
+    "sumPlainSources": "Las fuentes, en palabras sencillas",
+    "sourcesPlain": "Fuentes explica cada cifra en una o dos frases sencillas, en inglés, y no con nuestras notas de verificación.",
+    "sumUsGainTax": "Alquilar o comprar muestra el impuesto a la ganancia de venta",
+    "usGainTax": "Alquilar o comprar ahora muestra el impuesto sobre la ganancia de venta por encima de la exclusión federal para vivienda, que su resultado ya restaba.",
+    "sumFrenchSpacing": "Puntuación francesa al estilo de Quebec",
+    "frenchSpacing": "Las páginas en francés espacian la puntuación al estilo de Quebec, como recomienda la Office québécois de la langue française.",
     "sumSeattle": "Seattle, Washington, ya está incluida",
     "seattleAdded": "Seattle, Washington: la tasa de impuesto 2026 del condado de King, precios medianos de NWMLS y la renta de mercado de HUD.",
     "seattleSaleTax": "Alquilar o comprar descuenta, al vender, el impuesto de Washington sobre ventas de inmuebles, que paga el vendedor.",

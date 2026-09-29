@@ -1334,6 +1334,12 @@
     "bodyContact": "Ce site est exploité par :"
   },
   "Changelog": {
+    "sumPlainSources": "Les sources, en termes simples",
+    "sourcesPlain": "Sources explique chaque chiffre en une phrase ou deux, en termes simples et en anglais, plutôt que par nos notes de vérification.",
+    "sumUsGainTax": "Louer ou acheter affiche l’impôt sur le gain de vente",
+    "usGainTax": "Louer ou acheter indique maintenant l’impôt sur un gain de vente au-delà de l’exclusion fédérale pour résidence, que son résultat soustrayait déjà.",
+    "sumFrenchSpacing": "La ponctuation française, à la québécoise",
+    "frenchSpacing": "Les pages en français espacent la ponctuation à la québécoise, comme le recommande l’Office québécois de la langue française.",
     "sumSeattle": "Seattle (Washington) est maintenant couverte",
     "seattleAdded": "Seattle (Washington) : taux de taxe 2026 du comté de King, prix médians NWMLS et loyer de marché de HUD.",
     "seattleSaleTax": "Louer ou acheter déduit, à la vente, la taxe d’accise immobilière de Washington, payée par le vendeur.",

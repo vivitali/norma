@@ -37,6 +37,27 @@ export interface Release {
 
 export const RELEASES: readonly Release[] = [
   {
+    id: "2026-09-29-plain-sources",
+    date: "2026-09-29",
+    countries: ["ca", "us"],
+    summary: "sumPlainSources",
+    items: [{ key: "sourcesPlain", href: { pathname: "/sources" } }],
+  },
+  {
+    id: "2026-09-29-us-gain-tax",
+    date: "2026-09-29",
+    countries: ["us"],
+    summary: "sumUsGainTax",
+    items: [{ key: "usGainTax", href: { pathname: "/rent-vs-buy", hash: "wealth" } }],
+  },
+  {
+    id: "2026-09-29-french-spacing",
+    date: "2026-09-29",
+    countries: ["ca"],
+    summary: "sumFrenchSpacing",
+    items: [{ key: "frenchSpacing" }],
+  },
+  {
     id: "2026-09-28-winnipeg",
     date: "2026-09-28",
     countries: ["ca"],
@@ -276,8 +297,14 @@ export function releasesFor(country: Country): Release[] {
  * The newest release for this country that is relevant to this jurisdiction: one with no
  * `jurisdictions` (everyone) or one that names it. `undefined` when there is none.
  */
-export function latestRelevant(country: Country, jurId: string): Release | undefined {
-  return releasesFor(country).find((r) => !r.jurisdictions || r.jurisdictions.includes(jurId));
+export function latestRelevant(
+  country: Country,
+  jurId: string,
+  releases: readonly Release[] = RELEASES,
+): Release | undefined {
+  return releases.find(
+    (r) => r.countries.includes(country) && (!r.jurisdictions || r.jurisdictions.includes(jurId)),
+  );
 }
 
 /** A release's date as the reader's locale writes it: "28 Sep 2026", "28 sept. 2026". */

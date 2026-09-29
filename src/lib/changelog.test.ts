@@ -8,6 +8,7 @@ import {
   formatReleaseDate,
   latestRelevant,
   releasesFor,
+  type Release,
 } from "./changelog";
 import { ROUTE_COUNTRIES } from "./routes";
 import { SECTION_REGISTRIES } from "./sections";
@@ -153,11 +154,20 @@ describe("changelog helpers", () => {
   });
 
   it("latestRelevant skips a release tagged to other jurisdictions", () => {
-    // Winnipeg has its own newest release; everywhere else in Canada skips it.
-    expect(latestRelevant("ca", "winnipeg")?.jurisdictions).toEqual(["winnipeg"]);
-    const toronto = latestRelevant("ca", "toronto");
-    expect(toronto?.jurisdictions).toBeUndefined();
-    expect(toronto?.date).toBe("2026-09-28");
+    // A fixture, not RELEASES: which release is newest changes with every entry, and the skip is
+    // only exercised while a tagged one sits above an untagged one.
+    const release = (id: string, jurisdictions?: string[]): Release => ({
+      id,
+      date: "2026-01-01",
+      countries: ["ca"],
+      summary: "s",
+      items: [],
+      ...(jurisdictions ? { jurisdictions } : {}),
+    });
+    const fixture = [release("wpg", ["winnipeg"]), release("all")];
+    expect(latestRelevant("ca", "winnipeg", fixture)?.id).toBe("wpg");
+    expect(latestRelevant("ca", "toronto", fixture)?.id).toBe("all");
+    expect(latestRelevant("us", "toronto", fixture)).toBeUndefined();
   });
 
   it("latestRelevant is scoped to the country", () => {
