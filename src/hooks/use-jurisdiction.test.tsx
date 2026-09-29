@@ -56,6 +56,28 @@ describe("useJurisdiction", () => {
     await waitFor(() => expect(regionOf(result.current[0])).toBe("ON"));
   });
 
+  it("applies the reader's school division to the Winnipeg record", async () => {
+    const { result } = renderHook(() => useJurisdiction(), { wrapper });
+    const defaultRate = result.current[0].propTax.effective;
+    act(() => result.current[2]("pembina-trails"));
+    await waitFor(() => expect(result.current[0].propTax.effective).toBeLessThan(defaultRate));
+    expect(result.current[0].propTax.publishedRate).toBeCloseTo(0.025223, 9);
+    // Stored, so it survives a reload and every page reads the same division.
+    expect(JSON.parse(window.localStorage.getItem(STORE_KEY_V2)!).taxArea).toBe("pembina-trails");
+  });
+
+  it("ignores a Winnipeg division on a city that has none, and restores it on return", async () => {
+    window.localStorage.setItem(
+      STORE_KEY_V2,
+      JSON.stringify({ jurId: "toronto", taxArea: "pembina-trails" }),
+    );
+    const { result } = renderHook(() => useJurisdiction(), { wrapper });
+    await waitFor(() => expect(result.current[0].id).toBe("toronto"));
+    expect(result.current[0]).toBe(getJurisdiction("toronto"));
+    act(() => result.current[1]("winnipeg"));
+    await waitFor(() => expect(result.current[0].propTax.publishedRate).toBeCloseTo(0.025223, 9));
+  });
+
   it("resolves an unknown stored id to the default jurisdiction", async () => {
     window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ jurId: "atlantis" }));
     const { result } = renderHook(() => useJurisdiction(), { wrapper });

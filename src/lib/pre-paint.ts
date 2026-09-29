@@ -31,6 +31,8 @@ export function prePaintScript(country: Country): string {
   const defaults: Record<string, unknown> = {
     ...TOOL_DEFAULTS,
     jurId: defaultJurisdictionOf(country).id,
+    // A chosen school division re-prices every figure the page shows.
+    taxArea: null,
   };
   const ids = jurisdictionsOf(country).map((j) => j.id);
   return `(function(d,j,k){try{var s=localStorage.getItem(k);if(!s)return;var b=JSON.parse(s);if(!b||typeof b!=="object")return;for(var n in d){if(!Object.prototype.hasOwnProperty.call(b,n))continue;var v=b[n];if(n==="jurId"&&j.indexOf(v)<0)continue;if(v!==d[n]){document.documentElement.setAttribute("data-stored","");return}}}catch(e){}})(${JSON.stringify(defaults)},${JSON.stringify(ids)},${JSON.stringify(STORE_KEY_V2)})`;
