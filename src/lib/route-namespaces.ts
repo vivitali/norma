@@ -70,7 +70,7 @@ export const ROUTE_NAMESPACES: Record<RouteKey, readonly string[]> = {
   "/amortization": ["Amortization", "Disclosure", "Inputs", "Provenance", "Provinces", "ToolPage"],
   "/rent-vs-buy": ["Disclosure", "Inputs", "Provenance", "Provinces", "RentVsBuy", "ToolPage"],
   "/scenarios": ["Disclosure", "Inputs", "Provenance", "Provinces", "Scenarios", "ToolPage"],
-  "/sources": ["Disclosure", "Provenance", "Sources", "ToolPage"],
+  "/sources": ["ClosingCosts", "Disclosure", "Provenance", "Sources", "ToolPage"],
   "/privacy": [],
   "/terms": [],
   "/changelog": [],

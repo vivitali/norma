@@ -11,7 +11,12 @@ import {
   isSourced,
   weakestGroupId,
   FIGURE_GROUPS,
+  describeField,
+  describeFields,
+  formatAsOf,
+  latestAsOf,
 } from "./provenance-view";
+import en from "../../messages/en.json";
 
 describe("groupOf", () => {
   it("routes every provenance path in every record to a group", () => {
@@ -335,5 +340,63 @@ describe("FIGURE_GROUPS", () => {
         jurisdiction.id,
       ).toEqual(expectEmpty);
     }
+  });
+});
+
+describe("describeField", () => {
+  it("labels every provenance path in every record and in the rules", () => {
+    // The seam that keeps /sources readable: a path with no label would print a document with no
+    // figure beside it, which is the defect this exists to fix.
+    for (const j of jurisdictions) {
+      for (const path of Object.keys(j.provenance)) {
+        expect(describeField(path, j), `${j.id}: ${path}`).not.toBeNull();
+      }
+    }
+    for (const path of Object.keys(ca.provenance)) {
+      expect(describeField(path), `ca rules: ${path}`).not.toBeNull();
+    }
+  });
+
+  it("resolves every label to a real catalogue key", () => {
+    const tables = en as unknown as Record<string, Record<string, string>>;
+    for (const j of jurisdictions) {
+      for (const ref of describeFields(Object.keys(j.provenance), j)) {
+        expect(tables[ref.ns][ref.key], `${j.id}: ${ref.ns}.${ref.key}`).toBeTypeOf("string");
+      }
+    }
+    for (const ref of describeFields(Object.keys(ca.provenance))) {
+      expect(tables[ref.ns][ref.key], `${ref.ns}.${ref.key}`).toBeTypeOf("string");
+    }
+  });
+
+  it("pairs a scalar figure with its value and leaves a schedule without one", () => {
+    const w = getJurisdiction("winnipeg")!;
+    expect(describeField("fees.lawyer", w)).toEqual({
+      ns: "ClosingCosts",
+      key: "li_lawyer",
+      value: { kind: "money", n: 1800 },
+    });
+    expect(describeField("transfer.0.brackets", w)?.value).toBeUndefined();
+    expect(describeField("bench.house", w)?.value).toEqual({ kind: "money", n: w.bench.house });
+  });
+
+  it("folds several fields of one figure into one label", () => {
+    expect(describeFields(["rebates.1.full", "rebates.1.partial", "rebates.1.capBase"], getJurisdiction("vancouver")!).length).toBe(1);
+  });
+});
+
+describe("latestAsOf / formatAsOf", () => {
+  it("orders asOf strings of differing precision", () => {
+    const p = (asOf: string): Provenance => ({ conf: "high", asOf });
+    expect(latestAsOf({ a: p("2026"), b: p("2026-08"), c: p("2026-01-15") })).toBe("2026-08");
+    expect(latestAsOf({ a: p("2026-09-28"), b: p("2026") })).toBe("2026-09-28");
+    expect(latestAsOf({})).toBeNull();
+  });
+
+  it("formats at the precision it carries, in the locale", () => {
+    expect(formatAsOf("2026-09-28", "en-CA")).toBe("September 28, 2026");
+    expect(formatAsOf("2026-08", "en-CA")).toBe("August 2026");
+    expect(formatAsOf("2026", "en-CA")).toBe("2026");
+    expect(formatAsOf("2026-09-28", "fr-CA")).toMatch(/28 septembre 2026/);
   });
 });

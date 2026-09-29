@@ -117,7 +117,64 @@ describe("SourcesContent", () => {
     expect(mill).toHaveAttribute("href", expect.stringContaining("assessment.winnipeg.ca"));
     expect(mill).toHaveAttribute("rel", "noreferrer");
     // The board's August 2026 release, re-verified 2026-09-28.
-    expect(screen.getAllByText(/as of 2026-08/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/as of August 2026/).length).toBeGreaterThan(0);
+  });
+
+  it("names the FIGURE each document backs, with its value, not only the document", async () => {
+    const user = userEvent.setup();
+    render();
+    await openEverySection(user);
+    const fees = document.getElementById("fees-panel")!;
+    // Winnipeg's lawyer fee default, with the number it is.
+    expect(within(fees).getByText(/Real estate lawyer fees and disbursements/)).toBeVisible();
+    expect(within(fees).getByText(/\$1,800/)).toBeVisible();
+    const propTax = document.getElementById("propTax-panel")!;
+    expect(within(propTax).getAllByText(/Property tax rate/).length).toBeGreaterThan(0);
+    expect(within(propTax).getByText(/1\.32%/)).toBeVisible();
+    // A schedule gets a label and no single number.
+    const charges = document.getElementById("charges-panel")!;
+    expect(within(charges).getAllByText(/land transfer tax/i).length).toBeGreaterThan(0);
+  });
+
+  it("renders backticked names as plain text and keeps series ids in <code>", async () => {
+    const { renderNote } = await import("@/components/sources-content");
+    const { container } = renderWithIntl(
+      <p>{renderNote("Uses `bench` and `propTax.effective`, series BROKER_AVERAGE_5YR_VRM.")}</p>,
+    );
+    expect(container.textContent).toBe("Uses bench and propTax.effective, series BROKER_AVERAGE_5YR_VRM.");
+    const codes = [...container.querySelectorAll("code")].map((c) => c.textContent);
+    expect(codes).toEqual(["propTax.effective", "BROKER_AVERAGE_5YR_VRM"]);
+    expect(container.querySelector("code")!.className).toContain("[overflow-wrap:anywhere]");
+  });
+
+  it("uses no text below 11.5px", () => {
+    const content = readFileSync("src/components/sources-content.tsx", "utf8");
+    expect(content).not.toMatch(/text-\[(10|10\.5|11)px\]/);
+  });
+
+  it("uses the tool pages' geometry and hairlines, not cards", () => {
+    render();
+    const main = document.getElementById("main")!;
+    expect(main.className).toContain("max-w-[1100px]");
+    expect(main.className).toContain("px-5");
+    expect(main.className).toContain("sm:px-10");
+    expect(main.querySelector(".bg-card")).toBeNull();
+  });
+
+  it("agrees with its noun in Ukrainian: one/few/many for the figure count", async () => {
+    const { default: uk } = await import("../../../../messages/uk.json");
+    const { createTranslator } = await import("next-intl");
+    const t = createTranslator({ locale: "uk", messages: uk, namespace: "Sources" } as never) as unknown as (
+      key: string,
+      values: Record<string, number>,
+    ) => string;
+    const at = (total: number) =>
+      t("coverage", { jurisdictions: 15, total, sourced: 5, assumed: 3, unknown: 2 });
+    expect(at(1)).toContain("має 1 цифра");
+    expect(at(3)).toContain("мають 3 цифри");
+    expect(at(301)).toContain("має 301 цифра");
+    expect(at(305)).toContain("мають 305 цифр");
+    expect(at(312)).toContain("мають 312 цифр");
   });
 
   it("shows the note, which is usually the most useful sentence about a figure", async () => {
@@ -156,7 +213,8 @@ describe("SourcesContent", () => {
         "Every figure that carries a sourcing record names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
       ),
     ).toBeVisible();
-    expect(screen.getByText(/Rules last verified/)).toBeVisible();
+    expect(screen.getByText(/Federal rules verified/)).toBeVisible();
+    expect(screen.getByText(/Figures for Winnipeg verified/)).toBeVisible();
   });
 
   it("says the notes are kept in English, rather than pretending otherwise", () => {

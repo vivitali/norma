@@ -500,7 +500,7 @@ describe("horizontal scroll stays inside the element that owns it", () => {
     const source = readFileSync("src/components/sources-content.tsx", "utf8");
     // Anchored on the `>` that ends the opening tag, so `key={note}` — an
     // attribute, not a rendered child — does not count as a third print.
-    const verbatim = [...source.matchAll(/>\s*\{(?:entry\.src|note)\}/g)];
+    const verbatim = [...source.matchAll(/>\s*\{(?:renderNote\((?:entry\.src|note)\)|entry\.src|note)\}/g)];
     // Two source-title branches (linked and plain) and the note paragraph.
     expect(verbatim.length, "the inventory stopped printing verbatim text").toBe(3);
     for (const match of verbatim) {

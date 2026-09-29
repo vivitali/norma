@@ -25,6 +25,7 @@ vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")
 // next/font/google runs a build-time loader that is unavailable under vitest.
 vi.mock("next/font/google", () => ({
   Archivo: () => ({ variable: "--font-archivo" }),
+  Golos_Text: () => ({ variable: "--font-golos" }),
   Martian_Mono: () => ({ variable: "--font-martian-mono" }),
 }));
 
@@ -79,6 +80,23 @@ describe("LocaleLayout", () => {
     });
 
     expect(walk(tree).some((node) => isValidElement(node) && node.type === AppFooter)).toBe(true);
+  });
+
+  it("opens with a skip link to #main, before the header and everything focusable", async () => {
+    const tree = await LocaleLayout({
+      children: null,
+      params: Promise.resolve({ locale: "en-CA" }),
+    });
+    const anchors = walk(tree).filter((n) => isValidElement(n) && n.type === "a");
+    expect(anchors.length).toBeGreaterThan(0);
+    const first = anchors[0] as { props: { href: string; children: ReactNode } };
+    expect(first.props.href).toBe("#main");
+    expect(first.props.children).toBe("skip");
+    // Nothing focusable precedes it in document order: the header is a later sibling.
+    const all = walk(tree);
+    const skipAt = all.indexOf(anchors[0]);
+    const headerAt = all.findIndex((n) => isValidElement(n) && n.type === AppFooter);
+    expect(skipAt).toBeLessThan(headerAt);
   });
 
   it("404s an unknown locale instead of marking it", async () => {

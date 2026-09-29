@@ -66,6 +66,61 @@ describe("NumberField", () => {
     expect(onCommit).not.toHaveBeenCalledWith(0);
   });
 
+  it.each(["abc", "1e9", "1.5.5", "-"])("keeps %j, flags it and commits nothing", async (text) => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    renderWithIntl(<NumberField id="price" label="Price" value={350000} onCommit={onCommit} />);
+    const input = screen.getByLabelText("Price");
+    await user.clear(input);
+    await user.type(input, text);
+    await user.tab();
+    expect(onCommit).not.toHaveBeenCalled();
+    // The reader's text stays, instead of vanishing and the old figure coming back.
+    expect(input).toHaveValue(text);
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("alert")).toHaveTextContent("Not a number — try 75,000");
+    expect(input).toHaveAccessibleDescription(/Not a number/);
+  });
+
+  it("gives the example in the locale's own format", async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<NumberField id="prix" label="Prix" value={1} onCommit={vi.fn()} />, {
+      locale: "fr-CA",
+    });
+    const input = screen.getByLabelText("Prix");
+    await user.clear(input);
+    await user.type(input, "abc");
+    await user.tab();
+    expect(screen.getByRole("alert").textContent).toMatch(/75\s000/);
+  });
+
+  it("clears the message once the reader types again, and commits a valid entry", async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    renderWithIntl(<NumberField id="price" label="Price" value={350000} onCommit={onCommit} />);
+    const input = screen.getByLabelText("Price");
+    await user.clear(input);
+    await user.type(input, "abc");
+    await user.tab();
+    await user.click(input);
+    // Refocusing keeps the entry so it can be fixed rather than retyped.
+    expect(input).toHaveValue("abc");
+    await user.type(input, "{Backspace}{Backspace}{Backspace}500");
+    expect(screen.queryByRole("alert")).toBeNull();
+    await user.tab();
+    expect(onCommit).toHaveBeenLastCalledWith(500);
+    expect(input).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("shows a derived default in a quieter, lighter face than typed text", () => {
+    renderWithIntl(
+      <NumberField id="price" label="Price" value={null} placeholder={400000} onCommit={vi.fn()} />,
+    );
+    const cls = screen.getByLabelText("Price").className;
+    expect(cls).toContain("placeholder:text-ink3");
+    expect(cls).toContain("placeholder:font-normal");
+  });
+
   it("shows the derived default as a placeholder, not as a value", () => {
     // "Absent means derived": an untouched field still shows a real, correct
     // number -- the city benchmark -- but as a hint, so it cannot be mistaken

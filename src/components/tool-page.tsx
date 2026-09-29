@@ -3,8 +3,7 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { Jurisdiction } from "@/domain/types";
-import { Provenance, type ProvenanceKind } from "@/components/provenance";
-import { useRules } from "@/hooks/use-country";
+import { Provenance, ProvenanceLegend, VerifiedLines, type ProvenanceKind } from "@/components/provenance";
 import { cn } from "@/lib/utils";
 
 /**
@@ -23,6 +22,7 @@ import { cn } from "@/lib/utils";
 export function ToolMain({ children }: { children: ReactNode }) {
   return (
     <main
+      id="main"
       // The hook the pre-paint guard in globals.css keys on: a tool page's shape depends on
       // stored inputs, so for a returning reader it stays hidden until they have landed.
       data-slot="tool-main"
@@ -191,7 +191,7 @@ export function AnswerHead({
   figure?: string;
   pulseKey?: string;
   head: string;
-  sub?: string;
+  sub?: ReactNode;
   tag?: string;
   /**
    * When given, the tag is a button with the same pill look — one element whose
@@ -395,12 +395,12 @@ export function FigureFooter({
   children?: ReactNode;
 }) {
   const t = useTranslations("Disclosure");
-  const rules = useRules();
   return (
     <div className="mt-10 border-t border-border pt-4 text-[11.5px] text-ink3">
       <p>{t("unverifiedFlag")}</p>
-      <p>
-        {t("lastVerified")} {rules.verified}
+      <VerifiedLines jurisdiction={jurisdiction} />
+      <p className="mt-1">
+        <ProvenanceLegend />
       </p>
       {children}
       {!jurisdiction.cityData ? <p>{t("noCityData")}</p> : null}

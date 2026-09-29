@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Martian_Mono } from "next/font/google";
+import { Archivo, Golos_Text, Martian_Mono } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -35,6 +35,23 @@ const archivo = Archivo({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
+});
+
+/**
+ * Archivo has no Cyrillic subset, so a Ukrainian sentence used to fall through to the system
+ * sans (Arial) for every Cyrillic glyph while its Latin words and figures stayed Archivo. Golos
+ * Text is a grotesque with the same weight range and a similar x-height, loaded for Cyrillic only
+ * and placed AFTER Archivo in --font-sans / --font-heading (globals.css, by family name — see the
+ * note there on why the variables alone do not work), so Latin stays Archivo and Cyrillic reaches this
+ * face, not Arial. `unicode-range` subsetting means a page with no Cyrillic never downloads the
+ * file; `preload: false` keeps the <link rel=preload> from fetching it on every English and French page as well.
+ */
+const golos = Golos_Text({
+  variable: "--font-golos",
+  subsets: ["cyrillic"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: false,
 });
 
 const martianMono = Martian_Mono({
@@ -86,12 +103,13 @@ export default async function LocaleLayout({
   }
 
   setRequestLocale(locale);
+  const tTool = await getTranslations({ locale, namespace: "ToolPage" });
 
   return (
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${archivo.variable} ${martianMono.variable} h-full antialiased`}
+      className={`${archivo.variable} ${golos.variable} ${martianMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {/*
@@ -130,6 +148,16 @@ export default async function LocaleLayout({
 -->`,
           }}
         />
+        {/*
+          The first focusable element on every page. Hidden until it takes focus, then a fixed pill
+          above the header; it targets the page's <main id="main">.
+        */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-full focus:border focus:border-acbr focus:bg-card focus:px-4 focus:py-2 focus:text-[13px] focus:font-medium focus:text-ac"
+        >
+          {tTool("skip")}
+        </a>
         <NextIntlClientProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <JurisdictionProvider>

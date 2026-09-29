@@ -476,7 +476,7 @@ describe("Affordability — the disclosure stays", () => {
         "Every figure that carries a sourcing record names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
       ),
     ).toBeVisible();
-    expect(screen.getByText(/Rules last verified/)).toBeVisible();
+    expect(screen.getByText(/Federal rules verified/)).toBeVisible();
   });
 });
 

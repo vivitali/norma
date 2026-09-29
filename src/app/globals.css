@@ -44,9 +44,15 @@
   --color-caution: var(--caut);
   --color-blocked: var(--blk);
 
-  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  /*
+   * next/font appends a local Arial "Fallback" face to every variable it emits, and that face
+   * covers Cyrillic — so `var(--font-archivo), var(--font-golos)` never reaches Golos: Arial
+   * catches every Cyrillic glyph first. The real family names go first, then the variables as the
+   * graceful path should the names ever be hashed. Latin: Archivo. Cyrillic (Archivo has none):
+   * Golos Text. */
+  --font-sans: "Archivo", "Golos Text", var(--font-archivo), var(--font-golos), system-ui, sans-serif;
   --font-mono: var(--font-martian-mono), ui-monospace, monospace;
-  --font-heading: var(--font-archivo), system-ui, sans-serif;
+  --font-heading: "Archivo", "Golos Text", var(--font-archivo), var(--font-golos), system-ui, sans-serif;
 
   /* Pills and soft rectangles, not the hairline 1/2/3px of v1. */
   --radius-sm: 3px;
