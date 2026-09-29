@@ -738,6 +738,8 @@
     "riskTitle": "The rate is reset at every renewal",
     "riskBody": "A stress test at origination checks that you could carry the payment at a higher qualifying rate. It runs once. At every renewal the remaining balance is repriced at the rate then on offer, and the test is not run again. So the loan is priced once, but the payment can change several times over the amortization. To see what that does to your budget, set a higher renewal rate below and read the payment it produces.",
     "tableTitle": "Year by year",
+    "tablePhoneNote": "Rate and payment are left out of the table on a phone: {pay} a month at {rate} until a renewal, marked beside the year, changes them.",
+    "tablePhoneNote_us": "Rate and payment are left out of the table on a phone: {pay} a month at {rate}, for the whole loan.",
     "yr": "Yr",
     "cRate": "Rate",
     "cPayment": "Monthly payment",
@@ -1136,6 +1138,7 @@
     "unverifiedFlag": "Every figure that carries a sourcing record names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
     "federalVerified": "Federal rules verified {date}",
     "localVerified": "Figures for {place} verified {date}",
+    "localNewest": "Newest source for {place}: {date}",
     "legend": "What “rule” and “estimate” mean → Sources",
     "noCityData": "No verified city-level figures here yet. The provincial rules are exact; local costs use provincial averages and are estimates."
   },

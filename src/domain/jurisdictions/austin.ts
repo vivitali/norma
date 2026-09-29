@@ -83,6 +83,7 @@ export const austin: Jurisdiction = {
   state: "TX",
   city: "austin",
   cityData: true,
+  verified: "2026-09-05",
   pro: "titleCompany",
   rent: 1852,
   rentBasis: "fmr2br",

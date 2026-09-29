@@ -62,6 +62,7 @@ export const seattle: Jurisdiction = {
   state: "WA",
   city: "seattle",
   cityData: true,
+  verified: "2026-09-17",
   pro: "titleCompany",
   // HUD FY2026 metro-wide 2BR FMR, Seattle-Bellevue HMFA (dossier B2).
   rent: 2501,

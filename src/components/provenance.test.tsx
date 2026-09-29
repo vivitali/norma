@@ -58,10 +58,9 @@ describe("ProvenanceLegend", () => {
   });
 });
 
-/** Winnipeg with one figure dated after the federal record's own stamp. */
+/** Winnipeg, whose record carries its end-to-end re-verification date (2026-09-28). */
 function reverified() {
-  const w = getJurisdiction("winnipeg")!;
-  return { ...w, provenance: { ...w.provenance, rent: { conf: "high" as const, asOf: "2026-09-28" } } };
+  return getJurisdiction("winnipeg")!;
 }
 
 describe("VerifiedLines", () => {
@@ -72,6 +71,15 @@ describe("VerifiedLines", () => {
     // Winnipeg was re-verified on 2026-09-28, after the federal record's own stamp.
     expect(text).toMatch(/Figures for Winnipeg verified September 28, 2026/);
     expect(text).not.toMatch(/\d{4}-\d{2}-\d{2}/);
+  });
+
+  it("calls a source's date a source date where no end-to-end verification is recorded", () => {
+    const toronto = getJurisdiction("toronto")!;
+    expect(toronto.verified).toBeUndefined();
+    renderWithIntl(<VerifiedLines jurisdiction={toronto} />);
+    const text = document.body.textContent ?? "";
+    expect(text).toMatch(/Newest source for Toronto: /);
+    expect(text).not.toMatch(/Figures for Toronto verified/);
   });
 
   it("formats French dates the French way", () => {

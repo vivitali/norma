@@ -41,8 +41,10 @@ export async function AppFooter({ locale }: { locale: Locale }) {
   }));
 
   return (
-    <footer className="mt-auto border-t border-border px-5 pt-8 pb-12 sm:px-10">
-      <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5">
+    <footer className="mt-auto border-t border-border pt-8 pb-12">
+      {/* The same geometry as ToolMain (max-width, then the gutter inside it), so the footer's
+          left edge lines up with the page content above it at every width. */}
+      <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-5 px-5 sm:px-10">
         <p className="max-w-[68ch] text-[12.5px] leading-[1.65] text-ink3 text-pretty">
           {t(countryKey("footerDisclaimer", country))}
         </p>

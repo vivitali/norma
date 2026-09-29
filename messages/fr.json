@@ -738,6 +738,8 @@
     "riskTitle": "Le taux est refixé à chaque renouvellement",
     "riskBody": "Le test de résistance à l’origine vérifie que vous pourriez porter le paiement à un taux de qualification plus élevé. Il n’est fait qu’une fois. À chaque renouvellement, le solde restant est refixé au taux alors offert, et le test n’est pas refait. Le prêt est donc fixé une seule fois, mais le paiement peut changer plusieurs fois pendant l’amortissement. Pour voir l’effet sur votre budget, indiquez ci-dessous un taux de renouvellement plus élevé et lisez le paiement obtenu.",
     "tableTitle": "Année par année",
+    "tablePhoneNote": "Le taux et le paiement ne figurent pas dans le tableau sur un téléphone : {pay} par mois à {rate}, jusqu’à ce qu’un renouvellement, indiqué à côté de l’année, les change.",
+    "tablePhoneNote_us": "Le taux et le paiement ne figurent pas dans le tableau sur un téléphone : {pay} par mois à {rate}, pour toute la durée du prêt.",
     "yr": "An",
     "cRate": "Taux",
     "cPayment": "Paiement mensuel",
@@ -1136,6 +1138,7 @@
     "unverifiedFlag": "Tout chiffre accompagné d’une fiche de provenance indique d’où il vient : une source publiée et datée, une estimation que nous déclarons, ou rien du tout lorsque rien n’est publié.",
     "federalVerified": "Règles fédérales vérifiées : {date}",
     "localVerified": "Chiffres pour {place} vérifiés : {date}",
+    "localNewest": "Source la plus récente pour {place} : {date}",
     "legend": "Ce que signifient « règle » et « estimation » → Sources",
     "noCityData": "Aucun chiffre municipal vérifié ici pour l'instant. Les règles provinciales sont exactes; les coûts locaux utilisent des moyennes provinciales et sont des estimations."
   },

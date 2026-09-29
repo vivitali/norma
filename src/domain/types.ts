@@ -398,6 +398,13 @@ export interface JurisdictionCommon {
   id: string;
   city: string | null;
   cityData: boolean;
+  /**
+   * ISO date this record was last re-verified END TO END — every figure checked against its
+   * source in one pass, with a dossier under docs/superpowers/research/. Absent where no such pass
+   * is recorded; the footer then shows the newest source date instead, and never calls a source's
+   * publication date a verification date.
+   */
+  verified?: string;
   pro: ProfessionalType;
   /**
    * Monthly benchmark rent. `null` where the survey suppresses or does not cover the market

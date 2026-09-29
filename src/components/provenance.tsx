@@ -77,14 +77,16 @@ export function VerifiedLines({ jurisdiction }: { jurisdiction: Jurisdiction }) 
   const intl = localeProfile(useLocale()).intl;
   const federalLatest = latestAsOf(rules.provenance);
   const federal = federalLatest && federalLatest > rules.verified ? federalLatest : rules.verified;
-  const local = latestAsOf(jurisdiction.provenance);
+  // A record re-verified end to end says so, with that date; otherwise the newest SOURCE date is
+  // shown as what it is — a source's date is not a verification date.
+  const local = jurisdiction.verified ?? latestAsOf(jurisdiction.provenance);
   return (
     <p>
       {t("federalVerified", { date: formatAsOf(federal, intl) })}
       {local ? (
         <>
           {" · "}
-          {t("localVerified", {
+          {t(jurisdiction.verified ? "localVerified" : "localNewest", {
             // `at.<id>`, not the bare name: this sits after "for" (see CLAUDE.md).
             place: tJur(`at.${jurisdiction.id}`),
             date: formatAsOf(local, intl),

@@ -738,6 +738,8 @@
     "riskTitle": "La tasa se restablece en cada renovación",
     "riskBody": "Una prueba de resistencia al contratar comprueba que podría pagar la cuota a una tasa de calificación más alta. Se hace una sola vez. En cada renovación el saldo restante se vuelve a fijar a la tasa vigente entonces, y la prueba no se repite. Así, el préstamo se fija una vez, pero la cuota puede cambiar varias veces durante la amortización. Para ver qué supone eso para su presupuesto, indique abajo una tasa de renovación más alta y lea la cuota que resulta.",
     "tableTitle": "Año por año",
+    "tablePhoneNote": "En el teléfono, la tasa y la cuota no aparecen en la tabla: {pay} al mes a {rate}, hasta que una renovación, marcada junto al año, las cambia.",
+    "tablePhoneNote_us": "En el teléfono, la tasa y la cuota no aparecen en la tabla: {pay} al mes a {rate}, durante todo el préstamo.",
     "yr": "Año",
     "cRate": "Tasa",
     "cPayment": "Cuota mensual",
@@ -1136,6 +1138,7 @@
     "unverifiedFlag": "Toda cifra que lleva ficha de procedencia dice de dónde viene: una fuente publicada y fechada, una estimación que declaramos, o nada en absoluto cuando no hay nada publicado.",
     "federalVerified": "Reglas federales verificadas: {date}",
     "localVerified": "Cifras para {place} verificadas: {date}",
+    "localNewest": "Fuente más reciente para {place}: {date}",
     "legend": "Qué significan «regla» y «estimación» → Fuentes",
     "noCityData": "Todavía no hay cifras municipales verificadas aquí. Las reglas provinciales son exactas; los costos locales usan promedios provinciales y son estimaciones."
   },

@@ -76,6 +76,7 @@ export const houston: Jurisdiction = {
   state: "TX",
   city: "houston",
   cityData: true,
+  verified: "2026-09-03",
   pro: "titleCompany",
   rent: 1573,
   rentBasis: "fmr2br",

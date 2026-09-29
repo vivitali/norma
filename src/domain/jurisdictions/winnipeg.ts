@@ -53,6 +53,7 @@ export const winnipeg: Jurisdiction = {
   prov: "MB",
   city: "winnipeg",
   cityData: true,
+  verified: "2026-09-28",
   pro: "lawyer",
   rent: 1570,
   rentBasis: "apartment2br",
