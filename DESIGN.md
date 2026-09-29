@@ -126,12 +126,11 @@ Cyrillic before Golos ever did; the production build emits the plain family name
 `.next/static/**/*.css`). The `var(…, system-ui)` fallbacks keep the declaration valid on the global
 404, which defines neither variable.
 
-**French spacing follows the catalogue's existing convention, made unbreakable.** The French copy
-already set a space before `: ; ? !` (the European convention); those spaces are now U+202F, narrow
-and non-breaking, so punctuation never wraps onto a line of its own
-(`src/lib/french-typography.test.ts`). Quebec's OQLF convention differs — a non-breaking space
-before `:` only, none before `; ? !` — and switching the whole catalogue to it is an open
-decision for the owner, not an accident of this pass.
+**French spacing follows the Québec convention (OQLF)**, because the French reader here is
+Canadian: a non-breaking space (U+00A0) before the colon, no space before `; ? !`, and
+non-breaking spaces inside « guillemets ». Non-breaking, so a colon or a closing guillemet never
+wraps onto a line of its own at a phone width. `src/lib/french-typography.test.ts` enforces all
+three. (Numbers are Intl's business: fr-CA groups digits with U+202F, and that is correct.)
 
 **Form controls have a 16px floor** (`--control-font-size`), applied through `.control`.
 Below 16px iOS Safari zooms the viewport on focus, and this page has twelve fields. The
