@@ -37,9 +37,12 @@ const areaProvenance: Record<string, Provenance> = Object.fromEntries(
     `propTax.areas.list.${i}.publishedRate`,
     {
       conf: "high",
-      src: `City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division — ${name}, ${combinedMills(school).toFixed(3)} mills (municipal ${MUNICIPAL_MILLS.toFixed(3)} + school ${school.toFixed(3)})`,
+      // One document title for all eight, so /sources folds them into one citation with a line
+      // per division instead of eight near-identical rows.
+      src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
       asOf: "2026",
       url: MILL_RATES_URL,
+      note: `${name} School Division: ${combinedMills(school).toFixed(3)} mills = municipal ${MUNICIPAL_MILLS.toFixed(3)} + school ${school.toFixed(3)}.`,
     },
   ]),
 );
