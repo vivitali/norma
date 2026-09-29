@@ -55,6 +55,7 @@ export const nb: Jurisdiction = {
       asOf: "2026",
       src: "City of Fredericton, 2026 budget adopted 2025-11-24 — inside property tax rate held at $1.3086 per $100 of assessment",
       url: "https://www.fredericton.ca/your-government/news/city-fredericton-holds-inside-tax-rate-while-investing-safety-affordability",
+      summary: "Modelled on Fredericton's 2026 inside residential rate, $1.3086 per $100, not a province-wide figure; municipal rates vary by about 17%. Homes outside a municipality pay a different provincial rate this figure cannot express.",
       note: NB_PROP_TAX_NOTE,
     },
     "propTax.publishedRate": {
@@ -62,6 +63,7 @@ export const nb: Jurisdiction = {
       asOf: "2026",
       src: "City of Fredericton inside residential rate, $1.3086 per $100 of assessment",
       url: "https://www.fredericton.ca/your-government/news/city-fredericton-holds-inside-tax-rate-while-investing-safety-affordability",
+      summary: "Fredericton's inside residential rate, $1.3086 per $100 of assessment, from the city's own 2026 budget release.",
       note: "Read off the city's own budget release. The 0.0145 it replaces matched no municipality's published rate at all.",
     },
     "propTax.assessmentRatio": {
@@ -69,6 +71,7 @@ export const nb: Jurisdiction = {
       asOf: "2026",
       src: "Service New Brunswick assesses real property at its real and true value",
       url: "https://www2.gnb.ca/content/gnb/en/departments/finance/taxes/real_property.html",
+      summary: "New Brunswick assesses property at its real and true value, so the ratio is 1. The province froze 2026 assessments at 2025 levels, which holds them slightly below current market.",
       note: "Exactly 1: the assessment base IS market value, reassessed annually. The Province froze 2026 assessments at 2025 levels for one year, which holds assessments slightly below current market without changing the base's definition.",
     },
     "bench.house": {
@@ -76,6 +79,7 @@ export const nb: Jurisdiction = {
       asOf: "2026-07",
       src: `${NBREA_HPI} single-family benchmark, PROVINCE-WIDE`,
       url: NBREA_HPI_URL,
+      summary: "The New Brunswick REALTORS® July 2026 single-family benchmark for the whole province, $345,500, up 6.9% over a year. It is a published province-wide series, so no city stand-in is needed.",
       note: "$345,500, +6.9% year over year. NBREA publishes a province-wide HPI, so this record's geography maps 1:1 onto a published series and needs no city proxy. Province composite is $344,000, +6.7%.",
     },
     "bench.condo": {
@@ -83,6 +87,7 @@ export const nb: Jurisdiction = {
       asOf: "2026-07",
       src: `${NBREA_HPI} apartment benchmark, PROVINCE-WIDE`,
       url: NBREA_HPI_URL,
+      summary: "The New Brunswick REALTORS® July 2026 province-wide apartment benchmark, $277,100, down 3.6% over a year, the only property type falling there.",
       note: "$277,100, -3.6% year over year — the only New Brunswick property type falling.",
     },
     "transfer.0.rate": {
@@ -90,6 +95,7 @@ export const nb: Jurisdiction = {
       asOf: "2026",
       src: `${SNB_RPTT} — 1%, doubled from 0.5% effective 2016-04-01`,
       url: SNB_RPTT_URL,
+      summary: "New Brunswick's Real Property Transfer Tax is 1%. It is legally charged on the greater of price and assessed value, but we use price alone, which suits ordinary resales and not below-assessment or family transfers.",
       note: "The statutory base is the GREATER of the consideration and the assessed value; the model computes on price alone. Harmless for arm's-length resales, where price normally exceeds assessment; wrong for below-assessment and family transfers.",
     },
     "rebates.0": {
@@ -97,6 +103,7 @@ export const nb: Jurisdiction = {
       asOf: "2026",
       src: "New Brunswick levies no first-time-buyer Real Property Transfer Tax rebate or exemption",
       url: SNB_RPTT_URL,
+      summary: "New Brunswick has no first-time-buyer rebate or exemption on the Real Property Transfer Tax.",
       note: "kind: none is the finding, not a gap. The Department of Finance and Treasury Board is the right authority to name; it simply has no transfer-tax rebate to administer.",
     },
     "taxTime.0.amount": {
@@ -104,6 +111,7 @@ export const nb: Jurisdiction = {
       asOf: "2026",
       src: "CRA line 31270 Home buyers' amount ($10,000 claim) x the 2026 lowest federal rate of 14%",
       url: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/about-your-tax-return/tax-return/completing-a-tax-return/deductions-credits-expenses/line-31270-home-buyers-amount.html",
+      summary: "The federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal rate of 14%, worth $1,400 at tax time. New Brunswick adds no provincial first-time-buyer credit.",
       note: "1500 -> 1400. The $1,500 it replaces was the same credit at a 15% lowest rate. New Brunswick levies no provincial first-time-buyer credit, so this is the whole of the tax-time relief here. Tracks federal.hba.",
     },
     premiumTax: {
@@ -111,6 +119,7 @@ export const nb: Jurisdiction = {
       asOf: "2026",
       src: "CMHC: only Ontario, Quebec and Saskatchewan levy a provincial sales tax on mortgage default insurance premiums",
       url: "https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers/mortgage-loan-insurance-costs",
+      summary: "New Brunswick charges no sales tax on the mortgage default insurance premium; only Ontario, Quebec and Saskatchewan do, per CMHC. Insurance premiums fall outside HST.",
       note: "null is correct. New Brunswick's sales tax is the harmonized HST, and insurance premiums are not within its base.",
     },
     "orgs.market": {

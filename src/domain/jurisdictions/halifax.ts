@@ -88,6 +88,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026-04",
       src: HRM_BUDGET,
       url: HRM_BUDGET_URL,
+      summary: "Halifax's 2026/27 rate is $1.135 per $100: the municipal 0.798 plus 0.337 collected for the province and others. It matches HRM's budget, with a $357,500 average assessment and a $4,058 average bill. Suburban and rural buyers pay less.",
       note: HALIFAX_PROP_TAX_NOTE,
     },
     "propTax.publishedRate": {
@@ -95,6 +96,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026-04",
       src: `${HRM_RATES} — urban residential and resource rates plus the provincial rates on the same bill`,
       url: HRM_RATES_URL,
+      summary: "Halifax's rate per $100 including the provincial rates on the same bill. A shortcut figure of 1.098 misses supplementary education, fire protection and stormwater charges and comes out 3.3% short.",
       note: "1.098 (0.798 + the 0.300 of provincial rates alone) is the figure that reads like the answer and is 3.3% short: it drops the supplementary education, fire protection and stormwater right-of-way rates that HRM itself counts in the total bill.",
     },
     "propTax.assessmentRatio": {
@@ -102,6 +104,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026",
       src: "Property Valuation Services Corporation assesses Nova Scotia property at market value",
       url: "https://www.pvsc.ca/",
+      summary: "Nova Scotia assesses at market value, so the ratio is 1. A cap holds long-owned homes below market, but it resets on sale, so a new purchase is assessed at the price paid.",
       note: "Exactly 1: the assessment base IS market value. The Capped Assessment Program holds an owner-occupied assessment below market once it has been held for years, but the cap resets when the property changes hands, so a fresh purchase is assessed at what was paid.",
     },
     "bench.house": {
@@ -109,10 +112,12 @@ export const halifax: Jurisdiction = {
       asOf: "2026-07",
       src: "Halifax-Dartmouth MLS® HPI COMPOSITE benchmark, $557,300",
       url: "https://wowa.ca/halifax-housing-market",
+      summary: "The Halifax-Dartmouth composite (all home types) MLS® HPI benchmark for July 2026, $557,300, reproduced by a secondary site from CREA data. The province-wide figure is about 27% lower, so it is not used as a city figure.",
       note: "A COMPOSITE, not a detached benchmark, and the geography is the point: NSAR's type-level MLS® HPI is NOVA SCOTIA province-wide (single-family $425,200, apartment $435,100, composite $429,100), 27% below this. Dropping the provincial aggregate into a record whose `city` is halifax would silently re-scope it. The Halifax-Dartmouth type split exists only inside CREA's login-walled HPI tool; the composite is reproduced from CREA's sub-area HPI by a secondary site, hence medium. NSAR's own sub-area table publishes AVERAGE sold prices (Halifax-Dartmouth single-family $625,915), which is a different quantity.",
     },
     "bench.condo": {
       conf: "none",
+      summary: "Nobody publishes a Halifax-Dartmouth apartment benchmark. The published apartment figures cover the whole province or are average sale prices, which measure something different, so the page asks you for a price.",
       note: "No Halifax-Dartmouth apartment benchmark is published. Only a Nova Scotia province-wide apartment benchmark ($435,100, July 2026) and a Halifax-Dartmouth apartment AVERAGE sold price ($440,747) exist, and neither is this record's quantity — one is the wrong geography, the other the wrong metric. Note the provincial apartment benchmark EXCEEDS the provincial single-family one, which is real: apartments concentrate in Halifax while single-family averages across rural Nova Scotia. That is exactly why the provincial series cannot stand in for a city record.",
     },
     rent: {
@@ -120,6 +125,7 @@ export const halifax: Jurisdiction = {
       asOf: "2025-10",
       src: "CMHC Rental Market Survey, Halifax CMA, 2-bedroom, reliability code a",
       url: "https://www.cmhc-schl.gc.ca/professionals/housing-markets-data-and-research/market-reports/rental-market-reports-major-centres",
+      summary: "CMHC's October 2025 average two-bedroom rent for the Halifax area, taken from CMHC's survey table. It is always older than the price figures beside it.",
       note: "Taken from the market-data verification report's read of CMHC's HMIP table rather than re-read here, hence medium. CMHC's reference month is October, so this is always older than the benchmark beside it.",
     },
     yoy: {
@@ -127,6 +133,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026-07",
       src: "Halifax-Dartmouth MLS® HPI composite benchmark, -0.0% year over year",
       url: NSAR_HPI_URL,
+      summary: "The Halifax-Dartmouth composite benchmark is flat year over year (0.0% in July 2026), and the province-wide composite agrees on the direction.",
       note: "A sign flip, not a drift: the old +0.034 told a buyer prices were rising 3.4% in a market that is flat. NSAR's province-wide composite is also 0.0% year over year, so both geographies agree on the direction even though they disagree on the level.",
     },
     "transfer.0.rate": {
@@ -134,6 +141,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026",
       src: "HRM By-law D-300, Deed Transfer Tax — 1.5%, the statutory maximum a Nova Scotia municipality may levy",
       url: HRM_RATES_URL,
+      summary: "Halifax's deed transfer tax is 1.5%, the most a Nova Scotia municipality may charge (HRM By-law D-300). Council has been asked to explore raising it, so check for changes.",
       note: "Council has an active staff request to explore raising it. This one needs a re-check date, not just a value.",
     },
     "transfer.1.rate": {
@@ -141,6 +149,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026-08-07",
       src: "Nova Scotia Finance and Treasury Board news release, Changes to Non-Resident Deed Transfer Tax: \"The non-resident deed transfer tax remains at 10 per cent.\"",
       url: "https://news.novascotia.ca/en/2026/08/07/changes-non-resident-deed-transfer-tax",
+      summary: "Nova Scotia's non-resident deed transfer tax stays at 10%, per the province's August 2026 release; recent changes are administrative. It applies to the greater of price and assessed value, and a buyer who becomes a resident within six months is exempt; neither is modelled.",
       note: "The 2026-08-07 amendments are administrative and change no amount: proof-of-residency window 6 months -> 1 year, refund window 1 year -> 2 years, willed property exempted, refunds payable to legal representatives. Two details are recorded and NOT modelled, because norma has no input for either: the base is the greater of sale price and assessed value, and a buyer who becomes a Nova Scotia resident within six months is exempt.",
     },
     "rebates.0": {
@@ -148,6 +157,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026",
       src: "Nova Scotia levies no first-time-buyer deed transfer tax rebate",
       url: "https://www.novascotia.ca/programs-and-services/first-time-home-buyers-rebate-program",
+      summary: "Nova Scotia has no first-time-buyer rebate on the deed transfer tax. The similarly named rebate is an HST rebate on new construction, shown separately.",
       note: "kind: none is the finding, not a gap. The similarly-named Nova Scotia First-Time Home Buyers Rebate is an HST rebate on new construction and is modelled separately as cr_nsNewBuildHst.",
     },
     "taxTime.0.amount": {
@@ -155,6 +165,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026",
       src: "CRA line 31270 Home buyers' amount ($10,000 claim) x the 2026 lowest federal rate of 14%",
       url: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/about-your-tax-return/tax-return/completing-a-tax-return/deductions-credits-expenses/line-31270-home-buyers-amount.html",
+      summary: "The federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal rate of 14%, worth $1,400 at tax time.",
       note: "1500 -> 1400. The $1,500 it replaces was the same credit at a 15% lowest rate. Tracks federal.hba.",
     },
     "taxTime.1.amount": {
@@ -162,6 +173,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026",
       src: "Nova Scotia Provincial Tax Commission, First-Time Home Buyers Rebate Program overview: \"a rebate equivalent to 18.75 per cent of the provincial portion of the HST ... up to $3,000, on newly built homes\"",
       url: "https://beta.novascotia.ca/sites/default/files/documents/1-1192/first-time-home-buyers-rebate-program-overview-en.pdf",
+      summary: "Nova Scotia's First-Time Home Buyers Rebate returns 18.75% of the provincial HST on a newly built home, up to $3,000, reached from a $160,000 price. New builds only, and the province's first-time-buyer test is stricter than ours.",
       note: "$3,000 is the MAXIMUM, reached at a purchase price of $160,000 (18.75% x 10% provincial HST portion = 1.875% of price), so it is exact at every realistic new-build price rather than approximate. Newly constructed homes only — renovations and rental-to-condominium conversions do not qualify. Nova Scotia's own first-time-buyer test is stricter than norma's: not having owned AND occupied a home in Canada in the last five years, and only one rebate per home.",
     },
     premiumTax: {
@@ -169,6 +181,7 @@ export const halifax: Jurisdiction = {
       asOf: "2026",
       src: "CMHC: only Ontario, Quebec and Saskatchewan levy a provincial sales tax on mortgage default insurance premiums",
       url: "https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers/mortgage-loan-insurance-costs",
+      summary: "Nova Scotia charges no sales tax on the mortgage default insurance premium; only Ontario, Quebec and Saskatchewan do, per CMHC. Insurance premiums fall outside HST.",
       note: "null is correct. Nova Scotia's sales tax is the harmonized HST, and insurance premiums are not within its base.",
     },
     "orgs.market": {

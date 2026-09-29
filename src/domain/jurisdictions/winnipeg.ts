@@ -42,6 +42,7 @@ const areaProvenance: Record<string, Provenance> = Object.fromEntries(
       src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
       asOf: "2026",
       url: MILL_RATES_URL,
+      summary: `${name} School Division's 2026 combined rate: ${combinedMills(school).toFixed(3)} mills, the City's ${MUNICIPAL_MILLS.toFixed(3)} plus ${school.toFixed(3)} for schools. Residential property pays no education support levy.`,
       note: `${name} School Division: ${combinedMills(school).toFixed(3)} mills = municipal ${MUNICIPAL_MILLS.toFixed(3)} + school ${school.toFixed(3)}.`,
     },
   ]),
@@ -114,10 +115,12 @@ export const winnipeg: Jurisdiction = {
     ...areaProvenance,
     "fees.setup": {
       conf: "assumption",
+      summary: "A typical figure, not a published fee: opening a Manitoba Hydro account carries no published charge for a homeowner. A buyer may meet a gas reconnect fee, a furnace safety check and an internet installation, about $275 together, rounded up to $300 for a possible City water-account charge.",
       note: "Derived, 2026-09-28: opening a Manitoba Hydro electricity or natural-gas account carries no published fee for a homeowner, and Manitoba Hydro takes security deposits only from new commercial customers. What a buyer can meet is contingent: Centra's gas reconnect fee ($70 + GST, if service was shut off) and optional furnace safety check ($50), per the Schedule of Sales and Transportation Services and Rates (Nov 1, 2025, PUB Order 138/25), plus a typical professional internet installation (~$150, Bell MTS's published standard fee, read from a search summary). ≈ $275, rounded up to $300 for an unconfirmed City water-account charge. The $3,000 this replaces matched no published charge and was very likely a dropped-zero typo of $300.",
     },
     "fees.statusCert": {
       conf: "assumption",
+      summary: "A typical figure: Manitoba's condominium law requires a status certificate but sets no fee, only allowing 'reasonable' ones. Market quotes run about $100 to $200.",
       note: "No statutory fee or cap: The Condominium Act, C.C.S.M. c. C170, s. 61 prescribes the status certificate (Form 8, M.R. 164/2014) and sets no fee; s. 53(3) allows only 'reasonable fees'. Market quotes run about $100–$200 (secondary).",
     },
     "propTax.publishedRate": {
@@ -125,6 +128,7 @@ export const winnipeg: Jurisdiction = {
       src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
       asOf: "2026",
       url: MILL_RATES_URL,
+      summary: "The 2026 combined mill rate for Winnipeg School Division, the default: 29.366 mills, the City's 13.372 plus 15.994 for schools. All eight divisions are carried and differ by about 14%, so choose yours. Residential property pays no Education Support Levy.",
       note: "DEFAULT DIVISION: Winnipeg School Division, 29.366 mills = the 2026 municipal rate (13.372) + the division's school rate (15.994); residential property pays no Education Support Levy (0.000 on the residential class). The reader can choose their own division — all eight are carried, from 25.223 mills (Pembina Trails) to 29.530 (Seven Oaks), about 14% apart. Caveat on the source: the PDF's page footer still reads 'Last updated: April 7, 2025' although its first table is headed 2026 MILL RATES; the City's property-tax-bills page independently confirms the 2026 municipal rate of 13.372 (+3.5% on 2025), so the footer is unmaintained, not the rates.",
     },
     "propTax.assessmentRatio": {
@@ -137,6 +141,7 @@ export const winnipeg: Jurisdiction = {
       conf: "high",
       src: "Derived: propTax.publishedRate x propTax.assessmentRatio",
       asOf: "2026",
+      summary: "The published rate times the 45% of value Manitoba taxes: 0.0132147 of the purchase price for the default division, before the Homeowners Affordability Tax Credit. It leaves out the frontage levy, about $280 to $350 a year on a typical lot.",
       note: "0.029366 x 0.45 = 0.0132147 against market price, for the default division (each division's own rate is derived the same way). GROSS of the Homeowners Affordability Tax Credit, which propTax.credit nets off. Not modelled: the frontage levy, a separate line on the same bill at $6.95 per foot of frontage ($1.80 water main + $5.15 sewer main, City of Winnipeg Charter s. 432(1), last set 2023-04-20) — about $280–$350 a year on a 40–50 ft lot.",
     },
     "propTax.credit": {
@@ -144,6 +149,7 @@ export const winnipeg: Jurisdiction = {
       src: "Manitoba Municipal and Northern Relations, Bulletin #2026-08, Homeowners Affordability Tax Credit 2026; Manitoba Finance, Tax Assistance Office, HATC page",
       asOf: "2026-08",
       url: "https://www.gov.mb.ca/finance/tao/hatc.html",
+      summary: "Manitoba's 2026 Homeowners Affordability Tax Credit is the lesser of $1,600 and your school taxes, applied to the bill for a principal residence. Whether a condominium unit counts is unconfirmed. It becomes $1,700 in 2027.",
       note: "'The amount of the HATC is the lesser of [$1,600 for 2026] and the gross school taxes on your principal residence', 'applied directly on municipal property tax statements'. Principal residences only — the case every page here models. A new owner declares their principal residence with the City (by March 15 for the following year's bill) or claims the credit on their income tax return. The cap binds above about $222,000 in Winnipeg School Division (1,600 / 0.0071973). Not modelled: the separate Seniors' School Tax Rebate. Unconfirmed: whether a condominium unit counts as a 'single residential dwelling' (the City's wording suggests it does). 2027: $1,700, reduced above $1,000,000 of assessment — re-check when the year rolls.",
     },
     "bench.house": {
@@ -151,6 +157,7 @@ export const winnipeg: Jurisdiction = {
       src: "Winnipeg Regional Real Estate Board, August 2026 market release, residential-detached AVERAGE price (not an MLS® HPI benchmark)",
       asOf: "2026-08",
       url: "https://www.winnipegregionalrealestatenews.com/market-statistics/market-releases/article/628/august-sees-the-highest-year-to-date-residential-detached-and-condominium-average-prices-on-record",
+      summary: "The board's August 2026 average price for a detached home, $439,216. It is an average, not a quality-adjusted benchmark, so it moves with the mix of homes sold; July to August moved about $15,000.",
       note: "METRIC: an average. The board publishes averages and no MLS® HPI benchmark exists for Winnipeg — CREA's own board page for WRREB carries the release text and no HPI table. This is NOT the quantity Toronto, Vancouver, Calgary, Ottawa and Saskatoon hold (quality-constant MLS HPI benchmarks) nor the one Montreal holds (medians). An average is dragged by sales mix; a benchmark holds quality constant; a median is the middle sale. `bench` currently holds all three across the dataset, and choosing one metric for every record is a product decision, not a data fix. $439,216, released 2026-09-03 ('down 3% from last year'); it replaces July's $454,264, which matched that release to the dollar. A single month's average swings with sales mix — July to August moved $15,000.",
     },
     "bench.condo": {
@@ -158,12 +165,14 @@ export const winnipeg: Jurisdiction = {
       src: "Winnipeg Regional Real Estate Board, August 2026 market release, condominium AVERAGE price (not an MLS® HPI benchmark)",
       asOf: "2026-08",
       url: "https://www.winnipegregionalrealestatenews.com/market-statistics/market-releases/article/628/august-sees-the-highest-year-to-date-residential-detached-and-condominium-average-prices-on-record",
+      summary: "The board's August 2026 average condominium price, $283,715. It is an average rather than a benchmark, so it moves with the mix of units sold.",
       note: "METRIC: an average — no MLS® HPI benchmark exists for Winnipeg, same caveat as bench.house. $283,715, +2% on August 2025, replacing July's $290,522.",
     },
     rent: {
       conf: "high",
       src: "CMHC Rental Market Survey, Winnipeg CMA, two-bedroom purpose-built apartment, reliability code a",
       asOf: "2025-10",
+      summary: "CMHC's October 2025 average two-bedroom rent for Winnipeg. It covers occupied apartments, which usually rent below the asking price of a unit that is turning over.",
       note: "CMHC reports the average rent of the EXISTING OCCUPIED stock, which runs below asking rents for units actually turning over. October 2025 is the newest reference period CMHC publishes dollar levels for; the 2026 mid-year update is index-only.",
     },
     yoy: {
@@ -171,6 +180,7 @@ export const winnipeg: Jurisdiction = {
       src: "Winnipeg Regional Real Estate Board, August 2026 market release: year-to-date (January–August) averages, detached $468,679 and condominium $288,834, each +3% on the same period of 2025",
       asOf: "2026-08",
       url: "https://www.winnipegregionalrealestatenews.com/market-statistics/market-releases/article/628/august-sees-the-highest-year-to-date-residential-detached-and-condominium-average-prices-on-record",
+      summary: "The year-to-date (January to August 2026) change in the board's average prices, +3% for both detached homes and condominiums. It is a change in an average, so part of any move is sales mix rather than price.",
       note: "YEAR TO DATE, deliberately: the single-month figures disagree in sign (detached −3%, condo +2% in August; both +2% in July), and one field cannot hold two. The year-to-date change is the steadier measure and is the same for both. Whole percents, and a change in an AVERAGE, so part of any move is sales mix rather than price.",
     },
     marginal: {
@@ -179,6 +189,7 @@ export const winnipeg: Jurisdiction = {
       src: "EY, Combined federal and provincial personal income tax rates — 2026, Manitoba (rates reflect budget proposals and news releases to 2026-01-15)",
       asOf: "2026-01-15",
       url: "https://www.ey.com/content/dam/ey-unified-site/ey-com/en-ca/services/tax/tax-calculators/2026/ey-tax-rates-manitoba-2026-01-15-v1.pdf",
+      summary: "Combined federal and Manitoba income-tax rates for 2026, from EY's compilation rather than the governments' own tables. The drop above $400,000 is real: Manitoba's basic personal amount is clawed back between $200,000 and $400,000.",
       note: "Replaces a placeholder that was NON-MONOTONIC (bracket 2 sat below bracket 1, impossible for a progressive schedule) and used 2024 federal thresholds. The fall from 51.25% to 50.40% above $400,000 IS real: EY note 6 records that Manitoba's basic personal amount is clawed back on net income over $200,000 and fully eliminated at $400,000, adding ~0.85% between those points and dropping off above. Read by nothing today — marginalRate() is not yet ported — which is why this was corrected now rather than after it starts moving money.",
     },
     "transfer.0.brackets": {
@@ -186,6 +197,7 @@ export const winnipeg: Jurisdiction = {
       src: "Manitoba Finance, Land Transfer Tax",
       asOf: "2026",
       url: "https://www.gov.mb.ca/finance/other/print,landtransfertax.html",
+      summary: "Manitoba's land transfer tax scale, re-checked against Manitoba Finance's published schedule on 2026-09-28. A 2027 tax on bare-trust transfers leaves the rates for an ordinary purchase unchanged.",
       note: "Re-confirmed 2026-09-28 as an exact match to the published sliding scale. 2027: Bill 53, The Budget Implementation and Tax Statutes Amendment Act, 2026 (Royal Assent 2026-06-01, per MLT Aikins — the bill page leaves 'Assented to' blank) adds Part III.1, a tax on transfers of a BENEFICIAL interest in land (bare-trust arrangements) from 2027-01-01, using the same schedule. It does not change the rates or brackets for an ordinary registered purchase. Re-check when the 2027 budget lands.",
     },
     "transfer.1.amount": {
@@ -193,6 +205,7 @@ export const winnipeg: Jurisdiction = {
       src: "Teranet Manitoba, Land Titles Fees, item TR1 Transfer >30,000 Fee — $137.00 electronic, $144.00 paper",
       asOf: "2026-01-04",
       url: "https://teranetmanitoba.ca/wp-content/uploads/2025/09/2026-LTR-Fee-Schedule-Bareme-des-droits-LTR-2026-1.pdf",
+      summary: "Manitoba's Land Titles fee to register a transfer: $137 when filed electronically, as it normally is; paper filing is $144.",
       note: "130 -> 137. The record models ELECTRONIC registration, which is how a conveyance is filed in practice; paper is $144.",
     },
     "transfer.2.amount": {
@@ -200,6 +213,7 @@ export const winnipeg: Jurisdiction = {
       src: "Teranet Manitoba, Land Titles Fees, item MTGE Mortgage — $137.00 electronic, $144.00 paper",
       asOf: "2026-01-04",
       url: "https://teranetmanitoba.ca/wp-content/uploads/2025/09/2026-LTR-Fee-Schedule-Bareme-des-droits-LTR-2026-1.pdf",
+      summary: "The Land Titles fee to register a mortgage: $137 filed electronically ($144 on paper), a flat fee in Manitoba.",
       note: "A NEW line. Winnipeg charged no mortgage registration fee while Saskatoon and Calgary both did — an inconsistency between jurisdictions rather than a stale number, and so wrong in a systematic direction on every cross-city comparison. Flat in Manitoba, unlike Saskatchewan's stepped table and Alberta's per-value levy.",
     },
     "taxTime.0.amount": {
@@ -207,12 +221,14 @@ export const winnipeg: Jurisdiction = {
       src: "Federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal personal rate of 14%",
       asOf: "2026",
       url: "https://www.ey.com/content/dam/ey-unified-site/ey-com/en-ca/services/tax/tax-calculators/2026/ey-tax-rates-manitoba-2026-01-15-v1.pdf",
+      summary: "The federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal rate of 14%, worth $1,400 at tax time.",
       note: "1500 -> 1400. The $1,500 it replaces was the same credit at a 15% lowest rate. Corroborated independently by Quebec's finance ministry, which lists the federal credit at $1,169 for a Quebec filer = $1,400 x 0.835 after the 16.5% abatement.",
     },
     premiumTax: {
       conf: "high",
       src: "Manitoba Finance, Taxation Division, Bulletin No. 061 (revised July 2020) and Notice RST 20-04: mortgage insurance and title insurance are exempt from RST from 2020-07-01",
       asOf: "2020-07",
+      summary: "Manitoba has charged no provincial sales tax on the mortgage default insurance premium since July 2020. The same exemption covers title insurance.",
       note: "null is correct: no provincial sales tax on the mortgage default insurance premium in Manitoba. The same exemption covers title insurance, so fees.titleIns carries no RST either.",
     },
   },
