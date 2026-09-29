@@ -125,7 +125,7 @@ export const halifax: Jurisdiction = {
       asOf: "2025-10",
       src: "CMHC Rental Market Survey, Halifax CMA, 2-bedroom, reliability code a",
       url: "https://www.cmhc-schl.gc.ca/professionals/housing-markets-data-and-research/market-reports/rental-market-reports-major-centres",
-      summary: "CMHC's October 2025 average two-bedroom rent for the Halifax area, taken from CMHC's survey table. It is always older than the price figures beside it.",
+      summary: "CMHC's October 2025 average two-bedroom rent for the Halifax area, from a secondary read of CMHC's survey table rather than a fresh check. It is always older than the price figures beside it.",
       note: "Taken from the market-data verification report's read of CMHC's HMIP table rather than re-read here, hence medium. CMHC's reference month is October, so this is always older than the benchmark beside it.",
     },
     yoy: {

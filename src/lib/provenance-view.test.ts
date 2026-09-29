@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ca } from "@/domain/rules/ca";
+import { RULES } from "@/domain/rules";
 import { jurisdictions, getJurisdiction } from "@/domain/jurisdictions";
 import type { Provenance } from "@/domain/types";
 import {
@@ -67,6 +68,32 @@ describe("collectSources", () => {
       ["fees.moving", p({ conf: "assumption", note: "Movers price by distance." })],
     ]);
     expect(entries).toHaveLength(2);
+  });
+
+  it("merges unsourced figures whose notes differ but whose reader summary is the same", () => {
+    // The row shows the summary. Keying on the note printed two identical "Assumption" rows on
+    // the US /sources page, for three investment returns that share one explanation.
+    const entries = collectSources([
+      ["investReturn.cash", p({ conf: "assumption", note: "Carried over from Canada.", summary: "Ours." })],
+      ["investReturn.growth", p({ conf: "assumption", note: "Same caveat as cash.", summary: "Ours." })],
+    ]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].fields).toEqual(["investReturn.cash", "investReturn.growth"]);
+    expect(entries[0].notes).toEqual(["Ours."]);
+  });
+
+  it("shows no two identical rows for any real record", () => {
+    const records = [
+      ...jurisdictions.map((j) => [j.id, j.provenance] as const),
+      ...Object.entries(RULES).map(([country, r]) => [`rules.${country}`, r.provenance] as const),
+    ];
+    for (const [id, map] of records) {
+      const rows = collectSources(
+        Object.entries(map).filter((e): e is [string, Provenance] => e[1] !== undefined),
+      );
+      const shown = rows.map((r) => `${r.conf}|${r.src ?? ""}|${r.notes.join("|")}`);
+      expect(new Set(shown).size, id).toBe(shown.length);
+    }
   });
 
   it("takes the WEAKEST confidence when one document carries several figures", () => {

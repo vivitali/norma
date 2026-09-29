@@ -115,12 +115,12 @@ export const winnipeg: Jurisdiction = {
     ...feesProvenance(fees),
     "fees.setup": {
       conf: "assumption",
-      summary: "A typical figure, not a published fee: opening a Manitoba Hydro account carries no published charge for a homeowner. A buyer may meet a gas reconnect fee, a furnace safety check and an internet installation, about $275 together, rounded up to $300 for a possible City water-account charge.",
+      summary: "A default we chose, not a published fee: opening a Manitoba Hydro account carries no published charge for a homeowner. A buyer may meet a gas reconnect fee, a furnace safety check and an internet installation, about $275 together, rounded up to $300 for a possible City water-account charge.",
       note: "Derived, 2026-09-28: opening a Manitoba Hydro electricity or natural-gas account carries no published fee for a homeowner, and Manitoba Hydro takes security deposits only from new commercial customers. What a buyer can meet is contingent: Centra's gas reconnect fee ($70 + GST, if service was shut off) and optional furnace safety check ($50), per the Schedule of Sales and Transportation Services and Rates (Nov 1, 2025, PUB Order 138/25), plus a typical professional internet installation (~$150, Bell MTS's published standard fee, read from a search summary). ≈ $275, rounded up to $300 for an unconfirmed City water-account charge. The $3,000 this replaces matched no published charge and was very likely a dropped-zero typo of $300.",
     },
     "fees.statusCert": {
       conf: "assumption",
-      summary: "A typical figure: Manitoba's condominium law requires a status certificate but sets no fee, only allowing 'reasonable' ones. Market quotes run about $100 to $200.",
+      summary: "A default we chose: Manitoba's condominium law requires a status certificate but sets no fee, only allowing 'reasonable' ones. Market quotes run about $100 to $200.",
       note: "No statutory fee or cap: The Condominium Act, C.C.S.M. c. C170, s. 61 prescribes the status certificate (Form 8, M.R. 164/2014) and sets no fee; s. 53(3) allows only 'reasonable fees'. Market quotes run about $100–$200 (secondary).",
     },
     "propTax.publishedRate": {
@@ -152,7 +152,7 @@ export const winnipeg: Jurisdiction = {
       src: "Manitoba Municipal and Northern Relations, Bulletin #2026-08, Homeowners Affordability Tax Credit 2026; Manitoba Finance, Tax Assistance Office, HATC page",
       asOf: "2026-08",
       url: "https://www.gov.mb.ca/finance/tao/hatc.html",
-      summary: "Manitoba's 2026 Homeowners Affordability Tax Credit is the lesser of $1,600 and your school taxes, applied to the bill for a principal residence. Whether a condominium unit counts is unconfirmed. It becomes $1,700 in 2027.",
+      summary: "Manitoba's 2026 Homeowners Affordability Tax Credit is the lesser of $1,600 and your school taxes, applied to the bill for a principal residence. Whether a condominium unit counts is unconfirmed. It becomes $1,700 in 2027, reduced above $1,000,000 of assessment.",
       note: "'The amount of the HATC is the lesser of [$1,600 for 2026] and the gross school taxes on your principal residence', 'applied directly on municipal property tax statements'. Principal residences only — the case every page here models. A new owner declares their principal residence with the City (by March 15 for the following year's bill) or claims the credit on their income tax return. The cap binds above about $222,000 in Winnipeg School Division (1,600 / 0.0071973). Not modelled: the separate Seniors' School Tax Rebate. Unconfirmed: whether a condominium unit counts as a 'single residential dwelling' (the City's wording suggests it does). 2027: $1,700, reduced above $1,000,000 of assessment — re-check when the year rolls.",
     },
     "bench.house": {

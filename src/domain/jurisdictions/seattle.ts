@@ -140,12 +140,12 @@ export const seattle: Jurisdiction = {
     "fees.inspect": {
       conf: "assumption",
       note: "$450 — the same nationwide modelling default Houston and Austin carry; the dossier did not research inspection fees, and they are not state-specific (dossier A6).",
-      summary: "$450 is a typical nationwide figure, not specific to Washington. Nobody publishes an inspection fee, so we chose it.",
+      summary: "$450 is a default we chose, the same one used for Houston and Austin; inspection fees are not set by state. Nobody publishes one.",
     },
     "fees.appraisal": {
       conf: "assumption",
       note: "$600 — a modelling default between Houston's $500 and Austin's $750; the dossier did not research Seattle appraisal fees, and they are lender-driven, not state-specific (dossier A6).",
-      summary: "$600 is a typical figure we chose because lenders set appraisal fees and nobody publishes them.",
+      summary: "$600 is a default we chose because lenders set appraisal fees and nobody publishes them.",
     },
     "fees.recording": {
       conf: "assumption",
@@ -158,12 +158,12 @@ export const seattle: Jurisdiction = {
     "fees.moving": {
       conf: "assumption",
       note: "$1,500 — the same modelling default the Texas records carry; no Seattle mover cost was researched, and no authority publishes one.",
-      summary: "$1,500 is a typical figure. Nobody publishes a Seattle moving cost.",
+      summary: "$1,500 is a default we chose. Nobody publishes a Seattle moving cost.",
     },
     "fees.setup": {
       conf: "assumption",
       note: "$250 — the same modelling default the Texas records carry; Seattle City Light and SPU account-opening charges were not researched.",
-      summary: "$250 is a typical figure for utility account setup. We did not research Seattle's own utility charges.",
+      summary: "$250 is a default we chose for utility account setup. We did not research Seattle's own utility charges.",
     },
     insurance: {
       conf: "assumption",
@@ -178,7 +178,7 @@ export const seattle: Jurisdiction = {
       src: RCW_82_45_080,
       url: RCW_82_45_080_URL,
       note: "$0 to the buyer by design. Washington's real estate excise tax (graduated state rate 1.10% to $525,000, 1.28% to $1,525,000, 2.75% to $3,025,000, 3.00% above, plus Seattle's 0.50% local rate — dossier A2, dor.wa.gov) is \"the obligation of the seller\" under RCW 82.45.080, read directly. The seller's side is `saleTax` on this record and Rent vs Buy deducts it at the sale. A deed of trust (the loan) is not subject to REET (medium — secondary synthesis of WAC 458-61A-208).",
-      summary: "You pay $0 in excise tax when buying: under Washington law the real estate excise tax is the seller's obligation, and Rent vs Buy deducts it at the sale. The loan's deed of trust is not taxed either.",
+      summary: "You pay $0 in excise tax when buying: under Washington law the real estate excise tax is the seller's obligation, and Rent vs Buy deducts it at the sale. The loan's deed of trust is not taxed either, according to a secondary summary of the state rule.",
     },
     "saleTax.0": {
       conf: "high",
@@ -218,7 +218,7 @@ export const seattle: Jurisdiction = {
       src: NWMLS,
       url: NWMLS_URL,
       note: "MEDIAN, not an average: Seattle single-family (RES ONLY) median $920,000, August 2026, -8.00% from $1,000,000 (dossier B1). NWMLS's own subtotal across its Seattle map areas; fetched directly.",
-      summary: "The August 2026 median price for a Seattle single-family home, $920,000, down 8.00% from $1,000,000, from the Northwest Multiple Listing Service. A median, not an average.",
+      summary: "The August 2026 median price for a Seattle single-family home, $920,000, down 8.00% from $1,000,000 a year earlier, from the Northwest Multiple Listing Service. A median, not an average.",
     },
     "bench.condo": {
       conf: "high",

@@ -119,26 +119,26 @@ export const houston: Jurisdiction = {
     "fees.lawyer": {
       conf: "assumption",
       note: "The title company's settlement/closing fee, the direct Texas analogue of a lawyer's conveyancing fee elsewhere in this dataset — priced within the dossier's $250-800 escrow/settlement fee range (dossier B6), no publisher.",
-      summary: "In Texas a title company charges a settlement or closing fee where other places use a lawyer's fee. Nobody publishes it, so this is a typical figure within a $250 to $800 range.",
+      summary: "In Texas a title company charges a settlement or closing fee where other places use a lawyer's fee. Nobody publishes it, so this is a default we chose within the $250 to $800 range our research found.",
     },
     "fees.titleIns": {
       conf: "assumption",
       src: TDI_TITLE,
       url: TDI_TITLE_URL,
       note: "$100 is a MODELLING DEFAULT for the simultaneous-issue lender's policy, not a TDI-published figure — the dossier's own B6 row grades \"who customarily pays it\" at medium and prints no dollar amount for the rate itself; only the OWNER'S full-value policy schedule (TX_TITLE_INSURANCE_BRACKETS, exported separately) is TDI-promulgated and high-confidence. Texas/Harris County custom has the seller pay the owner's policy and the buyer pay only this flat lender's-policy add-on (dossier B3/B6); the amount is disclosed as an estimate pending a primary-source read of TDI's rate manual (the simultaneous-issue rule is commonly cited as a low flat fee, often near $100, but this figure has not been independently verified against the manual's printed rule).",
-      summary: "A typical $100 for the lender's title policy issued alongside the owner's policy. It is not a published rate and hasn't been checked against the Texas Department of Insurance rate manual; by Texas custom the seller pays for the owner's policy.",
+      summary: "$100, a default we chose, for the lender's title policy issued alongside the owner's policy. It is not a published rate and hasn't been checked against the Texas Department of Insurance rate manual; by Texas custom the seller pays for the owner's policy.",
     },
     "fees.survey": {
       conf: "assumption",
       note: "No Texas-specific survey-fee figure was located this pass, even at assumption grade (dossier B6: \"no primary or reputable-secondary figure was captured with a citation strong enough to record here\"). $500 is a modelling default in the same category as every other unpublished closing fee in this dataset — the calculator cannot run without SOME figure here — not a citation.",
-      summary: "Nobody publishes a Texas survey fee, and we could not find one with a solid citation, so $500 is a typical figure we chose.",
+      summary: "Nobody publishes a Texas survey fee, and we found none with a citation we could rely on, so $500 is a default we chose with no source behind it.",
     },
     "fees.recording": {
       conf: "medium",
       asOf: "2026",
       src: HARRIS_CLERK,
-      note: "$25 first page + $4 each additional page, Harris County Clerk. Read via a secondary aggregation of the county's fee schedule; a direct fetch of the Clerk's own page returned an internally inconsistent extraction ($5 vs $25) and should be re-verified before this ships above medium. $35 models a typical 3-4 page deed.",
-      summary: "The Harris County Clerk charges $25 for the first page and $4 for each additional page, so $35 covers a typical 3 to 4 page deed. We read this through a secondary summary of the county schedule, so check it against the Clerk's own page.",
+      note: "$25 first page + $4 each additional page, Harris County Clerk. Read via a secondary aggregation of the county's fee schedule; a direct fetch of the Clerk's own page returned an internally inconsistent extraction ($5 vs $25) and should be re-verified before this ships above medium. $35 sits between a 3-page ($33) and a 4-page ($37) deed.",
+      summary: "The Harris County Clerk charges $25 for the first page and $4 for each additional page, so a 3-page deed costs $33 and a 4-page deed $37; the $35 used here sits between the two. We read this through a secondary summary of the county schedule, so check it against the Clerk's own page.",
     },
     "insurance": {
       conf: "medium",

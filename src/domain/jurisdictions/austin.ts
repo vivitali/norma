@@ -171,24 +171,24 @@ export const austin: Jurisdiction = {
     "fees.lawyer": {
       conf: "assumption",
       note: "The title company's settlement/closing fee — priced at the midpoint of the dossier's own $400-$600 Austin escrow/closing-fee range (dossier C9), described there as \"the one shoppable/negotiable fee.\" No publisher prices this.",
-      summary: "A title company's closing fee, set at the midpoint of a typical $400 to $600 Austin range. It is one of the few closing fees you can shop around, and nobody publishes a price.",
+      summary: "A title company's closing fee, set at the midpoint of the $400 to $600 Austin range our research found. It is one of the few closing fees you can shop around, and nobody publishes a price.",
     },
     "fees.titleIns": {
       conf: "assumption",
       src: TDI_TITLE,
       url: TDI_TITLE_URL,
       note: "$100 is a MODELLING DEFAULT for the simultaneous-issue lender's policy, carried forward from Houston's own record unchanged (Phase 0 verdict) — this is a Texas-wide TDI-custom fact, not a Harris-County-specific one. Only the OWNER'S full-value policy schedule (the state's promulgated bracket table, reproduced in austin.test.ts against the dossier's own $2,015 example on a $350,000 policy) is TDI-promulgated and high-confidence; by Texas custom the seller pays that policy and the buyer pays only this flat lender's-policy add-on.",
-      summary: "A typical $100 for the lender's title policy issued alongside the owner's policy, the same figure used for Houston. Only the owner's policy has a state-set rate, and by Texas custom the seller pays for it.",
+      summary: "$100, a default we chose, for the lender's title policy issued alongside the owner's policy, the same figure used for Houston. Only the owner's policy has a state-set rate, and by Texas custom the seller pays for it.",
     },
     "fees.survey": {
       conf: "assumption",
       note: "Midpoint of the dossier's own $400-$700 Austin survey-fee range (dossier C9) — no primary publisher (TDI, a title-industry association, or a Travis County page) prices this; the dossier attributes the gap to a genuinely Texas-wide convention, not an Austin-specific research miss.",
-      summary: "The midpoint of a typical $400 to $700 range for an Austin survey. Nobody publishes a price, so this is a typical figure.",
+      summary: "The midpoint of the $400 to $700 range our research found for an Austin survey. Nobody publishes a price, so this is a default we chose.",
     },
     "fees.appraisal": {
       conf: "assumption",
       note: "Midpoint of the dossier's own $500-$1,000 Austin appraisal-fee range (dossier C9) — same no-publisher gap as fees.survey.",
-      summary: "The midpoint of a typical $500 to $1,000 range for an Austin appraisal. Nobody publishes a price, so this is a typical figure.",
+      summary: "The midpoint of the $500 to $1,000 range our research found for an Austin appraisal. Nobody publishes a price, so this is a default we chose.",
     },
     "fees.recording": {
       // The PER-PAGE rate is high (fetched directly off the Clerk's own page, internally

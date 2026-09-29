@@ -211,7 +211,7 @@ describe("SourcesContent", () => {
     await openEverySection(user);
     const fees = document.getElementById("fees-panel")!;
     expect(within(fees).getAllByText("Assumption").length).toBeGreaterThan(0);
-    expect(within(fees).getAllByText(/so this is a typical figure for the region/).length).toBeGreaterThan(0);
+    expect(within(fees).getAllByText(/so this is a default we chose for the region/).length).toBeGreaterThan(0);
   });
 
   it("says the figure disclosure in its mixed-state wording", () => {

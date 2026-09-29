@@ -129,8 +129,10 @@ export function isSourced(conf: Confidence): boolean {
 function entryKey(p: Provenance): string {
   // Without a document there is nothing to merge ON, so an unsourced figure is
   // keyed by its own explanation: the seven fee assumptions each say something
-  // different and must not collapse into one row.
-  return p.src ?? `~${p.conf}~${p.note ?? ""}`;
+  // different and must not collapse into one row. Keyed by the text the row SHOWS —
+  // two figures whose notes differ but whose reader summary is the same are one
+  // row, not two identical ones.
+  return p.src ?? `~${p.conf}~${p.summary ?? p.note ?? ""}`;
 }
 
 /** Fold a set of `[path, provenance]` pairs onto their source documents. */

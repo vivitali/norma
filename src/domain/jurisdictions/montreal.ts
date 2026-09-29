@@ -105,7 +105,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026-01-01",
       url: "https://montreal.ca/articles/taux-de-taxes-pour-2026-106147",
       note: "Montreal publishes NO city-wide residential rate — it varies by borough. Every component here is official: city-level taxes applying to all residential property total 0.5556 per $100 (taxe foncière générale 0.4631 + ARTM 0.0070 + voirie 0.0024 + service de l'eau 0.0831), to which each borough adds its dettes des anciennes villes, services and investissements shares. The 19 boroughs' all-in residential rates run from 0.6229 (Ville-Marie) to 0.7403 (Anjou); their unweighted mean is 0.667932. The province-wide school tax of 0.07899 per $100 (set by the Ministère de l'Éducation, published in the Gazette officielle) is added on top, giving 0.746922 per $100 = 0.0074692. The ASSUMPTION is the aggregation — an unweighted borough mean including school tax — not the figures. Two known simplifications: the school tax exempts the first $25,000 of assessment, and Lachine adds a flat $57.91 per unit.",
-      summary: "A typical figure chosen because Montréal publishes no single city-wide residential rate; it varies by borough. This is the average of the 19 boroughs' official 2026 rates plus the province-wide school tax, so your borough's actual rate will differ.",
+      summary: "A default we chose because Montréal publishes no single city-wide residential rate; it varies by borough. This is the average of the 19 boroughs' official 2026 rates plus the province-wide school tax, so your borough's actual rate will differ.",
     },
     "propTax.effective": {
       conf: "assumption",

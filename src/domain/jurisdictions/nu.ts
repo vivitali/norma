@@ -76,12 +76,12 @@ export const nu: Jurisdiction = {
     "propTax.effective": {
       conf: "assumption",
       note: "NO RATE FOUND, and the reason is structural rather than a failed search. The Government of Nunavut administers property tax only for the general taxation area, which EXCLUDES the City of Iqaluit; Iqaluit sets its own mill rates and publishes them nowhere machine-readable, across five property classes with two distinct residential ones (single-family and individually-owned condominium in one, two-or-more-dwelling-unit properties in the other). A single scalar is a modelling compromise here even once the rate is known. The prototype's 0.009 is retained as a disclosed default. Contact for a human: Iqaluit Finance, 867-979-5610.",
-      summary: "Nobody publishes a usable Iqaluit rate, so 0.9% is a disclosed default. The territory taxes only outside Iqaluit; the City sets its own rates across several property classes and doesn't publish them in machine-readable form.",
+      summary: "Nobody publishes a usable Iqaluit rate, so 0.9% is a disclosed default. The territory taxes only outside Iqaluit; the City sets its own rates across several property classes and doesn't publish them in a form we could use.",
     },
     "propTax.basis": {
       conf: "assumption",
       note: "`unknown`: nothing about the assessment base is sourced, and the record now says that rather than claiming the nearest label. It previously said `market` with a ratio of 1 — a claim this note itself denied in its next sentence, kept only because the 'ratio 1 iff market' invariant left no honest alternative. What is known: Nunavut inherited the NWT's Property Assessment and Taxation Act framework, under which assessed value is a base-year figure with improvements at depreciated replacement cost. Naming that base for real would require inventing both a published rate and a ratio to keep the derivation consistent. `unknown` also restores the Affordability estimate caveat, which reads `basis` and is exactly the disclosure a record with no sourced rate should carry.",
-      summary: "We could not source how Nunavut property is assessed, so the page says so rather than name a label. What is known: assessed value is a base-year figure with buildings at depreciated replacement cost, following the Northwest Territories' framework.",
+      summary: "We could not source how Nunavut property is assessed, so the page says so rather than guess. What is known: assessed value is a base-year figure with buildings at depreciated replacement cost, following the Northwest Territories' framework.",
     },
     "bench.house": {
       conf: "none",
@@ -103,7 +103,7 @@ export const nu: Jurisdiction = {
     "fees.moving": {
       conf: "assumption",
       note: "SUSPECT, and confidently wrong in spirit rather than merely uncited. Iqaluit has no road access: household goods arrive by annual sealift, booked months ahead and priced per cubic metre, and anything that misses the sealift window flies. A realistic Iqaluit household move is plausibly a multiple of this figure, and it is seasonal in a way this model cannot express at all.",
-      summary: "Treat this typical regional figure with caution. Iqaluit has no road access: household goods arrive by annual sealift or by air, and a real move could cost a multiple of this.",
+      summary: "Treat this default, which we chose, with caution. Iqaluit has no road access: household goods arrive by annual sealift or by air, and a real move could cost a multiple of this.",
     },
   },
 };

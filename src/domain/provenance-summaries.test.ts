@@ -29,6 +29,10 @@ const JARGON = [
   /\bconf(?:idence)?:\s*"/,
   /\b[a-z]+[A-Z][A-Za-z]*\(\)/, // camelCase function calls
   /\b(?:propTax|fees|bench|transfer|rebates|taxTime|marginal)\.[a-z]/, // field paths
+  /\bthis (?:record|field)\b/i,
+  /\bslot\b/i,
+  /\bmachine-readable\b/i,
+  /\blabel\b/i,
 ];
 
 describe("provenance summaries", () => {
@@ -76,4 +80,20 @@ describe("provenance summaries", () => {
       expect([...new Set(repeats)]).toEqual([]);
     });
   }
+
+  // `bench` holds three different metrics — MLS® HPI benchmarks, medians and board averages
+  // (CLAUDE.md). The record-level tests pin the disclosure in each NOTE; the reader sees the
+  // summary and the citation, so the metric has to survive into one of them.
+  it("every published benchmark price names its metric where the reader sees it", () => {
+    const missing: string[] = [];
+    for (const j of jurisdictions) {
+      for (const key of ["bench.house", "bench.condo"] as const) {
+        const p = j.provenance[key];
+        if (!p || p.conf === "none") continue;
+        const shown = `${p.summary ?? p.note ?? ""} ${p.src ?? ""}`;
+        if (!/median|average|benchmark|\bHPI\b|index/i.test(shown)) missing.push(`${j.id} ${key}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
 });

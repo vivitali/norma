@@ -102,7 +102,7 @@ export const ottawa: Jurisdiction = {
       src: `${OREB_HPI} single-family benchmark`,
       url: OREB_HPI_URL,
       note: "$725,000, +0.7% year over year — the only benchmark in this record still rising.",
-      summary: "The Ottawa Real Estate Board's July 2026 benchmark price for a single-family home, $725,000, up 0.7% on a year earlier. It is the only benchmark in this record still rising.",
+      summary: "The Ottawa Real Estate Board's July 2026 benchmark price for a single-family home, $725,000, up 0.7% on a year earlier. It is the only one of Ottawa's benchmarks still rising.",
     },
     "bench.condo": {
       conf: "high",

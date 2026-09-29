@@ -101,7 +101,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: "City of St. John's, Property Assessments: \"The base date for 2026-2027 assessment notices is January 1, 2024\"",
       url: "https://www.stjohns.ca/resident-services/property-taxes-assessments/property-assessments/",
-      summary: "St. John's assesses at a January 1, 2024 base date rather than today's value, and publishes no ratio. This about 0.77 is worked out from the city's February 2024 and July 2026 composite benchmarks, assuming your home tracked that benchmark.",
+      summary: "St. John's assesses at a January 1, 2024 base date rather than today's value, and publishes no ratio. This ratio, about 0.77, is worked out from the city's February 2024 and July 2026 composite benchmarks, assuming your home tracked that benchmark.",
       note: NL_RATIO_NOTE,
     },
     "bench.house": {
@@ -109,7 +109,7 @@ export const nl: Jurisdiction = {
       asOf: "2026-07",
       src: `${NLAR_HPI} single-family benchmark, PROVINCE-WIDE`,
       url: NLAR_HPI_URL,
-      summary: "The NLAR July 2026 single-family benchmark for the whole province, $362,100, up 9.1% over a year. St. John's alone is higher at $447,800, so the province-wide series is used to match this record.",
+      summary: "The NLAR July 2026 single-family benchmark for the whole province, $362,100, up 9.1% over a year. St. John's alone is higher at $447,800, so the province-wide series is used to match the rest of the figures here.",
       note: "$362,100, +9.1% year over year. St. John's metro alone is $447,800, +10.1% — a 24% gap, which is why the geography is written down. This record is province-wide, so the province-wide series is the matching one.",
     },
     "bench.condo": {

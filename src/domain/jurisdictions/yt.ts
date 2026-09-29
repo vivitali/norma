@@ -156,7 +156,7 @@ export const yt: Jurisdiction = {
     "propTax.basis": {
       conf: "assumption",
       note: "`frozenBaseYear` is the closest of the four bases, not an exact fit. Yukon reassesses every two years (municipalities and rural properties in alternate years; municipalities were last reassessed in 2025), so the roll lags rather than being permanently frozen, and improvements are valued at depreciated replacement cost rather than at any market date. What the label is carrying is the part that matters to the engine: the roll is NOT market value, so the ratio is not 1. The record previously claimed `market` with a ratio of 1, which the Government of Yukon's own assessment page contradicts.",
-      summary: "Yukon reassesses every two years and values buildings at depreciated replacement cost, so assessed value is not market value. The label we use is the closest fit rather than an exact one, but it carries the point that matters: the roll sits below market.",
+      summary: "Yukon reassesses every two years and values buildings at depreciated replacement cost, so assessed value is not market value. The category we use is the closest fit rather than an exact one, but it carries the point that matters: the roll sits below market.",
     },
     "propTax.effective": {
       conf: "assumption",
@@ -189,7 +189,7 @@ export const yt: Jurisdiction = {
     "fees.moving": {
       conf: "assumption",
       note: "No citation. Northern moving is barge- and air-freight-dependent and seasonal in a way this model cannot express; the figure is a regional modelling default carried from the prototype.",
-      summary: "Nobody publishes a moving cost for Yukon, so this is a typical regional figure. Northern moves depend on barge and air freight and on the season, which this estimate does not capture.",
+      summary: "Nobody publishes a moving cost for Yukon, so this is a default we chose for the region. Northern moves depend on barge and air freight and on the season, which this estimate does not capture.",
     },
   },
 };

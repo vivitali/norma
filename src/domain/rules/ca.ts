@@ -50,17 +50,17 @@ const INVEST_RETURN_NOTE =
 const APPRECIATION_NOTE =
   "A forward-looking house price growth assumption, not a forecast anyone is accountable for. The value is taken from FP Canada's 2026 Projection Assumption Guidelines, which is the Canadian standard for long-term projections — but a projection assumption is still an assumption, so it is disclosed as one rather than presented as a rate that will happen.";
 
+const APPRECIATION_SUMMARY =
+  "An assumed rate of house price growth taken from FP Canada's 2026 projection guidelines, the Canadian standard for long-term projections. It is an assumption, not a forecast of what prices will do.";
+
+const INVEST_RETURN_SUMMARY =
+  "An assumed investment return. Nobody publishes a return for a portfolio type such as 'balanced', and past returns do not predict future ones, so the three tiers show how much the answer depends on it. FP Canada's 2026 guidelines give the asset-class figures behind it.";
+
 /**
  * The mortgage term lengths Amortization's `SegmentedGroup` used to hardcode as
  * `TERM_CHOICES = [1, 3, 5, 10]`. Moved here so the UI reads its options off the rules record
  * rather than a component-local literal — see `Mortgage` in types.ts.
  */
-const APPRECIATION_SUMMARY =
-  "An assumed rate of house price growth taken from FP Canada's 2026 projection guidelines, the Canadian standard for long-term projections. It is an assumption, not a forecast of what prices will do.";
-
-const INVEST_RETURN_SUMMARY =
-  "An assumed investment return. Nobody publishes a return for a portfolio label and past returns do not predict future ones, so the three tiers show how much the answer depends on it. FP Canada's 2026 guidelines give the asset-class figures behind it.";
-
 export const ca: CaRules = {
   country: "ca",
   mortgage: { kind: "term", termYears: [1, 3, 5, 10], renews: true },
@@ -288,7 +288,7 @@ export const ca: CaRules = {
     sellingCost: {
       conf: "assumption",
       note: "No regulator publishes a standard selling cost; real estate commissions are negotiable by law and the structure varies by province (Quebec brokerage 4-5%; BC tiered at 7% of the first $100k then 2.5%). 5% all-in covers commission plus legal and discharge costs.",
-      summary: "Nobody publishes a standard selling cost, and commissions are negotiable and vary by province. 5% is a typical all-in figure covering commission plus legal and discharge costs.",
+      summary: "Nobody publishes a standard selling cost, and commissions are negotiable and vary by province. 5% is a default we chose, covering commission plus legal and discharge costs.",
     },
     maintenanceReserve: {
       conf: "assumption",

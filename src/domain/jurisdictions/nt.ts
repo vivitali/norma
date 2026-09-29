@@ -80,12 +80,12 @@ export const nt: Jurisdiction = {
     "propTax.basis": {
       conf: "assumption",
       note: "`unknown`: we could not establish what the assessment base is, and the record says so instead of picking the nearest label. It previously said `market` with a ratio of 1 — which this very note contradicted in its own second sentence, and which existed only to satisfy the 'ratio 1 iff market' invariant. What is known: the City of Yellowknife values land at 100% of 2024 base-year market value and buildings at 100% of typical depreciated replacement cost, and holds both between general assessments (statutorily at least every nine years; Yellowknife went seven). Outside municipalities, the GNWT's General Taxation Area values land at development cost and improvements at TWO THIRDS of depreciated replacement cost — so reading this record as territory-wide is further wrong again. Naming a real base needs a published rate and a ratio to go with it; we have neither. Affordability reads `basis` directly and shows its estimate caveat wherever the base is not market value, so `unknown` now renders the caveat this record always warranted.",
-      summary: "We could not establish how property is assessed here, so the page says so rather than pick a label. The City values land at 2024 market value and buildings at depreciated replacement cost; outside the city the territory assesses differently again.",
+      summary: "We could not establish how property is assessed here, so the page says so rather than guess. The City values land at 2024 market value and buildings at depreciated replacement cost; outside the city the territory assesses differently again.",
     },
     "propTax.effective": {
       conf: "assumption",
       note: "0.0112 retained, unmoved. Dropping a municipal-only mill rate onto a market price would replace one unverified number with two, and would understate: the assessment it is levied on is a 2024 base-year value with buildings at depreciated replacement cost, materially below a 2026 purchase price. This is exactly the case the PropertyTax struct exists for, and exactly the case where it has nothing sourced to record.",
-      summary: "We keep 1.12% as a stand-in property tax rate. Applying the City's mill rate to a market price would understate the bill, because assessments sit below current prices, and no sourced alternative exists.",
+      summary: "We keep 1.12% as a stand-in property tax rate. The City's published mill rate is the municipal portion only, so applying it alone would understate the bill, and no sourced alternative exists.",
     },
     "bench.house": {
       conf: "none",
@@ -107,7 +107,7 @@ export const nt: Jurisdiction = {
     "fees.moving": {
       conf: "assumption",
       note: "No citation. Yellowknife has road access, unlike Iqaluit, but is 1,500 km from the nearest large centre and moving is priced accordingly and seasonally; the figure is a regional modelling default carried from the prototype.",
-      summary: "Nobody publishes a moving cost for Yellowknife, so this is a typical regional figure. It is far from the nearest large centre, and moving prices vary by season.",
+      summary: "Nobody publishes a moving cost for Yellowknife, so this is a default we chose for the region. It is far from the nearest large centre, and moving prices vary by season.",
     },
   },
 };

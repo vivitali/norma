@@ -48,13 +48,13 @@ const US_FEDERAL_SINGLE_2026: MarginalTable = [
 ];
 
 const PMI_RATE_NOTE =
-  "Nobody publishes one true \"typical\" PMI rate: private mortgage insurers (MGIC, Radian, Arch, Essent, National MI) each run their own risk-based pricing grid by credit score and LTV, and the widely-cited range is roughly 0.3%-1.5%/year of the loan balance (dossier A10). 0.75% is the midpoint of that range, disclosed as a modelling default rather than a citation — the same category as the Canadian file's $150 heat allowance or $500 inspection fee.";
+  "Nobody publishes one true \"typical\" PMI rate: private mortgage insurers (MGIC, Radian, Arch, Essent, National MI) each run their own risk-based pricing grid by credit score and LTV, and the widely-cited range is roughly 0.3%-1.5%/year of the loan balance (dossier A10). 0.75% sits within that range (its midpoint is 0.9%), disclosed as a modelling default rather than a citation — the same category as the Canadian file's $150 heat allowance or $500 inspection fee.";
 
 const DTI_NOTE =
   "The conventional \"soft\" guideline, not a hard automated-underwriting cap: Fannie Mae's Desktop Underwriter accepts up to 45%, sometimes 50% with compensating factors, and FHA's own guideline is 31/43 (dossier A11). 28/36 is disclosed as the classic guideline this field's Canadian counterpart (gds/tds) already models — same shape, different label, per the design spec.";
 
 const PMI_RATE_SUMMARY =
-  "Nobody publishes one typical mortgage insurance rate: each private insurer prices by credit score and loan-to-value, commonly from 0.3% to 1.5% of the loan a year. 0.75% is the midpoint, a chosen default rather than a quote.";
+  "Nobody publishes one typical mortgage insurance rate: each private insurer prices by credit score and loan-to-value, commonly from 0.3% to 1.5% of the loan a year. 0.75%, within that range, is a default we chose rather than a quote.";
 
 const DTI_SUMMARY =
   "The classic 28/36 debt-to-income guideline. It is a soft guideline, not a hard cap: Fannie Mae's underwriting accepts up to 45% and sometimes 50%, and FHA's guideline is 31/43.";
@@ -190,7 +190,7 @@ export const us: UsRules = {
       asOf: "2026",
       src: "HUD Handbook 4000.1 baseline",
       note: "3.5% at FICO >=580; 10% at FICO 500-579 (dossier A8). DATA ONLY — no engine function reads the FHA programme yet.",
-      summary: "HUD's baseline FHA minimum down payment is 3.5% with a credit score of 580 or higher, and 10% for scores from 500 to 579. This figure is stored but no calculation uses the FHA program yet.",
+      summary: "HUD's baseline FHA minimum down payment is 3.5% with a credit score of 580 or higher, and 10% for scores from 500 to 579. No calculation uses the FHA program yet.",
     },
     "programs.fha.upfrontMip": { conf: "medium", asOf: "2026", src: HUD_ML_2023_05_SYNTHESIS },
     "programs.fha.annualMip": { conf: "medium", asOf: "2026", src: HUD_ML_2023_05_SYNTHESIS },
@@ -247,7 +247,7 @@ export const us: UsRules = {
       asOf: "2026-08-27",
       src: PMMS,
       note: "Freddie Mac PMMS 30-year fixed, 6.66% (dossier A12), fetched directly off freddiemac.com/pmms. Applied to all four `rates` slots — see the field's own comment for why. The PMMS also carries a 15-year fixed figure (5.98%) that this dataset does not yet have a slot for; disclosed here rather than silently dropped.",
-      summary: "Freddie Mac's weekly survey rate for a 30-year fixed mortgage, 6.66% on 27 August 2026. The same figure is used for every rate slot here, and a survey average is not a quote you will be offered.",
+      summary: "Freddie Mac's weekly survey rate for a 30-year fixed mortgage, 6.66% on 27 August 2026. The same rate is used for every loan type here, and a survey average is not a quote you will be offered.",
     },
     "rates.uninsured": {
       conf: "high",
@@ -320,7 +320,7 @@ export const us: UsRules = {
     capGainsInclusion: {
       conf: "assumption",
       note: "DEPRECATED, unread by any engine function — see the field's own comment on CountryRulesBase. `gains` below is what waterfall() actually reads.",
-      summary: "No calculation uses this field any more; the capital gains rate below is what gets applied.",
+      summary: "Not used in any calculation. A US gain is taxed at the flat long-term capital gains rate, listed on this page with its own source.",
     },
     gains: {
       conf: "medium",
