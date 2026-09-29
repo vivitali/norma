@@ -123,7 +123,7 @@ describe("SourcesContent", () => {
     const user = userEvent.setup();
     render();
     await openEverySection(user);
-    expect(screen.getByText(/29.366 = the 2026 municipal mill rate/)).toBeVisible();
+    expect(screen.getByText(/29\.366 mills = the 2026 municipal rate/)).toBeVisible();
   });
 
   it("shows a gap as a gap, not as a missing row", async () => {

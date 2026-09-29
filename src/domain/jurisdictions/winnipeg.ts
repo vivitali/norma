@@ -112,10 +112,10 @@ export const winnipeg: Jurisdiction = {
     },
     "propTax.publishedRate": {
       conf: "high",
-      src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division — Winnipeg School Division, 29.366 mills",
+      src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
       asOf: "2026",
-      url: "https://assessment.winnipeg.ca/Asmttax/pdfs/rates/HistoricalCombinedMillRates.pdf",
-      note: "CHOICE: 29.366 = the 2026 municipal mill rate (13.372) + the residential Education Support Levy (0.000 — the ESL no longer applies to residential property) + the Winnipeg School Division rate (15.994). The eight divisions run 25.223 (Pembina Trails) to 29.530 (Seven Oaks), i.e. effective rates of 0.011350 to 0.013289, so this record's division is the second-highest of eight and a Pembina Trails buyer pays ~14% less than the model shows. Sub-jurisdictional variation is out of scope per the spec; the choice is recorded rather than modelled. Also GROSS of Manitoba's Homeowners Affordability Tax Credit, which reduces the school-tax portion for a principal residence. Caveat on the source: the PDF's page footer still reads 'Last updated: April 7, 2025' although its first table is headed 2026 MILL RATES — the footer is unmaintained, not the rates.",
+      url: MILL_RATES_URL,
+      note: "DEFAULT DIVISION: Winnipeg School Division, 29.366 mills = the 2026 municipal rate (13.372) + the division's school rate (15.994); residential property pays no Education Support Levy (0.000 on the residential class). The reader can choose their own division — all eight are carried, from 25.223 mills (Pembina Trails) to 29.530 (Seven Oaks), about 14% apart. Caveat on the source: the PDF's page footer still reads 'Last updated: April 7, 2025' although its first table is headed 2026 MILL RATES; the City's property-tax-bills page independently confirms the 2026 municipal rate of 13.372 (+3.5% on 2025), so the footer is unmaintained, not the rates.",
     },
     "propTax.assessmentRatio": {
       conf: "high",
