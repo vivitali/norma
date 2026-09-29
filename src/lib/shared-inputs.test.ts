@@ -7,13 +7,14 @@ import {
   TOOL_DEFAULTS,
   JURISDICTION_KEYS,
   JURISDICTION_DEFAULTS,
+  SEEN_UPDATE_KEYS,
 } from "./shared-inputs";
 
 describe("shared input registry", () => {
   it("gives every registry key a default value", () => {
     // Assert against the union of every page's key tuple, not Object.keys(SHARED_INPUT_DEFAULTS)
     // — iterating the registry's own keys back against itself passes vacuously even against {}.
-    const pageKeys = new Set<string>([...TOOL_KEYS, ...JURISDICTION_KEYS]);
+    const pageKeys = new Set<string>([...TOOL_KEYS, ...JURISDICTION_KEYS, ...SEEN_UPDATE_KEYS]);
     expect(pageKeys.size).toBeGreaterThan(0);
     for (const key of pageKeys) {
       expect(SHARED_INPUT_DEFAULTS, key).toHaveProperty(key);
@@ -79,7 +80,7 @@ describe("shared input registry", () => {
     // component anywhere wrote it, so Halifax's 10% non-resident deed transfer tax
     // could never fire. What closes that hole is a control and a test over the
     // control — purchase-inputs.test.tsx — not another assertion in this file.
-    const covered = new Set<string>([...JURISDICTION_KEYS, ...TOOL_KEYS]);
+    const covered = new Set<string>([...JURISDICTION_KEYS, ...TOOL_KEYS, ...SEEN_UPDATE_KEYS]);
     expect(Object.keys(SHARED_INPUT_DEFAULTS).filter((k) => !covered.has(k))).toEqual([]);
   });
 

@@ -3,13 +3,17 @@ import { Link } from "@/i18n/navigation";
 import { FOOTER } from "@/lib/routes";
 import { countryKey } from "@/lib/country-key";
 import { countryOf, type Locale } from "@/i18n/countries";
+import { dateKey, formatReleaseDate, releasesFor } from "@/lib/changelog";
+import { VersionNote, type NoteRelease } from "@/components/version-note";
 
 /**
  * The site-wide footer, and the only place the "not advice" disclosure is guaranteed to appear.
  *
- * A server component with no client JavaScript at all. Every page route in this app must stay
- * prerendered (CLAUDE.md), and chrome that renders on all thirteen of them is the last place to
- * spend a client bundle — `getTranslations` resolves at build time, so this costs a string.
+ * A server component. Every page route in this app must stay prerendered (CLAUDE.md), and chrome
+ * that renders on every one of them is the last place to spend a client bundle — `getTranslations`
+ * resolves at build time, so this costs a string. The ONE client island is `VersionNote`, which
+ * needs the reader's jurisdiction and what they last saw; it is handed resolved strings, never a
+ * catalogue.
  *
  * Why it exists at all: a disclaimer only does legal work if the reader actually meets it.
  * Canadian misleading-advertising law is judged on the general impression a representation
@@ -24,6 +28,13 @@ import { countryOf, type Locale } from "@/i18n/countries";
 export async function AppFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale, namespace: "Legal" });
   const country = countryOf(locale);
+  const tc = await getTranslations({ locale, namespace: "Changelog" });
+  const noteReleases: NoteRelease[] = releasesFor(country).map((release) => ({
+    dateKey: dateKey(release.date),
+    updated: tc("updated", { date: formatReleaseDate(release.date, locale) }),
+    summary: tc(release.summary),
+    jurisdictions: release.jurisdictions,
+  }));
 
   return (
     <footer className="mt-auto border-t border-border px-5 pt-8 pb-12 sm:px-10">
@@ -31,6 +42,7 @@ export async function AppFooter({ locale }: { locale: Locale }) {
         <p className="max-w-[68ch] text-[12.5px] leading-[1.65] text-ink3 text-pretty">
           {t(countryKey("footerDisclaimer", country))}
         </p>
+        <VersionNote releases={noteReleases} whatChanged={tc("whatChanged")} newLabel={tc("new")} />
         <nav aria-label={t("legal")}>
           <ul role="list" className="-mx-2 flex flex-wrap items-center gap-x-1 gap-y-0.5">
             {FOOTER.map((entry) => (

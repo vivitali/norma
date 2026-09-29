@@ -73,6 +73,7 @@ export const ROUTE_NAMESPACES: Record<RouteKey, readonly string[]> = {
   "/sources": ["Sources", "Disclosure", "Provenance"],
   "/privacy": [],
   "/terms": [],
+  "/changelog": [],
 };
 
 /** The full namespace set a route's `NextIntlClientProvider` needs: its own plus the shared ones. */

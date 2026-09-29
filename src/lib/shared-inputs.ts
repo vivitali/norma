@@ -1,5 +1,5 @@
 import type { PropertyType, Residency } from "@/domain/types";
-import { defaultJurisdiction, jurisdictions } from "@/domain/jurisdictions";
+import { defaultJurisdiction, jurisdictions, taxAreaIds } from "@/domain/jurisdictions";
 
 /**
  * Every input this app persists, in one place. Pages select the slice they need instead of
@@ -15,6 +15,13 @@ import { defaultJurisdiction, jurisdictions } from "@/domain/jurisdictions";
  */
 export type SharedInputs = {
   jurId: string;
+  /**
+   * The reader's property-tax AREA within the jurisdiction — Winnipeg's school division. null =
+   * the record's default (`PropertyTax.areas.default`). Kept beside `jurId` rather than per
+   * jurisdiction: an id only matches the record that carries it, so switching city and back
+   * restores the choice, and every other record ignores it (`withTaxArea`).
+   */
+  taxArea: string | null;
 
   // The purchase
   /** null = derive from the city benchmark for the chosen property type. */
@@ -113,10 +120,19 @@ export type SharedInputs = {
   retKey: "cash" | "balanced" | "growth";
   investDiff: boolean;
   appreciationOn: boolean;
+
+  // Reading state, not calculator input
+  /**
+   * The newest changelog release the reader has seen, as yyyymmdd. null = never recorded, which
+   * is a first visit: the footer's version note records the current latest without showing its
+   * "new" dot (src/components/version-note.tsx).
+   */
+  seenUpdate: number | null;
 };
 
 export const SHARED_INPUT_DEFAULTS: SharedInputs = {
   jurId: defaultJurisdiction.id,
+  taxArea: null,
   price: null,
   dpPct: 10,
   amortYears: 30,
@@ -158,6 +174,7 @@ export const SHARED_INPUT_DEFAULTS: SharedInputs = {
   retKey: "balanced",
   investDiff: true,
   appreciationOn: true,
+  seenUpdate: null,
 };
 
 /**
@@ -176,6 +193,9 @@ export const MAX_AMOUNT = 1_000_000_000;
 
 export const SHARED_INPUT_SCHEMA: Record<keyof SharedInputs, FieldSchema> = {
   jurId: { kind: "enum", values: jurisdictions.map((j) => j.id) },
+  // An enum has no null member: a stored null, like any id no record carries, is dropped on
+  // read and the key falls back to its null default.
+  taxArea: { kind: "enum", values: taxAreaIds() },
   price: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
   dpPct: { kind: "number", nullable: false, min: 0, max: 100 },
   amortYears: { kind: "number", nullable: false, min: 1, max: 40 },
@@ -217,6 +237,7 @@ export const SHARED_INPUT_SCHEMA: Record<keyof SharedInputs, FieldSchema> = {
   retKey: { kind: "enum", values: ["cash", "balanced", "growth"] },
   investDiff: { kind: "boolean" },
   appreciationOn: { kind: "boolean" },
+  seenUpdate: { kind: "number", nullable: true, min: 20200101, max: 99991231 },
 };
 
 function slice<K extends keyof SharedInputs>(keys: readonly K[]): Pick<SharedInputs, K> {
@@ -231,7 +252,7 @@ function slice<K extends keyof SharedInputs>(keys: readonly K[]): Pick<SharedInp
  * module-level constant satisfies that by construction and makes an inline literal impossible
  * to write by accident.
  */
-export const JURISDICTION_KEYS = ["jurId"] as const satisfies readonly (keyof SharedInputs)[];
+export const JURISDICTION_KEYS = ["jurId", "taxArea"] as const satisfies readonly (keyof SharedInputs)[];
 type JurisdictionState = Pick<SharedInputs, (typeof JURISDICTION_KEYS)[number]>;
 export const JURISDICTION_DEFAULTS: JurisdictionState = slice(JURISDICTION_KEYS);
 
@@ -257,3 +278,8 @@ export const TOOL_KEYS = [
 ] as const satisfies readonly (keyof SharedInputs)[];
 export type ToolFormState = Pick<SharedInputs, (typeof TOOL_KEYS)[number]>;
 export const TOOL_DEFAULTS: ToolFormState = slice(TOOL_KEYS);
+
+/** The footer version note's own slice — not a calculator input, so it is not in `TOOL_KEYS`. */
+export const SEEN_UPDATE_KEYS = ["seenUpdate"] as const satisfies readonly (keyof SharedInputs)[];
+type SeenUpdateState = Pick<SharedInputs, (typeof SEEN_UPDATE_KEYS)[number]>;
+export const SEEN_UPDATE_DEFAULTS: SeenUpdateState = slice(SEEN_UPDATE_KEYS);

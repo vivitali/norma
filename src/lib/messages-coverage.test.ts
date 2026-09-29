@@ -151,6 +151,8 @@ const NAMESPACES = [
   // (`resultNote`, `rateNote`, `privacyLede`) had already shipped translated with no call site
   // before this line existed.
   "Legal", "Privacy", "Terms",
+  // Flat like the legal pages — no section registry, so it is named here rather than skipped.
+  "Changelog",
 ] as const;
 
 describe("message coverage", () => {

@@ -8,6 +8,10 @@ import { languageOf, countryOf } from "@/i18n/countries";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/lib/locales";
 import { countryKey } from "@/lib/country-key";
+import { NextIntlClientProvider } from "next-intl";
+import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
+import { latestRelevant } from "@/lib/changelog";
+import { defaultJurisdictionOf } from "@/domain/jurisdictions";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
@@ -51,7 +55,13 @@ const LOCALES = routing.locales;
 
 /** Awaited to a plain element before rendering — the shape the App Router uses for an async RSC. */
 async function renderFooter(locale: Locale) {
-  return render(await AppFooter({ locale }));
+  // The version note reads the reader's jurisdiction, exactly as it does under the root layout.
+  const footer = await AppFooter({ locale });
+  return render(
+    <NextIntlClientProvider locale={locale} messages={CATALOGUES[languageOf(locale)]}>
+      <JurisdictionProvider>{footer}</JurisdictionProvider>
+    </NextIntlClientProvider>,
+  );
 }
 
 describe("AppFooter", () => {
@@ -97,11 +107,33 @@ describe("AppFooter", () => {
     });
   }
 
-  it("ships no client JavaScript", () => {
-    // Chrome on all thirteen prerendered routes. A "use client" here would put the disclaimer and
-    // its two links into every page's bundle to render text that never changes.
+  for (const locale of LOCALES) {
+    it(`shows the newest release for this country, and links to the changelog, in ${locale}`, async () => {
+      const { container, unmount } = await renderFooter(locale);
+      const changelog = (CATALOGUES[languageOf(locale)] as { Changelog: Record<string, string> })
+        .Changelog;
+      // The newest release relevant to the country's default jurisdiction (what a first render shows).
+      const country = countryOf(locale);
+      const latest = latestRelevant(country, defaultJurisdictionOf(country).id)!;
+      expect(container.textContent).toContain(changelog[latest.summary]);
+      expect(container.textContent).toContain(changelog.updated.replace("{date}", ""));
+      const link = screen.getByRole("link", { name: changelog.whatChanged });
+      expect(link.getAttribute("href")).toBe("/changelog");
+      const leaked = leafPaths(CATALOGUES.en.Changelog as Tree)
+        .map((path) => `Changelog.${path}`)
+        .filter((key) => (container.textContent ?? "").includes(key));
+      expect(leaked, `${locale}: Changelog keys rendered verbatim`).toEqual([]);
+      unmount();
+    });
+  }
+
+  it("keeps the footer itself server-rendered, with one client island for the version note", () => {
+    // Chrome on every prerendered route. A "use client" here would put the disclaimer and its
+    // links into every page's bundle to render text that never changes; only the version note
+    // needs the browser (what this reader last saw), and it lives in its own file.
     const source = readFileSync("src/components/app-footer.tsx", "utf8");
     expect(source).not.toContain('"use client"');
+    expect(readFileSync("src/components/version-note.tsx", "utf8")).toContain('"use client"');
   });
 
   // The stronger, structural version of "is rendered by the locale layout" used to live here as a

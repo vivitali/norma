@@ -31,6 +31,7 @@ export const INDEXABLE_ROUTES = [
   "/sources",
   "/privacy",
   "/terms",
+  "/changelog",
 ] as const;
 
 export type IndexableRoute = (typeof INDEXABLE_ROUTES)[number];
@@ -57,6 +58,7 @@ export const ROUTE_METADATA_KEY = {
   "/sources": "sources",
   "/privacy": "privacy",
   "/terms": "terms",
+  "/changelog": "changelog",
 } as const satisfies Record<IndexableRoute, string>;
 
 /**
@@ -90,6 +92,9 @@ export const ROUTE_COUNTRIES: Record<IndexableRoute, readonly Country[]> = {
   // terms no less; the pages themselves say which law they are written under.
   "/privacy": ["ca", "us"],
   "/terms": ["ca", "us"],
+  // What changed is reader-facing in both markets; each release lists the countries it concerns
+  // (`src/lib/changelog.ts`) and the page shows only the reader's own.
+  "/changelog": ["ca", "us"],
 };
 
 /**

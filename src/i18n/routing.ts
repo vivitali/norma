@@ -88,5 +88,6 @@ export const routing = defineRouting({
     "/sources": perLanguage({ fr: "/sources", es: "/fuentes" }),
     "/privacy": perLanguage({fr: "/confidentialite", es: "/privacidad" }),
     "/terms": perLanguage({fr: "/conditions", es: "/terminos" }),
+    "/changelog": perLanguage({ fr: "/nouveautes", es: "/novedades" }),
   },
 });

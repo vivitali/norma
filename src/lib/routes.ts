@@ -117,4 +117,5 @@ export interface FooterEntry {
 export const FOOTER: readonly FooterEntry[] = [
   { route: "/privacy", label: "privacy" },
   { route: "/terms", label: "terms" },
+  { route: "/changelog", label: "changelog" },
 ];

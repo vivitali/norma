@@ -35,6 +35,7 @@ describe("routing.pathnames", () => {
       "/",
       "/affordability",
       "/amortization",
+      "/changelog",
       "/closing-costs",
       "/down-payment",
       "/privacy",
