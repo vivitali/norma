@@ -79,7 +79,7 @@ beforeEach(() => {
 describe("Rent vs buy — the horizon decides", () => {
   it("leads with a verdict tied to a holding period, not an abstract one", () => {
     renderPage();
-    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/wins at year \d+/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Your horizon:/).length).toBeGreaterThan(0);
   });
 
@@ -294,7 +294,7 @@ describe("Rent vs buy — it will not compare against a rent nobody published", 
     inNewBrunswick();
     renderPage();
     expect(screen.getByText(/Nobody publishes a rent for New Brunswick/)).toBeInTheDocument();
-    expect(screen.queryByText(/wins for your horizon/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/wins at year \d+/)).not.toBeInTheDocument();
   });
 
   it("never calls a rent typical for the place that did not publish it", () => {
@@ -315,7 +315,7 @@ describe("Rent vs buy — it will not compare against a rent nobody published", 
     renderPage();
     await user.type(screen.getByLabelText("Rent you are comparing against, monthly"), "1650");
     await user.tab();
-    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/wins at year \d+/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/Nobody publishes a rent/)).not.toBeInTheDocument();
   });
 
@@ -418,7 +418,7 @@ describe("Rent vs buy — an apartment rent cannot price a house", () => {
     // detached house beside it.
     window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "toronto", ptype: "house" }));
     renderPage();
-    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/wins at year \d+/).length).toBeGreaterThan(0);
     expect(screen.getByText("Uses CMHC’s apartment rent")).toBeInTheDocument();
     expect(screen.getByText(/CMHC’s average two-bedroom apartment rent for Toronto/)).toBeInTheDocument();
     expect(screen.getByText(/not what a house like the one above would rent for/)).toBeInTheDocument();
@@ -446,13 +446,13 @@ describe("Rent vs buy — an apartment rent cannot price a house", () => {
   it("answers again as soon as the reader gives a rent of their own", () => {
     window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "house", rent: 4200 }));
     renderPage();
-    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/wins at year \d+/).length).toBeGreaterThan(0);
   });
 
   it("still answers for a condo, which is the purchase an apartment rent can price", () => {
     window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "condo" }));
     renderPage();
-    expect(screen.getAllByText(/wins for your horizon/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/wins at year \d+/).length).toBeGreaterThan(0);
   });
 });
 
@@ -555,5 +555,106 @@ describe("Rent vs Buy — the trace is real arithmetic and the chart marks the h
     renderPage();
     await open(user, /The verdict/);
     expect(screen.getAllByText(/Your horizon: 10 years/).length).toBeGreaterThan(1);
+  });
+});
+
+describe("Rent vs buy — round 3: one rent field, a named comparator, a horizon that is not asserted", () => {
+  const seedDefaultHouse = (extra: Record<string, unknown> = {}) =>
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ptype: "house", ...extra }));
+
+  it("never shows two fields with the rent's name while the in-place ask stands", () => {
+    seedDefaultHouse();
+    renderPage();
+    expect(screen.getAllByLabelText("Rent you are comparing against, monthly")).toHaveLength(1);
+    expect(document.getElementById("rent-inline")).not.toBeNull();
+    expect(document.getElementById("rent")).toBeNull();
+    // ...and the inputs block says where the rent is, with a way back to it.
+    expect(within(document.getElementById("adjust")!).getByText(/Compared against \$[\d,]+ a month/)).toBeInTheDocument();
+  });
+
+  it("brings the rent field back into the inputs block once the reader types their own", async () => {
+    seedDefaultHouse();
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByLabelText("Rent you are comparing against, monthly"), "1650");
+    await user.tab();
+    expect(screen.getAllByLabelText("Rent you are comparing against, monthly")).toHaveLength(1);
+    expect(document.getElementById("rent")).not.toBeNull();
+  });
+
+  it("names the apartment rent as the comparator while it is the default for a house", () => {
+    seedDefaultHouse();
+    renderPage();
+    expect(screen.getByText(/two-bedroom apartment rent, not a rent for a house/)).toBeInTheDocument();
+  });
+
+  it("says what the figures cover, not what the reader plans, unless they set the horizon", () => {
+    seedDefaultHouse();
+    const { unmount } = renderPage();
+    expect(screen.getAllByText(/Over a 10-year stay/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/You plan to stay/)).not.toBeInTheDocument();
+    unmount();
+    seedDefaultHouse({ holding: 5 });
+    renderPage();
+    expect(screen.getAllByText(/You plan to stay 5 years/).length).toBeGreaterThan(0);
+  });
+
+  it("opens no section on a first visit, and the verdict once the reader has given something", () => {
+    seedDefaultHouse();
+    const { unmount } = renderPage();
+    for (const button of screen.getAllByRole("button", { name: /^The verdict|Where you end up|What each costs/ })) {
+      expect(button).toHaveAttribute("aria-expanded", "false");
+    }
+    unmount();
+    seedDefaultHouse({ rent: 1800 });
+    renderPage();
+    expect(screen.getByRole("button", { name: /^The verdict/ })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("names the assumption in the tag and offers the way to replace it", () => {
+    seedDefaultHouse();
+    renderPage();
+    expect(screen.getByRole("button", { name: /Uses CMHC.s apartment rent/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Adjust your numbers" })).toBeInTheDocument();
+    expect(document.getElementById("adjust")).not.toBeNull();
+  });
+
+  it("labels the outlay figures with their year", async () => {
+    seedAnswerable();
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /What each costs each year/);
+    expect(panel("outlay").getByText(/In year 10, the horizon assumed/)).toBeInTheDocument();
+    expect(panel("outlay").getByText(/Owner outlay in year \d+, the payoff year/)).toBeInTheDocument();
+  });
+
+  it("scrolls the verdict table as a keyboard-reachable region and drops the wealth columns on a phone", async () => {
+    seedAnswerable();
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /^The verdict/);
+    const region = screen.getByRole("region", { name: "The verdict by holding period" });
+    expect(region).toHaveAttribute("tabindex", "0");
+    for (const name of ["Buy wealth", "Rent wealth"]) {
+      expect(within(region).getByRole("columnheader", { name })).toHaveClass("hidden", "sm:table-cell");
+    }
+    for (const name of ["Advantage of buying", "Winner"]) {
+      expect(within(region).getByRole("columnheader", { name })).not.toHaveClass("hidden");
+    }
+  });
+});
+
+describe("Rent vs buy — Seattle's REET is the seller's, and the sale deducts it", () => {
+  it("shows the excise tax as its own row in the sale derivation, and not in Houston's", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "seattle", rent: 2600 }));
+    const user = userEvent.setup();
+    const { unmount } = renderPage("en-US");
+    await open(user, /Where you end up/);
+    expect(panel("wealth").getByText("Excise tax on the sale, paid by the seller")).toBeInTheDocument();
+    unmount();
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "houston", rent: 2200 }));
+    renderPage("en-US");
+    await open(user, /Where you end up/);
+    expect(panel("wealth").queryByText("Excise tax on the sale, paid by the seller")).not.toBeInTheDocument();
   });
 });

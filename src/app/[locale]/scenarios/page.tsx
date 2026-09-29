@@ -14,7 +14,7 @@ import { useSharedState } from "@/hooks/use-shared-state";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
 import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
 import { SCENARIOS_SECTIONS } from "@/lib/sections";
-import { recommend, SCENARIO_PERCENTS } from "@/lib/scenarios-view";
+import { PREMIUM_FREE_PCT, recommend, SCENARIO_PERCENTS } from "@/lib/scenarios-view";
 import type { Tone } from "@/lib/tone";
 import { useMoney, usePercent } from "@/lib/format";
 import { SectionRow } from "@/components/affordability/section-row";
@@ -83,6 +83,18 @@ export default function ScenariosPage() {
   );
 
   const rec = recommend(columns);
+  // Which limit the most forgiving column misses by more, as a share of its own cap: the
+  // housing-cost ratio (GDS / front-end DTI) or the all-debts ratio (TDS / back-end DTI).
+  // Only read when nothing qualifies.
+  const easiest = [...columns].sort(
+    (a, b) => Math.max(a.gds / rules.gds, a.tds / rules.tds) - Math.max(b.gds / rules.gds, b.tds / rules.tds),
+  )[0];
+  const qualBinds = easiest.tds / rules.tds > easiest.gds / rules.gds ? "tds" : "gds";
+  // The 20% column against the 5% one, per extra dollar: what the "reaching 20%" note reports.
+  const twentyCol = columns.find((c) => c.dpPct === PREMIUM_FREE_PCT);
+  const twentyExtra = twentyCol ? twentyCol.net - columns[0].net : 0;
+  const twentyRatio =
+    twentyCol && twentyExtra > 0 ? (columns[0].costOfBorrowing - twentyCol.costOfBorrowing) / twentyExtra : null;
   const cashUnanswered = columns.every((c) => c.fundable === null);
   const cashFundable = columns.some((c) => c.fundable === true);
 
@@ -90,8 +102,16 @@ export default function ScenariosPage() {
     SCENARIOS_SECTIONS,
     // Approval first: no deposit fixes an income problem, so when nothing
     // qualifies that is the finding. Then fundability. Then the comparison the
-    // page exists for.
-    rec.kind === "noneQualify" ? "approval" : rec.kind === "noneCash" ? "cash" : "monthly",
+    // page exists for. Nothing opens until the reader has given something of their own:
+    // a first-time visitor is not greeted by an open derivation built on inputs they never
+    // gave, and a hash arrival still opens its section.
+    !isPersonalised(stored)
+      ? null
+      : rec.kind === "noneQualify"
+        ? "approval"
+        : rec.kind === "noneCash"
+          ? "cash"
+          : "monthly",
   );
   const recommendedPct = rec.kind === "twenty" ? rec.pct : rec.kind === "only" ? rec.pct : null;
 
@@ -129,7 +149,7 @@ export default function ScenariosPage() {
               n: rec.months ?? 0,
             })
           : rec.kind === "noneQualify"
-            ? t("recNoneQualSub")
+            ? t(qualBinds === "tds" ? "recNoneQualSub_tds" : "recNoneQualSub")
             : t("gCashNote");
 
   const headline =
@@ -234,10 +254,17 @@ export default function ScenariosPage() {
     ...(columns.some((c) => c.monthly.condoFee > 0)
       ? [{ label: t("rCondoFee"), value: (c: ScenarioResult) => fmt(c.monthly.condoFee) }]
       : []),
-    { label: t("rAllIn"), value: (c) => fmt(c.monthly.total), strong: true, best: lowestBy((c) => c.monthly.total) },
+    { label: t("rAllIn"), value: (c) => fmt(c.monthly.total), strong: true, summary: true, best: lowestBy((c) => c.monthly.total) },
     // money() already puts the sign outside the symbol. Re-implementing that here
     // is how two screens end up formatting the same negative figure differently.
-    { label: t("rVsCeiling"), value: (c) => fmt(-c.vsCeiling) },
+    {
+      // Rule 15: while the ceiling is the default, the row says it is an assumed figure, not "your".
+      label:
+        stored.comfortCeiling === null
+          ? t("rVsCeilingDefault", { b: fmt(resolved.comfortCeiling) })
+          : t("rVsCeiling"),
+      value: (c) => fmt(-c.vsCeiling),
+    },
   ];
 
   const cashRows: MetricRow[] = [
@@ -248,7 +275,7 @@ export default function ScenariosPage() {
     ...(rules.country === "ca"
       ? [{ label: t("rPremTax"), value: (c: ScenarioResult) => (c.premiumTaxLine > 0 ? fmt(c.premiumTaxLine) : "—"), mark: "rule" as const }]
       : []),
-    { label: t("rCash"), value: (c) => fmt(c.net), strong: true, best: lowestBy((c) => c.net) },
+    { label: t("rCash"), value: (c) => fmt(c.net), strong: true, summary: true, best: lowestBy((c) => c.net) },
     { label: t("rSurplus"), value: (c) => (c.surplus === null ? "—" : fmt(c.surplus)) },
     {
       label: t("rMonths"),
@@ -287,7 +314,7 @@ export default function ScenariosPage() {
     // only the label forks, not the row or the arithmetic.
     { label: t(countryKey("rGds", rules.country)), value: (c) => pct(c.gds, 1), mark: "rule" },
     { label: t(countryKey("rTds", rules.country)), value: (c) => pct(c.tds, 1), mark: "rule" },
-    { label: t("rResult"), value: (c) => (c.qualifies ? t("fQualifies") : t("fDeclines")), strong: true },
+    { label: t("rResult"), value: (c) => (c.qualifies ? t("fQualifies") : t("fDeclines")), strong: true, summary: true },
   ];
 
   const lifeRows: MetricRow[] = [
@@ -302,6 +329,7 @@ export default function ScenariosPage() {
       label: t("rBorrowCost"),
       value: (c) => fmt(c.costOfBorrowing),
       strong: true,
+      summary: true,
       best: lowestBy((c) => c.costOfBorrowing),
     },
     { label: t("rExtraCash"), value: (c) => fmt(c.net - columns[0].net) },
@@ -387,10 +415,32 @@ export default function ScenariosPage() {
             pulseKey={jurisdiction.id}
             head={head}
             sub={sub}
-            tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+            // The figures rest on the price: a default benchmark until the reader gives one.
+            tag={
+              stored.price === null
+                ? t("tagPrice", { place: tJur(`at.${jurisdiction.id}`), price: fmt(resolved.price) })
+                : t("tagYours")
+            }
+            onTagActivate={
+              stored.price === null
+                ? () => {
+                    const el = document.getElementById("price");
+                    if (!el) return;
+                    el.scrollIntoView({ block: "center", behavior: "smooth" });
+                    el.focus({ preventScroll: true });
+                  }
+                : undefined
+            }
+            adjust
             stats={[
               { label: `${t("allIn")} · ${t("column", { p: pct(headline.dpPct) })}`, value: fmt(headline.monthly.total), mark: "estimate" },
-              { label: t("cashAtClosing"), value: fmt(headline.net), mark: "rule" },
+              {
+                label: t("cashAtClosing"),
+                value: fmt(headline.net),
+                mark: "rule",
+                // The cash section's own tone, so one figure never wears two colours.
+                tone: !cashUnanswered && !cashFundable ? ("blocked" as const) : undefined,
+              },
               { label: t("rBorrowCost"), value: fmt(headline.costOfBorrowing), mark: "rule" },
             ]}
           />
@@ -417,7 +467,11 @@ export default function ScenariosPage() {
                 <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{minDownLine}</p>
                 <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyPremium")}</p>
                 <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyContract")}</p>
-                <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">{t("whyVsCeiling")}</p>
+                <p className="pt-1.5 text-[12px] leading-[1.6] text-ink3">
+                  {stored.comfortCeiling === null
+                    ? t("whyVsCeilingDefault", { b: fmt(resolved.comfortCeiling) })
+                    : t("whyVsCeiling")}
+                </p>
               </>
             ))}
 
@@ -532,7 +586,12 @@ export default function ScenariosPage() {
                 <p className="pt-3 text-[12px] leading-[1.6] text-ink3">{t("whyReturn")}</p>
                 <div className="mt-4">
                   <p className="eyebrow pb-1 text-ink3">{t("howToRead")}</p>
-                  {note(t("nTwentyTitle"), t("nTwentyBody"))}
+                  {note(
+                    t("nTwentyTitle"),
+                    twentyRatio === null
+                      ? t("nTwentyBody")
+                      : t(twentyRatio >= 1 ? "nTwentyBodyAbove" : "nTwentyBodyBelow", { ratio: fmt(twentyRatio, 2) }),
+                  )}
                   {note(t("nAboveTitle"), t("nAboveBody"))}
                   {note(t(countryKey("nHurdleTitle", rules.country)), t(countryKey("nHurdleBody", rules.country)))}
                   {note(t(countryKey("nOrderTitle", rules.country)), t(countryKey("nOrderBody", rules.country)))}
@@ -619,7 +678,7 @@ export default function ScenariosPage() {
         />
       )}
 
-      <section aria-labelledby="sc-inputs" className="mt-8 flex flex-col gap-3">
+      <section id="adjust" aria-labelledby="sc-inputs" className="mt-8 flex scroll-mt-4 flex-col gap-3">
         <h2 id="sc-inputs" className="text-[13px] font-semibold">
           {t("adjust")}
         </h2>

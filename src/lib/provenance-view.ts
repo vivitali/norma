@@ -1,4 +1,4 @@
-import type { Confidence, Provenance, ProvenanceMap } from "@/domain/types";
+import type { Confidence, Jurisdiction, Provenance, ProvenanceMap } from "@/domain/types";
 import type { Tone } from "@/lib/tone";
 
 /**
@@ -36,6 +36,8 @@ export const FIGURE_GROUPS: readonly FigureGroupId[] = [
 
 const GROUP_OF_PREFIX: Record<string, FigureGroupId> = {
   transfer: "charges",
+  // The seller's transfer tax (Washington REET) — a charge, read beside the buyer's.
+  saleTax: "charges",
   premiumTax: "charges",
   rebates: "credits",
   taxTime: "credits",
@@ -316,4 +318,231 @@ export function coverageOf(maps: readonly ProvenanceMap[], federal: ProvenanceMa
     assumed: confidences.filter((c) => c === "assumption").length,
     unknown: confidences.filter((c) => c === "none").length,
   };
+}
+
+/**
+ * The FIGURES a source entry documents, named for a reader.
+ *
+ * An entry is keyed by its DOCUMENT, and a document title ("Manitoba Finance, Land Transfer Tax")
+ * says who published something without saying what of ours it backs. `describeFields` maps each
+ * folded-in field path to a label a reader knows already — the Closing Costs line label for a
+ * transfer, fee or credit (`li_*`, `cr_*`), otherwise a `Sources.field_*` string — plus the
+ * value where it is a single scalar. Bracket tables, rule tables and the like have a label and
+ * no value: printing one number for a schedule would misstate it.
+ *
+ * Labels and values are pure data here; the component owns formatting (money, percent) so the
+ * page's own `useMoney()` stays the one place a figure becomes text.
+ */
+export const FIELD_NAMESPACE = "Sources";
+
+/** Keyed by the path with numeric segments replaced by `#`. Literal keys, for the coverage scan. */
+const FIELD_KEY: Record<string, string> = {
+  "propTax.publishedRate": "field_propTaxPublished",
+  "propTax.assessmentRatio": "field_propTaxRatio",
+  "propTax.effective": "field_propTaxEffective",
+  "propTax.areas.list.#.publishedRate": "field_propTaxAreas",
+  "propTax.credit": "field_propTaxCredit",
+  "propTax.basis": "field_propTaxBasis",
+  "propTax.exemptions": "field_propTaxExemptions",
+  "propTax.exemptions.#": "field_propTaxExemptions",
+  "bench.house": "field_benchHouse",
+  "bench.condo": "field_benchCondo",
+  rent: "field_rent",
+  yoy: "field_yoy",
+  marginal: "field_marginal",
+  insurance: "field_insurance",
+  "orgs.transfer": "field_orgTransfer",
+  "orgs.muni": "field_orgMuni",
+  "orgs.premTax": "field_orgPremTax",
+  "orgs.rebate": "field_orgRebate",
+  "orgs.market": "field_orgMarket",
+  "cmhc.bands": "field_cmhcBands",
+  "cmhc.longAmortSurcharge": "field_cmhcSurcharge",
+  "cmhc.insuredCap": "field_cmhcCap",
+  "minDown.bands": "field_minDown",
+  "minDown.uninsuredRate": "field_minDown",
+  maxAmortFtbInsured: "field_maxAmort",
+  maxAmortOther: "field_maxAmort",
+  gds: "field_gds",
+  tds: "field_tds",
+  condoFeeInclusion: "field_condoFee",
+  "stressTest.floor": "field_stress",
+  "stressTest.buffer": "field_stress",
+  stressTest: "field_stress",
+  "rates.prime": "field_ratePrime",
+  "rates.variable": "field_rateVariable",
+  "rates.insured": "field_rateInsured",
+  "rates.uninsured": "field_rateUninsured",
+  contractRate: "field_contractRate",
+  "fhsa.annual": "field_fhsa",
+  "fhsa.lifetime": "field_fhsa",
+  "hbp.max": "field_hbpMax",
+  "hbp.repayYears": "field_hbpRepay",
+  "hbp.graceYears": "field_hbpRepay",
+  "hbp.ruleDays": "field_hbpDays",
+  rrspCap: "field_rrspCap",
+  rrspRoomRate: "field_rrspRoom",
+  capGainsInclusion: "field_capGains",
+  "gstFthb.rate": "field_gstFthb",
+  "gstFthb.fullTo": "field_gstFthb",
+  "gstFthb.zeroAt": "field_gstFthb",
+  "gstFthb.cap": "field_gstFthb",
+  hba: "field_hba",
+  "appreciation.inflation": "field_growth",
+  "appreciation.shelter": "field_growth",
+  "appreciation.flat": "field_growth",
+  nonShelterInflation: "field_inflation",
+  "investReturn.cash": "field_invest",
+  "investReturn.balanced": "field_invest",
+  "investReturn.growth": "field_invest",
+  savingsReturn: "field_savings",
+  heatAllowance: "field_heat",
+  sellingCost: "field_selling",
+  maintenanceReserve: "field_maintenance",
+  "programs.conventional.minDownFtb": "field_convDown",
+  "programs.conventional.minDown": "field_convDown",
+  "programs.conventional.pmi.annualRate": "field_pmiRate",
+  "programs.conventional.pmi.cancelRequestLtv": "field_pmiCancel",
+  "programs.conventional.pmi.autoTerminateLtv": "field_pmiCancel",
+  "programs.fha.minDown": "field_fhaDown",
+  "programs.fha.upfrontMip": "field_fhaMip",
+  "programs.fha.annualMip": "field_fhaMip",
+  "programs.fha.limitHarris": "field_fhaLimit",
+  conformingLimit: "field_conforming",
+  "tax.standardDeduction": "field_taxDeduction",
+  "tax.saltCap": "field_taxDeduction",
+  "tax.midCap": "field_midCap",
+  "tax.pmiDeductible": "field_pmiDeduct",
+  sec121: "field_sec121",
+  escrowPrepaidMonths: "field_escrow",
+  gains: "field_gains",
+};
+
+/** Fee paths that name a Closing Costs line, written out so the coverage scan sees the keys. */
+const FEE_LABEL: Record<string, string> = {
+  lawyer: "li_lawyer",
+  notary: "li_notary",
+  titleIns: "li_titleIns",
+  inspect: "li_inspect",
+  appraisal: "li_appraisal",
+  statusCert: "li_statusCert",
+  moving: "li_moving",
+  setup: "li_setup",
+  locCert: "li_locCert",
+  survey: "li_survey",
+  recording: "li_recording",
+};
+
+export type FieldValue = { kind: "money"; n: number } | { kind: "percent"; n: number };
+
+export interface FieldRef {
+  /** Which catalogue namespace `key` is in. */
+  ns: "Sources" | "ClosingCosts";
+  key: string;
+  /** A single scalar the label stands for, where there is one. */
+  value?: FieldValue;
+}
+
+type FieldSource = Pick<
+  Jurisdiction,
+  "transfer" | "rebates" | "taxTime" | "fees" | "propTax" | "bench" | "premiumTax"
+> &
+  Partial<Pick<Jurisdiction, "saleTax" | "rent" | "yoy" | "insurance">>;
+
+const money = (n: number | null | undefined): FieldValue | undefined =>
+  typeof n === "number" ? { kind: "money", n } : undefined;
+const percent = (n: number | null | undefined): FieldValue | undefined =>
+  typeof n === "number" ? { kind: "percent", n: n * 100 } : undefined;
+
+/** `null` for a path with no label — asserted empty by the test, like `groupOf`. */
+export function describeField(path: string, j?: FieldSource): FieldRef | null {
+  const parts = path.split(".");
+  const [head, second] = parts;
+  const index = second !== undefined && /^\d+$/.test(second) ? Number(second) : null;
+
+  if (head === "fees" && second) {
+    const key = FEE_LABEL[second];
+    if (!key) return null;
+    return { ns: "ClosingCosts", key, value: money((j?.fees as unknown as Record<string, number>)?.[second]) };
+  }
+  if (head === "premiumTax") {
+    return { ns: "ClosingCosts", key: "li_premTax", value: percent(j?.premiumTax?.rate) };
+  }
+  if ((head === "transfer" || head === "saleTax") && index !== null) {
+    const line = (head === "transfer" ? j?.transfer : j?.saleTax)?.[index];
+    if (!line) return null;
+    const value =
+      line.kind === "fixed" ? money(line.amount) : line.kind === "flat" ? percent(line.rate) : undefined;
+    return { ns: "ClosingCosts", key: line.key, value };
+  }
+  if (head === "rebates" && index !== null) {
+    const r = j?.rebates[index];
+    return r ? { ns: "ClosingCosts", key: r.key } : null;
+  }
+  if (head === "taxTime" && index !== null) {
+    const c = j?.taxTime[index];
+    return c ? { ns: "ClosingCosts", key: c.key, value: money(c.amount) } : null;
+  }
+
+  const norm = parts.map((p) => (/^\d+$/.test(p) ? "#" : p)).join(".");
+  const key = FIELD_KEY[norm];
+  if (!key) return null;
+  let value: FieldValue | undefined;
+  if (j) {
+    if (norm === "propTax.publishedRate") value = percent(j.propTax.publishedRate);
+    else if (norm === "propTax.assessmentRatio") value = percent(j.propTax.assessmentRatio);
+    else if (norm === "propTax.effective") value = percent(j.propTax.effective);
+    else if (norm === "bench.house") value = money(j.bench.house);
+    else if (norm === "bench.condo") value = money(j.bench.condo);
+    else if (norm === "rent") value = money(j.rent);
+    else if (norm === "yoy") value = percent(j.yoy);
+    else if (norm === "insurance") value = money(j.insurance);
+  }
+  return { ns: FIELD_NAMESPACE, key, value };
+}
+
+/** Every distinct figure an entry documents, in record order. Unmapped paths are dropped. */
+export function describeFields(paths: readonly string[], j?: FieldSource): FieldRef[] {
+  const seen = new Map<string, FieldRef>();
+  for (const path of paths) {
+    const ref = describeField(path, j);
+    if (!ref) continue;
+    const id = `${ref.ns}.${ref.key}`;
+    if (!seen.has(id)) seen.set(id, ref);
+  }
+  return [...seen.values()];
+}
+
+/**
+ * The most recent `asOf` in a provenance map, or `null` when none carries one.
+ *
+ * `asOf` is a string at three precisions — "2026", "2026-08", "2026-09-28" — and ISO strings of
+ * differing precision still order correctly as text: "2026" < "2026-08" < "2026-08-24". A bare year
+ * therefore loses to any dated entry in the same year, which is the honest reading.
+ */
+export function latestAsOf(map: ProvenanceMap): string | null {
+  let latest: string | null = null;
+  for (const [, p] of provenanceEntries(map)) {
+    if (p.asOf && /^\d{4}(-\d{2}(-\d{2})?)?$/.test(p.asOf) && (latest === null || p.asOf > latest)) {
+      latest = p.asOf;
+    }
+  }
+  return latest;
+}
+
+/**
+ * An ISO date at whatever precision it carries, in the reader's locale: "September 28, 2026",
+ * "August 2026", "2026". Parsed by hand and formatted in UTC so a reader west of Greenwich never
+ * sees the day before.
+ */
+export function formatAsOf(asOf: string, intlLocale: string): string {
+  const [y, m, d] = asOf.split("-").map(Number);
+  if (!m) return String(y);
+  const date = new Date(Date.UTC(y, m - 1, d ?? 1));
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "long",
+    ...(d ? { day: "numeric" } : {}),
+  }).format(date);
 }

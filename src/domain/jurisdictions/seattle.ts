@@ -9,8 +9,8 @@ import { feesProvenance } from "../provenance";
  *
  * Washington-specific shape decisions:
  * - REET (real estate excise tax) is the SELLER's statutory obligation (RCW 82.45.080), so the
- *   buyer's closing stack carries it as a $0 explained line, not an amount. Selling-side REET is
- *   not modelled in Rent vs Buy (see the report on this record's PR).
+ *   buyer's closing stack carries it as a $0 explained line, not an amount. The seller's side is
+ *   `saleTax`, which Rent vs Buy nets off the sale at the horizon.
  * - No general homestead exemption, so `propTax.exemptions` is absent.
  * - The 1% levy-growth limit caps a taxing DISTRICT's levy, not a parcel's assessment, so the
  *   basis is plain `market` (dossier A3).
@@ -90,6 +90,20 @@ export const seattle: Jurisdiction = {
   transfer: [
     { kind: "fixed", key: "li_reet", ex: "ex_reetSeller", tier: "provincial", amount: 0 },
   ],
+  // The SELLER's REET, charged on the sale at the horizon in Rent vs Buy (dossier A2): the state
+  // graduated schedule plus Seattle's 0.50% local rate, which dor.wa.gov says are added together.
+  // NOMINAL thresholds: the state adjusts them every four years (next 2027-01-01) and that
+  // adjustment is not projected.
+  saleTax: [
+    {
+      kind: "brackets",
+      key: "li_reetState",
+      ex: "ex_reetSeller",
+      tier: "provincial",
+      brackets: [[525000, 0.011], [1525000, 0.0128], [3025000, 0.0275], [null, 0.03]],
+    },
+    { kind: "flat", key: "li_reetLocal", ex: "ex_reetSeller", tier: "municipal", rate: 0.005 },
+  ],
   premiumTax: null,
   rebates: [],
   taxTime: [],
@@ -151,7 +165,21 @@ export const seattle: Jurisdiction = {
       asOf: "2026-09-17",
       src: RCW_82_45_080,
       url: RCW_82_45_080_URL,
-      note: "$0 to the buyer by design. Washington's real estate excise tax (graduated state rate 1.10% to $525,000, 1.28% to $1,525,000, 2.75% to $3,025,000, 3.00% above, plus Seattle's 0.50% local rate — dossier A2, dor.wa.gov) is \"the obligation of the seller\" under RCW 82.45.080, read directly. Selling-side REET is not modelled in Rent vs Buy. A deed of trust (the loan) is not subject to REET (medium — secondary synthesis of WAC 458-61A-208).",
+      note: "$0 to the buyer by design. Washington's real estate excise tax (graduated state rate 1.10% to $525,000, 1.28% to $1,525,000, 2.75% to $3,025,000, 3.00% above, plus Seattle's 0.50% local rate — dossier A2, dor.wa.gov) is \"the obligation of the seller\" under RCW 82.45.080, read directly. The seller's side is `saleTax` on this record and Rent vs Buy deducts it at the sale. A deed of trust (the loan) is not subject to REET (medium — secondary synthesis of WAC 458-61A-208).",
+    },
+    "saleTax.0": {
+      conf: "high",
+      asOf: "2026-09-17",
+      src: "Washington Department of Revenue, \"Real estate excise tax\" (graduated state rate, effective 2023-01-01)",
+      url: "https://dor.wa.gov/taxes-rates/other-taxes/real-estate-excise-tax",
+      note: "State REET on the SELLER's sale (RCW 82.45.080): 1.10% of the price up to $525,000, 1.28% from $525,000.01 to $1,525,000, 2.75% to $3,025,000 and 3.00% above (dossier A2). NOMINAL thresholds: dor.wa.gov states they are adjusted every four years, next on 2027-01-01, and that adjustment is not projected here.",
+    },
+    "saleTax.1": {
+      conf: "high",
+      asOf: "2026-05-01",
+      src: "Washington Department of Revenue, \"Local Real Estate Excise Tax Rates\" (rates effective 2026-05-01, location code 1726)",
+      url: "https://dor.wa.gov/sites/default/files/2026-03/84-0013-May26_REET.pdf",
+      note: "Seattle's local REET of 0.50% of the whole sale price, added to the state graduated rate (dossier A2 and B7).",
     },
     "propTax.effective": {
       conf: "high",

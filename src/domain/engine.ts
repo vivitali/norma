@@ -44,6 +44,19 @@ export function bracketTax(
   return { total, parts };
 }
 
+/**
+ * The seller's transfer tax on a sale at `price` — `j.saleTax`, summed. Zero for a
+ * jurisdiction that carries none (every Canadian record and Texas), so adding it to the sale
+ * changes nothing there. Nominal thresholds: a scheduled adjustment is not projected.
+ */
+export function saleTaxOn(j: Jurisdiction, price: number): number {
+  let total = 0;
+  for (const line of j.saleTax ?? []) {
+    total += line.kind === "brackets" ? bracketTax(price, line.brackets).total : price * line.rate;
+  }
+  return total;
+}
+
 /** Monthly payment per $1 of mortgage, Canadian semi-annual compounding. */
 export function payFactor(annualRate: number, years: number): number {
   const i = Math.pow(1 + annualRate / 2, 2 / 12) - 1;
@@ -1699,6 +1712,12 @@ export interface RentVsBuyRow {
    * row silently stops describing the figure directly beneath it.
    */
   sellingCost: number;
+  /**
+   * The seller's transfer tax on this sale (`Jurisdiction.saleTax` — Washington's REET), netted
+   * off `equity` beside `sellingCost`. PRESENT ONLY WHEN NON-ZERO, so a jurisdiction with no
+   * such tax returns the same row shape as before.
+   */
+  saleTax?: number;
   equity: number;
   /** Terminal wealth if you bought. */
   buyW: number;
@@ -1867,7 +1886,8 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
 
     const homeValue = o.price * Math.pow(1 + g, t);
     const sellingCost = homeValue * F.sellingCost;
-    const equity = homeValue - sellingCost - bal;
+    const saleTax = saleTaxOn(j, homeValue);
+    const equity = homeValue - sellingCost - saleTax - bal;
     // Rebates that arrive at TAX TIME rather than at the closing table — the home
     // buyers' amount, and the GST rebate where it applies. `upFront` already nets
     // off the at-closing ones; dropping these was the same omission one step later,
@@ -1883,7 +1903,7 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
-      homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
+      homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}), equity, buyW, rentW, adv: buyW - rentW,
     });
   }
 
@@ -2031,10 +2051,11 @@ function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
 
     const homeValue = o.price * Math.pow(1 + g, t);
     const sellingCost = homeValue * F.sellingCost;
+    const saleTax = saleTaxOn(j, homeValue);
     const homeGain = Math.max(0, homeValue - o.price);
     const taxableHomeGain = Math.max(0, homeGain - F.sec121.single);
     const homeGainTax = taxableHomeGain * flatGainsRate;
-    const equity = homeValue - sellingCost - bal - homeGainTax;
+    const equity = homeValue - sellingCost - saleTax - bal - homeGainTax;
 
     const buyW = equity + afterGainsTax(tbp, tbpContrib) + (o.investDiff ? afterGainsTax(bp, bpContrib) : 0);
     const rentW = afterGainsTax(upFront * Math.pow(1 + ret, t), upFront) + (o.investDiff ? afterGainsTax(rp, rpContrib) : 0);
@@ -2045,7 +2066,7 @@ function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
-      homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
+      homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}), equity, buyW, rentW, adv: buyW - rentW,
       deductionBenefit, itemizedBeatsStandard, pmi,
     });
   }

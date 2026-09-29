@@ -434,6 +434,14 @@ export interface JurisdictionCommon {
   propTax: PropertyTax;
   transfer: readonly TransferLine[];
   /**
+   * A tax the SELLER owes on the sale, netted off the sale price in Rent vs Buy's sale at the
+   * horizon alongside the generic selling cost. Washington's REET is the case: the seller's
+   * statutory obligation (RCW 82.45.080), so it is absent from the buyer's `transfer` stack.
+   * Absent for every jurisdiction where the buyer bears the transfer tax. Thresholds are
+   * NOMINAL — a scheduled adjustment (Washington's 2027-01-01) is not projected.
+   */
+  saleTax?: readonly (BracketTransferLine | FlatTransferLine)[];
+  /**
    * Per-jurisdiction override of the combined marginal tax table. Only Winnipeg carries this
    * in the source data, and it does not match `federal.marginal.MB` — both are unverified
    * placeholder figures (see federal.ts). Not consumed until a later phase ports `marginalRate()`.

@@ -7,7 +7,11 @@ import {
   credits,
   propertyTaxAnnual,
   rentComparable,
+  rentVsBuy,
+  saleTaxOn,
 } from "../engine";
+import { getJurisdiction } from "./index";
+import { ca } from "../rules/ca";
 import { us } from "../rules/us";
 
 const INPUT = {
@@ -134,5 +138,48 @@ describe("seattle — country, region, rent basis", () => {
     expect(seattle.provenance["fees.recording"]?.conf).toBe("assumption");
     expect(seattle.provenance["fees.titleIns"]?.conf).toBe("medium");
     expect(seattle.provenance["fees.lawyer"]?.conf).toBe("medium");
+  });
+});
+
+describe("seattle — the seller's REET, netted off the sale in Rent vs Buy", () => {
+  it("matches the hand-computed schedule at the $920,000 benchmark", () => {
+    // State: 525,000 x 1.10% = 5,775 + 395,000 x 1.28% = 5,056; local: 920,000 x 0.50% = 4,600.
+    expect(saleTaxOn(seattle, 920000)).toBeCloseTo(5775 + 5056 + 4600, 6);
+    expect(saleTaxOn(seattle, 920000)).toBeCloseTo(15431, 6);
+  });
+
+  it("reaches the upper bands: $2,000,000 = 5,775 + 12,800 + 475,000 x 2.75% + 10,000", () => {
+    // 525,000 x 1.10% + 1,000,000 x 1.28% + 475,000 x 2.75% + 2,000,000 x 0.50%
+    expect(saleTaxOn(seattle, 2000000)).toBeCloseTo(5775 + 12800 + 13062.5 + 10000, 6);
+  });
+
+  it("is zero where the buyer bears the transfer tax", () => {
+    for (const id of ["houston", "austin", "toronto", "vancouver", "winnipeg"]) {
+      const j = getJurisdiction(id)!;
+      expect(j.saleTax).toBeUndefined();
+      expect(saleTaxOn(j, 920000)).toBe(0);
+    }
+  });
+
+  it("is subtracted from equity in the engine row, and absent from rows that have none", () => {
+    const input = {
+      ...INPUT,
+      insuranceAnnual: 1600, utilities: 180, condoFee: 0, rent: 2501, rentInflation: 0.03,
+      appreciation: 0.04, appreciationOn: true, investReturn: 0.046, termYears: 5,
+      renewalRate: 5.75, investDiff: true, years: 10, taxableIncome: 95000,
+    };
+    const last = rentVsBuy(seattle, us, input).rows.at(-1)!;
+    expect(last.saleTax).toBeCloseTo(saleTaxOn(seattle, last.homeValue), 6);
+    expect(last.equity).toBeCloseTo(
+      last.homeValue - last.sellingCost - last.saleTax! - last.balance -
+        Math.max(0, last.homeValue - input.price - us.sec121.single) * us.gains.rate,
+      4,
+    );
+    const houston = getJurisdiction("houston")!;
+    const h = rentVsBuy(houston, us, input).rows.at(-1)!;
+    expect("saleTax" in h).toBe(false);
+    const toronto = getJurisdiction("toronto")!;
+    const c = rentVsBuy(toronto, ca, { ...input, contractRate: 5 }).rows.at(-1)!;
+    expect("saleTax" in c).toBe(false);
   });
 });
