@@ -638,7 +638,9 @@ describe("Affordability — the headline is the comfort price, never the lower c
     // The headline being un-financeable is only defensible because the page says so.
     poorEnoughToBeDeclined();
     renderPage();
-    expect(screen.getByText(/a lender would decline/i)).toBeInTheDocument();
+    // Either "A lender would decline…" or, where the lender is also the binding limit,
+    // "A lender caps you at … It would decline…" — one sentence naming the lender, then the refusal.
+    expect(screen.getByText(/lender.*would decline/i)).toBeInTheDocument();
   });
 
   it("captions the hero in the two states where nothing used to", () => {

@@ -69,12 +69,12 @@ const PRICE_DERIVED_HEADLINE = new Set<string>([
  * Stored state a page needs before it will render an ANSWER at all.
  *
  * Rent vs buy weighs a purchase against a PUBLISHED rent, and every rent in this
- * dataset is a CMHC two-bedroom apartment average. That answers a condo purchase
- * and nothing else, so on the default `ptype: "house"` the page correctly asks
- * for a rent instead of printing a verdict — and a contract about sections, or
- * about figures inside them, then has nothing to inspect. Seeding a condo puts
- * the page in the state these contracts are actually about. The ask state has its
- * own tests, in the page's own file.
+ * dataset is a CMHC two-bedroom apartment average. On the default `ptype: "house"`
+ * the page now answers on that apartment rent, labelled as such, while asking for
+ * the reader's own in place; the seed keeps a condo, where the published rent is a
+ * like-for-like comparison and no label or ask is in play, so these contracts
+ * inspect the plain answering state. The labelled default and the ask where no rent
+ * is published at all have their own tests, in the page's own file.
  */
 const SEED: Record<string, Record<string, unknown>> = {
   "Rent vs buy": { ptype: "condo" },
