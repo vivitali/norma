@@ -171,20 +171,24 @@ export const austin: Jurisdiction = {
     "fees.lawyer": {
       conf: "assumption",
       note: "The title company's settlement/closing fee — priced at the midpoint of the dossier's own $400-$600 Austin escrow/closing-fee range (dossier C9), described there as \"the one shoppable/negotiable fee.\" No publisher prices this.",
+      summary: "A title company's closing fee, set at the midpoint of a typical $400 to $600 Austin range. It is one of the few closing fees you can shop around, and nobody publishes a price.",
     },
     "fees.titleIns": {
       conf: "assumption",
       src: TDI_TITLE,
       url: TDI_TITLE_URL,
       note: "$100 is a MODELLING DEFAULT for the simultaneous-issue lender's policy, carried forward from Houston's own record unchanged (Phase 0 verdict) — this is a Texas-wide TDI-custom fact, not a Harris-County-specific one. Only the OWNER'S full-value policy schedule (the state's promulgated bracket table, reproduced in austin.test.ts against the dossier's own $2,015 example on a $350,000 policy) is TDI-promulgated and high-confidence; by Texas custom the seller pays that policy and the buyer pays only this flat lender's-policy add-on.",
+      summary: "A typical $100 for the lender's title policy issued alongside the owner's policy, the same figure used for Houston. Only the owner's policy has a state-set rate, and by Texas custom the seller pays for it.",
     },
     "fees.survey": {
       conf: "assumption",
       note: "Midpoint of the dossier's own $400-$700 Austin survey-fee range (dossier C9) — no primary publisher (TDI, a title-industry association, or a Travis County page) prices this; the dossier attributes the gap to a genuinely Texas-wide convention, not an Austin-specific research miss.",
+      summary: "The midpoint of a typical $400 to $700 range for an Austin survey. Nobody publishes a price, so this is a typical figure.",
     },
     "fees.appraisal": {
       conf: "assumption",
       note: "Midpoint of the dossier's own $500-$1,000 Austin appraisal-fee range (dossier C9) — same no-publisher gap as fees.survey.",
+      summary: "The midpoint of a typical $500 to $1,000 range for an Austin appraisal. Nobody publishes a price, so this is a typical figure.",
     },
     "fees.recording": {
       // The PER-PAGE rate is high (fetched directly off the Clerk's own page, internally
@@ -199,6 +203,7 @@ export const austin: Jurisdiction = {
       src: TRAVIS_CLERK,
       url: TRAVIS_CLERK_URL,
       note: "$25 first page + $4 each additional page + $0.25/name over 5, Travis County Clerk, fetched directly and internally consistent (dossier C6). $123 models the dossier's own worked combined total for a warranty deed (2-3 pages) plus a uniform deed of trust with riders (15-20 pages), roughly $110-$135 — no publisher states a 'typical total,' so the page-count combination is this dossier's own modelled estimate.",
+      summary: "The Travis County Clerk charges $25 for the first page and $4 for each further page (plus $0.25 per name over 5). $123 is our estimate for recording a short deed and a longer deed of trust, roughly $110 to $135 depending on page counts.",
     },
     "insurance": {
       conf: "medium",
@@ -206,18 +211,21 @@ export const austin: Jurisdiction = {
       src: TDI_INSURANCE,
       url: TDI_INSURANCE_URL,
       note: "$3,506/year statewide average, the SAME figure Houston's record carries (Phase 0 verdict) — TDI's market-overview page does not break this out by county, and no Travis-County-specific TDI figure was located either pass.",
+      summary: "The 2025 statewide average Texas home insurance premium, $3,506 a year (preliminary), the same figure used for Houston. The Texas Department of Insurance doesn't break it out by county.",
     },
     "propTax.effective": {
       conf: "high",
       asOf: "2025 tax year (adopted fall 2025)",
       src: `${TRAVIS_COUNTY_TAX}; ${CENTRAL_HEALTH_TAX}; ${ACC_TAX}; ${CITY_AUSTIN_TAX}; ${AISD_TAX}`,
       note: "Combined nominal rate 2.046485 per $100, each of the five components fetched directly off its own taxing entity's own page (dossier C3): Travis County 0.375845, Central Health 0.118023, ACC 0.1034 (0.0900 M&O + 0.0134 debt), City of Austin 0.524017, AISD 0.9252 (0.8022 M&O + 0.1230 I&S). Two caveats disclosed, not modelled as uncertainty in the rate itself: the City of Austin figure is the rate actually adopted AFTER voters rejected Proposition Q's higher ballot rate 63.48%-37% on 2025-11-04 (dossier C10 item 1); Travis County's rate was adopted under a disaster-declaration exception and is under active litigation as of 2026-07, with the rate remaining in effect pending the outcome (dossier C10 item 2).",
+      summary: "The combined 2025 property tax rate of $2.046485 per $100 of value, added up from five taxing entities' own rates: Travis County, Central Health, Austin Community College, the City of Austin and Austin ISD. Travis County's rate is under legal challenge but remains in effect.",
     },
     "propTax.publishedRate": {
       conf: "high",
       asOf: "2025 tax year",
       src: `${TRAVIS_COUNTY_TAX}; ${CENTRAL_HEALTH_TAX}; ${ACC_TAX}; ${CITY_AUSTIN_TAX}; ${AISD_TAX}`,
       note: "Same as propTax.effective — Texas taxes at market value with no assessment ratio distinct from 1, so the two fields hold the same number.",
+      summary: "The same rate as above: Texas taxes at market value, so the published and effective rates are one number.",
     },
     "propTax.exemptions": {
       conf: "high",
@@ -225,6 +233,7 @@ export const austin: Jurisdiction = {
       src: TCAD_EXEMPT,
       url: TCAD_EXEMPT_URL,
       note: "All five entities' local-option homestead percentages (or, for AISD, the flat state amount) are confirmed at high against TCAD's own 2026 Exemption Listing Report (dossier C10): AISD $140,000 flat (0%), City of Austin 20%, Travis County 20%, Central Health 20%, ACC 1% — the state-law floor a unit choosing any percentage exemption may not go below (s.11.13(n)). The listing's generation date (2026-07-19) is later than TY2025; local-option percentages are standing entity ordinances that change rarely, unlike the rate itself re-adopted annually, so this is treated as high for TY2025 too, with the vintage gap disclosed rather than silently assumed away. A SEPARATE question — whether AISD's exemption applies against its whole rate or only the M&O portion — is answered by the statute's own text, graded independently below (see `propTax.exemptions.0`), not folded into this entry's high grade.",
+      summary: "Austin ISD's $140,000 flat homestead exemption, 20% each from the City, Travis County and Central Health, and 1% from Austin Community College, confirmed on the appraisal district's 2026 listing. These are standing local decisions that change rarely, so we apply them to the 2025 tax year.",
     },
     // A separate, narrower provenance entry for the FIRST exemption entry (AISD's flat amount)
     // specifically, because the question it answers — whether s.11.13(b) exempts AISD's WHOLE
@@ -237,6 +246,7 @@ export const austin: Jurisdiction = {
       src: TX_TAX_CODE_11_13,
       url: TX_TAX_CODE_11_13_URL,
       note: "Tax Code s.11.13(b): \"An adult is entitled to exemption from taxation by a school district of $140,000 of the appraised value of the adult's residence homestead...\" — no M&O/I&S carve-out anywhere in the subsection or any cross-referenced section, so the $140,000 applies against AISD's WHOLE 0.9252 rate, both the 0.8022 M&O and the 0.1230 I&S portions. Graded medium, not high: statutes.capitol.texas.gov's own page returned only a navigation shell to a fetch tool, so this was read via a secondary but verbatim legal-code republication (codes.findlaw.com), cross-checked against an independent search result quoting identical text — a real citation, but not a direct read of the primary .gov document. This resolves the research dossier's own 'Could not verify' item on this question for THIS record; the same resolution is recorded on houston.ts's own propTax.exemptions.0 entry, which carries the identical statutory fact for HISD's exemption.",
+      summary: "Texas Tax Code s.11.13(b) gives a $140,000 school-district homestead exemption with no carve-out, so it applies against Austin ISD's whole rate. We read the law through a verbatim republication rather than the state's own site.",
     },
     "bench.house": {
       conf: "high",
@@ -244,6 +254,7 @@ export const austin: Jurisdiction = {
       src: ABOR_JULY_2026,
       url: ABOR_URL,
       note: "City of Austin (within city limits) single-family median, $577,000, -1.4% YoY (dossier C1) — fetched directly, no bot-blocking encountered. Corroborated independently by CultureMap Austin and The Real Deal (2026-08-12). Two other figures from the SAME release are NOT used as the headline benchmark, disclosed here instead: the Austin-Round Rock-San Marcos MSA median ($435,000, +1.0% YoY, spans five counties in different school districts and tax stacks) and the Travis County median ($520,000, county-wide, broader than the City).",
+      summary: "The July 2026 median price for a single-family home within Austin city limits, $577,000, down 1.4% on a year earlier, from the Austin Board of Realtors. It is the city median, not the wider metro ($435,000) or Travis County ($520,000) figures from the same release.",
     },
     "bench.condo": {
       conf: "medium",
@@ -251,6 +262,7 @@ export const austin: Jurisdiction = {
       src: AUSTIN_CONDO_REPORT,
       url: AUSTIN_CONDO_URL,
       note: "City of Austin condo/townhome median, $343,000, -6.5% YoY (dossier C1). The publisher names ABOR's own MLS as the underlying data source, but the page itself is a third party's compilation, not ABOR's own release — capped at medium per the same rule that caps any secondary aggregation, even one correctly naming its primary source.",
+      summary: "The July 2026 median for Austin condos and townhomes, $343,000, down 6.5% on a year earlier. It comes from a third party's compilation of Austin Board of Realtors data rather than the Board's own release.",
     },
     rent: {
       conf: "high",
@@ -258,6 +270,7 @@ export const austin: Jurisdiction = {
       src: HUD_FMR,
       url: HUD_FMR_URL,
       note: "HUD FY2026 Fair Market Rent, 2-bedroom, METRO-WIDE for the Austin-Round Rock-San Marcos, TX MSA: $1,852 (dossier C2), read directly off HUD's own national FY2026 FMR schedule PDF (fetched with a browser-like Referer header; a plain fetch of this URL returns nothing). Unlike Houston's HMFA, this MSA carries NO `+` in the schedule's own legend — it is not a mandatory-Small-Area-FMR area, so this metro-wide figure is the one to use directly, with none of Houston's ZIP-boundary ambiguity.",
+      summary: "HUD's FY2026 Fair Market Rent for a two-bedroom in the Austin-Round Rock-San Marcos metro area, $1,852, read off HUD's national schedule. It covers the whole metro, so it needs no ZIP-code adjustment.",
     },
     yoy: {
       conf: "high",
@@ -265,8 +278,9 @@ export const austin: Jurisdiction = {
       src: ABOR_JULY_2026,
       url: ABOR_URL,
       note: "City of Austin single-family -1.4% YoY (dossier C1) — the SAME release bench.house reads.",
+      summary: "The 1.4% year-over-year decline in the City of Austin single-family median price, from the same release as the price above.",
     },
-    "orgs.muni": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
-    "orgs.market": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
+    "orgs.muni": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution.", summary: "Not a figure: this only names the organisations cited as sources." },
+    "orgs.market": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution.", summary: "Not a figure: this only names the organisations cited as sources." },
   },
 };

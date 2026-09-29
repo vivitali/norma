@@ -108,6 +108,7 @@ export const yt: Jurisdiction = {
       src: YT_TARIFF,
       url: YT_TARIFF_URL,
       note: "Read off the government schedule directly: $50 / $150 / $350 / $550 / $750 by declared value. Replaces a flat $650 placeholder. The verification brief carried the pre-2015 tariff ($29.25 plus $0.25 per $1,000 above $25,000) and concluded norma OVERSTATED Yukon by ~$420; the Land Titles Act, 2015 schedule supersedes it, and the true direction is the opposite — see the note on transfer.2.steps.",
+      summary: "Yukon's land titles fee to register the transfer, from the territory's published schedule: $50, $150, $350, $550 or $750, depending on the declared value of the property.",
     },
     "transfer.1.base": {
       conf: "high",
@@ -115,6 +116,7 @@ export const yt: Jurisdiction = {
       src: `${YT_TARIFF} — assurance fund fee`,
       url: YT_TARIFF_URL,
       note: "\"$20 for the 1st $10,000, plus $10 for each $10,000 or portion thereof.\" The prototype omitted this line entirely; it is the largest of Yukon's three registration charges at a normal house price.",
+      summary: "Yukon also charges an assurance fund fee: $20 for the first $10,000 of value plus $10 for each further $10,000 or part of it. At a normal house price it is the largest of the three registration charges.",
     },
     "transfer.1.per": {
       conf: "high",
@@ -125,6 +127,7 @@ export const yt: Jurisdiction = {
     "transfer.1.on": {
       conf: "assumption",
       note: "MODELLED ON THE FULL PURCHASE PRICE, WHICH IS AN UPPER BOUND. The schedule charges the assurance fund fee on \"additional declared value since the last transfer was registered or title was issued\", and Yukon's transfer package carries two affidavits of declared value precisely to separate an increase from a decrease. The previous registered declared value is not an input this model has, so the fee is computed as if there were none — exactly right on a first title, and an overstatement on a resale by $10 for every $10,000 of the prior declared value. On a $620,000 purchase whose last transfer was registered at $450,000 the real fee is about $180 against the $630 modelled here.",
+      summary: "Yukon charges this fee only on value added since the last registered transfer, but that earlier value isn't known here, so we apply it to the whole price. That is exact on a first title and overstates on a resale: about $630 modelled against about $180 on a $620,000 purchase last registered at $450,000.",
     },
     "transfer.2.steps": {
       conf: "high",
@@ -132,6 +135,7 @@ export const yt: Jurisdiction = {
       src: `${YT_TARIFF} — register a mortgage or financial encumbrance`,
       url: YT_TARIFF_URL,
       note: "$50 / $100 / $200 / $400 / $600 / $800 / $1,000 by the value of the mortgage. Replaces a flat $100. Combined with the transfer and assurance fund lines, a $620,000 Whitehorse purchase with a $496,000 mortgage now charges $350 + $630 + $100 = $1,080 against the $750 the prototype modelled: norma UNDERSTATED Yukon registration by $330, it did not overstate it. (The schedule's band (e) for mortgages reads \"declared value of the land being transferred\" where every other band reads \"value of the mortgage\" — a drafting slip on the government page, immaterial below $5,000,000.)",
+      summary: "Yukon's fee to register a mortgage, from the published schedule: from $50 to $1,000, depending on the mortgage amount. With the transfer and assurance fund lines, a $620,000 Whitehorse purchase with a $496,000 mortgage pays $350 + $630 + $100 = $1,080.",
     },
     "propTax.publishedRate": {
       conf: "high",
@@ -139,6 +143,7 @@ export const yt: Jurisdiction = {
       src: "City of Whitehorse, Property Tax and Utilities — 2026 residential mill rate 1.097",
       url: "https://www.whitehorse.ca/living-in-whitehorse/my-property/tax-utilities/",
       note: "The City's own worked example is \"1.097% x $200,000 = $2,194\", and it states the rate applies to the assessed value supplied by the Government of Yukon — not to a sale price.",
+      summary: "The City of Whitehorse's 2026 residential rate of 1.097%. The City applies it to the assessed value supplied by the Government of Yukon, not to a sale price.",
     },
     "propTax.assessmentRatio": {
       conf: "assumption",
@@ -146,16 +151,19 @@ export const yt: Jurisdiction = {
       src: `Estimated: two reported 2026 Whitehorse tax bills over ${YBS_REPORT}`,
       url: YBS_REPORT_URL,
       note: WHITEHORSE_RATIO_NOTE,
+      summary: "Yukon assesses homes below market value and publishes no ratio of assessment to price, so 0.475 is our estimate. It is worked out from two reported 2026 Whitehorse tax bills ($1,625 and $3,744) against the Yukon Bureau of Statistics' $719,000 in-town average house price, rounded up.",
     },
     "propTax.basis": {
       conf: "assumption",
       note: "`frozenBaseYear` is the closest of the four bases, not an exact fit. Yukon reassesses every two years (municipalities and rural properties in alternate years; municipalities were last reassessed in 2025), so the roll lags rather than being permanently frozen, and improvements are valued at depreciated replacement cost rather than at any market date. What the label is carrying is the part that matters to the engine: the roll is NOT market value, so the ratio is not 1. The record previously claimed `market` with a ratio of 1, which the Government of Yukon's own assessment page contradicts.",
+      summary: "Yukon reassesses every two years and values buildings at depreciated replacement cost, so assessed value is not market value. The label we use is the closest fit rather than an exact one, but it carries the point that matters: the roll sits below market.",
     },
     "propTax.effective": {
       conf: "assumption",
       asOf: "2026",
       src: "Derived: publishedRate x assessmentRatio",
       note: "0.0078 -> 0.005485 -> 0.0049365 -> 0.00521075. Inherits the confidence of the weaker half: a primary-sourced published rate multiplied by an estimated ratio. The first move is DOWN, against the verification brief, which proposed 0.01123 on the reading that the mill rate applies to a market price. It does not: 1.097% of the Yukon Bureau of Statistics' $719,000 Whitehorse in-town single-detached average is about $7,900 a year, and the two real Whitehorse bills on homes in that market were $1,625 and $3,744. The last two moves are the ratio corrections described under propTax.assessmentRatio: 0.5 -> 0.45 -> 0.475. The modelled annual tax on a $620,000 house went $3,400 -> $3,060 -> $3,231, and every one of those sits inside the range of the two observed bills, which is the only check available — so the range is what rules the figure out, and the derivation is what chooses within it.",
+      summary: "Our estimate of yearly property tax as a share of price: the City's 1.097% rate times an estimated assessment ratio of 0.475. Nobody publishes this combination, and the result sits inside the range of the two real Whitehorse bills we found.",
     },
     // No `src`/`url` on either of these, on purpose: a `none` figure renders as "Not published"
     // on /sources, and hanging a document title beside that would read as a source for a figure
@@ -164,20 +172,24 @@ export const yt: Jurisdiction = {
     "bench.house": {
       conf: "none",
       note: "No MLS® HPI covers Yukon and no CREA member board publishes one, so there is no benchmark price to record and the field stays null. THE LOOKUP IS NO LONGER OUTSTANDING, and the reason for the null has changed. The Yukon Bureau of Statistics' Yukon Real Estate Report has now been read directly — First Quarter 2026, yukon.ca/sites/default/files/fin-yukon-real-estate-report-q1-2026.pdf — which retires the earlier reasoning that a CBC-attributed number would be 'sourcing by hearsay'. What that report publishes is an AVERAGE SALE PRICE: $753,300 across 32 Whitehorse single-detached sales in the quarter, inclusive of country residential properties, or $719,000 excluding them. An average of a small, mixed sample is a different metric from the constant-quality resale benchmark every other bench.house in this dataset holds, and seeding it as a buyer's default purchase price would present it as a claim about a typical Whitehorse house, which it is not. The $719,000 cut IS used, disclosed as an assumption, as the denominator of propTax.assessmentRatio — the in-town figure, because the two tax bills behind that ratio are in-town houses — where only the order of magnitude matters; that asymmetry is argued out in full in the note there. The open question for a later pass is whether to accept the average here behind a METRIC caveat, as Saskatoon accepts a composite HPI in place of a detached one.",
+      summary: "Nobody publishes a benchmark house price for Yukon, so the page asks for your price. The Yukon Bureau of Statistics reports an average Whitehorse sale price ($719,000 excluding acreages, Q1 2026), but a small-sample average is not a typical-house benchmark.",
     },
     "bench.condo": {
       conf: "none",
       note: "As above: the Bureau publishes an average, not a benchmark — $496,900 across 14 Whitehorse condominium apartment sales in Q1 2026 — and 14 sales is thinner still. The earlier claim that 'no published Whitehorse apartment series was found in any form' was simply wrong: the Bureau has reported condominium apartments separately since it split row houses out of 'condominium' in 2023. The field stays null for the metric reason, not for want of looking.",
+      summary: "Nobody publishes a benchmark condo price for Yukon, so the page asks for yours. The Yukon Bureau of Statistics reports only an average ($496,900 across 14 Whitehorse condo apartment sales in Q1 2026), too few sales to serve as a benchmark.",
     },
     "taxTime.0.amount": {
       conf: "high",
       asOf: "2026",
       src: "Federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal personal rate of 14%",
       note: "1500 -> 1400. The $1,500 figure is the old 15% rate and is still recited widely; Quebec's finance ministry independently lists the federal credit at $1,169, which is $1,400 x 0.835 after the Quebec abatement. Tracks federal.hba.",
+      summary: "The federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal rate of 14%, worth $1,400. Older sources still quote $1,500, which used the former 15% rate.",
     },
     "fees.moving": {
       conf: "assumption",
       note: "No citation. Northern moving is barge- and air-freight-dependent and seasonal in a way this model cannot express; the figure is a regional modelling default carried from the prototype.",
+      summary: "Nobody publishes a moving cost for Yukon, so this is a typical regional figure. Northern moves depend on barge and air freight and on the season, which this estimate does not capture.",
     },
   },
 };

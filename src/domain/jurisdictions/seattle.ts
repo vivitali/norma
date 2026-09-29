@@ -127,6 +127,7 @@ export const seattle: Jurisdiction = {
       src: OR_ESCROW,
       url: OR_ESCROW_URL,
       note: "$1,400 is half of Old Republic's $2,800 residential escrow fee at the $800,000 row (dossier A6). The 50/50 buyer/seller split is Puget Sound custom corroborated by secondary sources, not a statute. One insurer's filed fee; the schedule's next fetched row is $2,900 at $900,000 (half is $1,450), and rows above $900,000 were not fetched, so this is a floor-ish estimate at Seattle's $920,000 benchmark.",
+      summary: "Half of Old Republic's $2,800 escrow fee at an $800,000 price, since Puget Sound custom splits it 50/50 with the seller. It is one insurer's filed fee and rises with price, so it likely runs a little low at Seattle's $920,000 benchmark.",
     },
     "fees.titleIns": {
       conf: "medium",
@@ -134,14 +135,17 @@ export const seattle: Jurisdiction = {
       src: OR_TITLE,
       url: OR_TITLE_URL,
       note: "$1,070 is Old Republic's simultaneous-issue Residential Purchase Loan Policy premium at an $800,000 insured amount (dossier A4) — the lender's policy the BUYER customarily pays; the seller customarily pays the owner's policy (King/Pierce/Snohomish custom, secondary sources). Washington is a filed-rate state, so this is one insurer's rate, not a state schedule, and it is a flat figure that does not scale with the loan.",
+      summary: "Old Republic's $1,070 premium for the lender's title policy at an $800,000 insured amount, which the buyer customarily pays. Washington has no state schedule, so this is one insurer's rate, and it doesn't scale with the loan.",
     },
     "fees.inspect": {
       conf: "assumption",
       note: "$450 — the same nationwide modelling default Houston and Austin carry; the dossier did not research inspection fees, and they are not state-specific (dossier A6).",
+      summary: "$450 is a typical nationwide figure, not specific to Washington. Nobody publishes an inspection fee, so we chose it.",
     },
     "fees.appraisal": {
       conf: "assumption",
       note: "$600 — a modelling default between Houston's $500 and Austin's $750; the dossier did not research Seattle appraisal fees, and they are lender-driven, not state-specific (dossier A6).",
+      summary: "$600 is a typical figure we chose because lenders set appraisal fees and nobody publishes them.",
     },
     "fees.recording": {
       conf: "assumption",
@@ -149,20 +153,24 @@ export const seattle: Jurisdiction = {
       src: KC_RECORDER,
       url: KC_RECORDER_URL,
       note: "King County charges $303.50 for the first page of a deed and $304.50 for a deed of trust, $1.00 for each additional page (dossier A2, read directly, high). $627 models a 3-page deed ($305.50) plus an 18-page deed of trust ($321.50) — the page counts are this record's own estimate (dossier addendum item 1), so the combined figure is graded assumption even though the per-page fees are high.",
+      summary: "King County charges $303.50 to record a deed, $304.50 for a deed of trust and $1 for each additional page. $627 is our estimate for a 3-page deed plus an 18-page deed of trust; the page counts are our assumption.",
     },
     "fees.moving": {
       conf: "assumption",
       note: "$1,500 — the same modelling default the Texas records carry; no Seattle mover cost was researched, and no authority publishes one.",
+      summary: "$1,500 is a typical figure. Nobody publishes a Seattle moving cost.",
     },
     "fees.setup": {
       conf: "assumption",
       note: "$250 — the same modelling default the Texas records carry; Seattle City Light and SPU account-opening charges were not researched.",
+      summary: "$250 is a typical figure for utility account setup. We did not research Seattle's own utility charges.",
     },
     insurance: {
       conf: "assumption",
       asOf: "2026 (projected)",
       src: INSURIFY,
       note: "$1,600/year is the projected end-2026 Washington statewide average (about $1,533 at end-2025) from Insurify's report as syndicated by news outlets; no Office of the Insurance Commissioner average was located (dossier A5). Statewide, not King-County-specific.",
+      summary: "$1,600 a year is Insurify's projected end-2026 Washington statewide average, as reported by news outlets. No state insurance commissioner average was found, and it isn't specific to King County.",
     },
     "transfer.0": {
       conf: "high",
@@ -170,6 +178,7 @@ export const seattle: Jurisdiction = {
       src: RCW_82_45_080,
       url: RCW_82_45_080_URL,
       note: "$0 to the buyer by design. Washington's real estate excise tax (graduated state rate 1.10% to $525,000, 1.28% to $1,525,000, 2.75% to $3,025,000, 3.00% above, plus Seattle's 0.50% local rate — dossier A2, dor.wa.gov) is \"the obligation of the seller\" under RCW 82.45.080, read directly. The seller's side is `saleTax` on this record and Rent vs Buy deducts it at the sale. A deed of trust (the loan) is not subject to REET (medium — secondary synthesis of WAC 458-61A-208).",
+      summary: "You pay $0 in excise tax when buying: under Washington law the real estate excise tax is the seller's obligation, and Rent vs Buy deducts it at the sale. The loan's deed of trust is not taxed either.",
     },
     "saleTax.0": {
       conf: "high",
@@ -177,6 +186,7 @@ export const seattle: Jurisdiction = {
       src: "Washington Department of Revenue, \"Real estate excise tax\" (graduated state rate, effective 2023-01-01)",
       url: "https://dor.wa.gov/taxes-rates/other-taxes/real-estate-excise-tax",
       note: "State REET on the SELLER's sale (RCW 82.45.080): 1.10% of the price up to $525,000, 1.28% from $525,000.01 to $1,525,000, 2.75% to $3,025,000 and 3.00% above (dossier A2). NOMINAL thresholds: dor.wa.gov states they are adjusted every four years, next on 2027-01-01, and that adjustment is not projected here.",
+      summary: "Washington's state excise tax on the seller: 1.10% of the price up to $525,000, 1.28% up to $1,525,000, 2.75% up to $3,025,000 and 3.00% above. The thresholds are adjusted every four years, next on January 1, 2027, which isn't projected here.",
     },
     "saleTax.1": {
       conf: "high",
@@ -184,6 +194,7 @@ export const seattle: Jurisdiction = {
       src: "Washington Department of Revenue, \"Local Real Estate Excise Tax Rates\" (rates effective 2026-05-01, location code 1726)",
       url: "https://dor.wa.gov/sites/default/files/2026-03/84-0013-May26_REET.pdf",
       note: "Seattle's local REET of 0.50% of the whole sale price, added to the state graduated rate (dossier A2 and B7).",
+      summary: "Seattle's local excise tax on a sale is 0.50% of the whole price, on top of the state's graduated rate.",
     },
     "propTax.effective": {
       conf: "high",
@@ -191,6 +202,7 @@ export const seattle: Jurisdiction = {
       src: KC_LEVY,
       url: KC_LEVY_URL,
       note: "9.90845 per $1,000 of assessed value, i.e. a fraction of 0.00990845 (dossier B3): consolidated 3.80478 + City of Seattle 3.01677 + Seattle School District No. 1 2.15308 + Seattle EMS 0.25098 + Flood Control Zone 0.09419 + Sound Transit 0.15866 + Metropolitan Park District 0.42999, cross-footed. Levy code 0010 only; other Seattle levy codes carry different rates (e.g. 12.22112 per $1,000 for codes 0030/0032). No exemption is applied: Washington has no general homestead exemption (dossier A3).",
+      summary: "Seattle's 2026 property tax rate for tax code area 0010: $9.90845 per $1,000 of assessed value, summed from the consolidated rate and the City, school district, EMS, flood control, Sound Transit and park district levies. Other tax areas differ. No homestead exemption is applied, since Washington has none.",
     },
     "propTax.publishedRate": {
       conf: "high",
@@ -198,6 +210,7 @@ export const seattle: Jurisdiction = {
       src: KC_LEVY,
       url: KC_LEVY_URL,
       note: "Same as propTax.effective, 0.00990845 as a fraction (9.90845 per $1,000): Washington assesses at 100% of market value each year, so the assessment ratio is 1. The 1% limit caps a taxing district's total levy growth, not any parcel's assessed value (dor.wa.gov, dossier A3).",
+      summary: "The same rate, $9.90845 per $1,000. Washington assesses at 100% of market value each year, so the published and effective rates match.",
     },
     "bench.house": {
       conf: "high",
@@ -205,6 +218,7 @@ export const seattle: Jurisdiction = {
       src: NWMLS,
       url: NWMLS_URL,
       note: "MEDIAN, not an average: Seattle single-family (RES ONLY) median $920,000, August 2026, -8.00% from $1,000,000 (dossier B1). NWMLS's own subtotal across its Seattle map areas; fetched directly.",
+      summary: "The August 2026 median price for a Seattle single-family home, $920,000, down 8.00% from $1,000,000, from the Northwest Multiple Listing Service. A median, not an average.",
     },
     "bench.condo": {
       conf: "high",
@@ -212,6 +226,7 @@ export const seattle: Jurisdiction = {
       src: NWMLS,
       url: NWMLS_URL,
       note: "MEDIAN, not an average: Seattle condo (CONDO ONLY) median $535,000, August 2026, -10.08% from $595,000 (dossier B1). NWMLS's own subtotal; fetched directly.",
+      summary: "The August 2026 median price for a Seattle condo, $535,000, down 10.08% from $595,000, from the Northwest Multiple Listing Service. A median, not an average.",
     },
     rent: {
       conf: "high",
@@ -219,6 +234,7 @@ export const seattle: Jurisdiction = {
       src: HUD_FMR,
       url: HUD_FMR_URL,
       note: "HUD FY2026 Fair Market Rent, 2-bedroom, metro-wide for the Seattle-Bellevue, WA HMFA: $2,501 (dossier B2), read directly off HUD's national FY2026 schedule PDF (fetched with a browser-like Referer header). The area is Small-Area-FMR mandatory, like Houston; the metro-wide row is used, as Houston's record does.",
+      summary: "HUD's FY2026 Fair Market Rent for a two-bedroom in the Seattle-Bellevue area, $2,501. As with Houston, we use the metro-wide figure rather than a ZIP-code one.",
     },
     yoy: {
       conf: "high",
@@ -226,9 +242,10 @@ export const seattle: Jurisdiction = {
       src: NWMLS,
       url: NWMLS_URL,
       note: "Seattle single-family median -8.00% year over year, as a fraction -0.08 (dossier B1) — the same NWMLS table bench.house reads.",
+      summary: "The Seattle single-family median price fell 8.00% year over year (August 2026), from the same listing-service table as the price above.",
     },
-    "orgs.transfer": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
-    "orgs.muni": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
-    "orgs.market": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
+    "orgs.transfer": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution.", summary: "Not a figure: this only names the organisations cited as sources." },
+    "orgs.muni": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution.", summary: "Not a figure: this only names the organisations cited as sources." },
+    "orgs.market": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution.", summary: "Not a figure: this only names the organisations cited as sources." },
   },
 };

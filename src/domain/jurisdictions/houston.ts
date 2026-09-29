@@ -119,22 +119,26 @@ export const houston: Jurisdiction = {
     "fees.lawyer": {
       conf: "assumption",
       note: "The title company's settlement/closing fee, the direct Texas analogue of a lawyer's conveyancing fee elsewhere in this dataset — priced within the dossier's $250-800 escrow/settlement fee range (dossier B6), no publisher.",
+      summary: "In Texas a title company charges a settlement or closing fee where other places use a lawyer's fee. Nobody publishes it, so this is a typical figure within a $250 to $800 range.",
     },
     "fees.titleIns": {
       conf: "assumption",
       src: TDI_TITLE,
       url: TDI_TITLE_URL,
       note: "$100 is a MODELLING DEFAULT for the simultaneous-issue lender's policy, not a TDI-published figure — the dossier's own B6 row grades \"who customarily pays it\" at medium and prints no dollar amount for the rate itself; only the OWNER'S full-value policy schedule (TX_TITLE_INSURANCE_BRACKETS, exported separately) is TDI-promulgated and high-confidence. Texas/Harris County custom has the seller pay the owner's policy and the buyer pay only this flat lender's-policy add-on (dossier B3/B6); the amount is disclosed as an estimate pending a primary-source read of TDI's rate manual (the simultaneous-issue rule is commonly cited as a low flat fee, often near $100, but this figure has not been independently verified against the manual's printed rule).",
+      summary: "A typical $100 for the lender's title policy issued alongside the owner's policy. It is not a published rate and hasn't been checked against the Texas Department of Insurance rate manual; by Texas custom the seller pays for the owner's policy.",
     },
     "fees.survey": {
       conf: "assumption",
       note: "No Texas-specific survey-fee figure was located this pass, even at assumption grade (dossier B6: \"no primary or reputable-secondary figure was captured with a citation strong enough to record here\"). $500 is a modelling default in the same category as every other unpublished closing fee in this dataset — the calculator cannot run without SOME figure here — not a citation.",
+      summary: "Nobody publishes a Texas survey fee, and we could not find one with a solid citation, so $500 is a typical figure we chose.",
     },
     "fees.recording": {
       conf: "medium",
       asOf: "2026",
       src: HARRIS_CLERK,
       note: "$25 first page + $4 each additional page, Harris County Clerk. Read via a secondary aggregation of the county's fee schedule; a direct fetch of the Clerk's own page returned an internally inconsistent extraction ($5 vs $25) and should be re-verified before this ships above medium. $35 models a typical 3-4 page deed.",
+      summary: "The Harris County Clerk charges $25 for the first page and $4 for each additional page, so $35 covers a typical 3 to 4 page deed. We read this through a secondary summary of the county schedule, so check it against the Clerk's own page.",
     },
     "insurance": {
       conf: "medium",
@@ -142,24 +146,28 @@ export const houston: Jurisdiction = {
       src: TDI_INSURANCE,
       url: TDI_INSURANCE_URL,
       note: "$3,506/year statewide average (dossier B5), fetched directly off TDI's own market-overview page, which does not specify which policy form the figure blends. Not Harris-County-specific — hurricane/flood/hail exposure plausibly runs above the state average, but no county-specific TDI figure was located.",
+      summary: "The 2025 statewide average Texas home insurance premium, $3,506 a year, from the Texas Department of Insurance's market overview (preliminary). It isn't specific to Harris County, where storm and flood exposure may push premiums higher.",
     },
     "propTax.effective": {
       conf: "high",
       asOf: "2025 tax year (adopted fall 2025)",
       src: `${HCTAX}; ${HOUSTON_TAX_NOTICE}; ${HISD_TAX}; ${HCC_TAX}`,
       note: "Combined nominal rate 2.120422 per $100, each component fetched directly off its own taxing entity's page (dossier C3): Harris County four-entity 0.624130 (general 0.380960 + flood control 0.049660 + hospital district 0.187610 + port 0.005900), City of Houston 0.519190, HISD 0.878300, HCC 0.098802.",
+      summary: "The combined 2025 property tax rate of $2.120422 per $100 of value, added up from each taxing entity's own published rate: Harris County (0.624130), City of Houston (0.519190), Houston ISD (0.878300) and Houston Community College (0.098802).",
     },
     "propTax.publishedRate": {
       conf: "high",
       asOf: "2025 tax year",
       src: `${HCTAX}; ${HOUSTON_TAX_NOTICE}; ${HISD_TAX}; ${HCC_TAX}`,
       note: "Same as propTax.effective — Texas taxes at market value with no assessment ratio distinct from 1, so the two fields hold the same number.",
+      summary: "The same rate as above: Texas taxes at market value, so the published and effective rates are one number.",
     },
     "propTax.exemptions": {
       conf: "high",
       asOf: "2025-11-04 (Prop 13 certified, retroactive to TY2025)",
       src: HCAD_B2,
       note: "$140,000 general homestead exemption against the HISD portion only — see the field's own note above for what is and is not modelled. The 10% homestead appraisal cap on YEAR-OVER-YEAR growth (Tax Code s.23.23, unchanged by the 2025 amendment) is NOT modelled: for a fresh purchase the appraised value in year one is the purchase price itself, so the cap does not bind until a later reassessment year, which this single-year figure does not project.",
+      summary: "The $140,000 school-district homestead exemption applies against the Houston ISD share only. A 10% cap on yearly appraisal growth is not modelled, since in the first year your appraised value is your purchase price.",
     },
     // Added alongside the Austin record (the second Texas metro), which needed to settle the
     // same question for its own AISD exemption — recorded here too because the statute is a
@@ -171,6 +179,7 @@ export const houston: Jurisdiction = {
       src: TX_TAX_CODE_11_13,
       url: TX_TAX_CODE_11_13_URL,
       note: "Tax Code s.11.13(b): \"An adult is entitled to exemption from taxation by a school district of $140,000 of the appraised value of the adult's residence homestead...\" — no M&O/I&S carve-out anywhere in the subsection or any cross-referenced section, so the $140,000 applies against HISD's WHOLE 0.8783 rate, both M&O and I&S. Graded medium, not high: statutes.capitol.texas.gov's own page returned only a navigation shell to a fetch tool, so this was read via a secondary but verbatim legal-code republication (codes.findlaw.com), cross-checked against an independent search result quoting identical text — a real citation, but not a direct read of the primary .gov document.",
+      summary: "Texas Tax Code s.11.13(b) gives a $140,000 school-district homestead exemption with no carve-out, so it applies against Houston ISD's whole rate. We read the law through a verbatim republication rather than the state's own site.",
     },
     "bench.house": {
       conf: "high",
@@ -178,6 +187,7 @@ export const houston: Jurisdiction = {
       src: HAR_JULY_2026,
       url: HAR_URL,
       note: "HAR single-family median, $340,000, +0.6% YoY (dossier C1 addendum). Read via a proxy that extracts page text — har.com blocks direct automated fetches (PerimeterX 403) — corroborated by The Real Deal, 2026-08-13 (median $340,000, average \"$441,000\").",
+      summary: "The July 2026 Houston Association of Realtors median price for a single-family home, $340,000, up 0.6% on a year earlier. A median, so it is not affected by a few very expensive sales.",
     },
     "bench.condo": {
       conf: "high",
@@ -185,6 +195,7 @@ export const houston: Jurisdiction = {
       src: HAR_JULY_2026,
       url: HAR_URL,
       note: "HAR townhome/condo median, $211,000, -3.7% YoY (dossier C1 addendum). Same access method as bench.house.",
+      summary: "The July 2026 median for Houston townhomes and condos, $211,000, down 3.7% on a year earlier, from the same Houston Association of Realtors report.",
     },
     rent: {
       conf: "high",
@@ -192,6 +203,7 @@ export const houston: Jurisdiction = {
       src: HUD_FMR,
       url: HUD_FMR_URL,
       note: "HUD FY2026 Fair Market Rent, 2-bedroom, METRO-WIDE for the Houston-The Woodlands-Sugar Land HMFA: $1,573 (1BR is $1,323 — a different bedroom count, not this field). An FMR is the 40th percentile of gross rent across ALL dwelling types surveyed in the area, not an apartment-only average — a different statistic from a rental-market survey's apartment average, hence the separate `fmr2br` RentBasis value rather than reusing `apartment2br`. First read this pass as ZIP-only (Small Area FMR); a second pass found HUD does also publish this metro-wide figure directly on its own FMR Documentation System page (dossier C2 addendum) once fetched with a browser-like Referer.",
+      summary: "HUD's FY2026 Fair Market Rent for a two-bedroom in the Houston metro area, $1,573. It is the 40th percentile of rents across all home types, not an apartment average, so it can differ from a rental survey.",
     },
     yoy: {
       conf: "high",
@@ -199,8 +211,9 @@ export const houston: Jurisdiction = {
       src: HAR_JULY_2026,
       url: HAR_URL,
       note: "HAR single-family +0.6% YoY (dossier C1 addendum).",
+      summary: "The 0.6% year-over-year rise in the Houston Association of Realtors single-family median price, July 2026.",
     },
-    "orgs.muni": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
-    "orgs.market": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution." },
+    "orgs.muni": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution.", summary: "Not a figure: this only names the organisations cited as sources." },
+    "orgs.market": { conf: "assumption", note: "Not a figure — organisation names only, for /sources attribution.", summary: "Not a figure: this only names the organisations cited as sources." },
   },
 };

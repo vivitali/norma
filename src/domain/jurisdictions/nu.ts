@@ -47,6 +47,7 @@ export const nu: Jurisdiction = {
       src: `${NU_TARIFF} — item 1(a)`,
       url: NU_TARIFF_URL,
       note: "$1.50 for each $1,000 of value, read off the official consolidation. Confirmed still in force: the only later amendment, R-033-2022, repeals and replaces Schedule items 13 to 21 (document services) and leaves items 1 and 2 untouched. KNOWN LIMITATION: above $1,000,000 item 1(b) drops to $1 for each $1,000 of the excess, which one perValue line cannot express; the line continues $1.50 above $1M and overstates by $0.50 per $1,000 of excess. Nunavut's text also says 'for each $1,000 of value' without the NWT's 'or part thereof', while the engine always rounds the last part-unit up — a difference of at most $1.50 on any purchase.",
+      summary: "Nunavut's fee to register a land transfer is $1.50 per $1,000 of value, from the official consolidation of the tariff regulations, still in force. Above $1,000,000 the real rate drops to $1 per $1,000 of the excess, so we overstate slightly there.",
     },
     "transfer.0.min": {
       conf: "high",
@@ -54,6 +55,7 @@ export const nu: Jurisdiction = {
       src: `${NU_TARIFF} — item 1(a), minimum fee`,
       url: NU_TARIFF_URL,
       note: "100 -> 60. The verification brief recorded this as DISPUTED — most calculators said $60, RE/MAX said $100 — and left it unresolved. The regulation itself says $60. Immaterial in practice (it binds only below a $40,000 price), but it was a disagreement resolvable by reading the primary text, and now is.",
+      summary: "The transfer registration fee is never less than $60, per the tariff regulations. It only matters for prices under $40,000.",
     },
     "transfer.1.per": {
       conf: "high",
@@ -61,6 +63,7 @@ export const nu: Jurisdiction = {
       src: `${NU_TARIFF} — item 2`,
       url: NU_TARIFF_URL,
       note: "$1 for each $1,000 of the principal amount secured. Unchanged, and deliberately not raised to the NWT's new $1.50.",
+      summary: "Nunavut's fee to register a mortgage: $1 for each $1,000 of the amount secured, per the tariff regulations.",
     },
     "transfer.1.min": {
       conf: "high",
@@ -68,32 +71,39 @@ export const nu: Jurisdiction = {
       src: `${NU_TARIFF} — item 2, minimum fee`,
       url: NU_TARIFF_URL,
       note: "80 -> 40. Binds only below a $40,000 mortgage. Nunavut funds its assurance fund by transferring 10% of these fees into it (s.2 of the regulations), not by charging the buyer a separate line as Yukon does — so there is no assurance fund row here.",
+      summary: "The mortgage registration fee is never less than $40, per the tariff regulations; it only matters for mortgages under $40,000. Nunavut adds no separate assurance fund charge for the buyer.",
     },
     "propTax.effective": {
       conf: "assumption",
       note: "NO RATE FOUND, and the reason is structural rather than a failed search. The Government of Nunavut administers property tax only for the general taxation area, which EXCLUDES the City of Iqaluit; Iqaluit sets its own mill rates and publishes them nowhere machine-readable, across five property classes with two distinct residential ones (single-family and individually-owned condominium in one, two-or-more-dwelling-unit properties in the other). A single scalar is a modelling compromise here even once the rate is known. The prototype's 0.009 is retained as a disclosed default. Contact for a human: Iqaluit Finance, 867-979-5610.",
+      summary: "Nobody publishes a usable Iqaluit rate, so 0.9% is a disclosed default. The territory taxes only outside Iqaluit; the City sets its own rates across several property classes and doesn't publish them in machine-readable form.",
     },
     "propTax.basis": {
       conf: "assumption",
       note: "`unknown`: nothing about the assessment base is sourced, and the record now says that rather than claiming the nearest label. It previously said `market` with a ratio of 1 — a claim this note itself denied in its next sentence, kept only because the 'ratio 1 iff market' invariant left no honest alternative. What is known: Nunavut inherited the NWT's Property Assessment and Taxation Act framework, under which assessed value is a base-year figure with improvements at depreciated replacement cost. Naming that base for real would require inventing both a published rate and a ratio to keep the derivation consistent. `unknown` also restores the Affordability estimate caveat, which reads `basis` and is exactly the disclosure a record with no sourced rate should carry.",
+      summary: "We could not source how Nunavut property is assessed, so the page says so rather than name a label. What is known: assessed value is a base-year figure with buildings at depreciated replacement cost, following the Northwest Territories' framework.",
     },
     "bench.house": {
       conf: "none",
       note: "No MLS® HPI covers Nunavut and gov.nu.ca blocks automated access. More fundamentally: with 24 of 25 communities fly-in and most housing public or employer-provided, there is effectively no resale market outside Iqaluit, and a territory-wide benchmark price is close to a category error rather than a number nobody has got round to publishing.",
+      summary: "Nobody publishes a house price benchmark for Nunavut, so the page asks for your price. Most communities are fly-in and most housing is public or employer-provided, so there is little resale market outside Iqaluit.",
     },
     "bench.condo": {
       conf: "none",
       note: "As above. Condominium stock in Nunavut is very thin, and no publisher produces a series.",
+      summary: "Nobody publishes a condo price benchmark for Nunavut, so the page asks for yours. Condo stock is very thin.",
     },
     "taxTime.0.amount": {
       conf: "high",
       asOf: "2026",
       src: "Federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal personal rate of 14%",
       note: "1500 -> 1400. The $1,500 figure is the old 15% rate and is still recited widely; Quebec's finance ministry independently lists the federal credit at $1,169, which is $1,400 x 0.835 after the Quebec abatement. Tracks federal.hba.",
+      summary: "The federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal rate of 14%, worth $1,400. Older sources still quote $1,500, which used the former 15% rate.",
     },
     "fees.moving": {
       conf: "assumption",
       note: "SUSPECT, and confidently wrong in spirit rather than merely uncited. Iqaluit has no road access: household goods arrive by annual sealift, booked months ahead and priced per cubic metre, and anything that misses the sealift window flies. A realistic Iqaluit household move is plausibly a multiple of this figure, and it is seasonal in a way this model cannot express at all.",
+      summary: "Treat this typical regional figure with caution. Iqaluit has no road access: household goods arrive by annual sealift or by air, and a real move could cost a multiple of this.",
     },
   },
 };
