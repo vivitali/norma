@@ -25,7 +25,7 @@
     "closingCosts": {
       "title": "Gastos de cierre — lo que debe pagar el día del cierre",
       "description": "Cada gasto de cierre por provincia: impuesto de transferencia, honorarios legales, ajustes y qué reembolsos llegan de verdad el día del cierre.",
-      "description_us": "Cada costo de cierre: impuesto predial, título, plica, ajustes — y lo que Texas cobra en lugar de un impuesto de transferencia."
+      "description_us": "Cada costo de cierre: impuesto predial, título, plica, registro, ajustes y las reglas del impuesto de transferencia de cada estado."
     },
     "downPayment": {
       "title": "Fuentes del pago inicial — el dinero más barato primero",
@@ -801,6 +801,7 @@
     "pmiCancelYear": "El seguro hipotecario privado se cancela en el año {n}, eliminando {amt} al mes de cada pago posterior."
   },
   "RentVsBuy": {
+    "tablePhoneNote": "En una pantalla más ancha, esta tabla también muestra cuánto vale comprar y cuánto alquilar en cada horizonte; la columna de ventaja es la diferencia entre ambos.",
     "title": "Alquilar o comprar",
     "buyWord": "Comprar",
     "rentWord": "Alquilar",

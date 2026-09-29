@@ -25,7 +25,7 @@
     "closingCosts": {
       "title": "Calculateur des frais de clôture — ce que vous devez",
       "description": "Chaque frais de clôture par province : droits de mutation, frais juridiques, ajustements, et quels remboursements arrivent le jour même.",
-      "description_us": "Chaque frais de clôture : taxe foncière, titre, séquestre, ajustements — et ce que le Texas facture au lieu d'une taxe de mutation."
+      "description_us": "Chaque frais de clôture : taxe foncière, titre, séquestre, enregistrement, ajustements et les règles de taxe de mutation de chaque État."
     },
     "downPayment": {
       "title": "Sources de mise de fonds — l’argent le moins cher d’abord",
@@ -801,6 +801,7 @@
     "pmiCancelYear": "L’assurance hypothécaire privée s’annule en année {n}, retirant {amt} par mois de chaque versement après cela."
   },
   "RentVsBuy": {
+    "tablePhoneNote": "Sur un écran plus large, ce tableau montre aussi ce que valent l’achat et la location à chaque horizon ; la colonne de l’avantage est l’écart entre les deux.",
     "title": "Louer ou acheter",
     "buyWord": "Acheter",
     "rentWord": "Louer",

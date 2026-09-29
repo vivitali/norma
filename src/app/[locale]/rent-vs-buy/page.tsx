@@ -377,6 +377,10 @@ export default function RentVsBuyPage() {
                     </tbody>
                   </table>
                 </div>
+                {/* What the phone layout leaves out, said once — the contract in page-contracts.test.tsx. */}
+                <p className="mt-2 max-w-[560px] text-[11.5px] leading-[1.5] text-ink3 sm:hidden">
+                  {t("tablePhoneNote")}
+                </p>
               </>,
             )}
 

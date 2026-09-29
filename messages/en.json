@@ -25,7 +25,7 @@
     "closingCosts": {
       "title": "Closing costs calculator — what you owe on closing day",
       "description": "Every closing cost line by province: land transfer tax, legal fees, adjustments, and which rebates actually arrive on closing day.",
-      "description_us": "Every closing cost line: property tax, title and escrow fees, adjustments, and what Texas charges instead of a transfer tax."
+      "description_us": "Every closing cost line: property tax, title and escrow fees, recording, adjustments, and each state's transfer-tax rules."
     },
     "downPayment": {
       "title": "Down payment sources — the cheapest money first",
@@ -801,6 +801,7 @@
     "altText_us": "Stacked bars of interest and principal paid each year over {n} years. Interest dominates the early years. {flipSentence}"
   },
   "RentVsBuy": {
+    "tablePhoneNote": "On a wider screen this table also shows what buying and renting are each worth at every horizon; the advantage column is the difference between the two.",
     "title": "Rent versus buy",
     "buyWord": "Buy",
     "rentWord": "Rent",
