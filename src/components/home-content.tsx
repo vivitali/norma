@@ -227,7 +227,7 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
         ];
 
   return (
-    <main id="main" className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-4 sm:px-10">
+    <main id="main" tabIndex={-1} className="outline-none mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-4 sm:px-10">
       <section aria-labelledby="home-heading" className="border-b border-border pt-10 pb-12 sm:pt-16 sm:pb-16">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:gap-16">
           <div>

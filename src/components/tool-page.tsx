@@ -23,10 +23,11 @@ export function ToolMain({ children }: { children: ReactNode }) {
   return (
     <main
       id="main"
+      tabIndex={-1}
       // The hook the pre-paint guard in globals.css keys on: a tool page's shape depends on
       // stored inputs, so for a returning reader it stays hidden until they have landed.
       data-slot="tool-main"
-      className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10"
+      className="outline-none mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10"
     >
       {children}
     </main>

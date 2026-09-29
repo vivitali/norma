@@ -281,9 +281,9 @@ export function SourcesContent() {
 
   return (
     <main
-      id="main"
+      id="main" tabIndex={-1}
       // The tool pages' own geometry (ToolMain): 1100px, 20px gutters below sm, 40px from sm.
-      className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col gap-8 px-5 pb-16 sm:px-10"
+      className="outline-none mx-auto flex w-full max-w-[1100px] flex-1 flex-col gap-8 px-5 pb-16 sm:px-10"
     >
       <div className="pt-9 sm:pt-11">
         <p className="eyebrow mb-5 text-ac">{tNav("sources")}</p>

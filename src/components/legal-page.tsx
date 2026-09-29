@@ -28,7 +28,7 @@ import type { ReactNode } from "react";
  */
 export function LegalMain({ children }: { children: ReactNode }) {
   return (
-    <main id="main" className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10">
+    <main id="main" tabIndex={-1} className="outline-none mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10">
       {children}
     </main>
   );

@@ -18,6 +18,8 @@ describe("costPerDollarOperands", () => {
     ["winnipeg", "ca", { dpPct: 25 }], // bill credit
     ["vancouver", "ca", { dpPct: 10, amortYears: 30 }],
     ["houston", "us", {}], // flat homestead credit, monthly compounding
+    ["austin", "us", { dpPct: 20 }], // percentage exemptions on top of the flat one
+    ["seattle", "us", { condoFee: 450, ptype: "condo" }], // no exemption; a condo fee in the budget
   ];
   it.each(cases)("%s (%s) %j: budget ÷ cost per $1 reproduces comfort", (id, country, patch) => {
     const j = getJurisdiction(id)!;

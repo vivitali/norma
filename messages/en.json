@@ -1148,7 +1148,7 @@
     "subtitle": "Each figure below carries a sourcing record: the document it was checked against, that document's date, and how far it can be trusted.",
     "ruleHeading": "Marked “rule”",
     "ruleBody": "The figure follows a rule in the tables: land transfer tax brackets, CMHC premium bands, the GDS and TDS limits, the stress-test floor and buffer, and the minimum down payment. Exact given the table — and how well the table itself is sourced is what the inventory below says.",
-    "ruleBody_us": "The figure follows a rule in the tables: the title insurance schedule, PMI cancellation thresholds, the DTI limits, and the homestead exemption. Exact given the table — and how well the table itself is sourced is what the inventory below says.",
+    "ruleBody_us": "The figure follows a rule in the tables: title insurance rates, PMI cancellation thresholds, the DTI limits, and any property-tax exemption the state grants. Exact given the table — and how well the table itself is sourced is what the inventory below says.",
     "estimateHeading": "Marked “estimate”",
     "estimateBody": "The figure is a local or household estimate: benchmark prices, professional fees, the property tax rate, insurance, utilities, and every pre-filled default on this site.",
     "scaleHeading": "What the confidence marks mean",

@@ -62,6 +62,9 @@ export const seattle: Jurisdiction = {
   state: "WA",
   city: "seattle",
   cityData: true,
+  // The date every FIGURE here was checked against its source (the dossier). The 2026-09-28
+  // addendum changed modelling decisions — the sale-side REET, the recording-fee arithmetic — on
+  // those same checked figures, not the figures themselves, so the verification date stands.
   verified: "2026-09-17",
   pro: "titleCompany",
   // HUD FY2026 metro-wide 2BR FMR, Seattle-Bellevue HMFA (dossier B2).

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { STORE_KEY_V1, STORE_KEY_V2 } from "@/lib/storage";
 
 /**
@@ -26,6 +26,14 @@ export function ClearNumbers({
   className?: string;
 }) {
   const [asking, setAsking] = useState(false);
+  // Focus lands on Cancel, never on the destructive action, and returns to the trigger when the
+  // question is dismissed — unmounting the focused button used to drop focus to <body>.
+  const trigger = useRef<HTMLButtonElement>(null);
+  const wasAsking = useRef(false);
+  useEffect(() => {
+    if (wasAsking.current && !asking) trigger.current?.focus();
+    wasAsking.current = asking;
+  }, [asking]);
 
   function clear() {
     try {
@@ -39,7 +47,7 @@ export function ClearNumbers({
 
   if (!asking) {
     return (
-      <button type="button" className={className} onClick={() => setAsking(true)}>
+      <button ref={trigger} type="button" className={className} onClick={() => setAsking(true)}>
         {label}
       </button>
     );
@@ -47,15 +55,10 @@ export function ClearNumbers({
   return (
     <div role="group" aria-label={label} className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <p className="text-[12.5px] leading-[1.5] text-ink2">{question}</p>
-      <button
-        type="button"
-        autoFocus
-        className={`${className ?? ""} font-medium text-ink`}
-        onClick={clear}
-      >
+      <button type="button" className={`${className ?? ""} font-medium text-ink`} onClick={clear}>
         {confirm}
       </button>
-      <button type="button" className={className} onClick={() => setAsking(false)}>
+      <button type="button" autoFocus className={className} onClick={() => setAsking(false)}>
         {cancel}
       </button>
     </div>

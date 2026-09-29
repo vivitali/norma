@@ -774,5 +774,7 @@ Added during Phase 2, not new research. Nothing here is a newly fetched figure.
    assessed value; not per-$100). REET state bands are percentages of price (1.10% = 0.011).
 5. **REET on the buyer's bill.** REET is the seller's obligation (RCW 82.45.080), so the buyer's
    closing stack carries a `$0` "REET (paid by the seller)" line with an explanation rather than
-   omitting the tax silently. Selling-side REET is NOT modelled anywhere (see the design question
-   in the PR report): `waterfall()`'s selling cost is the 5.5% commission-style field only.
+   omitting the tax silently. **Update 2026-09-28:** selling-side REET IS now modelled — the
+   record's `saleTax` (the state schedule above plus Seattle's 0.50% local rate, nominal thresholds)
+   is netted off the sale at the horizon in Rent vs Buy (`saleTaxOn` in engine.ts), beside the
+   commission-style selling cost.
