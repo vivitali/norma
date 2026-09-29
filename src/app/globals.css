@@ -197,6 +197,25 @@
   }
 }
 
+/*
+ * The pre-paint guard (src/lib/pre-paint.ts). For a returning reader whose stored inputs change a
+ * tool page's shape, the page body and the footer below it stay invisible until useSharedState
+ * marks <html data-hydrated> in the commit the stored values land in — so nothing visible ever
+ * moves. `visibility` keeps every box and all the prerendered text. The delayed reveal is the
+ * failsafe: if hydration never happens, the page still appears after 3s. It is an animation
+ * DELAY, which the reduced-motion rule above does not zero (it zeroes durations).
+ */
+html[data-stored]:not([data-hydrated]) main[data-slot="tool-main"],
+html[data-stored]:not([data-hydrated]):has(main[data-slot="tool-main"]) footer {
+  visibility: hidden;
+  animation: norma-reveal 0s linear 3s forwards;
+}
+@keyframes norma-reveal {
+  to {
+    visibility: visible;
+  }
+}
+
 @keyframes v2-pulse {
   from {
     opacity: 0.35;

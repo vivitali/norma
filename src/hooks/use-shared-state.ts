@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { readStored, writeStored } from "@/lib/storage";
 
 /**
@@ -56,6 +56,13 @@ export function useSharedState<T extends Record<string, unknown>>(
     if (!ready) return;
     writeStored(allowlist, state);
   }, [allowlist, state, ready]);
+
+  // Lifts the pre-paint guard (src/lib/pre-paint.ts). A LAYOUT effect, in the commit where
+  // `ready` first goes true — i.e. the render that already carries the stored values — so the
+  // page is revealed before that frame paints, never a frame early with the defaults in it.
+  useLayoutEffect(() => {
+    if (ready) document.documentElement.setAttribute("data-hydrated", "");
+  }, [ready]);
 
   const update = useCallback((patch: Partial<T>) => {
     setState((prev) => ({ ...prev, ...patch }));

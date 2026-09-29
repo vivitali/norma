@@ -12,6 +12,7 @@ import { AppFooter } from "@/components/app-footer";
 import { countryKey } from "@/lib/country-key";
 import { countryOf, type Locale } from "@/i18n/countries";
 import { Analytics } from "@/components/analytics";
+import { prePaintScript } from "@/lib/pre-paint";
 import "../globals.css";
 
 /**
@@ -93,6 +94,12 @@ export default async function LocaleLayout({
       className={`${archivo.variable} ${martianMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/*
+          First child of <body>, so it runs before anything below it is parsed or painted. See
+          src/lib/pre-paint.ts. The site CSP allows inline scripts (script-src 'unsafe-inline'),
+          which next-themes' own pre-paint script already relies on.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: prePaintScript(countryOf(locale)) }} />
         {/*
           The direction contract, emitted as a real HTML comment rather than a
           JSX one: a JSX comment is compiled away and reaches no build output, so
