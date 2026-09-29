@@ -42,7 +42,8 @@ const areaProvenance: Record<string, Provenance> = Object.fromEntries(
       src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
       asOf: "2026",
       url: MILL_RATES_URL,
-      summary: `${name} School Division's 2026 combined rate: ${combinedMills(school).toFixed(3)} mills, the City's ${MUNICIPAL_MILLS.toFixed(3)} plus ${school.toFixed(3)} for schools. Residential property pays no education support levy.`,
+      // One line per division: the levy sentence and the default live once, on propTax.publishedRate.
+      summary: `${name} School Division: ${combinedMills(school).toFixed(3)} mills, the City's ${MUNICIPAL_MILLS.toFixed(3)} plus ${school.toFixed(3)} for schools.`,
       note: `${name} School Division: ${combinedMills(school).toFixed(3)} mills = municipal ${MUNICIPAL_MILLS.toFixed(3)} + school ${school.toFixed(3)}.`,
     },
   ]),

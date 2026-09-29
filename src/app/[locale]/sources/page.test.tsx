@@ -177,11 +177,19 @@ describe("SourcesContent", () => {
     expect(at(312)).toContain("мають 312 цифр");
   });
 
-  it("shows the note, which is usually the most useful sentence about a figure", async () => {
+  it("shows the reader summary, not the maintainer note, under a figure", async () => {
     const user = userEvent.setup();
     render();
     await openEverySection(user);
-    expect(screen.getByText(/29\.366 mills = the 2026 municipal rate/)).toBeVisible();
+    expect(screen.getByText(/Winnipeg School Division, the default: 29\.366 mills/)).toBeVisible();
+    // Eight divisions share the one document, so they fold into its row, a line each — and the
+    // levy sentence is said once, on the default, not repeated per division.
+    expect(screen.getByText(/^Pembina Trails School Division: 25\.223 mills/)).toBeVisible();
+    expect(screen.getAllByText(/no Education Support Levy/i)).toHaveLength(1);
+    // The note carries the verification trail (a stale PDF footer, the cross-check that dismissed
+    // it). It stays in src/domain for the next person to verify; a reader never needed it.
+    expect(screen.queryByText(/DEFAULT DIVISION/)).toBeNull();
+    expect(screen.queryByText(/page footer still reads/)).toBeNull();
   });
 
   it("shows a gap as a gap, not as a missing row", async () => {
@@ -194,7 +202,7 @@ describe("SourcesContent", () => {
     await openEverySection(user);
     const market = document.getElementById("market-panel")!;
     expect(within(market).getAllByText("Not published").length).toBeGreaterThan(0);
-    expect(within(market).getByText(/No MLS® HPI covers Yukon/)).toBeVisible();
+    expect(within(market).getByText(/Nobody publishes a benchmark house price for Yukon/)).toBeVisible();
   });
 
   it("marks the fee defaults as ours, everywhere", async () => {
@@ -203,7 +211,7 @@ describe("SourcesContent", () => {
     await openEverySection(user);
     const fees = document.getElementById("fees-panel")!;
     expect(within(fees).getAllByText("Assumption").length).toBeGreaterThan(0);
-    expect(within(fees).getByText(/firms set their own/)).toBeVisible();
+    expect(within(fees).getAllByText(/so this is a typical figure for the region/).length).toBeGreaterThan(0);
   });
 
   it("says the figure disclosure in its mixed-state wording", () => {

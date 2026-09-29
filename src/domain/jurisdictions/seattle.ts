@@ -226,7 +226,7 @@ export const seattle: Jurisdiction = {
       src: NWMLS,
       url: NWMLS_URL,
       note: "MEDIAN, not an average: Seattle condo (CONDO ONLY) median $535,000, August 2026, -10.08% from $595,000 (dossier B1). NWMLS's own subtotal; fetched directly.",
-      summary: "The August 2026 median price for a Seattle condo, $535,000, down 10.08% from $595,000, from the Northwest Multiple Listing Service. A median, not an average.",
+      summary: "The August 2026 median price for a Seattle condo, $535,000, down 10.08% from $595,000, from the Northwest Multiple Listing Service.",
     },
     rent: {
       conf: "high",
