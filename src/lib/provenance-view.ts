@@ -86,7 +86,10 @@ export interface SourceEntry {
   src?: string;
   url?: string;
   asOf?: string;
-  /** Distinct notes, in record order. Often the most useful sentence shown. */
+  /**
+   * Distinct reader texts, in record order: each figure's `summary`, or its maintainer `note`
+   * where it has none. Often the most useful sentence shown.
+   */
   notes: readonly string[];
   /** Field paths folded in. Not rendered; it is what the tests assert on. */
   fields: readonly string[];
@@ -135,6 +138,8 @@ export function collectSources(entries: readonly [string, Provenance][]): Source
   const byKey = new Map<string, SourceEntry>();
   for (const [path, p] of entries) {
     const key = entryKey(p);
+    // The reader-facing sentence where one exists; the maintainer note otherwise.
+    const text = p.summary ?? p.note;
     const found = byKey.get(key);
     if (!found) {
       byKey.set(key, {
@@ -143,7 +148,7 @@ export function collectSources(entries: readonly [string, Provenance][]): Source
         src: p.src,
         url: p.url,
         asOf: p.asOf,
-        notes: p.note ? [p.note] : [],
+        notes: text ? [text] : [],
         fields: [path],
       });
       continue;
@@ -153,7 +158,7 @@ export function collectSources(entries: readonly [string, Provenance][]): Source
       conf: WEAKNESS[p.conf] > WEAKNESS[found.conf] ? p.conf : found.conf,
       url: found.url ?? p.url,
       asOf: found.asOf ?? p.asOf,
-      notes: p.note && !found.notes.includes(p.note) ? [...found.notes, p.note] : found.notes,
+      notes: text && !found.notes.includes(text) ? [...found.notes, text] : found.notes,
       fields: [...found.fields, path],
     });
   }

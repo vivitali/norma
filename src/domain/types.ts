@@ -383,6 +383,13 @@ export interface Provenance {
   asOf?: string;
   /** Why no source exists, or what the assumption rests on. Required for `assumption`. */
   note?: string;
+  /**
+   * The same record for a READER: one or two plain sentences — what the figure is, where it
+   * comes from, and the one caveat that matters. No code names, file paths, review history or
+   * internal shorthand. /sources shows this in place of `note`, which stays the maintainer's
+   * full verification record. Required wherever `note` is set (provenance-summaries.test.ts).
+   */
+  summary?: string;
 }
 
 /** Keyed by dotted field path on the record it annotates: "bench.house", "fees.lawyer". */

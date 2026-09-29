@@ -26,6 +26,21 @@ export function readFieldPath(record: object, path: string): { found: boolean; v
  * inputs with cited ranges is the Closing Costs page's job; making their status legible is this
  * milestone's.
  */
+/** The same, for a reader on /sources (Provenance.summary). */
+const FEE_SUMMARIES: Record<keyof JurisdictionFees, string> = {
+  lawyer: "Lawyers set their own conveyancing fees and no regulator publishes a schedule, so this is a typical figure for the region.",
+  notary: "Quebec notaries set their own fees, so this is a typical figure for the region.",
+  titleIns: "Title insurers quote each purchase separately and publish no schedule, so this is a typical figure for the region.",
+  locCert: "Land surveyors price a Quebec certificate of location themselves, so this is a typical figure for the region.",
+  inspect: "Home inspectors set their own prices and no authority publishes a rate, so this is a typical figure for the region.",
+  appraisal: "Appraisers and lenders set appraisal fees and publish no schedule, so this is a typical figure for the region.",
+  statusCert: "Condominium corporations charge for status certificates at their own rates, so this is a typical figure for the region.",
+  moving: "Movers price by distance, volume and season, so this is a typical figure for the region.",
+  setup: "Each utility sets its own connection and account charges, so this is a typical figure for the region.",
+  survey: "Surveyors set their own prices and no state or county publishes a schedule, so this is a typical figure for the region.",
+  recording: "The county sets a per-page recording fee, but the number of pages depends on the documents, so this total is an estimate.",
+};
+
 const FEE_NOTES: Record<keyof JurisdictionFees, string> = {
   lawyer:
     "No law society or regulator publishes a conveyancing fee schedule — firms set their own. Regional modelling default.",
@@ -61,7 +76,7 @@ const FEE_NOTES: Record<keyof JurisdictionFees, string> = {
 export function feesProvenance(fees: JurisdictionFees): ProvenanceMap {
   const out: Record<string, Provenance> = {};
   for (const key of Object.keys(fees) as (keyof JurisdictionFees)[]) {
-    out[`fees.${key}`] = { conf: "assumption", note: FEE_NOTES[key] };
+    out[`fees.${key}`] = { conf: "assumption", note: FEE_NOTES[key], summary: FEE_SUMMARIES[key] };
   }
   return out;
 }
