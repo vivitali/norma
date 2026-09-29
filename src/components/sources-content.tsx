@@ -201,7 +201,7 @@ function SourceList({
                 </span>
               )}
               {entry.asOf ? (
-                <span className="text-[11.5px] whitespace-nowrap text-ink3">
+                <span className="text-[11.5px] text-ink3 [overflow-wrap:anywhere]">
                   {t("asOfLabel")}{" "}
                   {/^\d{4}(-\d{2}(-\d{2})?)?$/.test(entry.asOf)
                     ? formatAsOf(entry.asOf, intl)

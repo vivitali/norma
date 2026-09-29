@@ -107,7 +107,7 @@ export function WealthChart({
   }
 
   return (
-    <figure className="m-0 mt-1 mb-4 max-w-[720px]">
+    <figure className="m-0 mt-1 mb-4 max-w-[720px] overflow-x-clip">
       <div className="flex" aria-hidden="true">
         {/* y axis: three values, right-aligned against the plot */}
         <div className="relative w-[72px] shrink-0" style={{ marginTop: markers.length * LABEL_ROW, height: H }}>
@@ -127,7 +127,7 @@ export function WealthChart({
             {markers.map((m, i) => (
               <span
                 key={m.key}
-                className={`absolute text-[11.5px] leading-none whitespace-nowrap ${m.cls}`}
+                className={`absolute w-max max-w-[8.5rem] text-[11.5px] leading-tight sm:max-w-none sm:leading-none sm:whitespace-nowrap ${m.cls}`}
                 style={{
                   top: i * LABEL_ROW,
                   ...(pctX(m.year) > 55

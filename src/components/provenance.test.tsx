@@ -85,6 +85,6 @@ describe("VerifiedLines", () => {
   it("formats French dates the French way", () => {
     renderWithIntl(<VerifiedLines jurisdiction={reverified()} />, { locale: "fr-CA" });
     expect(document.body.textContent).toMatch(/28 septembre 2026/);
-    expect(document.body.textContent).toMatch(/Chiffres pour Winnipeg vérifiés : 28 septembre 2026/);
+    expect(document.body.textContent).toMatch(/Chiffres pour Winnipeg vérifiés\u202f: 28 septembre 2026/);
   });
 });

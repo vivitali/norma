@@ -245,10 +245,10 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
               {t("ledeSub")}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button asChild className="min-h-11 rounded-full px-6 text-[14px]">
+              <Button asChild className="h-auto min-h-11 max-w-full rounded-full px-6 py-2 text-center text-[14px] whitespace-normal">
                 <Link href="/affordability">{t("cta")}</Link>
               </Button>
-              <Button asChild variant="outline" className="min-h-11 rounded-full px-6 text-[14px]">
+              <Button asChild variant="outline" className="h-auto min-h-11 max-w-full rounded-full px-6 py-2 text-center text-[14px] whitespace-normal">
                 <Link href="/rent-vs-buy">{t("ctaSecondary")}</Link>
               </Button>
             </div>

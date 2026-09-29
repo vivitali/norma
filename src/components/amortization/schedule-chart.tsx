@@ -57,7 +57,7 @@ export function ScheduleChart({ result }: { result: AmortizationResult }) {
   const onRight = (year: number) => year / n > 0.62;
 
   return (
-    <figure className="m-0 mt-1 mb-4 max-w-[720px]">
+    <figure className="m-0 mt-1 mb-4 max-w-[720px] overflow-x-clip">
       <div className="flex">
         <div aria-hidden="true" className="relative h-[150px] w-[62px] shrink-0 text-[11.5px] leading-none text-ink3">
           {[1, 2, 3].map((k) => (
@@ -108,8 +108,8 @@ export function ScheduleChart({ result }: { result: AmortizationResult }) {
                   <span
                     className={
                       onRight(year)
-                        ? "absolute top-0 right-1 bg-background/85 px-0.5 text-[11.5px] leading-tight whitespace-nowrap text-ink"
-                        : "absolute top-0 left-1 bg-background/85 px-0.5 text-[11.5px] leading-tight whitespace-nowrap text-ink"
+                        ? "absolute top-0 right-1 bg-background/85 px-0.5 text-[11.5px] leading-tight w-max max-w-[8.5rem] sm:max-w-none sm:whitespace-nowrap text-ink"
+                        : "absolute top-0 left-1 bg-background/85 px-0.5 text-[11.5px] leading-tight w-max max-w-[8.5rem] sm:max-w-none sm:whitespace-nowrap text-ink"
                     }
                   >
                     {t("termMark")}
@@ -128,8 +128,8 @@ export function ScheduleChart({ result }: { result: AmortizationResult }) {
                 <span
                   className={
                     onRight(flip)
-                      ? "absolute top-7 right-1.5 bg-background/85 px-0.5 text-[11.5px] leading-tight whitespace-nowrap text-ink"
-                      : "absolute top-7 left-1.5 bg-background/85 px-0.5 text-[11.5px] leading-tight whitespace-nowrap text-ink"
+                      ? "absolute top-7 right-1.5 bg-background/85 px-0.5 text-[11.5px] leading-tight w-max max-w-[8.5rem] sm:max-w-none sm:whitespace-nowrap text-ink"
+                      : "absolute top-7 left-1.5 bg-background/85 px-0.5 text-[11.5px] leading-tight w-max max-w-[8.5rem] sm:max-w-none sm:whitespace-nowrap text-ink"
                   }
                 >
                   {t("flipLabel")}
