@@ -41,7 +41,7 @@ describe("Down payment — the target", () => {
   it("shows the legal minimum as a rule, not an opinion", async () => {
     const user = userEvent.setup();
     renderPage();
-    await open(user, /Assembled from your accounts/);
+    await open(user, /Needed on closing day/);
     expect(screen.getByText("Legal minimum down payment")).toBeInTheDocument();
   });
 });
@@ -182,7 +182,7 @@ describe("Down payment — the ask can be answered from where it is made", () =>
     // The hero asks for balances; all six fields sit inside the CLOSED waterfall
     // section. The link opens it and moves focus to it.
     renderPage();
-    const link = screen.getByRole("link", { name: /funding order/i });
+    const link = screen.getByRole("link", { name: /add what you have in each account/i });
     expect(link).toHaveAttribute("href", "#waterfall");
   });
 
@@ -194,7 +194,7 @@ describe("Down payment — the ask can be answered from where it is made", () =>
     await user.clear(fhsa);
     await user.type(fhsa, "1000");
     await user.tab();
-    expect(screen.queryByRole("link", { name: /funding order/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /add what you have in each account/i })).not.toBeInTheDocument();
   });
 });
 
@@ -322,5 +322,102 @@ describe("Down payment — the RRSP-HBP cross-link", () => {
     // link at the foot of the waterfall pointed at it unconditionally.
     renderPage("en-US");
     expect(document.querySelector('[data-cross="sentence"]')).toBeNull();
+  });
+});
+
+describe("Down payment — nothing opens, and the target is named for what it is", () => {
+  it("opens no section on a first visit", () => {
+    renderPage();
+    expect(screen.queryAllByRole("button", { expanded: true })).toHaveLength(0);
+  });
+
+  it("opens the target for a personalised reader who has described no account", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 90000 }));
+    renderPage();
+    expect(screen.getByRole("button", { name: /Needed on closing day/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("does not call $0 assembled: the section is what is NEEDED, and its line says how", () => {
+    // "Assembled from your accounts $56,631" over accounts that hold nothing said the opposite of
+    // what the figure was.
+    renderPage();
+    const row = screen.getByRole("button", { name: /Needed on closing day/ });
+    expect(row.textContent).not.toMatch(/Assembled/);
+    expect(row.textContent).toContain("Down payment plus closing costs, less credits that day");
+    // The line is not the section's own name repeated.
+    expect(row.textContent?.match(/Needed on closing day/g)).toHaveLength(1);
+  });
+});
+
+describe("Down payment — the assumption is named and the way to replace it is one tap", () => {
+  it("names the assumed price and jumps to the price field", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Assuming the typical price for Winnipeg, \$[\d,]+/ }));
+    expect(screen.getByLabelText("Purchase price")).toHaveFocus();
+  });
+
+  it("names the reader's price once given, and jumps nowhere", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ price: 500000 }));
+    renderPage();
+    expect(document.querySelector("[data-slot=answer-tag]")!.textContent).toBe("Based on your price, $500,000");
+    expect(document.querySelector("button[data-slot=answer-tag]")).toBeNull();
+  });
+
+  it("carries the id its head links to", () => {
+    renderPage();
+    expect(screen.getByRole("link", { name: "Adjust your numbers" })).toHaveAttribute("href", "#adjust");
+    expect(document.getElementById("adjust")!.querySelector("#price")).not.toBeNull();
+  });
+});
+
+describe("Down payment — the same thing is not said twice", () => {
+  it("prints no two identical totals in the trace when nothing is described", async () => {
+    // "Needed on closing day = $56,631" then "Still to find = $56,631", one line apart, over
+    // accounts nobody described.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const values = [...document.getElementById("calc")!.querySelectorAll("dd")].map((d) => d.textContent);
+    expect(new Set(values).size).toBe(values.length);
+    expect(document.getElementById("calc")!.textContent).not.toMatch(/Still to find/);
+  });
+
+  it("still measures a described shortfall in the trace", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ fhsa: 1000 }));
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    expect(document.getElementById("calc")!.textContent).toMatch(/Still to find/);
+  });
+
+  it("gives each account's name to its field once, not to the row above it as well", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    const panel = document.getElementById("waterfall")!;
+    // "FHSA" as a whole label appears once in the account block (the field's own).
+    expect(within(panel).getAllByText("FHSA")).toHaveLength(1);
+    expect(within(panel).getByLabelText("FHSA")).toBeInTheDocument();
+  });
+
+  it("puts the FHSA's first-time caveat in the same paragraph as its description", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    const why = screen.getByText(/First Home Savings Account/);
+    expect(why.tagName).toBe("P");
+    expect(why.textContent).toMatch(/wherever in the world/);
+  });
+
+  it("does not repeat the hero's ask inside the glide path", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The savings glide path/);
+    const panel = document.getElementById("glide")!;
+    expect(within(panel).queryByText(/Add what you have in each account/)).not.toBeInTheDocument();
   });
 });

@@ -45,8 +45,10 @@ export default function RrspHbpPage() {
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     RRSP_HBP_SECTIONS,
     // The refund is why anyone does this at all, and it is the only figure here
-    // that is unambiguously a gain.
-    "refund",
+    // that is unambiguously a gain. It opens once the reader has personalised the page — never
+    // for a first-time visitor, who has given nothing and should not land on an open derivation
+    // of a contribution nobody entered.
+    isPersonalised(stored) ? "refund" : null,
   );
   const fmt = useMoney();
   const pct = usePercent();
@@ -76,6 +78,26 @@ export default function RrspHbpPage() {
     [caRules, resolved.hbpContribution, resolved.hbpWithdraw, resolved.taxIncome, jurisdiction],
   );
   const rate = play.marginalRate;
+
+  /*
+   * What the headline rests on that the reader never gave. The contribution defaults to the lesser
+   * of the annual limit and 18% of income, and the income to the household default; the tag says
+   * which, and jumps to the field that replaces it. "Your figures" only when neither is assumed.
+   * The income is assumed only when NO income was given anywhere — a household income typed on
+   * another page is the reader's own and resolves into `taxIncome`.
+   */
+  const contributionAssumed = stored.hbpContribution === null;
+  const incomeAssumed = stored.taxIncome === null && stored.income1 === null;
+  const roomRate = pct(caRules.rrspRoomRate * 100);
+  const focusField = (id: string) => () => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.focus({ preventScroll: true });
+  };
+  const contributionLabel = contributionAssumed
+    ? t("contributionAssumed", { rate: roomRate })
+    : t("contribution");
 
   /*
    * The two states that both used to render `noWithdraw`, which told a reader
@@ -110,10 +132,12 @@ export default function RrspHbpPage() {
     <div className="border-b border-hairline py-3">
       <p className="text-[13.5px] font-semibold">{title}</p>
       <p className="mt-1 max-w-[620px] text-[13px] leading-[1.6] text-ink2 text-pretty">{body}</p>
+      {/* A quiet note, not a warning: the caveat is CRA's own wording of a limit on the deduction, and
+          it used to be set in the blocked colour under a step that says the withdrawal is never blocked. */}
       {warn ? (
-        <p className="mt-1.5 max-w-[620px] text-[12.5px] leading-[1.55] text-blocked text-pretty">
-          {warn}
-        </p>
+        <div className="mt-1.5 max-w-[620px]">
+          <NoteLine>{warn}</NoteLine>
+        </div>
       ) : null}
     </div>
   );
@@ -134,13 +158,35 @@ export default function RrspHbpPage() {
         pulseKey={jurisdiction.id}
         head={t("refund")}
         sub={t("subtitle")}
-        tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+        tag={
+          contributionAssumed
+            ? t("tagContribution", { c: fmt(play.contribution), rate: roomRate })
+            : incomeAssumed
+              ? t("tagIncome", { income: fmt(resolved.taxIncome) })
+              : t("tagYours")
+        }
+        onTagActivate={
+          contributionAssumed
+            ? focusField("hbpContribution")
+            : incomeAssumed
+              ? focusField("taxIncome")
+              : undefined
+        }
+        adjust
         stats={[
-          { label: t("withdraw"), value: fmt(play.withdraw), mark: "rule" },
+          {
+            label: t("withdraw"),
+            value: fmt(play.withdraw),
+            // $13,500 is a default until the reader gives a contribution and a withdrawal; the rule
+            // (the HBP maximum) caps it, but it does not say what the reader is withdrawing.
+            mark: contributionAssumed || stored.hbpWithdraw === null ? "estimate" : "rule",
+          },
           {
             label: t("repaySchedule"),
             value: fmt(play.repayAnnual),
             note: t("obligationYears", { n: play.repayYears }),
+            // The same colour as the repayment section that owns this figure.
+            tone: play.withdraw > 0 ? ("caution" as const) : undefined,
           },
           { label: t("marginal"), value: pct(rate * 100, 1), mark: "rule" },
         ]}
@@ -162,12 +208,12 @@ export default function RrspHbpPage() {
           // The two inputs the refund is the product of, rather than the word
           // "refund" printed beside a section already called "The refund".
           play.withdraw > 0
-            ? `${t("contribution")} ${fmt(play.contribution)} · ${t("marginal")} ${pct(rate * 100, 1)}`
+            ? `${contributionLabel} ${fmt(play.contribution)} · ${t("marginal")} ${pct(rate * 100, 1)}`
             : emptyLine,
           fmt(play.refund),
           t("refundWhy"),
           <>
-            <PanelRow label={t("contribution")} value={fmt(play.contribution)} />
+            <PanelRow label={contributionLabel} value={fmt(play.contribution)} />
             <PanelRow
               label={t("federalMax")}
               value={fmt(play.max)}
@@ -205,48 +251,6 @@ export default function RrspHbpPage() {
               provenance={<Provenance kind="rule" />}
             />
             <PanelRow label={t("refund")} value={fmt(play.refund)} strong />
-            <div className="mt-4 flex max-w-[420px] flex-col gap-3">
-              <NumberField
-                id="hbpContribution"
-                label={t("contribution")}
-                value={stored.hbpContribution}
-                placeholder={resolved.hbpContribution}
-                min={0}
-                max={play.max}
-                onCommit={(hbpContribution) => update({ hbpContribution })}
-              />
-              <NumberField
-                id="hbpWithdraw"
-                label={t("withdraw")}
-                value={stored.hbpWithdraw}
-                placeholder={resolved.hbpWithdraw}
-                min={0}
-                max={play.max}
-                onCommit={(hbpWithdraw) => update({ hbpWithdraw })}
-              />
-              {/*
-                Attached to the field it is about, in the caution tone, because
-                the app applied something the reader did not ask for: the model
-                contributes first and withdraws what was contributed, so a
-                withdrawal entered against an RRSP balance that already exists
-                is cut back to the contribution — to $0 when there is none. The
-                page used to say nothing at all and simply print $0 everywhere,
-                which reads as an arithmetic answer rather than a clamp.
-              */}
-              {play.clampedByContribution ? (
-                <NoteLine tone="caution" tight>
-                  {t("clampedByContribution", { c: fmt(play.contribution) })}
-                </NoteLine>
-              ) : null}
-              <NumberField
-                id="taxIncome"
-                label={t("income")}
-                value={stored.taxIncome}
-                placeholder={resolved.taxIncome}
-                min={0}
-                onCommit={(taxIncome) => update({ taxIncome })}
-              />
-            </div>
           </>,
         )}
 
@@ -257,9 +261,6 @@ export default function RrspHbpPage() {
             {step(t("step3", { d: play.ruleDays }), t("step3Body", { d: play.ruleDays }), t("step3Warn"))}
             {step(t("step4"), t("step4Body", { cap: fmt(play.max) }))}
             {step(t("step5"), t("step5Body", { y: play.repayYears }))}
-            <p className="pt-3 text-[12.5px] text-ink3">
-              {t("ruleDaysNote", { d: play.ruleDays })}
-            </p>
           </>
         ))}
 
@@ -383,6 +384,54 @@ export default function RrspHbpPage() {
           </>,
         )}
       </div>
+
+      <section id="adjust" aria-labelledby="hbp-inputs" className="mt-8 flex scroll-mt-4 flex-col gap-3">
+        <h2 id="hbp-inputs" className="text-[13px] font-semibold">
+          {t("adjust")}
+        </h2>
+      <div className="flex max-w-[420px] flex-col gap-3">
+        <NumberField
+          id="hbpContribution"
+          label={t("contribution")}
+          value={stored.hbpContribution}
+          placeholder={resolved.hbpContribution}
+          min={0}
+          max={play.max}
+          onCommit={(hbpContribution) => update({ hbpContribution })}
+        />
+        <NumberField
+          id="hbpWithdraw"
+          label={t("withdraw")}
+          value={stored.hbpWithdraw}
+          placeholder={resolved.hbpWithdraw}
+          min={0}
+          max={play.max}
+          onCommit={(hbpWithdraw) => update({ hbpWithdraw })}
+        />
+        {/*
+          Attached to the field it is about, in the caution tone, because
+          the app applied something the reader did not ask for: the model
+          contributes first and withdraws what was contributed, so a
+          withdrawal entered against an RRSP balance that already exists
+          is cut back to the contribution — to $0 when there is none. The
+          page used to say nothing at all and simply print $0 everywhere,
+          which reads as an arithmetic answer rather than a clamp.
+        */}
+        {play.clampedByContribution ? (
+          <NoteLine tone="caution" tight>
+            {t("clampedByContribution", { c: fmt(play.contribution) })}
+          </NoteLine>
+        ) : null}
+        <NumberField
+          id="taxIncome"
+          label={t("income")}
+          value={stored.taxIncome}
+          placeholder={resolved.taxIncome}
+          min={0}
+          onCommit={(taxIncome) => update({ taxIncome })}
+        />
+      </div>
+      </section>
 
       <FigureFooter jurisdiction={jurisdiction} />
     </ToolMain>

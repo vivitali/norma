@@ -118,10 +118,11 @@ export default function DownPaymentPage() {
 
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     DOWN_PAYMENT_SECTIONS,
-    // Nothing is described on a first visit, so the target -- what has to be
-    // assembled -- is the only section with something to say. Once balances
-    // exist, the waterfall is the answer.
-    described ? "waterfall" : "target",
+    // Nothing opens on a first visit: the head and its stats carry the verdict, and a reader
+    // who has given nothing is not greeted by an open derivation. Once the reader has given
+    // something, the section that answers is the waterfall (balances described) or the target
+    // (what has to be assembled, before any balance exists).
+    isPersonalised(stored) ? (described ? "waterfall" : "target") : null,
   );
   const funded = described && flow.shortfall <= 0.5;
   const obligations = flow.rows.reduce((sum, row) => sum + row.repayAnnual, 0);
@@ -153,6 +154,16 @@ export default function DownPaymentPage() {
         ? t("fullyFundedBeforeTax", { a: fmt(flow.surplus), tax: fmt(flow.taxTotal) })
         : t("fullyFunded", { a: fmt(flow.surplus) })
       : t("shortBy", { a: fmt(flow.drawnTotal), b: fmt(flow.shortfall) });
+
+  // The figures rest on the typical price for this place until the reader gives one: the tag
+  // names it and jumps to the price field that replaces it.
+  const assumedPrice = !(stored.price !== null && stored.price > 0);
+  const focusPrice = () => {
+    const el = document.getElementById("price");
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.focus({ preventScroll: true });
+  };
 
   const section = (id: string, tone: Tone, line: string, figure: string, why: string, body: ReactNode) => {
     const def = DOWN_PAYMENT_SECTIONS.find((entry) => entry.id === id)!;
@@ -203,13 +214,39 @@ export default function DownPaymentPage() {
             figure={fmt(need)}
             pulseKey={jurisdiction.id}
             head={head}
-            sub={described ? t("subtitle") : t("unanswered")}
-            tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+            sub={
+              described
+                ? t("subtitle")
+                : // The ask, with the way to answer it IN it: the fields that answer it sit in the
+                  // funding-order section, which is closed on a first visit.
+                  t.rich("unanswered", {
+                    link: (chunks) => (
+                      <a href="#waterfall" className="font-medium text-ac underline underline-offset-2">
+                        {chunks}
+                      </a>
+                    ),
+                  })
+            }
+            tag={
+              assumedPrice
+                ? t("tagAssumed", { place: tJur(`at.${jurisdiction.id}`), price: fmt(resolved.price) })
+                : t("tagGiven", { price: fmt(resolved.price) })
+            }
+            onTagActivate={assumedPrice ? focusPrice : undefined}
+            adjust
             stats={[
-              { label: t("downPaymentRow"), value: fmt(closing.fin.down) },
+              {
+                label: t("downPaymentRow"),
+                value: fmt(closing.fin.down),
+                // The same colour as the target section that owns it: a deposit below the legal
+                // minimum was raised to it, which is the app applying something unasked.
+                tone: resolved.belowMinimum ? ("caution" as const) : undefined,
+              },
               { label: t("closingCosts"), value: fmt(closing.total), mark: "estimate" },
               {
                 label: described ? t("totalDrawn") : t("totalAvailable"),
+                // The waterfall row that owns this figure is "blocked" while short.
+                tone: described && !funded ? ("blocked" as const) : undefined,
                 // No balance given is not a total of $0: that would assert empty accounts
                 // (DESIGN.md 5.2 rule 4). Say nothing is entered rather than print a figure —
                 // in words, not a bare em-dash, which reads as a rendering fault at figure
@@ -232,7 +269,9 @@ export default function DownPaymentPage() {
             {section(
               "target",
               resolved.belowMinimum ? "caution" : "none",
-              t("needLabel"),
+              // Not `needLabel`: the section is now NAMED "Needed on closing day", and a row
+              // whose line repeated its own name told the reader nothing between the two.
+              t("targetLine"),
               fmt(need),
               t("targetWhy"),
               <>
@@ -336,8 +375,33 @@ export default function DownPaymentPage() {
               <>
                 {visibleRows.map((row) => (
                   <div key={row.key} className="border-b border-hairline pb-2">
+                    <div className="max-w-[320px] pb-1">
+                      <NumberField
+                        id={`src-${row.key}`}
+                        label={t(SOURCE_LABEL[row.key])}
+                        value={stored[SOURCE_FIELD[row.key]] as number | null}
+                        min={0}
+                        onCommit={(next) => update({ [SOURCE_FIELD[row.key]]: next })}
+                      />
+                      {row.key === "nonreg" ? (
+                        <div className="mt-2">
+                          <NumberField
+                            id="nonregGain"
+                            label={t("unrealised")}
+                            value={stored.nonregGain}
+                            min={0}
+                            onCommit={(nonregGain) => update({ nonregGain })}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                    {/*
+                      The field owns the account's NAME; this row is the cost and the status. It used
+                      to read "FHSA · Free — Not entered yet" directly above a field labelled "FHSA",
+                      the same word twice in adjacent lines of every account block.
+                    */}
                     <PanelRow
-                      label={`${t(SOURCE_LABEL[row.key])} · ${t(row.cost === "free" ? "free" : row.cost === "strings" ? "strings" : "costs")}`}
+                      label={t(row.cost === "free" ? "free" : row.cost === "strings" ? "strings" : "costs")}
                       // "Not needed" is what an untouched row says, and it is false
                       // of a blocked one: the money is there and the programme is
                       // shut. The row stays, at zero, saying which.
@@ -375,24 +439,18 @@ export default function DownPaymentPage() {
                         a: rules.country === "ca" ? fmt(rules.fhsa.annual) : "",
                         l: rules.country === "ca" ? fmt(rules.fhsa.lifetime) : "",
                       })}
+                      {/* One paragraph, not two: the first-time check is a sentence about the same
+                          account, and the FHSA block was the only one with a second block of grey
+                          text under it. "First-time" is narrower than it sounds — CRA counts a home
+                          owned and lived in anywhere in the world — so someone who left a flat behind
+                          can tick the box and be shown money they may not be able to use. No period
+                          is named: it is not in `src/domain`, so under the sourcing rule it may not
+                          travel. */}
+                      {row.key === "fhsa" ? ` ${t("srcFtbCheck")}` : null}
                     </p>
                     {row.blocked === "ftb" ? (
                       <p className="pt-1 text-[12px] leading-[1.55] text-caution text-pretty">
                         {t("srcBlockedFtb")}
-                      </p>
-                    ) : null}
-                    {/*
-                      Once, on the first of the two gated rows rather than on both.
-                      "First-time" is narrower than it sounds and the trap is
-                      specific to this reader: CRA counts a home owned and lived in
-                      anywhere in the world, so someone who left a flat behind can
-                      arrive here, tick the box and be shown money they may not be
-                      able to use. No period is named — it is not in `src/domain`,
-                      so under the sourcing rule it may not travel.
-                    */}
-                    {row.key === "fhsa" ? (
-                      <p className="pt-1 text-[12px] leading-[1.55] text-ink3 text-pretty">
-                        {t("srcFtbCheck")}
                       </p>
                     ) : null}
                     {/* repayAnnual is non-zero only for an hbp draw, and hbp is filtered
@@ -427,26 +485,6 @@ export default function DownPaymentPage() {
                         {row.exhausted ? <span>{t("exhausted")}</span> : null}
                       </div>
                     ) : null}
-                    <div className="mt-2 max-w-[320px]">
-                      <NumberField
-                        id={`src-${row.key}`}
-                        label={t(SOURCE_LABEL[row.key])}
-                        value={stored[SOURCE_FIELD[row.key]] as number | null}
-                        min={0}
-                        onCommit={(next) => update({ [SOURCE_FIELD[row.key]]: next })}
-                      />
-                      {row.key === "nonreg" ? (
-                        <div className="mt-2">
-                          <NumberField
-                            id="nonregGain"
-                            label={t("unrealised")}
-                            value={stored.nonregGain}
-                            min={0}
-                            onCommit={(nonregGain) => update({ nonregGain })}
-                          />
-                        </div>
-                      ) : null}
-                    </div>
                   </div>
                 ))}
                 {/*
@@ -554,18 +592,20 @@ export default function DownPaymentPage() {
                       label={t("monthlySavings")}
                       value={resolved.save === null ? "—" : fmt(resolved.save)}
                     />
-                    {resolved.save === null || resolved.save <= 0 ? (
+                    {/* Only for an explicit zero: with no rate given, the row's own line already says
+                        "add a monthly saving rate", and the same sentence twice is one too many. */}
+                    {resolved.save !== null && resolved.save <= 0 ? (
                       <p className="pt-2 text-[12.5px] text-ink3">{t("noSaveRate")}</p>
                     ) : null}
                     <p className="pt-2 text-[12px] text-ink3">
                       {t("glideNote", { r: pct(rules.savingsReturn * 100, 1) })}
                     </p>
                   </>
-                ) : (
-                  <p className="text-[13.5px] text-ink2">
-                    {described ? t("noShortfall") : t("unanswered")}
-                  </p>
-                )}
+                ) : described ? (
+                  <p className="text-[13.5px] text-ink2">{t("noShortfall")}</p>
+                ) : // Nothing described: the hero's sub-line already asks for the balances, in the
+                // same words this used to repeat. The saving-rate field below stands alone.
+                null}
                 <div className="mt-4 max-w-[320px]">
                   <NumberField
                     id="save"
@@ -606,7 +646,11 @@ export default function DownPaymentPage() {
                   // returns); a surplus is measured against everything AVAILABLE
                   // (`totalAvailable − need`). Printing "drawn" above both read
                   // "$60,000 − $60,000 = $140,000" for every fully funded reader.
-                  ...(flow.shortfall > 0.5
+                  // Nothing described is not a shortfall: with no balances the "still to find" line
+                  // equalled the target to the dollar, two identical totals one line apart.
+                  ...(!described
+                    ? []
+                    : flow.shortfall > 0.5
                     ? [
                         { label: t("calcDrawn"), value: fmt(flow.drawnTotal), op: "minus" as const, rule: true },
                         { label: t("calcShortfall"), value: fmt(flow.shortfall), op: "equals" as const, strong: true },
@@ -662,7 +706,7 @@ export default function DownPaymentPage() {
         />
       )}
 
-      <section aria-labelledby="dp-inputs" className="mt-8 flex flex-col gap-3">
+      <section id="adjust" aria-labelledby="dp-inputs" className="mt-8 flex scroll-mt-4 flex-col gap-3">
         <h2 id="dp-inputs" className="text-[13px] font-semibold">
           {t("adjust")}
         </h2>

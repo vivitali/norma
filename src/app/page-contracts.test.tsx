@@ -110,12 +110,10 @@ describe("exactly one section opens on arrival", () => {
   for (const [name, Page] of PAGES) {
     it(name, () => {
       seed(name);
-      // Affordability opens its deciding section only once the reader has personalised
-      // (a first visit opens none), so give it one stated income.
-      if (name === "Affordability") {
-        const cur = JSON.parse(window.localStorage.getItem("norma.inputs.v2") ?? "{}");
-        window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ...cur, income1: 75000 }));
-      }
+      // A page opens its deciding section only once the reader has personalised (a first visit
+      // opens none — see the sweep below), so give every page one stated income.
+      const cur = JSON.parse(window.localStorage.getItem("norma.inputs.v2") ?? "{}");
+      window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ...cur, income1: 75000 }));
       renderWithIntl(
         <JurisdictionProvider>
           <Page />
@@ -124,6 +122,21 @@ describe("exactly one section opens on arrival", () => {
       expect(screen.getAllByRole("button", { expanded: true })).toHaveLength(1);
     });
   }
+
+  it("opens none on a first visit, on any page", () => {
+    // A first-time visitor has given nothing, so must not land on an open derivation of figures
+    // they never entered: the answer head and its stats carry the verdict.
+    for (const [name, Page] of PAGES) {
+      seed(name);
+      const { unmount } = renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+      );
+      expect(screen.queryAllByRole("button", { expanded: true }), name).toHaveLength(0);
+      unmount();
+    }
+  });
 
   it("offers to expand rather than to collapse, with one already open", () => {
     // Keyed off ALL sections, not any: an any-test made the bulk control read

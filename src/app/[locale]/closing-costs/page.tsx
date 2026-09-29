@@ -70,22 +70,31 @@ export default function ClosingCostsPage() {
 
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     CLOSING_SECTIONS,
-    // Taxes and government fees, always.
+    // Taxes and government fees — once the reader has given something.
     //
-    // Every other page opens the section that answers its own question, and this
-    // page's question is what THIS jurisdiction charges. That group is the only
-    // one whose contents change with location — Toronto stacks a municipal tax on
-    // the provincial one, Alberta has no transfer tax and shows land titles
-    // registration instead — so it is both the subject and the positioning claim
-    // made concrete.
+    // Every other page opens the section that answers its own question, and this page's question
+    // is what THIS jurisdiction charges. That group is the only one whose contents change with
+    // location — Toronto stacks a municipal tax on the provincial one, Alberta has no transfer
+    // tax and shows land titles registration instead. "The largest group" was the obvious rule
+    // and is a bad proxy for it: in Winnipeg, the default jurisdiction, adjustments and moving in
+    // is the heaviest at $5,459, so the rule opened the one group that is the same everywhere.
     //
-    // "The largest group" was the obvious rule and is a bad proxy for it: in
-    // Winnipeg, the default jurisdiction, adjustments and moving in is the
-    // heaviest at $5,459, so the rule opened the one group that is the same
-    // everywhere.
-    "government",
+    // Nothing opens on a first visit: the head and its stats carry the answer, and a reader who
+    // has given nothing is not greeted by an open list of fees built on a price they never gave.
+    isPersonalised(stored) ? "government" : null,
   );
   const creditsAtClosing = total.creditsAtClosing;
+  /** The bill on top of the down payment, net of what comes off it that day. */
+  const costsNet = total.net - total.fin.down;
+  // The figures rest on the typical price for this place until the reader gives one: the tag
+  // names it and jumps to the price field that replaces it.
+  const assumedPrice = !(stored.price !== null && stored.price > 0);
+  const focusPrice = () => {
+    const el = document.getElementById("price");
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.focus({ preventScroll: true });
+  };
   const later = credit.later.reduce((sum, c) => sum + c.amount, 0);
 
   const gap = resolved.funds === null ? null : resolved.funds - total.net;
@@ -204,19 +213,31 @@ export default function ClosingCostsPage() {
       <PendingFigures pending={!hydrated}>
       <AnswerHead
         eyebrow={t("title")}
-        // NET, not gross. `cash` is down payment + costs before the credits that
-        // land on closing day; every one of the three stats beside it and the
-        // cash-check section below it are measured against `net`, so the hero was
-        // the only figure on the page disagreeing with the rest of the page. On a
-        // Toronto benchmark the difference was $207,777 against $199,302.
-        figure={fmt(total.net)}
+        // The CLOSING COSTS, net of the credits that arrive that day and excluding the down payment.
+        // The hero used to be the cash to close, which is also Down Payment's hero, to the dollar:
+        // two pages answering "what do I need" with the same figure, when this one's own subject is
+        // the bill on top of the deposit. The cash to close is the first stat now.
+        figure={fmt(costsNet)}
         pulseKey={jurisdiction.id}
-        head={t("cashTotal")}
+        head={t("costsHead")}
         sub={t("separateNote")}
-        tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+        tag={
+          assumedPrice
+            ? t("tagAssumed", { place: tJur(`at.${jurisdiction.id}`), price: fmt(resolved.price) })
+            : t("tagGiven", { price: fmt(resolved.price) })
+        }
+        onTagActivate={assumedPrice ? focusPrice : undefined}
+        adjust
         stats={[
+          {
+            // NET cash, measured against the funds the reader has — the same figure the cash-check
+            // section below judges, so it wears that section's colour. The fees in it are estimates.
+            label: t("cashTotal"),
+            value: fmt(total.net),
+            mark: "estimate",
+            tone: cash === "blocked" ? "blocked" : cash === "caution" ? "caution" : undefined,
+          },
           { label: t("downPaymentRow"), value: fmt(total.fin.down) },
-          { label: t("closingCosts"), value: fmt(total.total), mark: "estimate" },
           ...(creditsAtClosing > 0
             ? [{ label: t("grpAtClosing"), value: `− ${fmt(creditsAtClosing)}`, mark: "rule" as const }]
             : []),
@@ -375,10 +396,9 @@ export default function ClosingCostsPage() {
               <PanelRow label={t("grpAtClosing")} value={`− ${fmt(creditsAtClosing)}`} />
             ) : null}
             <PanelRow label={t("netCash")} value={fmt(total.net)} strong />
-            <PanelRow
-              label={t("available")}
-              value={resolved.funds === null ? "—" : fmt(resolved.funds)}
-            />
+            {/* No "Funds available" row here: the field below carries that name AND the figure, and
+                the row above it read "Funds available for this purchase — " over a field of the
+                same name. */}
             <PanelRow
               label={t("monthsToClose")}
               value={months === null ? "—" : String(months)}
@@ -441,18 +461,23 @@ export default function ClosingCostsPage() {
           <CalcTrace
             caption={t("calcTraceCaption")}
             lines={[
-              { label: t("downPaymentRow"), value: fmt(total.fin.down) },
-              { label: t("calcGov"), value: fmt(sum(lines.gov)), op: "plus" },
+              { label: t("calcGov"), value: fmt(sum(lines.gov)) },
               { label: t("calcPro"), value: fmt(sum(lines.pro)), op: "plus" },
               { label: t("calcAdj"), value: fmt(sum(lines.adj)), op: "plus" },
-              { label: t("cashTotal"), value: fmt(total.cash), op: "equals", strong: true },
-              // Absent when nothing applies that day — a repeat buyer, or a province
-              // with no at-closing rebate — rather than a $0 row implying relief the
-              // reader does not get.
+              { label: t("closingCosts"), value: fmt(total.total), op: "equals", strong: true },
+              // Absent when nothing applies that day — a repeat buyer, or a province with no
+              // at-closing rebate — rather than a $0 row implying relief the reader does not get.
+              // With no credit the closing costs ARE the hero, so the line above is where it lands.
               ...(total.creditsAtClosing > 0
-                ? [{ label: t("calcCredits"), value: fmt(total.creditsAtClosing), op: "minus" as const }]
+                ? [
+                    { label: t("calcCredits"), value: fmt(total.creditsAtClosing), op: "minus" as const },
+                    // The hero: the bill on top of the down payment, after what comes off it that day.
+                    { label: t("costsHead"), value: fmt(costsNet), op: "equals" as const, strong: true, rule: true },
+                  ]
                 : []),
-              { label: t("netCash"), value: fmt(total.net), op: "equals", rule: true, strong: true },
+              // Then the deposit, which the hero leaves out, to land on the cash the first stat shows.
+              { label: t("downPaymentRow"), value: fmt(total.fin.down), op: "plus" },
+              { label: t("cashTotal"), value: fmt(total.net), op: "equals", rule: true, strong: true },
             ]}
           />,
         )}
@@ -497,7 +522,7 @@ export default function ClosingCostsPage() {
         />
       )}
 
-      <section aria-labelledby="cc-inputs" className="mt-8 flex flex-col gap-3">
+      <section id="adjust" aria-labelledby="cc-inputs" className="mt-8 flex scroll-mt-4 flex-col gap-3">
         <h2 id="cc-inputs" className="text-[13px] font-semibold">
           {t("adjust")}
         </h2>
