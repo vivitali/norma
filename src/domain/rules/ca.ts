@@ -55,6 +55,12 @@ const APPRECIATION_NOTE =
  * `TERM_CHOICES = [1, 3, 5, 10]`. Moved here so the UI reads its options off the rules record
  * rather than a component-local literal — see `Mortgage` in types.ts.
  */
+const APPRECIATION_SUMMARY =
+  "An assumed rate of house price growth taken from FP Canada's 2026 projection guidelines, the Canadian standard for long-term projections. It is an assumption, not a forecast of what prices will do.";
+
+const INVEST_RETURN_SUMMARY =
+  "An assumed investment return. Nobody publishes a return for a portfolio label and past returns do not predict future ones, so the three tiers show how much the answer depends on it. FP Canada's 2026 guidelines give the asset-class figures behind it.";
+
 export const ca: CaRules = {
   country: "ca",
   mortgage: { kind: "term", termYears: [1, 3, 5, 10], renews: true },
@@ -154,6 +160,7 @@ export const ca: CaRules = {
       asOf: "2026-08-24",
       src: CMHC_PURCHASE,
       note: "25 years is CMHC's published maximum for an insured loan outside Home Start, and that much is verified. The field name claims more than the source covers: a borrower with 20%+ down needs no insurance and is not bound by it — 30-year, often 35-year, uninsured amortizations are lender discretion. Read nowhere in the codebase today; the gap is the field's scope, not its value.",
+      summary: "25 years is CMHC's published maximum for an insured mortgage outside its Home Start product. A buyer with 20% or more down needs no insurance, so lenders can offer longer terms at their own discretion.",
     },
     gds: { conf: "high", asOf: "2026-08-24", src: CMHC_GDS_TDS },
     tds: { conf: "high", asOf: "2026-08-24", src: CMHC_GDS_TDS },
@@ -162,6 +169,7 @@ export const ca: CaRules = {
       asOf: "2026-08-28",
       src: CMHC_GDS_TDS,
       note: "Stated outright, not inferred: \"If applicable, 50% of the condominium fees must be included in the GDS and TDS calculations.\" Re-read on 2026-08-28 specifically to settle whether this could carry `high` — it had been living as a bare `* 0.5` in the engine's arithmetic with no entry at all. The 50% applies ONLY to the lender's qualifying ratios; the household still pays the whole fee every month, which is why the comfort budget and the monthly table use the full figure.",
+      summary: "Lenders count 50% of your condo fees when they test whether you qualify, as CMHC's guidance states. You still pay the whole fee every month, so the budget and monthly figures here use the full amount.",
     },
 
     // --- OSFI ---------------------------------------------------------------
@@ -181,6 +189,7 @@ export const ca: CaRules = {
       asOf: "2026-08-20",
       src: `${BOC_VALET}, series BROKER_AVERAGE_5YR_VRM (Estimated variable mortgage rate)`,
       note: "The one mortgage rate in this file with an official publisher, and it is an ESTIMATED AVERAGE across brokers. The two fixed rates beside it are lowest-available quotes from an aggregator. Comparing variable against fixed here therefore compares an average against a best case, which flatters fixed. The alternative — dropping to an aggregator's lowest variable (3.35% the same day) for consistency — would trade a central bank for a commercial site, so the mismatch is kept and disclosed.",
+      summary: "The Bank of Canada's estimated average variable rate across brokers. It is an average, while the fixed rates beside it are the lowest quotes from a rate site, so comparing the two flatters fixed.",
     },
 
     // --- 5-year fixed contract rates: no publisher exists --------------------
@@ -189,12 +198,14 @@ export const ca: CaRules = {
       asOf: "2026-08-24",
       src: WOWA_RATES,
       note: `Lowest 5-year fixed INSURED (down payment under 20%). ${CONTRACT_RATE_NOTE}`,
+      summary: "The lowest 5-year fixed rate for a down payment under 20%, read off the WOWA rate site. No official body publishes 5-year fixed rates, so it is a best-case quote and your own offer may differ.",
     },
     "rates.uninsured": {
       conf: "medium",
       asOf: "2026-08-24",
       src: WOWA_RATES,
       note: `Lowest 5-year fixed UNINSURABLE. ${CONTRACT_RATE_NOTE} Lenders price three segments, not two: insured (under 20% down, 3.94%), insurable (20%+ down, home under $1M, amortization 25 years or less — 4.04%) and uninsurable (home at $1M+, or a longer amortization, or a refinance — 4.24%). defaultContractRate() has only a 20%-down switch, so it hands every 20%-down borrower the uninsurable rate; for a sub-$1M 25-year buyer that is ~20bp conservative. The 4.39% in the 2026-08-17 research report was a 2026-08-03 quote and is not reproducible today.`,
+      summary: "The lowest 5-year fixed rate for a mortgage that cannot be insured, read off the WOWA rate site. Lenders price three tiers, so a buyer of a home under $1M on a 25-year term may get a slightly lower rate.",
     },
 
     // --- CRA ----------------------------------------------------------------
@@ -207,12 +218,14 @@ export const ca: CaRules = {
       asOf: "2026-08-24",
       src: CRA_HBP_REPAY,
       note: "Correct for a withdrawal made today, and only for that. CRA defers the 15-year repayment period by a further three years for a FIRST withdrawal made between 2022-01-01 and 2025-12-31, making the grace 5 years for that cohort — a window that closed eight months ago, so many buyers on this page are in it. The value cannot honestly be a constant; it is a function of the withdrawal year. Deferred to the RRSP-HBP milestone, which is the only screen that consumes it.",
+      summary: "Correct for a withdrawal made today. Buyers who made a first withdrawal between 2022 and 2025 got a longer wait before repayment starts, so the true grace period depends on the year you withdrew.",
     },
     "hbp.ruleDays": {
       conf: "high",
       asOf: "2026-09-02",
       src: CRA_HBP_WITHDRAW,
       note: 'CRA states this as an 89-day period, not 90 — five times on the withdrawal page and again in the T1036 worksheet: "certain rules limit the deduction of your RRSP contributions made during the 89-day period before you made a withdrawal under the HBP, and you may not be able to deduct part or all of the RRSP contributions made during this period." Corrected from the industry\'s 90-day rounding to CRA\'s own 89 here, in Metadata.rrspHbp.description, and in the RrspHbp copy, in all four locale files, together, so the value and the copy cannot disagree. CRA\'s rule is also narrower than a plain holding period: it restricts the DEDUCTIBILITY of a contribution made in the window, not the ability to withdraw — the withdrawal itself is never blocked.',
+      summary: "CRA counts an 89-day period, not 90, in which RRSP contributions made before a Home Buyers' Plan withdrawal may not be deductible. The withdrawal itself is never blocked, only the deduction on those contributions.",
     },
     rrspCap: { conf: "high", asOf: "2026", src: `${CRA_LIMITS} (2026 RRSP dollar limit)` },
     rrspRoomRate: {
@@ -221,6 +234,7 @@ export const ca: CaRules = {
       src: "CRA, How contributions affect your RRSP deduction limit: 'The lesser of … 18% of your earned income in the previous year [or] the annual RRSP limit'",
       url: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans/contributing-a-rrsp-prpp/contributions-affect-your-rrsp-prpp-deduction-limit.html",
       note: "The rule counts PREVIOUS-year earned income, plus any unused room carried forward and less pension adjustments; the RRSP-HBP page applies 18% to the income it has only to choose a default contribution the reader can overwrite.",
+      summary: "CRA sets RRSP room from last year's earned income, plus unused room and less pension adjustments. The RRSP page applies 18% to your income only to suggest a starting contribution, which you can overwrite.",
     },
     capGainsInclusion: {
       conf: "high",
@@ -236,47 +250,55 @@ export const ca: CaRules = {
       asOf: "2026-08-24",
       src: "CRA line 31270 (Home buyers' amount, $10,000 claim) x the 14% lowest federal rate for 2026",
       note: "Derived, not quoted, and the derivation is the whole point. A federal non-refundable credit is the lowest bracket rate times the claim; CRA states the lowest rate as 14% for 2026 and later, and confirms the claim is still $10,000. $10,000 x 14% = $1,400. The CRA page that says $1,500 is scoped to a home bought in 2025, when the rate was higher. Independently corroborated by Quebec's Ministere des Finances, whose bulletin on the refundable home-access credit lists the FEDERAL credit at $1,169 — exactly $1,400 x 0.835, the Quebec abatement.",
+      summary: "Worked out, not quoted: the federal home buyers' amount is a $10,000 claim at the lowest federal tax rate of 14%, so it saves $1,400. A CRA page showing $1,500 applies to homes bought in 2025, when the rate was higher.",
     },
 
     // --- FP Canada: published, but published as assumptions ------------------
     // Each of the four below matches the 2026 Guidelines exactly (inflation 2.1%, shelter
     // 3.1%, short-term 2.4%). They stay `assumption` rather than `high` because what is
     // verified is that we copied the guideline correctly, not that the future will comply.
-    "appreciation.inflation": { conf: "assumption", src: FP_PAG, note: APPRECIATION_NOTE },
-    "appreciation.shelter": { conf: "assumption", src: FP_PAG, note: APPRECIATION_NOTE },
+    "appreciation.inflation": { conf: "assumption", src: FP_PAG, note: APPRECIATION_NOTE, summary: APPRECIATION_SUMMARY },
+    "appreciation.shelter": { conf: "assumption", src: FP_PAG, note: APPRECIATION_NOTE, summary: APPRECIATION_SUMMARY },
     "appreciation.flat": {
       conf: "assumption",
       note: "Zero appreciation, offered deliberately as the assumption-free case rather than as a forecast.",
+      summary: "Zero growth in home prices, offered as the no-assumptions case rather than as a forecast.",
     },
     nonShelterInflation: {
       conf: "assumption",
       note: "A modelling choice, and it sits 90bp ABOVE this file's own sourced general-inflation figure of 2.1%. The argument for the gap is that insurance, utilities and condo fees are services, whose prices have run ahead of headline CPI; the argument against is that FP Canada publishes 2.1% and this file uses it everywhere else, so an unexplained divergence in the one place nobody could see it is how a bias survives review. WHICH WAY IT BIASES: it inflates the owner's non-mortgage outlay on Rent vs Buy for up to forty compounding years, so it makes renting look better. Aligning it with appreciation.inflation is a product decision for the owner and is deliberately NOT taken here; what is fixed is that the figure is now disclosed on /sources instead of being structurally invisible.",
+      summary: "A chosen assumption: costs like insurance, utilities and condo fees are assumed to rise faster than general inflation. This makes renting look somewhat better in the rent-versus-buy comparison over long horizons.",
     },
-    "investReturn.cash": { conf: "assumption", src: FP_PAG, note: INVEST_RETURN_NOTE },
-    "investReturn.balanced": { conf: "assumption", src: FP_PAG, note: INVEST_RETURN_NOTE },
-    "investReturn.growth": { conf: "assumption", src: FP_PAG, note: INVEST_RETURN_NOTE },
+    "investReturn.cash": { conf: "assumption", src: FP_PAG, note: INVEST_RETURN_NOTE, summary: INVEST_RETURN_SUMMARY },
+    "investReturn.balanced": { conf: "assumption", src: FP_PAG, note: INVEST_RETURN_NOTE, summary: INVEST_RETURN_SUMMARY },
+    "investReturn.growth": { conf: "assumption", src: FP_PAG, note: INVEST_RETURN_NOTE, summary: INVEST_RETURN_SUMMARY },
     savingsReturn: {
       conf: "assumption",
       src: FP_PAG,
       note: "A modelling return on savings held before closing, and on current evidence too high: 3.5% is above FP Canada's own 2026 fixed-income assumption of 3.2%, and well above what a high-interest savings account pays with the overnight rate at 2.25%. It makes saving longer look better than it is, which biases the Down Payment and Rent vs Buy answers. Choosing a better default is a product decision, not a sourcing one.",
+      summary: "A growth rate assumed for savings held before closing. It is above FP Canada's own fixed-income assumption and above typical savings account rates, so it makes saving for longer look better than it is.",
     },
 
     // --- Modelling defaults with no publisher at all -------------------------
     heatAllowance: {
       conf: "assumption",
       note: "There is no federal heating allowance to be out of date with. CMHC's own GDS/TDS guidance tells the underwriter to ask the borrower and use actual heat cost records, and where none exist, to estimate from property size, location and heating system. $150/month is a lender convention (commonly $100-$175) standing in for that estimate — and a figure that is right in Vancouver is badly wrong in Winnipeg.",
+      summary: "No federal heating allowance exists. Lenders estimate heat cost from your actual records or the home's size and location, so a flat monthly figure is a common convention, and it will be off in some cities.",
     },
     sellingCost: {
       conf: "assumption",
       note: "No regulator publishes a standard selling cost; real estate commissions are negotiable by law and the structure varies by province (Quebec brokerage 4-5%; BC tiered at 7% of the first $100k then 2.5%). 5% all-in covers commission plus legal and discharge costs.",
+      summary: "Nobody publishes a standard selling cost, and commissions are negotiable and vary by province. 5% is a typical all-in figure covering commission plus legal and discharge costs.",
     },
     maintenanceReserve: {
       conf: "assumption",
       note: "The 1%-of-value-per-year rule of thumb is widely repeated but is not a published federal standard. Lenders and insurers use 1-3%, so this is the conservative end of a range, not a rate.",
+      summary: "The 1% of home value per year rule of thumb is widely repeated but not an official standard. Lenders and insurers use a range, and this is the conservative end of it.",
     },
     contractRate: {
       conf: "assumption",
       note: "A default, no longer read by any screen: the contract rate derives from dpPct against rates.insured / rates.uninsured. Kept so the field is not silently authoritative. It sits between the best insured and best uninsured 5-year fixed, so it models a broker-shopped borrower rather than a branch customer.",
+      summary: "A default contract rate that no screen uses any more; the rate shown now depends on your down payment. It sits between the best insured and best uninsured 5-year fixed rates.",
     },
     marginal: {
       conf: "medium",
@@ -284,6 +306,7 @@ export const ca: CaRules = {
       asOf: "2026-06-15",
       url: "https://www.ey.com/content/dam/ey-unified-site/ey-com/en-ca/services/tax/tax-calculators/2026/ey-tax-rates-manitoba-2026-06-15.pdf",
       note: "Re-sourced 2026-09-28, replacing unverified prototype tables that had no 0% band, stale or invented thresholds (Manitoba's 47,564/101,200 are 47,000/100,000 — indexation frozen since 2025) and a made-up fallback read by six provinces and territories. Every row reproduces from CRA's statutory rates by shown arithmetic (federal 14/20.5/26/29/33% + provincial, +0.29 points for the federal BPA phase-down between $181,440 and $258,482). Medium, not high, because the low-income-reduction claw-backs (ON, BC, NB, NL, NS, PE), Ontario's surtax and Manitoba's BPA claw-back ($200,000–$400,000) come from EY's notes only. Excludes the Ontario Health Premium, payroll contributions and every credit except the basic personal amounts. Worked arithmetic per row: docs/superpowers/research/2026-09-28-ca-combined-marginal-rates.md.",
+      summary: "Combined federal and provincial tax rates for 2026, from EY's tables, with the statutory rates cross-checked against CRA's. Some income-tested reductions and surtaxes come from EY's notes alone, and payroll contributions and most credits are left out.",
     },
   },
 };
