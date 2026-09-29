@@ -78,6 +78,10 @@ export function payFactorMonthly(annualRate: number, years: number): number {
  * binds, which is everywhere this product's own benchmark prices reach.
  */
 export function propertyTaxAnnual(j: Jurisdiction, price: number): number {
+  return Math.max(0, grossPropertyTax(j, price) - billCredit(j, price));
+}
+
+function grossPropertyTax(j: Jurisdiction, price: number): number {
   const exemptions = j.propTax.exemptions;
   if (!exemptions || exemptions.length === 0) return price * j.propTax.effective;
   let coveredRate = 0;
@@ -90,6 +94,20 @@ export function propertyTaxAnnual(j: Jurisdiction, price: number): number {
   }
   const remainderRate = j.propTax.effective - coveredRate;
   return total + price * remainderRate;
+}
+
+/**
+ * The principal-residence credit printed on the bill (`PropertyTax.credit` — Manitoba's HATC):
+ * the lesser of its amount and the slice it is capped against. Exact per price. The closed-form
+ * ceiling solve in `affordability()` instead adds the full `amount` back as a constant through
+ * `propertyTaxCredit()` — exact wherever the cap binds (in Winnipeg School Division, any price
+ * above ~$222,000: 1,600 ÷ 0.0071973), which is everywhere the solve lands for any income the
+ * GDS/TDS limits let reach it; below that it overstates the credit by at most the difference.
+ */
+function billCredit(j: Jurisdiction, price: number): number {
+  const credit = j.propTax.credit;
+  if (!credit) return 0;
+  return Math.min(credit.amount, Math.max(0, price) * credit.appliesToRate);
 }
 
 /**
@@ -118,12 +136,14 @@ export function propertyTaxRate(j: Jurisdiction): number {
  * carries no flat exemption.
  */
 export function propertyTaxCredit(j: Jurisdiction): number {
-  const exemptions = j.propTax.exemptions;
-  if (!exemptions) return 0;
-  return exemptions.reduce(
+  const exemptions = j.propTax.exemptions ?? [];
+  const homestead = exemptions.reduce(
     (sum, ex) => sum + (ex.kind === "flatAmount" ? ex.amount * ex.appliesToRate : 0),
     0,
   );
+  // A bill credit (Manitoba's HATC) enters the same way: a constant dollar amount off the tax,
+  // taken at its cap — see `billCredit()` for when that is exact.
+  return homestead + (j.propTax.credit?.amount ?? 0);
 }
 
 /**
@@ -1787,7 +1807,9 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
     // up to forty years while being structurally unreachable by /sources, which builds its
     // inventory from the rules' provenance and the jurisdiction maps.
     const infl = Math.pow(1 + F.nonShelterInflation, t - 1);
-    const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax.effective;
+    // Through the seam, not `price × effective`: a record with a bill credit (Winnipeg's HATC)
+    // or an exemption must be taxed the same way here as on every other page.
+    const propTax = propertyTaxAnnual(j, o.price * Math.pow(1 + g, t - 1));
     const insurance = o.insuranceAnnual * infl;
     // Split, because only ONE half of this is a cost the renter escapes. A strata
     // fee buys the building; a tenant's rent already buys it. In-suite services —
@@ -2079,7 +2101,9 @@ export function scenario(j: Jurisdiction, F: CountryRules, o: ScenarioInput) {
   const contractRate = insured ? F.rates.insured : F.rates.uninsured;
   const f = payFactor(contractRate, o.amortYears);
   const pi = totalMortgage * f;
-  const propTax = (o.price * j.propTax.effective) / 12;
+  // Through the seam — see `propertyTaxAnnual()` — so Scenarios taxes a price exactly as the
+  // other pages do.
+  const propTax = propertyTaxAnnual(j, o.price) / 12;
   const maintenance = (o.price * F.maintenanceReserve) / 12;
   const monthly = {
     pi,

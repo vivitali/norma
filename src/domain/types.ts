@@ -304,6 +304,41 @@ export interface PropertyTax {
    * exactly as Houston's single-entry case already behaved.
    */
   exemptions?: readonly PropertyTaxExemption[];
+  /**
+   * A principal-residence credit printed on the tax bill against ONE slice of the rate —
+   * Manitoba's Homeowners Affordability Tax Credit, which is "the lesser of $1,600 and the gross
+   * school taxes" (2026). Worth `min(amount, price × appliesToRate)`, where `appliesToRate` is
+   * the school portion of `effective`. The product models a purchase the buyer will live in, so
+   * a principal-residence credit always applies; `propertyTaxAnnual()` is the one place that
+   * reads it. Absent everywhere else.
+   */
+  credit?: PropertyTaxCredit;
+  /**
+   * Sub-jurisdictional tax areas that change the rate — Winnipeg's eight school divisions, each
+   * levying its own school mill rate on top of the one municipal rate. The record's own
+   * `publishedRate`/`effective` (and `credit.appliesToRate`) are the `default` area's;
+   * `withTaxArea()` in jurisdictions/index.ts swaps in another area's, so no engine function
+   * needs to know areas exist.
+   */
+  areas?: { default: string; list: readonly TaxArea[] };
+}
+
+export interface PropertyTaxCredit {
+  kind: "cappedAgainstSlice";
+  amount: number;
+  /** The slice of `effective` the credit is capped against (e.g. the school portion). */
+  appliesToRate: number;
+}
+
+/** One school division (or other sub-area): its rates, derived exactly as the record's own. */
+export interface TaxArea {
+  id: string;
+  /** Combined published rate (municipal + this area's school rate), per dollar of assessment. */
+  publishedRate: number;
+  /** `publishedRate × assessmentRatio` — against market price. */
+  effective: number;
+  /** This area's school portion against market price — the slice a `credit` is capped by. */
+  schoolEffective: number;
 }
 
 /**
