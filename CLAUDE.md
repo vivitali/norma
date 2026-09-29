@@ -99,6 +99,8 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 - **Allowlists passed to `useSharedState` MUST be module-level constants** from
   `src/lib/shared-inputs.ts`. The hook keys an effect on the array's identity; an inline literal is
   an infinite render loop, not a type error. This has bitten twice.
+- **A change a reader would notice ships with its changelog entry** (`src/lib/changelog.ts` + the
+  `Changelog` keys in all four catalogues) — see the PR #54 paragraph under "Where the project is".
 - User-facing strings go in `messages/<locale>.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy. **English is the source**; a test keeps every other catalogue key-identical to it with the same ICU placeholders.
 - **Never interpolate a jurisdiction name into a sentence with `tJur(jurisdiction.id)`.** Use
   `` tJur(`at.${jurisdiction.id}`) `` — the `Jurisdictions.at.<id>` form is the name as it appears
@@ -232,7 +234,8 @@ restyled. The rulebook is `DESIGN.md`, written at the finish from the built worl
 registry), and `AppNav`.
 
 **ALL NINE PAGES ARE BUILT.** Home · Affordability · Closing Costs · Down Payment · RRSP-HBP ·
-Amortization · Rent vs Buy · Scenarios · Sources. Eleven routes, every one prerendered.
+Amortization · Rent vs Buy · Scenarios · Sources. Eleven routes, every one prerendered (fourteen
+page routes today, with /privacy, /terms and /changelog).
 
 **Four locales ship** — en, fr, uk, es — closing [#1](https://github.com/vivitali/norma/issues/1).
 The plumbing was generalized rather than doubled: `src/lib/locales.ts` holds the presentation facts
@@ -530,6 +533,43 @@ row-level sibling but not themselves. `locale-render.test.tsx`'s `LOCALES` is `r
 (now six, not four), so every page render already covers `en-US`/`es-US` too, for the missing-key
 and garbage-value classes of defect; the vocabulary contract is the one check for wrong-but-present
 copy that renders without error.
+
+**PR [#54](https://github.com/vivitali/norma/pull/54) (UX pass + Winnipeg) added five mechanisms.
+Each has a reason recorded where it lives; do not "simplify" one away without reading it.**
+- **Tax areas and bill credits** (`PropertyTax.areas` / `.credit` in `src/domain/types.ts`).
+  Winnipeg carries all eight school divisions; `withTaxArea()` (`src/domain/jurisdictions/index.ts`)
+  swaps the reader's division — stored as `taxArea` in the JURISDICTION slice of the one blob — into
+  the record once, in `JurisdictionProvider`, so no engine function knows areas exist. Manitoba's
+  Homeowners Affordability Tax Credit is `credit: min(amount, price × school slice)`:
+  `propertyTaxAnnual()` nets it exactly, and `solveWithBillCredit()` inverts it exactly in both
+  ceiling solves (taking it at its cap everywhere overstated a low-income ceiling by ~4%). Every
+  property-tax figure goes through `propertyTaxAnnual()` — never `price × effective` — or a credit
+  silently stops reaching that page. `TaxAreaPicker` is opt-in on `PurchaseInputs` (`taxArea`), like
+  the residency switch: bind it only where the page prices property tax (not /amortization);
+  `src/app/tax-area-reach.test.tsx` proves it is REACHED.
+- **The pre-paint guard** (`src/lib/pre-paint.ts`, `globals.css`, `useSharedState`'s layout effect).
+  An inline script, first in `<body>`, marks `<html data-stored>` when the stored blob differs from
+  the prerendered defaults; the tool page's `<main data-slot="tool-main">` and the footer stay
+  invisible until `data-hydrated`, so a returning reader never sees the page jump (CLS ~0.5 → 0). A
+  3s animation DELAY reveals it if hydration fails; reduced motion zeroes durations, not delays. A
+  new key that changes a page's shape belongs in the script's defaults.
+- **The global 404** (`src/app/global-not-found.tsx`, `experimental.globalNotFound`). One static
+  document carrying every locale's copy; an inline script picks the block, `lang` and title from the
+  URL prefix. Verified on a Cloudflare preview Worker (404 status, styled) — re-verify there if the
+  adapter or Next is upgraded.
+- **The changelog** (`src/lib/changelog.ts`, `/changelog`, `VersionNote` in the footer). **A change a
+  reader would notice ships with its changelog entry** — one object plus its `Changelog` keys in all
+  four catalogues; `changelog.test.ts` checks keys, routes per country, section hashes and summary
+  length. Entries are per country: a US reader must never read about Canada (tested). Figures quoted
+  in an entry follow the `## Don't` rule on figures that leave the app — `conf: "high"` with `asOf`.
+- **Winnipeg was re-verified end to end on 2026-09-28**
+  (`docs/superpowers/research/2026-09-28-winnipeg-figures.md`): `fees.setup` 3000 → 300 (the old
+  figure matched no published charge), August 2026 prices, the HATC, all eight divisions, and the
+  "2027 LTT change" identified as Bill 53's bare-trust tax (the ordinary-purchase schedule is
+  unchanged). Rent vs Buy now answers a house on the published APARTMENT rent, labelled
+  (`rentBasisMismatch`) and asked for in place; `rentKnown` is false only where no rent is published.
+  The RRSP-HBP contribution defaults to `min(rrspCap, rrspRoomRate × income)` (CRA's rule, sourced in
+  `rules/ca.ts`).
 
 **Open issues:**
 - ~~[#1](https://github.com/vivitali/norma/issues/1)~~ — **closed by this branch.** Ukrainian and
