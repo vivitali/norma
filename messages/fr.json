@@ -1343,6 +1343,7 @@
     "usGainTax": "Louer ou acheter indique maintenant l’impôt sur un gain de vente au-delà de l’exclusion fédérale pour résidence, que son résultat soustrayait déjà.",
     "usGainBase": "Le gain de vente imposé tient maintenant compte des frais de vente, comme le fait l’IRS; un gain important est donc moins imposé qu’avant.",
     "usTraceTaxes": "Son calcul montre maintenant l’impôt sur les gains de placement des deux côtés, pour que chaque sous-total s’additionne.",
+    "usDpGainWording": "Mise de fonds indique maintenant que le gain d’un placement vendu est imposé en entier au taux fixe à long terme, comme aux États-Unis.",
     "sumFrenchSpacing": "La ponctuation française, à la québécoise",
     "frenchSpacing": "Les pages en français espacent la ponctuation à la québécoise, comme le recommande l’Office québécois de la langue française.",
     "sumSeattle": "Seattle (Washington) est maintenant couverte",

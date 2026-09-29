@@ -1343,6 +1343,7 @@
     "usGainTax": "Alquilar o comprar ahora muestra el impuesto sobre la ganancia de venta por encima de la exclusión federal para vivienda, que su resultado ya restaba.",
     "usGainBase": "La ganancia de venta gravada ahora descuenta los costos de venta, como lo hace el IRS, así que una ganancia grande paga menos que antes.",
     "usTraceTaxes": "Su cálculo ahora muestra el impuesto sobre las ganancias de inversión de ambos lados, así que cada subtotal cuadra.",
+    "usDpGainWording": "Pago inicial ahora indica que la ganancia de una inversión vendida se grava completa a la tasa fija de largo plazo, como en EE. UU.",
     "sumFrenchSpacing": "Puntuación francesa al estilo de Quebec",
     "frenchSpacing": "Las páginas en francés espacian la puntuación al estilo de Quebec, como recomienda la Office québécois de la langue française.",
     "sumSeattle": "Seattle, Washington, ya está incluida",

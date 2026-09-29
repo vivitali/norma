@@ -1343,6 +1343,7 @@
     "usGainTax": "Rent vs Buy now lists the tax on a sale gain above the federal home-sale exclusion, which its result already subtracted.",
     "usGainBase": "The taxed home-sale gain now counts selling costs, as the IRS does, so a large gain owes less than before.",
     "usTraceTaxes": "Its calculation now shows the tax on investment gains on both sides, so every subtotal adds up.",
+    "usDpGainWording": "Down Payment now says a sold investment's gain is taxed whole at the flat long-term rate, as the US taxes it.",
     "sumFrenchSpacing": "French punctuation, Québec style",
     "frenchSpacing": "French pages space punctuation the Québec way, as the Office québécois de la langue française recommends.",
     "sumSeattle": "Seattle, Washington is now covered",

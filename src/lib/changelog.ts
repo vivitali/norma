@@ -52,6 +52,7 @@ export const RELEASES: readonly Release[] = [
       { key: "usGainTax", href: { pathname: "/rent-vs-buy", hash: "wealth" } },
       { key: "usGainBase", href: { pathname: "/rent-vs-buy", hash: "wealth" } },
       { key: "usTraceTaxes", href: { pathname: "/rent-vs-buy", hash: "calc" } },
+      { key: "usDpGainWording", href: { pathname: "/down-payment", hash: "waterfall" } },
     ],
   },
   {
