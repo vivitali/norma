@@ -26,10 +26,14 @@ const archivo = Archivo({
 });
 
 const COPIES = notFoundCopies();
-const FALLBACK = COPIES.find((c) => c.locale === NOT_FOUND_FALLBACK)!;
 
+/**
+ * No `title` here, on purpose. A static metadata title is a React-managed <title>: the pre-paint
+ * script (`notFoundScript`) sets `document.title` in the reader's language, and React re-applied
+ * the English fallback the moment the page hydrated. The script alone owns the title; a reader
+ * without JavaScript sees the address in the tab, which is a fair price for not lying in English.
+ */
 export const metadata: Metadata = {
-  title: FALLBACK.title,
   robots: { index: false },
 };
 
@@ -62,9 +66,12 @@ export default function GlobalNotFound() {
               <h1 className="max-w-[560px] text-[24px] leading-[1.3] font-semibold tracking-[-0.02em] sm:text-[28px]">
                 {c.body}
               </h1>
-              <p className="mt-6 text-[14.5px]">
-                <a href={c.ctaHref} className="text-ac underline underline-offset-2">
+              <p className="mt-6 flex flex-wrap gap-x-6 gap-y-1 text-[14.5px]">
+                <a href={c.ctaHref} className="flex min-h-11 items-center text-ac underline underline-offset-2">
                   {c.cta}
+                </a>
+                <a href={c.prefix} className="flex min-h-11 items-center text-ac underline underline-offset-2">
+                  {c.home}
                 </a>
               </p>
             </main>

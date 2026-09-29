@@ -45,8 +45,15 @@ describe("notFoundScript", () => {
     expect(runAt("/ca/english")).toBeNull();
   });
 
-  it("leaves an unrecognisable URL to the fallback", () => {
+  it("leaves an unrecognisable URL to the fallback, with the fallback's title", () => {
     expect(runAt("/de/irgendwas")).toBeNull();
+    expect(document.title).toBe("Page not found — AffordMath");
+  });
+
+  it("carries a home link per locale, pointing at that locale's prefix", () => {
+    const fr = copies.find((c) => c.locale === "fr-CA")!;
+    expect(fr.prefix).toBe("/ca/fr");
+    expect(fr.home).toBeTruthy();
   });
 
   it("applies a stored dark theme, as next-themes would", () => {

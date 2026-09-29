@@ -3,7 +3,7 @@ import { cleanup, screen, waitFor } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
 import { STORE_KEY_V2 } from "@/lib/storage";
-import { VersionNote, type NoteRelease } from "./version-note";
+import { ChangelogLink, VersionNote, type NoteRelease } from "./version-note";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 
@@ -33,7 +33,8 @@ function stored(): Record<string, unknown> {
 function renderNote(releases: readonly NoteRelease[] = [GENERAL, OLDER]) {
   return renderWithIntl(
     <JurisdictionProvider>
-      <VersionNote releases={releases} whatChanged="What changed" newLabel="new" />
+      <VersionNote releases={releases} />
+      <ChangelogLink releases={releases} label="What changed" newLabel="new" />
     </JurisdictionProvider>,
   );
 }
@@ -47,10 +48,23 @@ afterEach(() => cleanup());
 const dot = () => screen.getByTestId("version-dot");
 
 describe("VersionNote", () => {
-  it("shows the newest release's date and summary, and links to the changelog", () => {
+  it("shows the newest release's date and summary as plain text, with ONE link to the changelog", () => {
     renderNote();
-    expect(screen.getByText(/Updated 28 Sep 2026 — Clearer closing costs/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "What changed" })).toHaveAttribute("href", "/changelog");
+    const note = screen.getByText(/Updated 28 Sep 2026 — Clearer closing costs/);
+    expect(note.querySelector("a")).toBeNull();
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/changelog");
+    expect(links[0]).toHaveAccessibleName("What changed");
+  });
+
+  it("puts the news dot inside that one link, and names it for screen readers", async () => {
+    window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ seenUpdate: 20260901 }));
+    renderNote();
+    await waitFor(() => expect(dot()).not.toHaveClass("invisible"));
+    const link = screen.getByRole("link");
+    expect(link).toContainElement(dot());
+    expect(link).toHaveAccessibleName("What changed new");
   });
 
   it("shows no dot on a first visit, and records the current latest as seen", async () => {
@@ -78,7 +92,7 @@ describe("VersionNote", () => {
 
   it("always renders the dot's box, hidden while not new, so nothing shifts when it appears", () => {
     renderNote();
-    expect(dot()).toHaveClass("invisible", "size-1.5", "absolute");
+    expect(dot()).toHaveClass("invisible", "size-1.5", "inline-block");
     expect(dot()).toHaveAttribute("aria-hidden", "true");
   });
 
@@ -106,8 +120,8 @@ describe("VersionNote", () => {
     await waitFor(() => expect(dot()).not.toHaveClass("invisible"));
   });
 
-  it("renders nothing when no release applies", () => {
-    const { container } = renderNote([]);
-    expect(container.textContent).toBe("");
+  it("renders no note when no release applies", () => {
+    renderNote([]);
+    expect(screen.queryByText(/Updated/)).toBeNull();
   });
 });

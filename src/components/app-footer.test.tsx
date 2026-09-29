@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { AppFooter } from "./app-footer";
 import { FOOTER } from "@/lib/routes";
 import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
@@ -117,8 +118,11 @@ describe("AppFooter", () => {
       const latest = latestRelevant(country, defaultJurisdictionOf(country).id)!;
       expect(container.textContent).toContain(changelog[latest.summary]);
       expect(container.textContent).toContain(changelog.updated.replace("{date}", ""));
-      const link = screen.getByRole("link", { name: changelog.whatChanged });
-      expect(link.getAttribute("href")).toBe("/changelog");
+      // ONE link to the changelog, labelled from Legal (the note itself is plain text).
+      const links = screen.getAllByRole("link").filter((a) => a.getAttribute("href") === "/changelog");
+      expect(links).toHaveLength(1);
+      const legal = (CATALOGUES[languageOf(locale)] as { Legal: Record<string, string> }).Legal;
+      expect(links[0]).toHaveAccessibleName(legal.changelog);
       const leaked = leafPaths(CATALOGUES.en.Changelog as Tree)
         .map((path) => `Changelog.${path}`)
         .filter((key) => (container.textContent ?? "").includes(key));
@@ -127,7 +131,30 @@ describe("AppFooter", () => {
     });
   }
 
-  it("keeps the footer itself server-rendered, with one client island for the version note", () => {
+  it("offers Clear my numbers, confirming in the page and removing the stored blob", async () => {
+    const user = userEvent.setup();
+    const reload = vi.fn();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...window.location, reload },
+    });
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 90000 }));
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ income1: 90000 }));
+    await renderFooter("en-CA");
+    await user.click(screen.getByRole("button", { name: "Clear my numbers" }));
+    // Asked first, in the page; nothing is removed yet.
+    expect(screen.getByText("Remove the numbers saved in this browser?")).toBeTruthy();
+    expect(window.localStorage.getItem("norma.inputs.v2")).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByText("Remove the numbers saved in this browser?")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Clear my numbers" }));
+    await user.click(screen.getByRole("button", { name: "Yes, clear them" }));
+    expect(window.localStorage.getItem("norma.inputs.v2")).toBeNull();
+    expect(window.localStorage.getItem("norma.inputs.v1")).toBeNull();
+    expect(reload).toHaveBeenCalled();
+  });
+
+  it("keeps the footer itself server-rendered, with client islands only for browser state", () => {
     // Chrome on every prerendered route. A "use client" here would put the disclaimer and its
     // links into every page's bundle to render text that never changes; only the version note
     // needs the browser (what this reader last saw), and it lives in its own file.

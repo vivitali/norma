@@ -28,7 +28,7 @@ import type { ReactNode } from "react";
  */
 export function LegalMain({ children }: { children: ReactNode }) {
   return (
-    <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10">
+    <main id="main" className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10">
       {children}
     </main>
   );
@@ -51,10 +51,13 @@ export function LegalHead({
   eyebrow: string;
   head: string;
   sub: string;
-  /** Already interpolated — one ICU message, not a label concatenated with a date. */
-  updated: string;
+  /**
+   * Already interpolated — one ICU message, not a label concatenated with a date. Optional as a
+   * pair with `updatedIso`: the changelog omits it, because its own date headings say it.
+   */
+  updated?: string;
   /** ISO-8601, for the machine-readable half of <time>. */
-  updatedIso: string;
+  updatedIso?: string;
 }) {
   return (
     <div className="pt-9 sm:pt-11">
@@ -70,9 +73,11 @@ export function LegalHead({
         A real <time>: `Privacy.bodyChanges` tells the reader this date is when the page last
         changed, which makes it a claim rather than decoration.
       */}
-      <time dateTime={updatedIso} className="mt-5 block text-[11.5px] text-ink3">
-        {updated}
-      </time>
+      {updated && updatedIso ? (
+        <time dateTime={updatedIso} className="mt-5 block text-[11.5px] text-ink3">
+          {updated}
+        </time>
+      ) : null}
     </div>
   );
 }

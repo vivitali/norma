@@ -33,7 +33,7 @@ describe("AppHeader", () => {
     expect(await screen.findByRole("combobox", { name: /^Change location:/ })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /^Change country:/ })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /^Change language:/ })).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: "Theme" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /^Theme:/ })).toBeInTheDocument();
   });
 
   it("names each setting's current value, so the name contains whatever the trigger shows", async () => {
@@ -64,6 +64,6 @@ describe("AppHeader", () => {
     expect(screen.getByRole("combobox", { name: /^Change location:/ })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /^Change country:/ })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /^Change language:/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Theme" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Theme:/ })).toBeInTheDocument();
   });
 });

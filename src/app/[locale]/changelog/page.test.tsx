@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, within } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
 import { languageOf, countryOf } from "@/i18n/countries";
 import { routing } from "@/i18n/routing";
@@ -97,18 +97,34 @@ describe("/changelog", () => {
       unmount();
     });
 
-    it(`links each item to its page and section in ${locale}`, async () => {
+    it(`links each item with a short "See it", not its whole sentence, in ${locale}`, async () => {
       const { container, unmount } = await renderPage(locale);
-      const main = within(container.querySelector("main")!);
+      const items = [...container.querySelectorAll("main li")];
       for (const release of releasesFor(country)) {
         for (const item of release.items) {
-          if (!item.href) continue;
-          const link = main.getByRole("link", { name: catalogue[item.key] });
-          expect(link.getAttribute("href")).toBe(
+          const li = items.find((el) => el.textContent?.includes(catalogue[item.key]))!;
+          expect(li, `${locale}: ${item.key}`).toBeTruthy();
+          const link = li.querySelector("a");
+          if (!item.href) {
+            expect(link, `${locale}: ${item.key} has no href`).toBeNull();
+            continue;
+          }
+          expect(link!.getAttribute("href")).toBe(
             `${item.href.pathname}${item.href.hash ? `#${item.href.hash}` : ""}`,
           );
+          expect(link!.textContent).toContain(catalogue.seeIt);
+          expect(link!.textContent).not.toContain(catalogue[item.key]);
         }
       }
+      unmount();
+    });
+
+    it(`labels every release with its summary, and shows no separate "Updated" line, in ${locale}`, async () => {
+      const { container, unmount } = await renderPage(locale);
+      const subheads = [...container.querySelectorAll("main h3")].map((h) => h.textContent);
+      expect(subheads).toEqual(releasesFor(country).map((r) => catalogue[r.summary]));
+      const updated = catalogue.updated.replace("{date}", "");
+      expect(container.textContent).not.toContain(updated);
       unmount();
     });
 

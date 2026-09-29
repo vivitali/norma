@@ -64,8 +64,6 @@ export default async function ChangelogPage({ params }: PageProps<"/[locale]/cha
         eyebrow={t("eyebrow")}
         head={t("head")}
         sub={t("sub")}
-        updated={t("updated", { date: formatReleaseDate(releases[0].date, locale as Locale) })}
-        updatedIso={releases[0].date}
       />
 
       {days.map((day) => (
@@ -76,25 +74,31 @@ export default async function ChangelogPage({ params }: PageProps<"/[locale]/cha
           <div className="mt-3 flex max-w-[68ch] flex-col gap-5">
             {day.releases.map((release) => (
               <div key={release.id}>
-                <ul role="list" className="flex flex-col gap-2 text-[15px] leading-[1.65] text-ink2 text-pretty">
+                {/* The release in a few words, so two releases under one date are not unlabelled. */}
+                <h3 className="text-[13.5px] leading-[1.4] font-semibold text-ink">{t(release.summary)}</h3>
+                <ul role="list" className="mt-2 flex flex-col gap-2 text-[15px] leading-[1.65] text-ink2 text-pretty">
                   {release.items.map((item) => (
                     <li key={item.key} className="flex gap-2.5">
                       <span aria-hidden="true" className="mt-[0.7em] size-[5px] shrink-0 rounded-full bg-border" />
                       <span>
+                        {t(item.key)}
                         {item.href ? (
-                          <Link
-                            href={
-                              item.href.hash
-                                ? { pathname: item.href.pathname, hash: `#${item.href.hash}` }
-                                : item.href.pathname
-                            }
-                            className="underline decoration-border underline-offset-2 transition-colors hover:text-ink hover:decoration-current"
-                          >
-                            {t(item.key)}
-                          </Link>
-                        ) : (
-                          t(item.key)
-                        )}
+                          <>
+                            {" "}
+                            {/* A short trailing link, not the whole sentence underlined. */}
+                            <Link
+                              href={
+                                item.href.hash
+                                  ? { pathname: item.href.pathname, hash: `#${item.href.hash}` }
+                                  : item.href.pathname
+                              }
+                              className="whitespace-nowrap text-ac underline decoration-ac/40 underline-offset-2 transition-colors hover:decoration-current"
+                            >
+                              {t("seeIt")}
+                              <span aria-hidden="true"> →</span>
+                            </Link>
+                          </>
+                        ) : null}
                       </span>
                     </li>
                   ))}
