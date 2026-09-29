@@ -92,7 +92,7 @@ export const ottawa: Jurisdiction = {
     "propTax.effective": {
       conf: "low",
       asOf: "2026",
-      src: "Derived: publishedRate x assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       note: "Inherits the confidence of the weakest half — a medium published rate multiplied by a low estimated assessment ratio. Previously 0.01144, which was a published-style rate applied to a 2026 market price.",
       summary: "Worked out by multiplying the published rate by the estimated assessment-to-price ratio, so it is only as reliable as the weaker of the two. It is an estimate of yearly tax as a share of today's price.",
     },

@@ -181,7 +181,7 @@ describe("SourcesContent", () => {
     const user = userEvent.setup();
     render();
     await openEverySection(user);
-    expect(screen.getByText(/Winnipeg School Division, the default: 29\.366 mills/)).toBeVisible();
+    expect(screen.getByText(/The default is Winnipeg School Division, at 29\.366 mills/)).toBeVisible();
     // Eight divisions share the one document, so they fold into its row, a line each — and the
     // levy sentence is said once, on the default, not repeated per division.
     expect(screen.getByText(/^Pembina Trails School Division: 25\.223 mills/)).toBeVisible();

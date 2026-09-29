@@ -44,6 +44,12 @@ describe("provenance summaries", () => {
           for (const re of JARGON) if (re.test(p.summary)) bad.push(`${path}: matches ${re}`);
         }
       }
+      // The citation renders beside the summary, so it is held to the same rule.
+      for (const [path, p] of Object.entries(map)) {
+        if (!p?.src) continue;
+        for (const re of JARGON) if (re.test(p.src)) bad.push(`${path} (src): matches ${re}`);
+        if (/\b[a-z]+[A-Z][A-Za-z]*\b/.test(p.src)) bad.push(`${path} (src): names a field`);
+      }
       expect(missing, `${id}: notes without a summary`).toEqual([]);
       expect(bad, `${id}: summaries that read like a log`).toEqual([]);
     });

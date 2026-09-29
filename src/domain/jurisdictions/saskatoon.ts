@@ -96,7 +96,7 @@ export const saskatoon: Jurisdiction = {
     },
     "propTax.effective": {
       conf: "high",
-      src: "Derived: propTax.publishedRate x propTax.assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       asOf: "2026",
       summary: "The published rate (0.0130835) times the 80% taxable share: 0.0104668 of the purchase price a year.",
       note: "0.0130835 x 0.80 = 0.0104668 against market price. The single largest recurring-cost error in the dataset: the prototype's 0.01285 omitted the Percentage of Value and overstated annual property tax by ~23%, about $958/yr on the benchmark house. The comfort ceiling subtracts property tax from net income, so that error propagated straight into a materially understated affordability ceiling.",

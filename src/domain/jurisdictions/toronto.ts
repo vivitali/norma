@@ -136,7 +136,7 @@ export const toronto: Jurisdiction = {
     "propTax.effective": {
       conf: "low",
       asOf: "2026",
-      src: "Derived: publishedRate x assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       note: "Inherits the confidence of the weaker half — a high-confidence published rate multiplied by a low-confidence estimated assessment ratio. Previously 0.00752, which was the published rate applied to a 2026 market price and overstated Toronto property tax by about half.",
       summary: "Worked out by multiplying the City's published rate by the estimated assessment-to-price ratio, so it is only as reliable as the weaker of the two. It is an estimate of yearly tax as a share of today's price.",
     },

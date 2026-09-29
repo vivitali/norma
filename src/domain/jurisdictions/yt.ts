@@ -161,7 +161,7 @@ export const yt: Jurisdiction = {
     "propTax.effective": {
       conf: "assumption",
       asOf: "2026",
-      src: "Derived: publishedRate x assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       note: "0.0078 -> 0.005485 -> 0.0049365 -> 0.00521075. Inherits the confidence of the weaker half: a primary-sourced published rate multiplied by an estimated ratio. The first move is DOWN, against the verification brief, which proposed 0.01123 on the reading that the mill rate applies to a market price. It does not: 1.097% of the Yukon Bureau of Statistics' $719,000 Whitehorse in-town single-detached average is about $7,900 a year, and the two real Whitehorse bills on homes in that market were $1,625 and $3,744. The last two moves are the ratio corrections described under propTax.assessmentRatio: 0.5 -> 0.45 -> 0.475. The modelled annual tax on a $620,000 house went $3,400 -> $3,060 -> $3,231, and every one of those sits inside the range of the two observed bills, which is the only check available — so the range is what rules the figure out, and the derivation is what chooses within it.",
       summary: "Our estimate of yearly property tax as a share of price: the City's 1.097% rate times an estimated assessment ratio of 0.475. Nobody publishes this combination, and the result sits inside the range of the two real Whitehorse bills we found.",
     },

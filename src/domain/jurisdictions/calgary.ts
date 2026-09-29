@@ -69,7 +69,7 @@ export const calgary: Jurisdiction = {
     },
     "propTax.effective": {
       conf: "high",
-      src: "Derived: propTax.publishedRate x propTax.assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       asOf: "2026",
       note: "0.0066499 x 1 = 0.0066499 against market price. The prototype's 0.00654 was ~$68/yr low on the old benchmark — small, but the exact rate is published.",
       summary: "The published rate applied to market price, since the assessment ratio is 1. It is worked out directly from the published rate.",

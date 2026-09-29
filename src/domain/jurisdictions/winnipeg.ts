@@ -113,7 +113,6 @@ export const winnipeg: Jurisdiction = {
   },
   provenance: {
     ...feesProvenance(fees),
-    ...areaProvenance,
     "fees.setup": {
       conf: "assumption",
       summary: "A typical figure, not a published fee: opening a Manitoba Hydro account carries no published charge for a homeowner. A buyer may meet a gas reconnect fee, a furnace safety check and an internet installation, about $275 together, rounded up to $300 for a possible City water-account charge.",
@@ -129,9 +128,12 @@ export const winnipeg: Jurisdiction = {
       src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
       asOf: "2026",
       url: MILL_RATES_URL,
-      summary: "The 2026 combined mill rate for Winnipeg School Division, the default: 29.366 mills, the City's 13.372 plus 15.994 for schools. All eight divisions are carried and differ by about 14%, so choose yours. Residential property pays no Education Support Levy.",
+      summary: "The City's 2026 combined mill rates, one for each of the eight school divisions, which differ by about 14%, so choose yours. The default is Winnipeg School Division, at 29.366 mills. Residential property pays no Education Support Levy.",
       note: "DEFAULT DIVISION: Winnipeg School Division, 29.366 mills = the 2026 municipal rate (13.372) + the division's school rate (15.994); residential property pays no Education Support Levy (0.000 on the residential class). The reader can choose their own division — all eight are carried, from 25.223 mills (Pembina Trails) to 29.530 (Seven Oaks), about 14% apart. Caveat on the source: the PDF's page footer still reads 'Last updated: April 7, 2025' although its first table is headed 2026 MILL RATES; the City's property-tax-bills page independently confirms the 2026 municipal rate of 13.372 (+3.5% on 2025), so the footer is unmaintained, not the rates.",
     },
+    // After the default's entry: /sources prints a row's lines in key order, and that paragraph
+    // introduces the eight division lines.
+    ...areaProvenance,
     "propTax.assessmentRatio": {
       conf: "high",
       src: "City of Winnipeg 2026 mill rate table, Portioned Percentage row: Residential Single-Family / Multi-Family / Condo = 45%, set by the Classification of Property and Portioned Values Regulation, M.R. 184/98, under The Municipal Assessment Act",
@@ -140,7 +142,7 @@ export const winnipeg: Jurisdiction = {
     },
     "propTax.effective": {
       conf: "high",
-      src: "Derived: propTax.publishedRate x propTax.assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       asOf: "2026",
       summary: "The published rate times the 45% of value Manitoba taxes: 0.0132147 of the purchase price for the default division, before the Homeowners Affordability Tax Credit. It leaves out the frontage levy, about $280 to $350 a year on a typical lot.",
       note: "0.029366 x 0.45 = 0.0132147 against market price, for the default division (each division's own rate is derived the same way). GROSS of the Homeowners Affordability Tax Credit, which propTax.credit nets off. Not modelled: the frontage levy, a separate line on the same bill at $6.95 per foot of frontage ($1.80 water main + $5.15 sewer main, City of Winnipeg Charter s. 432(1), last set 2023-04-20) — about $280–$350 a year on a 40–50 ft lot.",

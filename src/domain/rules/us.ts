@@ -21,7 +21,7 @@ const IRS_PUB523 = "IRS Publication 523, Selling Your Home (2025-return edition,
 const FHFA_CLL = "FHFA, \"FHFA Announces Conforming Loan Limit Values for 2026\" (news release, 2025-11-25)";
 const HUD_ML_2025_23 = "HUD Mortgagee Letter 2025-23, \"2026 Nationwide Forward Mortgage Loan Limits\"";
 const HUD_ML_2023_05_SYNTHESIS =
-  "Secondary synthesis of HUD Mortgagee Letter 2023-05 (FHA annual MIP bands), not independently fetched from a HUD PDF this pass";
+  "HUD Mortgagee Letter 2023-05 (FHA annual MIP bands), as reported by secondary sources; not read in HUD's own PDF";
 const HPA_1998 = "Homeowners Protection Act of 1998 (78%/80% LTV mechanics)";
 const PMMS = "Freddie Mac, Primary Mortgage Market Survey (PMMS), week of 2026-08-27";
 const FHFA_HPI = "FHFA House Price Index Quarterly Report, 2026Q2 & June 2026 (2026-08-25)";
@@ -160,14 +160,15 @@ export const us: UsRules = {
     "programs.conventional.minDownFtb": {
       conf: "high",
       asOf: "2026",
-      src: "Fannie Mae HomeReady / Freddie Mac Home Possible (dossier A9)",
-      note: "3% minimum down payment on income-restricted, first-time-buyer-oriented conventional programmes.",
+      src: "Fannie Mae HomeReady / Freddie Mac Home Possible",
+      note: "3% minimum down payment on income-restricted, first-time-buyer-oriented conventional programmes (dossier A9).",
       summary: "A 3% minimum down payment applies on income-restricted conventional programs aimed at first-time buyers, such as Fannie Mae HomeReady and Freddie Mac Home Possible.",
     },
+    // Dossier A9. The citation renders on /sources, so the dossier reference lives here.
     "programs.conventional.minDown": {
       conf: "medium",
       asOf: "2026",
-      src: "Secondary corroboration of conventional lending minimums (dossier A9), not independently fetched from Fannie Mae's own Selling Guide",
+      src: "Conventional lending minimums as reported by secondary sources; not read in Fannie Mae's own Selling Guide",
     },
     "programs.conventional.pmi.annualRate": { conf: "assumption", note: PMI_RATE_NOTE, summary: PMI_RATE_SUMMARY },
     "programs.conventional.pmi.cancelRequestLtv": {
@@ -187,8 +188,8 @@ export const us: UsRules = {
     "programs.fha.minDown": {
       conf: "high",
       asOf: "2026",
-      src: "HUD Handbook 4000.1 baseline (dossier A8)",
-      note: "3.5% at FICO >=580; 10% at FICO 500-579. DATA ONLY — no engine function reads the FHA programme yet.",
+      src: "HUD Handbook 4000.1 baseline",
+      note: "3.5% at FICO >=580; 10% at FICO 500-579 (dossier A8). DATA ONLY — no engine function reads the FHA programme yet.",
       summary: "HUD's baseline FHA minimum down payment is 3.5% with a credit score of 580 or higher, and 10% for scores from 500 to 579. This figure is stored but no calculation uses the FHA program yet.",
     },
     "programs.fha.upfrontMip": { conf: "medium", asOf: "2026", src: HUD_ML_2023_05_SYNTHESIS },
@@ -211,8 +212,8 @@ export const us: UsRules = {
     "tax.saltCap": {
       conf: "medium",
       asOf: "2026",
-      src: "Rev. Proc. 2025-32, reached via secondary synthesis (dossier A4) — not independently fetched from irs.gov",
-      note: "$40,400 for most filers. The MAGI-based phase-down above $505,000 is NOT modelled by rentVsBuy() — the flat cap is applied unconditionally, which understates the benefit for a high earner above the phase-down threshold and is therefore the conservative direction for this product's \"you probably get less than you think\" message.",
+      src: "Rev. Proc. 2025-32, as reported by secondary sources; not read on irs.gov",
+      note: "$40,400 for most filers (dossier A4). The MAGI-based phase-down above $505,000 is NOT modelled by rentVsBuy() — the flat cap is applied unconditionally. The phase-down LOWERS the cap, and the engine deducts min(propertyTax, saltCap), so the flat cap OVERSTATES the deduction, and the owning benefit, for a high earner above the threshold whose property tax exceeds the reduced cap. Corrected 2026-09-29: this note first said 'understates … the conservative direction', which inverted it; the reader summary had it right.",
       summary: "The cap on deducting state and local taxes is $40,400 for most filers. The income-based reduction above $505,000 is not modelled, so a high earner's benefit is somewhat overstated.",
     },
     "tax.midCap": {
@@ -313,8 +314,8 @@ export const us: UsRules = {
       note: "null is not a missing value: no federal minimum-qualifying-rate stress test exists on a US mortgage. Every engine reader qualifies at the bare contract rate when this is null.",
       summary: "The US has no federal stress test on mortgages, so this is left empty on purpose and lenders qualify you at your actual contract rate.",
     },
-    gds: { conf: "medium", asOf: "2026", src: "Conventional \"soft\" DTI guideline (dossier A11)", note: DTI_NOTE, summary: DTI_SUMMARY },
-    tds: { conf: "medium", asOf: "2026", src: "Conventional \"soft\" DTI guideline (dossier A11)", note: DTI_NOTE, summary: DTI_SUMMARY },
+    gds: { conf: "medium", asOf: "2026", src: "Conventional \"soft\" DTI guideline", note: DTI_NOTE, summary: DTI_SUMMARY },
+    tds: { conf: "medium", asOf: "2026", src: "Conventional \"soft\" DTI guideline", note: DTI_NOTE, summary: DTI_SUMMARY },
     maxAmortOther: { conf: "high", note: "30-year fixed is the standard US conforming term this dataset models. No maxAmortFtbInsured concept exists — see the Canada-only field's own comment.", summary: "The standard US conforming mortgage term is 30 years, and that is the term modelled here." },
     capGainsInclusion: {
       conf: "assumption",
@@ -324,7 +325,7 @@ export const us: UsRules = {
     gains: {
       conf: "medium",
       asOf: "2026",
-      src: "Long-term capital gains rate brackets (0/15/20% by income) — secondary synthesis",
+      src: "Long-term capital gains rate brackets (0/15/20% by income), as reported by secondary sources",
       note: "15% flat is the ASSUMPTION this field discloses: the true US long-term capital-gains rate is itself progressive by income (0% below roughly $48,350 single / $96,700 MFJ for 2026, 15% in the middle, 20% above roughly $533,400 single), so a flat 15% is a mid-bracket stand-in, not a published single rate. Chosen because most buyers modelled here sit in the 15% band; a later pass could make this income-dependent the way marginalRate() already is for ordinary income.",
       summary: "An assumed flat 15% capital gains rate. The real US rate is 0%, 15% or 20% depending on income, so 15% is a mid-range stand-in that suits most of the buyers modelled here.",
     },

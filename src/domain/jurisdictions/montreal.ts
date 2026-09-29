@@ -109,7 +109,7 @@ export const montreal: Jurisdiction = {
     },
     "propTax.effective": {
       conf: "assumption",
-      src: "Derived: propTax.publishedRate x propTax.assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       asOf: "2026-01-01",
       note: "Equal to publishedRate because the ratio is 1. Carries the same assumption as publishedRate: no single Montreal residential rate exists, so this is the 19-borough mean plus school tax. The prototype's 0.00792 sat above the top of the credible band even including school tax.",
       summary: "Equal to the rate above because the assessment ratio is 1. It rests on the same choice: an average of the borough rates plus school tax, since no single Montréal rate exists.",
