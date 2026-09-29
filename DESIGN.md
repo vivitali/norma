@@ -132,8 +132,11 @@ non-breaking spaces inside « guillemets ». Non-breaking, so a colon or a closi
 wraps onto a line of its own at a phone width. `src/lib/french-typography.test.ts` enforces them on
 `messages/fr.json`: exactly U+00A0 before every colon (URLs and clock times exempt), no space of any kind
 before `; ? !`, and U+00A0 (not U+0020, not U+202F) after « and before ». `src/app/locale-render.test.tsx`
-applies the colon rule to every rendered fr-CA page, so a colon assembled in JSX cannot bypass it:
-put the colon inside the message, as ICU with an argument. (Numbers are Intl's business: fr-CA groups digits with U+202F, and that is correct.)
+applies the colon rule to the rendered text of every fr-CA page except `/sources` (English domain
+data) — in the DEFAULT state, with nothing stored, and to text content only, not attributes. A
+colon assembled in JSX behind a stored input or inside an `aria-label` can still slip past it, so
+the rule is the design, and the tests are a net: put the colon inside the message, as ICU with an
+argument, wherever it appears. (Numbers are Intl's business: fr-CA groups digits with U+202F, and that is correct.)
 
 **Form controls have a 16px floor** (`--control-font-size`), applied through `.control`.
 Below 16px iOS Safari zooms the viewport on focus, and this page has twelve fields. The

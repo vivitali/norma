@@ -347,6 +347,7 @@ const FIELD_KEY: Record<string, string> = {
   "propTax.publishedRate": "field_propTaxPublished",
   "propTax.assessmentRatio": "field_propTaxRatio",
   "propTax.effective": "field_propTaxEffective",
+  "propTax.areas": "field_propTaxAreas",
   "propTax.areas.list.#.publishedRate": "field_propTaxAreas",
   "propTax.credit": "field_propTaxCredit",
   "propTax.basis": "field_propTaxBasis",

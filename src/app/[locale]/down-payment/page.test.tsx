@@ -449,3 +449,18 @@ describe("Down payment — a realised gain is described the way it is taxed", ()
     expect(screen.queryByText(/of it taxable at/)).toBeNull();
   });
 });
+
+describe("Down payment — French colons behind a stored balance", () => {
+  // locale-render.test.tsx checks French colons with nothing stored, so it never reaches this
+  // line: "Reste au compte" only renders once a balance is entered. It used to build its colon
+  // in JSX with an ordinary space.
+  it("puts U+00A0 before the colon in the balance-left line", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ cashSav: 900000 }));
+    const user = userEvent.setup();
+    renderPage("fr-CA");
+    await open(user, /L’ordre de financement|ordre de financement/i);
+    const text = document.getElementById("waterfall-panel")!.textContent ?? "";
+    expect(text).toContain("Reste au compte :");
+    expect(text).not.toMatch(/Reste au compte[  ]?:/);
+  });
+});

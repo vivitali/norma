@@ -181,7 +181,8 @@ describe("SourcesContent", () => {
     const user = userEvent.setup();
     render();
     await openEverySection(user);
-    expect(screen.getByText(/The default is Winnipeg School Division, at 29\.366 mills/)).toBeVisible();
+    expect(screen.getByText(/so choose yours; the default is Winnipeg School Division/)).toBeVisible();
+    expect(screen.getByText(/^Winnipeg School Division: 29\.366 mills/)).toBeVisible();
     // Eight divisions share the one document, so they fold into its row, a line each — and the
     // levy sentence is said once, on the default, not repeated per division.
     expect(screen.getByText(/^Pembina Trails School Division: 25\.223 mills/)).toBeVisible();
@@ -190,6 +191,27 @@ describe("SourcesContent", () => {
     // it). It stays in src/domain for the next person to verify; a reader never needed it.
     expect(screen.queryByText(/DEFAULT DIVISION/)).toBeNull();
     expect(screen.queryByText(/page footer still reads/)).toBeNull();
+  });
+
+  it("keeps the division table's own paragraph for a reader who chose their division", async () => {
+    // `withTaxArea` swaps `propTax.publishedRate` for the chosen division's entry. The paragraph
+    // introducing all eight lives on `propTax.areas` so that swap cannot take it away.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "winnipeg", taxArea: "pembina-trails" }),
+    );
+    const user = userEvent.setup();
+    render();
+    await openEverySection(user);
+    const tax = document.getElementById("propTax-panel")!;
+    // The swap happened: the published rate this row reports is Pembina Trails' 25.223 mills.
+    expect(tax.textContent).toContain("2.52%");
+    expect(tax.textContent).not.toContain("2.94%");
+    expect(within(tax).getByText(/so choose yours; the default is Winnipeg School Division/)).toBeVisible();
+    expect(within(tax).getAllByText(/no Education Support Levy/i)).toHaveLength(1);
+    // Each division once, the chosen one included — never twice because it was swapped in.
+    expect(within(tax).getAllByText(/^Pembina Trails School Division: 25\.223 mills/)).toHaveLength(1);
+    expect(within(tax).getAllByText(/School Division: \d/)).toHaveLength(8);
   });
 
   it("shows a gap as a gap, not as a missing row", async () => {

@@ -84,8 +84,8 @@ export const nt: Jurisdiction = {
     },
     "propTax.effective": {
       conf: "assumption",
-      note: "0.0112 retained, unmoved. Dropping a municipal-only mill rate onto a market price would replace one unverified number with two, and would understate: the assessment it is levied on is a 2024 base-year value with buildings at depreciated replacement cost, materially below a 2026 purchase price. This is exactly the case the PropertyTax struct exists for, and exactly the case where it has nothing sourced to record.",
-      summary: "We keep 1.12% as a stand-in property tax rate. The City's published mill rate is the municipal portion only, so applying it alone would understate the bill, and no sourced alternative exists.",
+      note: "0.0112 retained, unmoved. Dropping a municipal-only mill rate onto a market price would replace one unverified number with two, and the two errors it would introduce pull in opposite directions: the rate is the municipal portion only (understating the bill), and the assessment it is levied on is a 2024 base-year value with buildings at depreciated replacement cost, materially below a 2026 purchase price (so rate × price overstates rate × assessment). The net direction is unknown. Corrected 2026-09-29: this note first said the swap 'would understate', giving the assessment gap as the reason, which points the other way. This is exactly the case the PropertyTax struct exists for, and exactly the case where it has nothing sourced to record.",
+      summary: "We keep 1.12% as a stand-in property tax rate. The City's published mill rate covers only the municipal portion and applies to an assessment below today's prices, so it cannot be applied to a purchase price directly, and no sourced alternative exists.",
     },
     "bench.house": {
       conf: "none",

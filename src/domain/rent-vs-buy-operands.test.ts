@@ -60,3 +60,21 @@ describe("rent vs buy: the wealth figures are sums of reported operands", () => 
     }
   });
 });
+
+describe("rent vs buy (US): the investment-gains tax is the flat rate on growth", () => {
+  // The identities above hold by construction for buyGainsTax/rentGainsTax, which the engine
+  // derives by subtraction. This computes them independently, from figures the row reports:
+  // with no invested difference, the renter's only holding is the grown up-front cash, and the
+  // buyer's is the deduction benefit invested as it arrived.
+  it("seattle, no invested difference", () => {
+    if (us.gains.kind !== "flat") throw new Error("the US branch taxes gains at a flat rate");
+    const rate = us.gains.rate;
+    const result = rentVsBuy(getJurisdiction("seattle")!, us, { ...input, investDiff: false });
+    let contributed = 0;
+    for (const r of result.rows) {
+      contributed += r.deductionBenefit ?? 0;
+      expect(r.rentGainsTax ?? 0).toBeCloseTo((r.upFrontGrown - result.upFront) * rate, 6);
+      expect(r.buyGainsTax ?? 0).toBeCloseTo(Math.max(0, r.taxTimeCredits - contributed) * rate, 6);
+    }
+  });
+});

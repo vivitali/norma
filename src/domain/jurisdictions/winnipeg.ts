@@ -42,7 +42,8 @@ const areaProvenance: Record<string, Provenance> = Object.fromEntries(
       src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
       asOf: "2026",
       url: MILL_RATES_URL,
-      // One line per division: the levy sentence and the default live once, on propTax.publishedRate.
+      // One line per division. The table's own paragraph (eight divisions, choose yours, no
+      // Education Support Levy) lives once, on `propTax.areas`, which `withTaxArea` never swaps.
       summary: `${name} School Division: ${combinedMills(school).toFixed(3)} mills, the City's ${MUNICIPAL_MILLS.toFixed(3)} plus ${school.toFixed(3)} for schools.`,
       note: `${name} School Division: ${combinedMills(school).toFixed(3)} mills = municipal ${MUNICIPAL_MILLS.toFixed(3)} + school ${school.toFixed(3)}.`,
     },
@@ -123,16 +124,28 @@ export const winnipeg: Jurisdiction = {
       summary: "A default we chose: Manitoba's condominium law requires a status certificate but sets no fee, only allowing 'reasonable' ones. Market quotes run about $100 to $200.",
       note: "No statutory fee or cap: The Condominium Act, C.C.S.M. c. C170, s. 61 prescribes the status certificate (Form 8, M.R. 164/2014) and sets no fee; s. 53(3) allows only 'reasonable fees'. Market quotes run about $100–$200 (secondary).",
     },
+    // Leads the row on /sources for every reader: `withTaxArea` swaps `propTax.publishedRate`
+    // for the chosen division's entry, so the paragraph that introduces all eight cannot live
+    // there, or a reader who picked their own division loses it.
+    "propTax.areas": {
+      conf: "high",
+      src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
+      asOf: "2026",
+      url: MILL_RATES_URL,
+      summary: "The City's 2026 combined mill rates, one for each of the eight school divisions, which differ by about 14%, so choose yours; the default is Winnipeg School Division. Residential property pays no Education Support Levy.",
+      note: "All eight divisions of the 2026 combined mill rate table, from 25.223 mills (Pembina Trails) to 29.530 (Seven Oaks), about 14% apart; residential property pays no Education Support Levy (0.000 on the residential class). The reader's choice is swapped into propTax.publishedRate by withTaxArea.",
+    },
     "propTax.publishedRate": {
       conf: "high",
       src: "City of Winnipeg Assessment and Taxation, 2026 Combined Mill Rates by School Division",
       asOf: "2026",
       url: MILL_RATES_URL,
-      summary: "The City's 2026 combined mill rates, one for each of the eight school divisions, which differ by about 14%, so choose yours. The default is Winnipeg School Division, at 29.366 mills. Residential property pays no Education Support Levy.",
+      // Word for word the default division's own line, so /sources shows it once: the same
+      // text a swapped-in division carries, which keeps the row identical in shape for every
+      // reader.
+      summary: areaProvenance["propTax.areas.list.0.publishedRate"].summary,
       note: "DEFAULT DIVISION: Winnipeg School Division, 29.366 mills = the 2026 municipal rate (13.372) + the division's school rate (15.994); residential property pays no Education Support Levy (0.000 on the residential class). The reader can choose their own division — all eight are carried, from 25.223 mills (Pembina Trails) to 29.530 (Seven Oaks), about 14% apart. Caveat on the source: the PDF's page footer still reads 'Last updated: April 7, 2025' although its first table is headed 2026 MILL RATES; the City's property-tax-bills page independently confirms the 2026 municipal rate of 13.372 (+3.5% on 2025), so the footer is unmaintained, not the rates.",
     },
-    // After the default's entry: /sources prints a row's lines in key order, and that paragraph
-    // introduces the eight division lines.
     ...areaProvenance,
     "propTax.assessmentRatio": {
       conf: "high",
