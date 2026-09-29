@@ -450,6 +450,7 @@
     "cr_gstFthb": "Reembolso del GST/HST para compradores de primera vivienda",
     "cr_noRebateUs": "Sin reembolso de impuesto de transferencia ni crédito para comprador primerizo",
     "ex_lttProv": "Un impuesto provincial sobre la transferencia del título, cobrado en tramos progresivos del precio de compra. Depende de: precio, provincia y condición de primera vivienda.",
+    "ex_lttProvMb": "Un impuesto provincial sobre la transferencia del título, cobrado en tramos progresivos del precio de compra. Depende de: precio, provincia y condición de primera vivienda. Desde el 1 de enero de 2027, Manitoba grava también, con la misma escala, las transferencias de un interés beneficiario sobre un inmueble (fideicomisos nudos); una compra ordinaria como esta no cambia.",
     "ex_lttMuni": "Un segundo impuesto de transferencia que cobra la ciudad, sumado al provincial. Depende de: precio y municipio.",
     "ex_lttProvNonRes": "Nueva Escocia cobra a los compradores no residentes un impuesto provincial del 10 % sobre la escritura de una vivienda, además del impuesto municipal sobre la escritura. Depende de: precio y residencia.",
     "ex_titleReg": "Aquí no se cobra impuesto de transferencia. En su lugar, el registro de la propiedad cobra una tasa que crece suavemente con el valor. Depende de: precio y provincia.",
@@ -1020,6 +1021,19 @@
     "estimateTitle": "Estimación local o del hogar — ver fuentes"
   },
   "Inputs": {
+    "taxArea": "Distrito escolar",
+    "taxAreaNote": "Aquí el impuesto predial depende del distrito escolar donde está la vivienda: de {lo} a {hi} del precio al año.",
+    "taxCreditNote": "Se muestra después del crédito fiscal de Manitoba para propietarios (Homeowners Affordability Tax Credit): hasta {amount} al año de los impuestos escolares de una residencia principal.",
+    "taxAreas": {
+      "winnipeg-sd": "Winnipeg",
+      "louis-riel": "Louis Riel",
+      "pembina-trails": "Pembina Trails",
+      "river-east-transcona": "River East Transcona",
+      "st-james-assiniboia": "St. James-Assiniboia",
+      "seven-oaks": "Seven Oaks",
+      "seine-river": "Seine River",
+      "interlake": "Interlake"
+    },
     "price": "Precio de compra",
     "downPayment": "Pago inicial",
     "propertyType": "Tipo de vivienda",

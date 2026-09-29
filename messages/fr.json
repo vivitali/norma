@@ -450,6 +450,7 @@
     "cr_gstFthb": "Remboursement de la TPS/TVH pour première habitation",
     "cr_noRebateUs": "Aucun remboursement de taxe de transfert ni crédit pour premier acheteur",
     "ex_lttProv": "Une taxe provinciale sur le transfert de titre, calculée par tranches progressives du prix d’achat. Dépend de : le prix, la province, le statut d’acheteur d’une première habitation.",
+    "ex_lttProvMb": "Une taxe provinciale sur le transfert de titre, calculée par tranches progressives du prix d’achat. Dépend de : le prix, la province, le statut d’acheteur d’une première habitation. À compter du 1er janvier 2027, le Manitoba taxe aussi, selon le même barème, les transferts d’un intérêt bénéficiaire dans un bien-fonds (fiducies nues) ; un achat ordinaire comme celui-ci n’est pas touché.",
     "ex_lttMuni": "Une deuxième taxe de mutation imposée par la ville, qui s’ajoute à celle de la province. Dépend de : le prix, la municipalité.",
     "ex_lttProvNonRes": "La Nouvelle-Écosse impose aux acheteurs non-résidents une taxe provinciale de mutation de 10 % sur les propriétés résidentielles, en plus de la taxe municipale. Dépend de : le prix, le lieu de résidence.",
     "ex_titleReg": "Aucune taxe de mutation n’est perçue ici. Le bureau des titres fonciers perçoit plutôt des frais d’enregistrement qui augmentent légèrement avec la valeur. Dépend de : le prix, la province.",
@@ -1020,6 +1021,19 @@
     "estimateTitle": "Estimation locale ou du ménage — voir les sources"
   },
   "Inputs": {
+    "taxArea": "Division scolaire",
+    "taxAreaNote": "Ici, les taxes foncières dépendent de la division scolaire où se trouve la propriété : de {lo} à {hi} du prix par année.",
+    "taxCreditNote": "Montant après le crédit d’impôt du Manitoba pour les propriétaires (Homeowners Affordability Tax Credit) — jusqu’à {amount} par année sur les taxes scolaires d’une résidence principale.",
+    "taxAreas": {
+      "winnipeg-sd": "Winnipeg",
+      "louis-riel": "Louis Riel",
+      "pembina-trails": "Pembina Trails",
+      "river-east-transcona": "River East Transcona",
+      "st-james-assiniboia": "St. James-Assiniboia",
+      "seven-oaks": "Seven Oaks",
+      "seine-river": "Seine River",
+      "interlake": "Interlake"
+    },
     "price": "Prix d’achat",
     "downPayment": "Mise de fonds",
     "propertyType": "Type de propriété",

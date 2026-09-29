@@ -450,6 +450,7 @@
     "cr_gstFthb": "First-time home buyers’ GST/HST rebate",
     "cr_noRebateUs": "No transfer-tax or first-time-buyer rebate",
     "ex_lttProv": "A provincial tax on the transfer of title, charged in progressive bands on the purchase price. Driven by: price, province, first-time buyer status.",
+    "ex_lttProvMb": "A provincial tax on the transfer of title, charged in progressive bands on the purchase price. Driven by: price, province, first-time buyer status. From 1 January 2027 Manitoba also taxes transfers of a beneficial interest in land (bare-trust arrangements) on the same schedule; an ordinary purchase like this one is unchanged.",
     "ex_lttMuni": "A second transfer tax charged by the city, stacked on top of the provincial one. Driven by: price, municipality.",
     "ex_lttProvNonRes": "Nova Scotia charges non-resident buyers a 10% provincial deed transfer tax on residential property, on top of the municipal deed transfer tax. Driven by: price, residency.",
     "ex_titleReg": "No land transfer tax is charged here. Instead the land titles office charges a registration fee that scales gently with value. Driven by: price, province.",
@@ -1020,6 +1021,19 @@
     "estimateTitle": "A local or household estimate — see sources"
   },
   "Inputs": {
+    "taxArea": "School division",
+    "taxAreaNote": "Property tax here depends on the school division the home is in: from {lo} to {hi} of the price a year.",
+    "taxCreditNote": "Shown after Manitoba's Homeowners Affordability Tax Credit — up to {amount} a year off the school taxes on a principal residence.",
+    "taxAreas": {
+      "winnipeg-sd": "Winnipeg",
+      "louis-riel": "Louis Riel",
+      "pembina-trails": "Pembina Trails",
+      "river-east-transcona": "River East Transcona",
+      "st-james-assiniboia": "St. James-Assiniboia",
+      "seven-oaks": "Seven Oaks",
+      "seine-river": "Seine River",
+      "interlake": "Interlake"
+    },
     "price": "Purchase price",
     "downPayment": "Down payment",
     "propertyType": "Property type",

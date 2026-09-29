@@ -77,7 +77,10 @@ export const winnipeg: Jurisdiction = {
   transfer: [
     {
       key: "li_lttProv",
-      ex: "ex_lttProv",
+      // Manitoba's own explanation: the standard one plus Bill 53's 2027 bare-trust tax, which a
+      // reader who has heard "the land transfer tax changes in 2027" needs to see does not
+      // touch an ordinary purchase. See the transfer.0.brackets provenance.
+      ex: "ex_lttProvMb",
       tier: "provincial",
       kind: "brackets",
       brackets: [[30000, 0], [90000, 0.005], [150000, 0.01], [200000, 0.015], [null, 0.02]],

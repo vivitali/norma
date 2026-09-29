@@ -12,6 +12,7 @@ import type { ToolFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
 import { countryKey } from "@/lib/country-key";
 import { NumberField } from "@/components/number-field";
+import { TaxAreaPicker } from "@/components/tax-area-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -303,6 +304,7 @@ export function InputGroups({
               {tInputs("noPrice", { place: tJur(`at.${jurisdiction.id}`) })}
             </span>
           )}
+          <TaxAreaPicker />
           {/*
             Bound to what the reader PICKED, never to the floored value. In the
             blended tier the legal floor is 10 − 2 500 000/price, which is never

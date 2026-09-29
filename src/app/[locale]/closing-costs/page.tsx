@@ -503,6 +503,7 @@ export default function ClosingCostsPage() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <PurchaseInputs
+              taxArea
             price={stored.price}
             pricePlaceholder={resolved.priceKnown ? resolved.price : null}
             dpPct={stored.dpPct}

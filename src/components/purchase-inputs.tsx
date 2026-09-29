@@ -9,6 +9,7 @@ import { useRules } from "@/hooks/use-country";
 import { useMoney, usePercent } from "@/lib/format";
 import { NumberField } from "@/components/number-field";
 import { NoteLine } from "@/components/tool-page";
+import { TaxAreaPicker } from "@/components/tax-area-picker";
 import { SegmentedGroup } from "@/components/affordability/segmented-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -96,6 +97,12 @@ export interface PurchaseInputsProps {
    * the prop the product was missing.
    */
   residency?: Residency;
+  /**
+   * Show the school-division picker (`TaxAreaPicker`) where the record has divisions. Opt-in for
+   * the residency switch's reason above: a page that prices no property tax — /amortization —
+   * must not offer a control that moves nothing on its screen.
+   */
+  taxArea?: boolean;
   jurisdiction: Jurisdiction;
   onChange: (patch: {
     price?: number | null;
@@ -124,6 +131,7 @@ export function PurchaseInputs({
   ftbEffective,
   ptypeEffective,
   residency,
+  taxArea,
   jurisdiction,
   onChange,
 }: PurchaseInputsProps) {
@@ -215,6 +223,7 @@ export function PurchaseInputs({
       {effectivePrice === null ? (
         <NoteLine tight>{t("noPrice", { place: tJur(`at.${jurisdiction.id}`) })}</NoteLine>
       ) : null}
+      {taxArea ? <TaxAreaPicker /> : null}
 
       <SegmentedGroup
         label={
