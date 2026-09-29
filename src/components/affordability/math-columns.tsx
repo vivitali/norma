@@ -3,6 +3,9 @@
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
 import { useRules } from "@/hooks/use-country";
+import { propertyTaxCredit } from "@/domain/engine";
+import type { Jurisdiction } from "@/domain/types";
+import { costPerDollarOperands } from "@/lib/affordability-view";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
 import { useDecimal, useMoney, usePercent } from "@/lib/format";
 import { countryKey } from "@/lib/country-key";
@@ -42,15 +45,24 @@ function MathRow({
 export function MathColumns({
   result,
   resolved,
+  jurisdiction,
+  comfortAssumed = false,
 }: {
   result: AffordabilityResult;
   resolved: ResolvedInputs;
+  jurisdiction: Jurisdiction;
+  /** The monthly budget is the placeholder, not the reader's own figure. */
+  comfortAssumed?: boolean;
 }) {
   const t = useTranslations("Affordability");
   const fmt = useMoney();
   const pct = usePercent();
   const dec = useDecimal();
   const rules = useRules();
+  const ops = costPerDollarOperands(jurisdiction, rules, resolved, result);
+  const heat = rules.country === "ca" ? rules.heatAllowance : 0;
+  const condoCounted = resolved.condoFee * rules.condoFeeInclusion;
+  const credit = propertyTaxCredit(jurisdiction) / 12;
 
   return (
     <div className="grid max-w-[900px] grid-cols-1 gap-9 lg:grid-cols-2">
@@ -88,6 +100,23 @@ export function MathColumns({
           strong
           why={result.tdsBinds ? t("ckTds") : t("ckGds")}
         />
+        {heat > 0 ? (
+          <MathRow label={`${t("mLess")} · ${t("mHeatAllowance")}`} value={`− ${fmt(heat)}`} />
+        ) : null}
+        {condoCounted > 0 ? (
+          <MathRow label={`${t("mLess")} · ${t("mCondoCounted")}`} value={`− ${fmt(condoCounted)}`} />
+        ) : null}
+        {credit > 0 ? (
+          <MathRow label={`${t("mPlus")} · ${t("taxCreditMonthly")}`} value={`+ ${fmt(credit)}`} />
+        ) : null}
+        <MathRow
+          label={t("mLenderAvail")}
+          value={fmt(result.binding - heat - condoCounted + credit)}
+          strong
+        />
+        <MathRow label={t("mBorrowed")} value={pct(ops.borrowed * 100, 2)} why={t("mBorrowedWhy")} />
+        <MathRow label={t("mTaxPerDollar")} value={dec(ops.taxPerDollar, 6)} />
+        <MathRow label={t("mCostPerDollar")} value={dec(ops.lender, 6)} strong why={t("mCostPerDollarWhy")} />
         <MathRow label={t("mMaxPrice")} value={fmt(result.ceiling)} strong />
         {/*
           The down payment is an ARGUMENT, not a word in the copy. Both labels read
@@ -103,7 +132,10 @@ export function MathColumns({
 
       <div>
         <div className="mb-3 text-[13px] font-semibold text-ac">{t("mComfort")}</div>
-        <MathRow label={t("mStated")} value={fmt(resolved.comfortCeiling)} />
+        <MathRow
+          label={t(comfortAssumed ? "mStatedDefault" : "mStated")}
+          value={fmt(resolved.comfortCeiling)}
+        />
         {result.monthly.insurance > 0 ? (
           <MathRow
             label={`${t("mLess")} · ${t("insuranceMonthly")}`}
@@ -132,6 +164,10 @@ export function MathColumns({
           label={`${t("mFactorContract")} · ${pct(resolved.contractRate, 2)}`}
           value={dec(result.fc, 6)}
         />
+        <MathRow label={t("mBorrowed")} value={pct(ops.borrowed * 100, 2)} why={t("mBorrowedWhy")} />
+        <MathRow label={t("mTaxPerDollar")} value={dec(ops.taxPerDollar, 6)} />
+        <MathRow label={t("mMaintPerDollar")} value={dec(ops.maintPerDollar, 6)} />
+        <MathRow label={t("mCostPerDollar")} value={dec(ops.comfort, 6)} strong why={t("mCostPerDollarWhy")} />
         <MathRow label={t("mComfortPrice", { p: pct(resolved.dpPct) })} value={fmt(result.comfort)} strong />
         <MathRow label={t("mDownReq")} value={fmt(result.comfortDown)} />
         <MathRow label={t("mPiAt")} value={fmt(result.comfortPI)} />

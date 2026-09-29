@@ -100,7 +100,7 @@ export function ImpactRow({
           />
         </span>
       ) : null}
-      {body.foot ? <span className="text-[10.5px] text-ink3">{body.foot}</span> : null}
+      {body.foot ? <span className="text-[11.5px] text-ink3">{body.foot}</span> : null}
     </div>
   );
 }

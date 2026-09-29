@@ -1,4 +1,5 @@
-import type { AffordabilityResult } from "@/domain/engine";
+import { financedFraction, propertyTaxRate, type AffordabilityResult } from "@/domain/engine";
+import type { CountryRules, Jurisdiction } from "@/domain/types";
 import type { Tone } from "./tone";
 import type { AffordabilitySectionId } from "./sections";
 
@@ -93,4 +94,29 @@ export function decidingSectionId(result: AffordabilityResult): AffordabilitySec
     default:
       return "gap";
   }
+}
+
+/**
+ * The operands behind "budget ÷ cost per $1 of price = price", read off the same
+ * functions `affordability()` reads them from, so the printed derivation is the one the
+ * engine ran. The engine's `denomLender` and `denomComfort` are these sums; they are
+ * not returned by it, and recomputing them here from the same exported helpers is what
+ * keeps the engine untouched while the math column can show every term.
+ */
+export function costPerDollarOperands(
+  j: Jurisdiction,
+  F: CountryRules,
+  o: { dpPct: number; amortYears: number },
+  r: Pick<AffordabilityResult, "fq" | "fc">,
+) {
+  const borrowed = financedFraction(F, o.dpPct, o.amortYears);
+  const taxPerDollar = propertyTaxRate(j) / 12;
+  const maintPerDollar = F.maintenanceReserve / 12;
+  return {
+    borrowed,
+    taxPerDollar,
+    maintPerDollar,
+    lender: borrowed * r.fq + taxPerDollar,
+    comfort: borrowed * r.fc + taxPerDollar + maintPerDollar,
+  };
 }

@@ -63,6 +63,13 @@ describe("Affordability — the answer comes first", () => {
     await user.clear(income);
     await user.type(income, "95000");
     await user.tab();
+    // Income is now the reader's own, but the $2,700 budget still is not: the tag
+    // names exactly what remains assumed instead of claiming the numbers as theirs.
+    expect(screen.queryByText("Your numbers")).not.toBeInTheDocument();
+    expect(screen.getByText("Assuming a $2,700 monthly budget")).toBeInTheDocument();
+    const budget = screen.getByLabelText("Monthly all-in you would be relaxed about");
+    await user.type(budget, "3200");
+    await user.tab();
     expect(screen.getByText("Your numbers")).toBeInTheDocument();
   });
 
@@ -90,6 +97,7 @@ describe("Affordability — one disclosure gesture", () => {
     // decided nothing — and PRODUCT.md's fourth principle, that the binding
     // constraint is the insight, sat behind a caret. On the placeholder figures
     // a lender declines, so Approval is the deciding section.
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 75000 }));
     renderPage();
     const open = SECTIONS.filter(
       (name) =>
@@ -103,6 +111,7 @@ describe("Affordability — one disclosure gesture", () => {
     // A default the reader cannot dismiss is chrome. An explicit click wins in
     // both directions, for the rest of the session.
     const user = userEvent.setup();
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 75000 }));
     renderPage();
     await user.click(screen.getByRole("button", { name: /Approval/ }));
     expect(screen.getByRole("button", { name: /Approval/ })).toHaveAttribute(
@@ -215,7 +224,7 @@ describe("Affordability — the unanswered cash check", () => {
 describe("Affordability — inputs", () => {
   it("groups the controls under four labelled headings", () => {
     renderPage();
-    for (const name of ["Income", "Monthly debts", "The purchase", "Your limits"]) {
+    for (const name of ["Income", "Monthly debts", "The purchase", "Your budget"]) {
       expect(screen.getByRole("group", { name })).toBeInTheDocument();
     }
   });
@@ -573,7 +582,7 @@ describe("Affordability — with no published price, it keeps the ceiling and as
     inYukon();
     const user = userEvent.setup();
     renderPage();
-    await user.type(screen.getByLabelText("Purchase price you're considering"), "640000");
+    await user.type(document.getElementById("price-inline")!, "640000");
     await user.tab();
     expect(screen.getByRole("button", { name: /Approval/ })).toBeInTheDocument();
     expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
@@ -590,7 +599,7 @@ describe("Affordability — with no published price, it keeps the ceiling and as
     renderPage();
     // Present first, so the assertion below cannot pass by querying nothing.
     expect(screen.getByText(/No published price for Yukon/)).toBeInTheDocument();
-    await user.type(screen.getByLabelText("Purchase price you're considering"), "640000");
+    await user.type(document.getElementById("price-inline")!, "640000");
     await user.tab();
     expect(screen.queryByText(/No published price for Yukon/)).not.toBeInTheDocument();
   });
@@ -789,7 +798,7 @@ describe("Affordability — ask state spacing", () => {
   it("gives the inputs their own top gap when the sections are absent", () => {
     window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nu" }));
     renderPage();
-    const heading = screen.getByText("Adjust your numbers");
+    const heading = screen.getByRole("heading", { name: "Adjust your numbers" });
     expect(heading.closest(".pt-8")).not.toBeNull();
   });
 });
@@ -825,7 +834,7 @@ describe("Affordability — the lender limit is named when it binds", () => {
     expect(document.querySelector("[data-slot=answer-figure]")!.textContent).toBe(
       `$${Math.round(r.comfort).toLocaleString("en-CA")}`,
     );
-    expect(screen.getByText("Your limit here")).toBeInTheDocument();
+    expect(screen.getByText("The limit that binds")).toBeInTheDocument();
     expect(screen.queryByText("A ceiling, not a target")).not.toBeInTheDocument();
   });
 
@@ -839,21 +848,83 @@ describe("Affordability — the lender limit is named when it binds", () => {
   it("makes the assumption tag a button that focuses the budget field", async () => {
     seed({ jurId: "winnipeg" });
     renderPage();
-    const tag = screen.getByRole("button", { name: /Assuming .* income and a .* monthly budget/ });
+    const tag = screen.getByRole("button", { name: /Assuming .* a year, .* a month/ });
     await userEvent.setup().click(tag);
     expect(document.activeElement).toBe(document.getElementById("comfortCeiling"));
   });
 
   it("does not link the tag once the numbers are the reader's own", () => {
-    seed({ jurId: "winnipeg", income1: 90000 });
+    seed({ jurId: "winnipeg", income1: 90000, comfortCeiling: 3000 });
     renderPage();
+    expect(screen.getByText("Your numbers")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Your numbers" })).not.toBeInTheDocument();
   });
 
-  it("puts 'Your limits' first among the input groups", () => {
+  it("puts 'Your budget' first among the input groups", () => {
     seed({ jurId: "winnipeg" });
     renderPage();
     const legends = Array.from(document.querySelectorAll("#inputs ~ * legend, section[aria-labelledby=inputs] legend")).map((l) => l.textContent);
-    expect(legends[0]).toBe("Your limits");
+    expect(legends[0]).toBe("Your budget");
+  });
+});
+
+describe("Affordability — a default budget is never presented as the reader's own", () => {
+  const seed = (o: object) => window.localStorage.setItem("norma.inputs.v2", JSON.stringify(o));
+
+  it("cautions, and asks for the budget in place, when the assumed budget exceeds stated income", () => {
+    // $30,000 a year is $2,500 a month before tax; the placeholder budget is $2,700.
+    seed({ jurId: "winnipeg", income1: 30000 });
+    renderPage();
+    expect(screen.getByText(/The \$2,700 monthly budget assumed here is more than your income of \$2,500 a month/)).toBeInTheDocument();
+    expect(screen.getByText("Assuming a $2,700 monthly budget")).toBeInTheDocument();
+    expect(document.getElementById("comfortCeiling-inline")).not.toBeNull();
+  });
+
+  it("says nothing about the budget when it is below the stated income", () => {
+    seed({ jurId: "winnipeg", income1: 90000 });
+    renderPage();
+    expect(screen.queryByText(/monthly budget assumed here is more than/)).not.toBeInTheDocument();
+    expect(document.getElementById("comfortCeiling-inline")).toBeNull();
+  });
+
+  it("drops the caution once the reader sets a budget", () => {
+    seed({ jurId: "winnipeg", income1: 30000, comfortCeiling: 900 });
+    renderPage();
+    expect(screen.queryByText(/monthly budget assumed here is more than/)).not.toBeInTheDocument();
+    expect(screen.getByText("Your numbers")).toBeInTheDocument();
+  });
+
+  it("opens no section on a first visit", () => {
+    renderPage();
+    for (const name of SECTIONS) {
+      expect(screen.getByRole("button", { name: new RegExp(name) })).toHaveAttribute("aria-expanded", "false");
+    }
+  });
+
+  it("wires the Adjust your numbers jump to the inputs block", () => {
+    renderPage();
+    expect(document.querySelector('a[href="#adjust"]')).not.toBeNull();
+    expect(document.getElementById("adjust")?.className).toContain("scroll-mt-4");
+  });
+
+  it("names the typical price, not the reader's target, while no price was entered", async () => {
+    renderPage();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /^Expand all/ }));
+    expect(screen.getAllByText(/Typical price/).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Your target")).not.toBeInTheDocument();
+  });
+
+  it("puts the price field in place, without saying 'below', where nobody publishes a price", () => {
+    seed({ jurId: "nu" });
+    renderPage();
+    expect(document.getElementById("price-inline")).not.toBeNull();
+    expect(document.body.textContent).not.toMatch(/considering, below/);
+  });
+
+  it("shows no Texas fact on a Washington page", () => {
+    seed({ jurId: "seattle" });
+    renderPage("en-US");
+    expect(document.body.textContent).not.toMatch(/Texas|homestead exemption/);
   });
 });

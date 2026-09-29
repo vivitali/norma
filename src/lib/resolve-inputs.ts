@@ -366,6 +366,34 @@ export function isPersonalised(stored: ToolFormState): boolean {
 }
 
 /**
+ * The assumptions a hero figure still rests on: which of the two placeholders behind
+ * Affordability's comfortable price the reader has NOT replaced. `isPersonalised`
+ * flips on ANY personal key, so a reader who typed only an income of $30,000 was told
+ * "Your numbers" over a figure still built on an assumed $2,700 budget. This names
+ * exactly what is still in play, so a tag can say so.
+ */
+export function unsetHeadlineAssumptions(
+  stored: ToolFormState,
+): ("income1" | "comfortCeiling")[] {
+  const unset: ("income1" | "comfortCeiling")[] = [];
+  if (stored.income1 === null) unset.push("income1");
+  if (stored.comfortCeiling === null) unset.push("comfortCeiling");
+  return unset;
+}
+
+/**
+ * True when the assumed budget is at least what the reader says they gross a month:
+ * the default `DEFAULT_COMFORT_CEILING` ignores income by design, so for a low income
+ * it describes spending more than they earn. False while no income has been given,
+ * because then there is no stated figure to compare against.
+ */
+export function assumedBudgetExceedsIncome(stored: ToolFormState, r: ResolvedInputs): boolean {
+  if (stored.comfortCeiling !== null || stored.income1 === null) return false;
+  const grossMonthly = (r.income1 + r.income2 + r.otherIncome) / 12;
+  return r.comfortCeiling >= grossMonthly;
+}
+
+/**
  * Every input that is the READER'S OWN situation rather than the thing being
  * tested. Touching any one of them flips the badge from "typical" to "yours".
  *

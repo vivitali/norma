@@ -8,7 +8,12 @@ import { useRules } from "@/hooks/use-country";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { useSections } from "@/hooks/use-sections";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
-import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
+import {
+  assumedBudgetExceedsIncome,
+  isPersonalised,
+  resolveInputs,
+  unsetHeadlineAssumptions,
+} from "@/lib/resolve-inputs";
 import { AFFORDABILITY_SECTIONS, type AffordabilitySectionId } from "@/lib/sections";
 import {
   approvalState,
@@ -65,7 +70,9 @@ export default function AffordabilityPage() {
   // each open whichever section their own figures make decisive.
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     AFFORDABILITY_SECTIONS,
-    decidingSectionId(result),
+    // A first-time visitor is not greeted by an open derivation built on inputs they
+    // never gave; the answer head and stats carry the verdict until they personalise.
+    isPersonalised(stored) ? decidingSectionId(result) : null,
   );
 
   /**
@@ -93,6 +100,16 @@ export default function AffordabilityPage() {
 
   const propTaxProv =
     jurisdiction.provenance["propTax.publishedRate"] ?? jurisdiction.provenance["propTax.effective"];
+
+  // The budget in use is the placeholder, not a figure the reader gave: every sentence
+  // that would say "your ceiling" must say so instead (PRODUCT.md Principle 2).
+  const budgetDefault = stored.comfortCeiling === null;
+  const budgetFmt = fmt(resolved.comfortCeiling);
+  const subComfortText = budgetDefault
+    ? t("subComfortDefault", { b: budgetFmt })
+    : t("subComfort");
+  const unsetAssumptions = unsetHeadlineAssumptions(stored);
+  const budgetOverIncome = assumedBudgetExceedsIncome(stored, resolved);
 
   const verdict = verdictKey(result);
   const approval = approvalState(result);
@@ -137,7 +154,7 @@ export default function AffordabilityPage() {
       : verdict === "comfortable"
         ? `${t("vComfort")} ${fmt(result.comfort)}.`
         : verdict === "over"
-          ? t("vOver")
+          ? t(stored.price === null ? "vOverTypical" : "vOver")
           : verdict === "declined"
             ? t(stored.price === null ? "vDeclinedTypical" : "vDeclined", { a: fmt(result.comfort) })
             : t("vShortCash", { a: fmt(result.comfort) });
@@ -147,7 +164,7 @@ export default function AffordabilityPage() {
         ? // No limit is binding when nothing qualifies; the approval row says why.
           lenderCaps
           ? undefined
-          : t("subComfort")
+          : subComfortText
         : result.tdsBinds
           ? t("ckTds")
           : t("ckGds")
@@ -157,12 +174,12 @@ export default function AffordabilityPage() {
           : t("vMonths", { n: result.monthsToClose })
         : lenderCaps
           ? t("subCap")
-          : t("subComfort");
+          : subComfortText;
 
-  // Jump to the budget field and put the caret in it. A hash link would scroll but not
-  // reliably focus an <input>, and this is ~3,000px down at phone width.
-  const focusBudget = () => {
-    const el = document.getElementById("comfortCeiling");
+  // Jump to a field and put the caret in it. A hash link would scroll but not
+  // reliably focus an <input>, and the inputs are ~3,000px down at phone width.
+  const focusField = (id: string) => {
+    const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ block: "center", behavior: "smooth" });
     el.focus({ preventScroll: true });
@@ -174,11 +191,14 @@ export default function AffordabilityPage() {
     // When it binds, this is the reader's limit and not merely a ceiling on paper.
     note: lenderCaps ? t("stCeilingBinds") : t("stCeilingNote"),
     mark: "rule" as const,
-    ...(lenderCaps ? { tone: "caution" as const } : {}),
+    // The Approval section's tone, so one figure never wears two colours: red only
+    // when the lender actually declines the target, otherwise the same ink the
+    // sentence above prints it in.
+    ...(approval === "blocked" ? { tone: "blocked" as const } : {}),
   };
 
   /** Comfort: positive means over the ceiling you set. */
-  const headroom = (n: number) => (n <= 0 ? `${fmt(-n)} ${t("headroom")}` : `${fmt(n)} ${t("over")}`);
+  const headroom = (n: number) => (n <= 0 ? `${fmt(-n)} ${t("headroom")}` : t("overBudget", { a: fmt(n) }));
   /**
    * Cash has its own word. A shortfall is money you do not have yet — "short" —
    * not money you are "over" by, which is what a comfort overrun means. Reusing
@@ -222,6 +242,25 @@ export default function AffordabilityPage() {
       value={stored.funds}
       min={0}
       onCommit={(funds) => update({ funds })}
+    />
+  );
+  const budgetField = (
+    <NumberField
+      id="comfortCeiling-inline"
+      label={t("cComfortCeiling")}
+      value={stored.comfortCeiling}
+      placeholder={resolved.comfortCeiling}
+      min={0}
+      onCommit={(comfortCeiling) => update({ comfortCeiling })}
+    />
+  );
+  const priceField = (
+    <NumberField
+      id="price-inline"
+      label={t("price")}
+      value={stored.price}
+      min={0}
+      onCommit={(price) => update({ price })}
     />
   );
   const condoFeeField = (
@@ -326,14 +365,20 @@ export default function AffordabilityPage() {
           the assumption is the fix; removing the answer is not.
         */
         tag={
-          isPersonalised(stored)
+          unsetAssumptions.length === 0
             ? t("tagYours")
-            : t("tagTypical", {
-                income: fmt(resolved.income1),
-                budget: fmt(resolved.comfortCeiling),
-              })
+            : unsetAssumptions.length === 2
+              ? t("tagTypical", { income: fmt(resolved.income1), budget: budgetFmt })
+              : unsetAssumptions[0] === "comfortCeiling"
+                ? t("tagBudget", { budget: budgetFmt })
+                : t("tagIncome", { income: fmt(resolved.income1) })
         }
-        onTagActivate={isPersonalised(stored) ? undefined : focusBudget}
+        onTagActivate={
+          unsetAssumptions.length === 0
+            ? undefined
+            : () => focusField(budgetDefault ? "comfortCeiling" : "income1")
+        }
+        adjust
         stats={
           resolved.priceKnown
             ? [
@@ -348,6 +393,29 @@ export default function AffordabilityPage() {
         }
       />
       </PendingFigures>
+
+      {/*
+        The assumed budget is more than the reader's whole monthly income before tax:
+        the headline is then a price nobody could pay for, and the tag alone is too
+        quiet a disclosure. Say it, and ask for the budget right here rather than a
+        screen of scrolling away.
+      */}
+      {budgetOverIncome ? (
+        <div className="max-w-[560px]">
+          <NoteLine tone="caution">
+            {t("budgetAboveIncome", {
+              budget: budgetFmt,
+              income: fmt((resolved.income1 + resolved.income2 + resolved.otherIncome) / 12),
+            })}
+          </NoteLine>
+          <InlineAsk prompt={t("budgetAsk")}>{budgetField}</InlineAsk>
+        </div>
+      ) : null}
+      {!resolved.priceKnown ? (
+        <div className="max-w-[560px]">
+          <InlineAsk prompt={t("priceAsk", { place: tJur(`at.${jurisdiction.id}`) })}>{priceField}</InlineAsk>
+        </div>
+      ) : null}
 
       {resolved.priceKnown ? (
         <div className="pt-8 sm:pt-[34px]">
@@ -500,9 +568,15 @@ export default function AffordabilityPage() {
           {section(
             "comfort",
             TONE[comfort],
-            comfort === "pass" ? t("ckCfOk") : t("ckCfNo"),
+            comfort === "pass"
+              ? budgetDefault
+                ? t("ckCfOkDefault", { b: budgetFmt })
+                : t("ckCfOk")
+              : budgetDefault
+                ? t("ckCfNoDefault", { b: budgetFmt })
+                : t("ckCfNo"),
             headroom(result.comfortGap),
-            t("subComfort"),
+            subComfortText,
             <>
               {/*
                 TRACE, on the label. `monthly.pi` is `cc.fin.loan *
@@ -565,7 +639,11 @@ export default function AffordabilityPage() {
               ) : null}
               <PanelRow label={t("mMaint")} value={fmt(result.monthly.maintenance)} provenance={<Provenance kind="estimate" />} />
               <PanelRow label={t("mTotal")} value={fmt(result.monthly.total)} strong />
-              <PanelRow label={t("mStated")} value={fmt(resolved.comfortCeiling)} strong />
+              <PanelRow
+                label={t(budgetDefault ? "mStatedDefault" : "mStated")}
+                value={budgetFmt}
+                strong
+              />
               {/*
                 Reachable wherever a strata fee can exist, not only where we ask for
                 one. The prompt is still gated to an unanswered CONDO — "You picked a
@@ -644,24 +722,29 @@ export default function AffordabilityPage() {
             fmt(Math.abs(result.gap)),
             t("gapWhy"),
             <>
-              <GapBand result={result} price={resolved.price} />
+              <GapBand result={result} price={resolved.price} typical={stored.price === null} />
               <div className="max-w-[620px]">
                 <PanelRow label={t("stComfort")} value={fmt(result.comfort)} strong />
                 <PanelRow label={t("stCeiling")} value={fmt(result.ceiling)} />
-                <PanelRow label={t("gapTarget")} value={fmt(resolved.price)} />
+                <PanelRow label={t(stored.price === null ? "gapTargetTypical" : "gapTarget")} value={fmt(resolved.price)} />
               </div>
             </>,
           )}
 
           {section("math", "none", t("mLine"), "", t("mWhy"), (
-            <MathColumns result={result} resolved={resolved} />
+            <MathColumns
+              result={result}
+              resolved={resolved}
+              jurisdiction={jurisdiction}
+              comfortAssumed={budgetDefault}
+            />
           ))}
         </div>
       ) : null}
 
       {/* In the ask state the sections block (which carries the page's top gap) is not
           rendered, so the inputs' heading would butt against the hero's stat strip. */}
-      <div className={resolved.priceKnown ? undefined : "pt-8 sm:pt-[34px]"}>
+      <div id="adjust" className="scroll-mt-4 pt-8 sm:pt-[34px]">
         <InputGroups
           stored={stored}
           resolved={resolved}

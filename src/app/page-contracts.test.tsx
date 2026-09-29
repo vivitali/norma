@@ -110,6 +110,12 @@ describe("exactly one section opens on arrival", () => {
   for (const [name, Page] of PAGES) {
     it(name, () => {
       seed(name);
+      // Affordability opens its deciding section only once the reader has personalised
+      // (a first visit opens none), so give it one stated income.
+      if (name === "Affordability") {
+        const cur = JSON.parse(window.localStorage.getItem("norma.inputs.v2") ?? "{}");
+        window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ...cur, income1: 75000 }));
+      }
       renderWithIntl(
         <JurisdictionProvider>
           <Page />

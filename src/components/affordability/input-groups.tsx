@@ -16,13 +16,6 @@ import { TaxAreaPicker } from "@/components/tax-area-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { NoteLine } from "@/components/tool-page";
 import { ImpactRow } from "./impact-row";
 import { SegmentedGroup } from "./segmented-group";
@@ -107,7 +100,7 @@ export function InputGroups({
         <p className="text-[11.5px] text-muted-foreground">{t("defaults")}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Group legend={t("cLimits")}>
           <NumberField
             id="comfortCeiling"
@@ -132,27 +125,6 @@ export function InputGroups({
             min={0}
             onCommit={(save) => update({ save })}
           />
-          {advanced(
-            "adv-limits",
-            <>
-              <NumberField
-                id="insuranceAnnual"
-                label={t("cInsurance")}
-                value={stored.insuranceAnnual}
-                placeholder={resolved.insuranceAnnual}
-                min={0}
-                onCommit={(insuranceAnnual) => update({ insuranceAnnual })}
-              />
-              <NumberField
-                id="utilities"
-                label={t("cUtilities")}
-                value={stored.utilities}
-                placeholder={resolved.utilities}
-                min={0}
-                onCommit={(utilities) => update({ utilities })}
-              />
-            </>,
-          )}
         </Group>
 
         <Group legend={t("cIncome")}>
@@ -174,7 +146,7 @@ export function InputGroups({
               >
                 {t("cAddApp")}
               </Button>
-              <span className="text-[10.5px] text-ink3">{t("addSecondApplicantHint")}</span>
+              <span className="text-[11.5px] text-ink3">{t("addSecondApplicantHint")}</span>
             </div>
           ) : (
             <div className="flex flex-col gap-1">
@@ -189,7 +161,7 @@ export function InputGroups({
               <Button
                 type="button"
                 variant="ghost"
-                className="min-h-11 self-start text-[11px] sm:min-h-8"
+                className="min-h-11 self-start text-[11.5px] sm:min-h-8"
                 onClick={() => {
                   setAddingIncome2(false);
                   update({ income2: null });
@@ -225,8 +197,8 @@ export function InputGroups({
                   onChange={(e) => update({ haircut: Number(e.target.value) })}
                   className="norma-range"
                 />
-                <span className="text-[10.5px] text-ink3">{pct(resolved.haircut)}</span>
-                <span className="text-[10.5px] text-ink3">{t("cHaircutWhy")}</span>
+                <span className="text-[11.5px] text-ink3">{pct(resolved.haircut)}</span>
+                <span className="text-[11.5px] text-ink3">{t("cHaircutWhy")}</span>
               </div>
             </>,
           )}
@@ -370,24 +342,16 @@ export function InputGroups({
               })}
             </NoteLine>
           ) : null}
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="ptype" className="text-[11.5px] font-semibold text-muted-foreground">
-              {t("ptype")}
-            </Label>
-            <Select
-              value={resolved.ptype}
-              onValueChange={(ptype) => update({ ptype: ptype as ResolvedInputs["ptype"] })}
-            >
-              <SelectTrigger id="ptype" className="control min-h-11 sm:min-h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="house">{t("ptypeHouse")}</SelectItem>
-                <SelectItem value="condo">{t("ptypeCondo")}</SelectItem>
-                <SelectItem value="newbuild">{t("ptypeNewbuild")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SegmentedGroup
+            label={tInputs("propertyType")}
+            value={resolved.ptype}
+            onChange={(ptype) => update({ ptype })}
+            options={[
+              { value: "house" as const, label: tInputs("house") },
+              { value: "condo" as const, label: tInputs("condo") },
+              { value: "newbuild" as const, label: tInputs("newbuild") },
+            ]}
+          />
           {/*
             This switch defaults to TRUE and drives every first-time-buyer rebate on
             the closing bill plus every tax-time credit, and its entire copy was the
@@ -405,17 +369,33 @@ export function InputGroups({
             document rather than the number.
           */}
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <Switch id="ftb" checked={resolved.ftb} onCheckedChange={(ftb) => update({ ftb })} />
-              <Label htmlFor="ftb" className="text-[11.5px]">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="ftb" className="text-[13px]">
                 {t("ftb")}
               </Label>
+              <Switch id="ftb" checked={resolved.ftb} onCheckedChange={(ftb) => update({ ftb })} />
             </div>
             <NoteLine>{tInputs(countryKey("ftbWhy", rules.country))}</NoteLine>
           </div>
           {advanced(
             "adv-purchase",
             <>
+              <NumberField
+                id="insuranceAnnual"
+                label={t("cInsurance")}
+                value={stored.insuranceAnnual}
+                placeholder={resolved.insuranceAnnual}
+                min={0}
+                onCommit={(insuranceAnnual) => update({ insuranceAnnual })}
+              />
+              <NumberField
+                id="utilities"
+                label={t("cUtilities")}
+                value={stored.utilities}
+                placeholder={resolved.utilities}
+                min={0}
+                onCommit={(utilities) => update({ utilities })}
+              />
               <NumberField
                 id="contractRate"
                 label={t("contractRate")}

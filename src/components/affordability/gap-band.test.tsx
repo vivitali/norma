@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { gapBand } from "@/lib/scale";
 import type { AffordabilityResult } from "@/domain/engine";
-import { GapBand } from "./gap-band";
+import { GapBand, labelMaxWidth } from "./gap-band";
 
 const result = (comfort: number, ceiling: number) => ({ comfort, ceiling }) as AffordabilityResult;
 
@@ -25,5 +25,23 @@ describe("GapBand — the lender ceiling sits where its value puts it", () => {
     renderWithIntl(<GapBand result={result(400000, 346776)} price={454264} />);
     expect(screen.getByTestId("gap-ceiling").style.left).not.toBe("100%");
     expect(screen.getByTestId("gap-ceiling").className).not.toContain("right-0");
+  });
+});
+
+describe("labelMaxWidth — a label may not leave the band", () => {
+  it("allows a centred label half its room either side of the nearer edge", () => {
+    expect(labelMaxWidth("center", 84)).toBe(32);
+    expect(labelMaxWidth("center", 50)).toBe(100);
+  });
+  it("runs an end-aligned label back from the marker and a start-aligned one forward", () => {
+    expect(labelMaxWidth("end", 95)).toBe(95);
+    expect(labelMaxWidth("start", 5)).toBe(95);
+  });
+  it("never squeezes a label below a readable width", () => {
+    expect(labelMaxWidth("start", 99)).toBe(20);
+  });
+  it("caps every rendered marker", () => {
+    renderWithIntl(<GapBand result={result(380828, 366989)} price={439216} />);
+    expect(screen.getByTestId("gap-ceiling").style.maxWidth).toMatch(/%$/);
   });
 });

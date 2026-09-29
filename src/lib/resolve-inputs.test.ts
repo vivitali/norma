@@ -8,7 +8,9 @@ import {
   benchmarkPrice,
   DEFAULT_COMFORT_CEILING,
   DEFAULT_RENT,
+  assumedBudgetExceedsIncome,
   isPersonalised,
+  unsetHeadlineAssumptions,
   resolveInputs,
 } from "./resolve-inputs";
 
@@ -450,5 +452,30 @@ describe("benchmarkPrice", () => {
         expect(j.provenance[`bench.${field}`]?.conf, `${j.id}.${ptype} is null`).toBe("none");
       }
     }
+  });
+});
+
+describe("unsetHeadlineAssumptions / assumedBudgetExceedsIncome", () => {
+  const j = getJurisdiction("winnipeg")!;
+  const F = ca;
+
+  it("lists exactly the assumptions still in play", () => {
+    expect(unsetHeadlineAssumptions({ ...TOOL_DEFAULTS })).toEqual(["income1", "comfortCeiling"]);
+    expect(unsetHeadlineAssumptions({ ...TOOL_DEFAULTS, income1: 30000 })).toEqual(["comfortCeiling"]);
+    expect(unsetHeadlineAssumptions({ ...TOOL_DEFAULTS, comfortCeiling: 3000 })).toEqual(["income1"]);
+    expect(unsetHeadlineAssumptions({ ...TOOL_DEFAULTS, income1: 1, comfortCeiling: 1 })).toEqual([]);
+  });
+
+  it("flags a default budget at or above stated gross monthly income only", () => {
+    const at = (o: object) => {
+      const s = { ...TOOL_DEFAULTS, ...o };
+      return assumedBudgetExceedsIncome(s, resolveInputs(s, j, F));
+    };
+    expect(at({})).toBe(false); // nothing stated
+    expect(at({ income1: 30000 })).toBe(true); // 2,500 < 2,700
+    expect(at({ income1: 32400 })).toBe(true); // exactly 2,700
+    expect(at({ income1: 90000 })).toBe(false);
+    expect(at({ income1: 30000, comfortCeiling: 900 })).toBe(false); // the reader's own
+    expect(at({ income1: 20000, income2: 20000 })).toBe(false); // household income counts
   });
 });
