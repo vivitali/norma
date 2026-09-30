@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { AffordabilityResult } from "@/domain/engine";
 import { maxAmortYears } from "@/domain/engine";
@@ -8,21 +8,14 @@ import { useRules } from "@/hooks/use-country";
 import type { Jurisdiction } from "@/domain/types";
 import { regionOf } from "@/domain/types";
 import type { ResolvedInputs } from "@/lib/resolve-inputs";
-import { DEFAULT_INCOME_2 } from "@/lib/resolve-inputs";
 import type { ToolFormState } from "@/lib/shared-inputs";
 import { useMoney, usePercent } from "@/lib/format";
 import { countryKey } from "@/lib/country-key";
 import { NumberField } from "@/components/number-field";
+import { TaxAreaPicker } from "@/components/tax-area-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { NoteLine } from "@/components/tool-page";
 import { ImpactRow } from "./impact-row";
 import { SegmentedGroup } from "./segmented-group";
@@ -61,6 +54,9 @@ export function InputGroups({
   const fmt = useMoney();
   const pct = usePercent();
   const rules = useRules();
+  // Revealing the second-applicant field is UI state, not data: `income2` is an unknown and
+  // stays null until the reader commits a number (PRODUCT.md Principle 2).
+  const [addingIncome2, setAddingIncome2] = useState(false);
 
   /**
    * The longest amortization this purchase can actually be written at.
@@ -104,7 +100,33 @@ export function InputGroups({
         <p className="text-[11.5px] text-muted-foreground">{t("defaults")}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Group legend={t("cLimits")}>
+          <NumberField
+            id="comfortCeiling"
+            label={t("cComfortCeiling")}
+            value={stored.comfortCeiling}
+            placeholder={resolved.comfortCeiling}
+            min={0}
+            onCommit={(comfortCeiling) => update({ comfortCeiling })}
+          />
+          {/*
+            `funds` and `condoFee` are DELIBERATELY absent from this grid. Both were
+            here AND in the panel that asks for them — funds under two different
+            labels — and each ask fires on exactly the condition that leaves its twin
+            here empty, so one press of Expand all put two fields for one value on
+            screen. The in-place ask is the endorsed placement (DESIGN.md §5.3), and
+            the survivors live in the cash and comfort panels on affordability/page.tsx.
+          */}
+          <NumberField
+            id="save"
+            label={t("monthlySavings")}
+            value={stored.save}
+            min={0}
+            onCommit={(save) => update({ save })}
+          />
+        </Group>
+
         <Group legend={t("cIncome")}>
           <NumberField
             id="income1"
@@ -114,17 +136,17 @@ export function InputGroups({
             min={0}
             onCommit={(income1) => update({ income1 })}
           />
-          {stored.income2 === null ? (
+          {stored.income2 === null && !addingIncome2 ? (
             <div className="flex flex-col gap-1">
               <Button
                 type="button"
                 variant="outline"
                 className="min-h-11 justify-start text-[12px] sm:min-h-9"
-                onClick={() => update({ income2: DEFAULT_INCOME_2 })}
+                onClick={() => setAddingIncome2(true)}
               >
                 {t("cAddApp")}
               </Button>
-              <span className="text-[10.5px] text-ink3">{t("addSecondApplicantHint")}</span>
+              <span className="text-[11.5px] text-ink3">{t("addSecondApplicantHint")}</span>
             </div>
           ) : (
             <div className="flex flex-col gap-1">
@@ -132,14 +154,18 @@ export function InputGroups({
                 id="income2"
                 label={t("cApp2")}
                 value={stored.income2}
+                autoFocus={addingIncome2}
                 min={0}
                 onCommit={(income2) => update({ income2 })}
               />
               <Button
                 type="button"
                 variant="ghost"
-                className="min-h-11 self-start text-[11px] sm:min-h-8"
-                onClick={() => update({ income2: null })}
+                className="min-h-11 self-start text-[11.5px] sm:min-h-8"
+                onClick={() => {
+                  setAddingIncome2(false);
+                  update({ income2: null });
+                }}
               >
                 {t("cRemove")}
               </Button>
@@ -171,8 +197,8 @@ export function InputGroups({
                   onChange={(e) => update({ haircut: Number(e.target.value) })}
                   className="norma-range"
                 />
-                <span className="text-[10.5px] text-ink3">{pct(resolved.haircut)}</span>
-                <span className="text-[10.5px] text-ink3">{t("cHaircutWhy")}</span>
+                <span className="text-[11.5px] text-ink3">{pct(resolved.haircut)}</span>
+                <span className="text-[11.5px] text-ink3">{t("cHaircutWhy")}</span>
               </div>
             </>,
           )}
@@ -211,7 +237,7 @@ export function InputGroups({
             min={0}
             onCommit={(otherDebt) => update({ otherDebt })}
           />
-          <ImpactRow result={result} debts={resolved.debts} />
+          <ImpactRow result={result} debts={resolved.debts} priceKnown={resolved.priceKnown} />
         </Group>
 
         <Group legend={t("cPurchase")}>
@@ -242,14 +268,15 @@ export function InputGroups({
             whether a publisher produces one. One fact, `priceKnown`, in both places.
           */}
           {resolved.benchmark !== null ? (
-            <span className="-mt-1 text-[10.5px] text-ink3">
-              {jurisdiction.city ?? tProv(regionOf(jurisdiction))} · {fmt(resolved.benchmark)}
+            <span className="-mt-1 text-[11.5px] text-ink3">
+              {tJur(jurisdiction.id)} · {fmt(resolved.benchmark)}
             </span>
           ) : resolved.priceKnown ? null : (
             <span className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
               {tInputs("noPrice", { place: tJur(`at.${jurisdiction.id}`) })}
             </span>
           )}
+          <TaxAreaPicker />
           {/*
             Bound to what the reader PICKED, never to the floored value. In the
             blended tier the legal floor is 10 − 2 500 000/price, which is never
@@ -315,24 +342,16 @@ export function InputGroups({
               })}
             </NoteLine>
           ) : null}
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="ptype" className="text-[11.5px] font-semibold text-muted-foreground">
-              {t("ptype")}
-            </Label>
-            <Select
-              value={resolved.ptype}
-              onValueChange={(ptype) => update({ ptype: ptype as ResolvedInputs["ptype"] })}
-            >
-              <SelectTrigger id="ptype" className="control min-h-11 sm:min-h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="house">{t("ptypeHouse")}</SelectItem>
-                <SelectItem value="condo">{t("ptypeCondo")}</SelectItem>
-                <SelectItem value="newbuild">{t("ptypeNewbuild")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SegmentedGroup
+            label={tInputs("propertyType")}
+            value={resolved.ptype}
+            onChange={(ptype) => update({ ptype })}
+            options={[
+              { value: "house" as const, label: tInputs("house") },
+              { value: "condo" as const, label: tInputs("condo") },
+              { value: "newbuild" as const, label: tInputs("newbuild") },
+            ]}
+          />
           {/*
             This switch defaults to TRUE and drives every first-time-buyer rebate on
             the closing bill plus every tax-time credit, and its entire copy was the
@@ -350,17 +369,33 @@ export function InputGroups({
             document rather than the number.
           */}
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <Switch id="ftb" checked={resolved.ftb} onCheckedChange={(ftb) => update({ ftb })} />
-              <Label htmlFor="ftb" className="text-[11.5px]">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="ftb" className="text-[13px]">
                 {t("ftb")}
               </Label>
+              <Switch id="ftb" checked={resolved.ftb} onCheckedChange={(ftb) => update({ ftb })} />
             </div>
             <NoteLine>{tInputs(countryKey("ftbWhy", rules.country))}</NoteLine>
           </div>
           {advanced(
             "adv-purchase",
             <>
+              <NumberField
+                id="insuranceAnnual"
+                label={t("cInsurance")}
+                value={stored.insuranceAnnual}
+                placeholder={resolved.insuranceAnnual}
+                min={0}
+                onCommit={(insuranceAnnual) => update({ insuranceAnnual })}
+              />
+              <NumberField
+                id="utilities"
+                label={t("cUtilities")}
+                value={stored.utilities}
+                placeholder={resolved.utilities}
+                min={0}
+                onCommit={(utilities) => update({ utilities })}
+              />
               <NumberField
                 id="contractRate"
                 label={t("contractRate")}
@@ -386,53 +421,6 @@ export function InputGroups({
                   </Label>
                 </div>
               ) : null}
-            </>,
-          )}
-        </Group>
-
-        <Group legend={t("cLimits")}>
-          <NumberField
-            id="comfortCeiling"
-            label={t("cComfortCeiling")}
-            value={stored.comfortCeiling}
-            placeholder={resolved.comfortCeiling}
-            min={0}
-            onCommit={(comfortCeiling) => update({ comfortCeiling })}
-          />
-          {/*
-            `funds` and `condoFee` are DELIBERATELY absent from this grid. Both were
-            here AND in the panel that asks for them — funds under two different
-            labels — and each ask fires on exactly the condition that leaves its twin
-            here empty, so one press of Expand all put two fields for one value on
-            screen. The in-place ask is the endorsed placement (DESIGN.md §5.3), and
-            the survivors live in the cash and comfort panels on affordability/page.tsx.
-          */}
-          <NumberField
-            id="save"
-            label={t("monthlySavings")}
-            value={stored.save}
-            min={0}
-            onCommit={(save) => update({ save })}
-          />
-          {advanced(
-            "adv-limits",
-            <>
-              <NumberField
-                id="insuranceAnnual"
-                label={t("cInsurance")}
-                value={stored.insuranceAnnual}
-                placeholder={resolved.insuranceAnnual}
-                min={0}
-                onCommit={(insuranceAnnual) => update({ insuranceAnnual })}
-              />
-              <NumberField
-                id="utilities"
-                label={t("cUtilities")}
-                value={stored.utilities}
-                placeholder={resolved.utilities}
-                min={0}
-                onCommit={(utilities) => update({ utilities })}
-              />
             </>,
           )}
         </Group>

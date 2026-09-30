@@ -73,8 +73,16 @@ export function CountrySwitcher() {
         router.replace(targetHrefFor(country), { locale: targetLocaleFor(country) });
       }}
     >
-      <SelectTrigger aria-label={t("changeCountry")} className="w-auto">
-        <SelectValue>{tCountries(activeCountry)}</SelectValue>
+      {/* Name carries both the name and the code, so it contains whichever one is visible (WCAG 2.5.3). */}
+      <SelectTrigger
+        aria-label={t("changeCountry", { name: `${tCountries(activeCountry)} (${activeCountry.toUpperCase()})` })}
+        className="w-auto"
+      >
+        {/* Below sm the trigger shows the two-letter code to save width; the dropdown and sm+ keep the name. */}
+        <SelectValue>
+          <span className="sm:hidden">{activeCountry.toUpperCase()}</span>
+          <span className="hidden sm:inline">{tCountries(activeCountry)}</span>
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {countries.map((country) => (

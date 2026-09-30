@@ -1,6 +1,6 @@
 import { render, type RenderOptions } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { CATALOGUES } from "./catalogues";
 import { languageOf, type Locale } from "@/i18n/countries";
 
@@ -9,10 +9,11 @@ export function renderWithIntl(
   options?: RenderOptions & { locale?: Locale },
 ) {
   const { locale = "en-CA", ...renderOptions } = options ?? {};
-  return render(
+  // As a `wrapper`, not a parent element, so `rerender(ui)` keeps the provider too.
+  const Wrapper = ({ children }: { children: ReactNode }) => (
     <NextIntlClientProvider locale={locale} messages={CATALOGUES[languageOf(locale)]}>
-      {ui}
-    </NextIntlClientProvider>,
-    renderOptions,
+      {children}
+    </NextIntlClientProvider>
   );
+  return render(ui, { wrapper: Wrapper, ...renderOptions });
 }

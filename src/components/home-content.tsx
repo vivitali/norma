@@ -1,10 +1,16 @@
 import type { ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { NAV, builtEntries, type NavEntry } from "@/lib/routes";
 import { countryKey } from "@/lib/country-key";
 import type { Country } from "@/i18n/countries";
+import { affordability, money } from "@/domain/engine";
+import { defaultJurisdictionOf, jurisdictionsOf } from "@/domain/jurisdictions";
+import { rulesFor } from "@/domain/rules";
+import { resolveInputs } from "@/lib/resolve-inputs";
+import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
+import { localeProfile } from "@/lib/locales";
 
 /**
  * The six questions the home page answers, in the order a visitor asks them.
@@ -65,6 +71,24 @@ export function homeFaqKey(base: string, country: Country): string {
 }
 
 /**
+ * The markets a country models, as one translated list ("Houston, Austin and Seattle").
+ *
+ * Read off the jurisdiction registry rather than written into a message, so adding a metro can
+ * never leave the FAQ or the rules intro claiming a smaller (or "only") market. Fed to the
+ * `{places}` placeholder of `Home.rulesIntro_us` and `Home.faqA_jurisdiction_us` by BOTH this
+ * component and `page.tsx`'s FAQPage builder. The bare name is the right form: the list stands
+ * as the subject of a sentence, not after a preposition.
+ */
+export function homePlaces(
+  country: Country,
+  locale: string,
+  tJur: (id: string) => string,
+): string {
+  const names = jurisdictionsOf(country).map((j) => tJur(j.id));
+  return new Intl.ListFormat(localeProfile(locale).intl, { type: "conjunction" }).format(names);
+}
+
+/**
  * Same shape as `HOME_FAQ_FORKS`/`homeFaqKey`, one level up: the tool directory's
  * `tool_<NavEntry.label>` blurbs are mostly country-neutral prose (Affordability,
  * Rent vs Buy, Scenarios, Sources), and `countryKey` has no runtime fallback — a
@@ -82,11 +106,9 @@ function toolDescKey(label: string, country: Country): string {
 /**
  * Every destination, each listed once.
  *
- * `NAV` lists `/rent-vs-buy` twice on purpose — it answers a question for someone entering the
- * market and a different one for someone already in it, and flat URLs are what make that honest in
- * a menu. A directory is not a menu: two cards pointing at one page reads as a bug, and two
- * identical anchors to one URL is a worse internal-linking signal than one. So the route registry
- * stays the single source of truth and this collapses the repeat, first appearance winning.
+ * `NAV` lists each route once now, so the de-duplication below is a guard rather than a
+ * necessity: two cards pointing at one page reads as a bug, and two identical anchors to one URL
+ * is a worse internal-linking signal than one. First appearance wins if a repeat ever returns.
  *
  * Also filtered by `entry.countries`: RRSP-HBP has no US analogue (US-market spec, "absent
  * from the US navigation"), so a US reader would otherwise be offered a card whose page
@@ -161,6 +183,18 @@ function Section({
 export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
   const t = useTranslations("Home");
   const tNav = useTranslations("Nav");
+  const tJur = useTranslations("Jurisdictions");
+  const locale = useLocale();
+  const places = homePlaces(country, locale, (id) => tJur(id));
+
+  // The worked example: the country's default place at the product's own default inputs,
+  // computed here at build time so the prerendered page carries real, engine-made figures.
+  // Nothing in it is typed by hand; it is labelled an example and links to the tool.
+  const exampleJur = defaultJurisdictionOf(country);
+  const exampleInputs = resolveInputs(TOOL_DEFAULTS, exampleJur, rulesFor(country));
+  const example = affordability(exampleJur, rulesFor(country), exampleInputs);
+  const { intl, moneyTrailing } = localeProfile(locale);
+  const fmt = (n: number) => money(n, intl, moneyTrailing);
 
   const sourcesLink = (chunks: ReactNode) => (
     <Link href="/sources" className="text-ac underline underline-offset-2">
@@ -175,8 +209,8 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
   ];
 
   // Three examples of "one jurisdiction at a time, not a national average" — genuinely
-  // different content per country, not a reworded fork of the same fact, because the US
-  // side of this page models exactly one market (Houston, TX) rather than three provinces.
+  // different content per country, not a reworded fork of the same fact. The US examples are
+  // Texas rules (the intro says so); which markets exist comes from `places`, never from copy.
   // Not routed through `countryKey`: that helper forks WORDING for one call site, and these
   // are three entirely different facts with their own label/body pairs.
   const rules =
@@ -193,30 +227,72 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
         ];
 
   return (
-    <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-4 sm:px-10">
+    <main id="main" tabIndex={-1} className="outline-none mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-4 sm:px-10">
       <section aria-labelledby="home-heading" className="border-b border-border pt-10 pb-12 sm:pt-16 sm:pb-16">
-        <p className="eyebrow text-ac">{t(countryKey("eyebrow", country))}</p>
-        <h1
-          id="home-heading"
-          className="mt-5 max-w-[14ch] text-[38px] leading-[0.98] font-bold tracking-[-0.045em] text-balance sm:text-[64px]"
-        >
-          {t("heading")}
-        </h1>
-        <p className="mt-6 max-w-[640px] text-[17px] leading-[1.45] font-medium tracking-[-0.01em] text-pretty sm:text-[19px]">
-          {t("lede")}
-        </p>
-        <p className="mt-3 max-w-[640px] text-[14.5px] leading-[1.6] text-ink2 text-pretty">
-          {t("ledeSub")}
-        </p>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Button asChild className="min-h-11 rounded-full px-6 text-[14px]">
-            <Link href="/affordability">{t("cta")}</Link>
-          </Button>
-          <Button asChild variant="outline" className="min-h-11 rounded-full px-6 text-[14px]">
-            <Link href="/rent-vs-buy">{t("ctaSecondary")}</Link>
-          </Button>
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:gap-16">
+          <div>
+            <p className="eyebrow text-ac">{t(countryKey("eyebrow", country))}</p>
+            <h1
+              id="home-heading"
+              className="mt-5 max-w-[14ch] text-[38px] leading-[0.98] font-bold tracking-[-0.045em] text-balance sm:text-[64px]"
+            >
+              {t("heading")}
+            </h1>
+            <p className="mt-6 max-w-[640px] text-[17px] leading-[1.45] font-medium tracking-[-0.01em] text-pretty sm:text-[19px]">
+              {t("lede")}
+            </p>
+            <p className="mt-3 max-w-[640px] text-[14.5px] leading-[1.6] text-ink2 text-pretty">
+              {t("ledeSub")}
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button asChild className="h-auto min-h-11 max-w-full rounded-full px-6 py-2 text-center text-[14px] whitespace-normal">
+                <Link href="/affordability">{t("cta")}</Link>
+              </Button>
+              <Button asChild variant="outline" className="h-auto min-h-11 max-w-full rounded-full px-6 py-2 text-center text-[14px] whitespace-normal">
+                <Link href="/rent-vs-buy">{t("ctaSecondary")}</Link>
+              </Button>
+            </div>
+            <p className="mt-7 max-w-[640px] text-[12.5px] leading-[1.6] text-ink3">{t("heroNote")}</p>
+          </div>
+
+          <aside
+            aria-labelledby="example-heading"
+            data-testid="home-example"
+            className="border-t border-hairline pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-12"
+          >
+            <p id="example-heading" className="eyebrow text-ink3">
+              {t("exampleEyebrow")}
+            </p>
+            <p className="mt-3 text-[13.5px] leading-[1.6] text-ink2 text-pretty">
+              {t("exampleFor", {
+                place: tJur(exampleJur.id),
+                income: fmt(exampleInputs.income1),
+                budget: fmt(exampleInputs.comfortCeiling),
+              })}
+            </p>
+            <dl className="mt-5 flex flex-col gap-5">
+              <div>
+                <dt className="text-[12.5px] text-ink3">{t("exampleLender")}</dt>
+                <dd className="mt-1 text-[34px] leading-none font-bold tracking-[-0.03em] tabular-nums">
+                  {fmt(example.ceiling)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[12.5px] text-ink3">{t("exampleCarry")}</dt>
+                <dd className="mt-1 text-[34px] leading-none font-bold tracking-[-0.03em] tabular-nums">
+                  {fmt(example.comfort)}
+                </dd>
+              </div>
+            </dl>
+            <Link
+              href="/affordability"
+              className="mt-5 inline-flex min-h-11 items-center gap-1.5 text-[14px] font-medium text-ac underline decoration-ac/40 underline-offset-4 hover:decoration-current"
+            >
+              {t("exampleLink")}
+              <span aria-hidden="true">→</span>
+            </Link>
+          </aside>
         </div>
-        <p className="mt-7 max-w-[640px] text-[12.5px] leading-[1.6] text-ink3">{t("heroNote")}</p>
       </section>
 
       <Section id="ceilings" heading={t("ceilingsHeading")} intro={t("ceilingsIntro")}>
@@ -233,7 +309,7 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
       <Section
         id="rules"
         heading={t(countryKey("rulesHeading", country))}
-        intro={t(countryKey("rulesIntro", country))}
+        intro={t(countryKey("rulesIntro", country), { places })}
       >
         <dl className="mt-8 border-t border-hairline">
           {rules.map((item) => (
@@ -273,8 +349,16 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
                       href={entry.route}
                       className="group flex min-h-11 flex-col justify-center gap-1.5 py-4"
                     >
-                      <span className="text-[16.5px] font-semibold tracking-[-0.015em] transition-colors group-hover:text-ac">
-                        {tNav(entry.label)}
+                      <span className="flex items-baseline gap-1.5 text-[16.5px] font-semibold tracking-[-0.015em] text-ac">
+                        <span className="underline decoration-ac/30 underline-offset-4 transition-colors group-hover:decoration-current">
+                          {tNav(entry.label)}
+                        </span>
+                        <span
+                          aria-hidden="true"
+                          className="transition-transform group-hover:translate-x-0.5"
+                        >
+                          →
+                        </span>
                       </span>
                       <span className="max-w-[52ch] text-[13.5px] leading-[1.6] text-ink2 text-pretty">
                         {t(toolDescKey(entry.label, country))}
@@ -299,7 +383,7 @@ export function HomeContent({ country = "ca" }: { country?: Country } = {}) {
                 {t(homeFaqKey(`faqQ_${key}`, country))}
               </dt>
               <dd className="mt-2 max-w-[62ch] text-[13.5px] leading-[1.65] text-ink2 text-pretty sm:mt-0">
-                {t(homeFaqKey(`faqA_${key}`, country))}
+                {t(homeFaqKey(`faqA_${key}`, country), { places })}
               </dd>
             </div>
           ))}

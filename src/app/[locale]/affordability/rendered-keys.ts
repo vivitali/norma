@@ -16,6 +16,7 @@ export const RENDERED = [
   "ceiling", "comfort", "budget", "monthly", "cc", "gdsAtTarget", "tdsAtTarget",
   "impliedMortgage", "comfortDown", "comfortPI", "approvalPass", "comfortPass",
   "comfortGap", "gap", "cashGap", "monthsToClose", "debtCapacity", "capacityPer100",
+  "comfortTaxCredit",
 ] as const satisfies readonly (keyof AffordabilityResult)[];
 
 export const DELIBERATELY_UNRENDERED = [

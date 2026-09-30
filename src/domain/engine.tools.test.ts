@@ -102,17 +102,27 @@ describe("amortization", () => {
 
 describe("marginalRate", () => {
   it("returns the bracket the income falls in", () => {
-    expect(marginalRate(ca, "ON", 50000)).toBe(0.2005);
-    expect(marginalRate(ca, "ON", 100000)).toBe(0.2965);
+    // ca.marginal.ON, 2026 (EY 2026-06-15, cross-checked against CRA): 24,870–53,891 is 14% federal
+    // + 5.05% Ontario; 94,901–107,785 is 20.5% + 9.15% + Ontario's 20% surtax on the provincial rate.
+    expect(marginalRate(ca, "ON", 50000)).toBe(0.1905);
+    expect(marginalRate(ca, "ON", 100000)).toBe(0.3148);
   });
 
   it("treats a bracket cap as the top of that bracket, not the bottom of the next", () => {
-    expect(marginalRate(ca, "ON", 52886)).toBe(0.2005);
-    expect(marginalRate(ca, "ON", 52887)).toBe(0.2415);
+    expect(marginalRate(ca, "ON", 53891)).toBe(0.1905);
+    expect(marginalRate(ca, "ON", 53892)).toBe(0.2315);
   });
 
-  it("falls back to the CA table for a province with no table of its own", () => {
-    expect(marginalRate(ca, "NU", 60000)).toBe(marginalRate(ca, "CA", 60000));
+  it("falls back to the federal-only CA table for a region code with no table of its own", () => {
+    // All thirteen provinces and territories carry their own table; only an unknown code falls back.
+    expect(marginalRate(ca, "XX", 60000)).toBe(marginalRate(ca, "CA", 60000));
+    expect(marginalRate(ca, "NU", 60000)).not.toBe(marginalRate(ca, "CA", 60000));
+  });
+
+  it("starts every provincial table at a 0% band for the basic personal amounts", () => {
+    for (const [prov, table] of Object.entries(ca.marginal)) {
+      expect(table[0][1], prov).toBe(0);
+    }
   });
 
   it("returns the top rate above the last cap", () => {
@@ -255,12 +265,15 @@ describe("glidePath", () => {
 
 describe("taxOnBand", () => {
   it("integrates the bracket table over a band that spans three brackets", () => {
-    // Hand-computed against ca.marginal.ON, band by band:
-    //   15,000 -> 52,886 : 37,886 x 0.2005 = 7,596.143
-    //   52,886 -> 58,522 :  5,636 x 0.2415 = 1,361.094
-    //   58,522 -> 75,000 : 16,478 x 0.2965 = 4,885.727
-    //                                      = 13,842.964
-    expect(taxOnBand(ca, "ON", 15000, 75000)).toBeCloseTo(13842.964, 3);
+    // Hand-computed against ca.marginal.ON (2026), band by band:
+    //   15,000 -> 16,452 :  1,452 x 0      =     0
+    //   16,452 -> 18,930 :  2,478 x 0.14   =   346.92
+    //   18,930 -> 24,870 :  5,940 x 0.241  = 1,431.54
+    //   24,870 -> 53,891 : 29,021 x 0.1905 = 5,528.5005
+    //   53,891 -> 58,523 :  4,632 x 0.2315 = 1,072.308
+    //   58,523 -> 75,000 : 16,477 x 0.2965 = 4,885.4305
+    //                                      = 13,264.699
+    expect(taxOnBand(ca, "ON", 15000, 75000)).toBeCloseTo(13264.699, 3);
   });
 
   it("agrees with the marginal rate on an infinitesimal band", () => {
@@ -290,8 +303,8 @@ describe("taxOnBand", () => {
     );
   });
 
-  it("falls back to the national table for a province it does not carry", () => {
-    expect(taxOnBand(ca, "NU", 0, 60000)).toBeCloseTo(taxOnBand(ca, "CA", 0, 60000), 9);
+  it("falls back to the federal-only table for a region code it does not carry", () => {
+    expect(taxOnBand(ca, "XX", 0, 60000)).toBeCloseTo(taxOnBand(ca, "CA", 0, 60000), 9);
   });
 
   it("keeps running above the final bracket, whose ceiling is null", () => {
@@ -317,10 +330,10 @@ describe("hbpPlay", () => {
   it("prices the deduction over the brackets it walks through, not at the top rate", () => {
     // The defect this replaced: `contribution * marginalRate(income)` priced the whole
     // $60,000 at Ontario's 29.65% and printed ~$17,790 as the page's hero figure. The
-    // deduction actually carries the taxpayer from $75,000 down to $15,000, through three
-    // brackets, and saves ~$13,842 -- a 29% overstatement, in the flattering direction.
+    // deduction actually carries the taxpayer from $75,000 down to $15,000, through six
+    // bands of the 2026 table, and saves $13,264.70 (the taxOnBand test above).
     const h = hbpPlay(ca, { ...ON, contribution: 60000, withdrawAmount: 60000 });
-    expect(h.refund).toBeCloseTo(13842.964, 3);
+    expect(h.refund).toBeCloseTo(13264.699, 3);
     expect(h.refund).toBeLessThan(60000 * marginalRate(ca, "ON", 75000));
   });
 

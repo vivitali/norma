@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ca } from "@/domain/rules/ca";
+import { RULES } from "@/domain/rules";
 import { jurisdictions, getJurisdiction } from "@/domain/jurisdictions";
 import type { Provenance } from "@/domain/types";
 import {
@@ -11,7 +12,12 @@ import {
   isSourced,
   weakestGroupId,
   FIGURE_GROUPS,
+  describeField,
+  describeFields,
+  formatAsOf,
+  latestAsOf,
 } from "./provenance-view";
+import en from "../../messages/en.json";
 
 describe("groupOf", () => {
   it("routes every provenance path in every record to a group", () => {
@@ -62,6 +68,32 @@ describe("collectSources", () => {
       ["fees.moving", p({ conf: "assumption", note: "Movers price by distance." })],
     ]);
     expect(entries).toHaveLength(2);
+  });
+
+  it("merges unsourced figures whose notes differ but whose reader summary is the same", () => {
+    // The row shows the summary. Keying on the note printed two identical "Assumption" rows on
+    // the US /sources page, for three investment returns that share one explanation.
+    const entries = collectSources([
+      ["investReturn.cash", p({ conf: "assumption", note: "Carried over from Canada.", summary: "Ours." })],
+      ["investReturn.growth", p({ conf: "assumption", note: "Same caveat as cash.", summary: "Ours." })],
+    ]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].fields).toEqual(["investReturn.cash", "investReturn.growth"]);
+    expect(entries[0].notes).toEqual(["Ours."]);
+  });
+
+  it("shows no two identical rows for any real record", () => {
+    const records = [
+      ...jurisdictions.map((j) => [j.id, j.provenance] as const),
+      ...Object.entries(RULES).map(([country, r]) => [`rules.${country}`, r.provenance] as const),
+    ];
+    for (const [id, map] of records) {
+      const rows = collectSources(
+        Object.entries(map).filter((e): e is [string, Provenance] => e[1] !== undefined),
+      );
+      const shown = rows.map((r) => `${r.conf}|${r.src ?? ""}|${r.notes.join("|")}`);
+      expect(new Set(shown).size, id).toBe(shown.length);
+    }
   });
 
   it("takes the WEAKEST confidence when one document carries several figures", () => {
@@ -201,8 +233,8 @@ describe("coverageOf", () => {
       ) + Object.keys(ca.provenance).filter((p) => isFigure(ca.provenance, p)).length;
 
     expect(coverage.total).toBe(expected);
-    // 14 Canadian + Houston + Austin (US).
-    expect(coverage.jurisdictions).toBe(16);
+    // 14 Canadian + Houston + Austin + Seattle (US).
+    expect(coverage.jurisdictions).toBe(17);
   });
 
   it("actually excludes something — the exclusions are not vacuous", () => {
@@ -322,12 +354,76 @@ describe("FIGURE_GROUPS", () => {
       // recording tax; no federal/state rebate exists — see engine.ts's credits()
       // and its cr_noRebateUs omission), so "charges" and "credits" are
       // legitimately empty there rather than a hole in the data.
+      // Seattle carries a "charges" entry (the seller-paid REET line's own provenance) but, like
+      // Texas, no rebate or credit.
       const expectEmpty =
-        jurisdiction.id === "houston" || jurisdiction.id === "austin" ? ["charges", "credits"] : [];
+        jurisdiction.id === "houston" || jurisdiction.id === "austin"
+          ? ["charges", "credits"]
+          : jurisdiction.id === "seattle"
+            ? ["credits"]
+            : [];
       expect(
         groups.filter((g) => g.total === 0).map((g) => g.id),
         jurisdiction.id,
       ).toEqual(expectEmpty);
     }
+  });
+});
+
+describe("describeField", () => {
+  it("labels every provenance path in every record and in the rules", () => {
+    // The seam that keeps /sources readable: a path with no label would print a document with no
+    // figure beside it, which is the defect this exists to fix.
+    for (const j of jurisdictions) {
+      for (const path of Object.keys(j.provenance)) {
+        expect(describeField(path, j), `${j.id}: ${path}`).not.toBeNull();
+      }
+    }
+    for (const path of Object.keys(ca.provenance)) {
+      expect(describeField(path), `ca rules: ${path}`).not.toBeNull();
+    }
+  });
+
+  it("resolves every label to a real catalogue key", () => {
+    const tables = en as unknown as Record<string, Record<string, string>>;
+    for (const j of jurisdictions) {
+      for (const ref of describeFields(Object.keys(j.provenance), j)) {
+        expect(tables[ref.ns][ref.key], `${j.id}: ${ref.ns}.${ref.key}`).toBeTypeOf("string");
+      }
+    }
+    for (const ref of describeFields(Object.keys(ca.provenance))) {
+      expect(tables[ref.ns][ref.key], `${ref.ns}.${ref.key}`).toBeTypeOf("string");
+    }
+  });
+
+  it("pairs a scalar figure with its value and leaves a schedule without one", () => {
+    const w = getJurisdiction("winnipeg")!;
+    expect(describeField("fees.lawyer", w)).toEqual({
+      ns: "ClosingCosts",
+      key: "li_lawyer",
+      value: { kind: "money", n: 1800 },
+    });
+    expect(describeField("transfer.0.brackets", w)?.value).toBeUndefined();
+    expect(describeField("bench.house", w)?.value).toEqual({ kind: "money", n: w.bench.house });
+  });
+
+  it("folds several fields of one figure into one label", () => {
+    expect(describeFields(["rebates.1.full", "rebates.1.partial", "rebates.1.capBase"], getJurisdiction("vancouver")!).length).toBe(1);
+  });
+});
+
+describe("latestAsOf / formatAsOf", () => {
+  it("orders asOf strings of differing precision", () => {
+    const p = (asOf: string): Provenance => ({ conf: "high", asOf });
+    expect(latestAsOf({ a: p("2026"), b: p("2026-08"), c: p("2026-01-15") })).toBe("2026-08");
+    expect(latestAsOf({ a: p("2026-09-28"), b: p("2026") })).toBe("2026-09-28");
+    expect(latestAsOf({})).toBeNull();
+  });
+
+  it("formats at the precision it carries, in the locale", () => {
+    expect(formatAsOf("2026-09-28", "en-CA")).toBe("September 28, 2026");
+    expect(formatAsOf("2026-08", "en-CA")).toBe("August 2026");
+    expect(formatAsOf("2026", "en-CA")).toBe("2026");
+    expect(formatAsOf("2026-09-28", "fr-CA")).toMatch(/28 septembre 2026/);
   });
 });

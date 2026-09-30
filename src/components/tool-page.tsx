@@ -3,8 +3,7 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { Jurisdiction } from "@/domain/types";
-import { Provenance, type ProvenanceKind } from "@/components/provenance";
-import { useRules } from "@/hooks/use-country";
+import { Provenance, ProvenanceLegend, VerifiedLines, type ProvenanceKind } from "@/components/provenance";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,7 +21,14 @@ import { cn } from "@/lib/utils";
 
 export function ToolMain({ children }: { children: ReactNode }) {
   return (
-    <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10">
+    <main
+      id="main"
+      tabIndex={-1}
+      // The hook the pre-paint guard in globals.css keys on: a tool page's shape depends on
+      // stored inputs, so for a returning reader it stays hidden until they have landed.
+      data-slot="tool-main"
+      className="outline-none mx-auto flex w-full max-w-[1100px] flex-1 flex-col px-5 pb-16 sm:px-10"
+    >
       {children}
     </main>
   );
@@ -149,6 +155,11 @@ export interface HeadStat {
   /** Short qualifier beside the figure. Empty renders nothing. */
   note?: string;
   mark?: ProvenanceKind;
+  /**
+   * Promotes the figure to a state colour (DESIGN.md §2: state is a figure colour, never a fill).
+   * Pass the SAME tone as the section that owns the figure, so one number never wears two colours.
+   */
+  tone?: "caution" | "blocked";
 }
 
 /**
@@ -173,16 +184,30 @@ export function AnswerHead({
   head,
   sub,
   tag,
+  onTagActivate,
+  adjust,
   stats,
 }: {
   eyebrow: string;
   figure?: string;
   pulseKey?: string;
   head: string;
-  sub?: string;
+  sub?: ReactNode;
   tag?: string;
+  /**
+   * When given, the tag is a button with the same pill look — one element whose
+   * accessible name is its text — that jumps to and focuses the field it names.
+   */
+  onTagActivate?: () => void;
+  /**
+   * Renders "Adjust your numbers" under the answer: a jump to the page's inputs block, which must
+   * carry `id="adjust"`, focusing its first field. Every tool page keeps its inputs below its
+   * sections, 1,300–2,300px from the figure they move on a phone; this is the way back to them.
+   */
+  adjust?: boolean;
   stats?: readonly HeadStat[];
 }) {
+  const tTool = useTranslations("ToolPage");
   return (
     <div className="pt-9 sm:pt-11">
       {/*
@@ -227,11 +252,41 @@ export function AnswerHead({
             <p className="mt-2 max-w-[560px] text-[14.5px] leading-[1.6] text-ink2 text-pretty">{sub}</p>
           ) : null}
           {tag ? (
-            <p
-              data-slot="answer-tag"
-              className="eyebrow mt-4 inline-block rounded-full border border-acbr px-2.5 py-1 text-ac"
-            >
-              {tag}
+            onTagActivate ? (
+              <button
+                type="button"
+                data-slot="answer-tag"
+                onClick={onTagActivate}
+                className="eyebrow mt-4 inline-block min-h-11 max-w-full cursor-pointer rounded-full border border-acbr px-2.5 py-1 text-left text-ac underline decoration-dotted underline-offset-4 hover:bg-acbg sm:min-h-0"
+              >
+                {tag}
+              </button>
+            ) : (
+              <p
+                data-slot="answer-tag"
+                className="eyebrow mt-4 inline-block rounded-full border border-acbr px-2.5 py-1 text-ac"
+              >
+                {tag}
+              </p>
+            )
+          ) : null}
+          {adjust ? (
+            <p className="mt-3">
+              <a
+                href="#adjust"
+                onClick={(event) => {
+                  const target = document.getElementById("adjust");
+                  if (!target) return;
+                  event.preventDefault();
+                  target.scrollIntoView({ block: "start", behavior: "smooth" });
+                  target
+                    .querySelector<HTMLElement>("input, button, [role=combobox], [role=radio][tabindex='0']")
+                    ?.focus({ preventScroll: true });
+                }}
+                className="relative text-[13px] font-medium text-ac underline underline-offset-4 after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 sm:after:hidden"
+              >
+                {tTool("adjust")}
+              </a>
             </p>
           ) : null}
         </div>
@@ -255,7 +310,15 @@ export function AnswerHead({
                 </div>
                 {/* The note wraps under the value rather than off the screen. */}
                 <div data-slot="answer-stat" className="flex flex-wrap items-baseline gap-x-2.5">
-                  <span className="text-[22px] font-semibold tracking-[-0.02em]">{stat.value}</span>
+                  <span
+                    className={cn(
+                      "text-[22px] font-semibold tracking-[-0.02em]",
+                      stat.tone === "caution" && "text-caution",
+                      stat.tone === "blocked" && "text-blocked",
+                    )}
+                  >
+                    {stat.value}
+                  </span>
                   {stat.note ? (
                     <span className="text-[12px] leading-[1.35] text-ink3">{stat.note}</span>
                   ) : null}
@@ -333,12 +396,12 @@ export function FigureFooter({
   children?: ReactNode;
 }) {
   const t = useTranslations("Disclosure");
-  const rules = useRules();
   return (
     <div className="mt-10 border-t border-border pt-4 text-[11.5px] text-ink3">
       <p>{t("unverifiedFlag")}</p>
-      <p>
-        {t("lastVerified")} {rules.verified}
+      <VerifiedLines jurisdiction={jurisdiction} />
+      <p className="mt-1">
+        <ProvenanceLegend />
       </p>
       {children}
       {!jurisdiction.cityData ? <p>{t("noCityData")}</p> : null}

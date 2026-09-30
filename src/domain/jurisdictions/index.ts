@@ -15,11 +15,12 @@ import { nt } from "./nt";
 import { nu } from "./nu";
 import { houston } from "./houston";
 import { austin } from "./austin";
+import { seattle } from "./seattle";
 
 export const jurisdictions: readonly Jurisdiction[] = [
   toronto, ottawa, vancouver, halifax, winnipeg, montreal, calgary, saskatoon,
   nb, nl, pe, yt, nt, nu,
-  houston, austin,
+  houston, austin, seattle,
 ];
 
 export function getJurisdiction(id: string): Jurisdiction | undefined {
@@ -54,3 +55,39 @@ export function defaultJurisdictionOf(country: Country): Jurisdiction {
 
 /** Canada's default. Kept as a named export — most call sites today have no other country. */
 export const defaultJurisdiction: Jurisdiction = defaultJurisdictionOf("ca");
+
+/**
+ * The record as the reader's own tax AREA sees it — Winnipeg's school division today.
+ *
+ * `PropertyTax.areas` stores every area's rates; the record's own `publishedRate`/`effective`
+ * (and the credit's cap slice) are the default area's. This swaps in the chosen area's, and
+ * points the published-rate provenance at that area's own entry (`propTax.areas.list.<i>.publishedRate`), so every
+ * engine function and every "where this figure came from" line reads the reader's division
+ * without knowing areas exist. An unknown, absent or default id returns the record unchanged —
+ * the same object, so a memo keyed on it stays stable.
+ */
+export function withTaxArea(j: Jurisdiction, areaId: string | null | undefined): Jurisdiction {
+  const areas = j.propTax.areas;
+  if (!areas || !areaId || areaId === areas.default) return j;
+  const index = areas.list.findIndex((a) => a.id === areaId);
+  if (index < 0) return j;
+  const area = areas.list[index];
+  const areaProvenance = j.provenance[`propTax.areas.list.${index}.publishedRate`];
+  return {
+    ...j,
+    propTax: {
+      ...j.propTax,
+      publishedRate: area.publishedRate,
+      effective: area.effective,
+      credit: j.propTax.credit && { ...j.propTax.credit, appliesToRate: area.schoolEffective },
+    },
+    provenance: areaProvenance
+      ? { ...j.provenance, "propTax.publishedRate": areaProvenance }
+      : j.provenance,
+  };
+}
+
+/** Every tax-area id any record carries — the storage schema's enum for the chosen area. */
+export function taxAreaIds(): string[] {
+  return jurisdictions.flatMap((j) => j.propTax.areas?.list.map((a) => a.id) ?? []);
+}

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/lib/locales";
@@ -41,7 +41,7 @@ describe("Down payment — the target", () => {
   it("shows the legal minimum as a rule, not an opinion", async () => {
     const user = userEvent.setup();
     renderPage();
-    await open(user, /Assembled from your accounts/);
+    await open(user, /Needed on closing day/);
     expect(screen.getByText("Legal minimum down payment")).toBeInTheDocument();
   });
 });
@@ -77,7 +77,33 @@ describe("Down payment — the waterfall", () => {
     await user.type(fhsa, "40000");
     await user.tab();
 
-    // The TFSA is still untouched: the order is by cost, not by balance.
+    // Every other source is unanswered, and an unanswered account is not "Not needed"
+    // (that asserts a balance nobody gave) nor "Left in the account: $0".
+    expect(screen.getAllByText("Not entered yet").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Not needed")).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Left in the account/).length).toBe(1);
+  });
+
+  it("says nothing is entered, rather than printing $0 available, before any balance", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    // Six sources in the funding order, scoped so the hero stat below is not counted with them.
+    expect(within(document.getElementById("waterfall")!).getAllByText("Not entered yet").length).toBe(6);
+    expect(screen.queryByText(/Left in the account/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Short by/)).not.toBeInTheDocument();
+    // The stat says so in words: not $0 (an empty account) and not a bare em-dash (a render fault).
+    const stat = screen.getByText("Available in total");
+    expect(stat.parentElement!.textContent).not.toMatch(/\$0/);
+    expect(stat.parentElement!.textContent).toContain("Not entered yet");
+    expect(stat.parentElement!.textContent).not.toContain("—");
+  });
+
+  it("still says a given source is not needed when the cheaper ones cover the target", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ cashSav: 900000, gift: 5000 }));
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
     expect(screen.getAllByText("Not needed").length).toBeGreaterThan(0);
   });
 
@@ -110,8 +136,9 @@ describe("Down payment — the two accounts that require first-time-buyer status
     expect(screen.getAllByText(/first-time home buyer programmes/).length).toBeGreaterThan(0);
     // And neither blocked row reports "Left in the account: $0" back at a reader
     // looking at their own balance in the field two lines below it. Four rows
-    // carry that line; the two blocked ones do not.
-    expect(screen.getAllByText(/Left in the account/).length).toBe(4);
+    // carry the row, but only the one the reader gave a balance for (cash) reports what is
+    // left; the two blocked ones and the unanswered ones do not.
+    expect(screen.getAllByText(/Left in the account/).length).toBe(1);
   });
 
   it("spends them for a first-time buyer", async () => {
@@ -155,7 +182,7 @@ describe("Down payment — the ask can be answered from where it is made", () =>
     // The hero asks for balances; all six fields sit inside the CLOSED waterfall
     // section. The link opens it and moves focus to it.
     renderPage();
-    const link = screen.getByRole("link", { name: /funding order/i });
+    const link = screen.getByRole("link", { name: /add what you have in each account/i });
     expect(link).toHaveAttribute("href", "#waterfall");
   });
 
@@ -167,7 +194,7 @@ describe("Down payment — the ask can be answered from where it is made", () =>
     await user.clear(fhsa);
     await user.type(fhsa, "1000");
     await user.tab();
-    expect(screen.queryByRole("link", { name: /funding order/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /add what you have in each account/i })).not.toBeInTheDocument();
   });
 });
 
@@ -295,5 +322,145 @@ describe("Down payment — the RRSP-HBP cross-link", () => {
     // link at the foot of the waterfall pointed at it unconditionally.
     renderPage("en-US");
     expect(document.querySelector('[data-cross="sentence"]')).toBeNull();
+  });
+});
+
+describe("Down payment — nothing opens, and the target is named for what it is", () => {
+  it("opens no section on a first visit", () => {
+    renderPage();
+    expect(screen.queryAllByRole("button", { expanded: true })).toHaveLength(0);
+  });
+
+  it("opens the target for a personalised reader who has described no account", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 90000 }));
+    renderPage();
+    expect(screen.getByRole("button", { name: /Needed on closing day/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("does not call $0 assembled: the section is what is NEEDED, and its line says how", () => {
+    // "Assembled from your accounts $56,631" over accounts that hold nothing said the opposite of
+    // what the figure was.
+    renderPage();
+    const row = screen.getByRole("button", { name: /Needed on closing day/ });
+    expect(row.textContent).not.toMatch(/Assembled/);
+    expect(row.textContent).toContain("Down payment plus closing costs, less credits that day");
+    // The line is not the section's own name repeated.
+    expect(row.textContent?.match(/Needed on closing day/g)).toHaveLength(1);
+  });
+});
+
+describe("Down payment — the assumption is named and the way to replace it is one tap", () => {
+  it("names the assumed price and jumps to the price field", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Assuming the typical price for Winnipeg, \$[\d,]+/ }));
+    expect(screen.getByLabelText("Purchase price")).toHaveFocus();
+  });
+
+  it("names the reader's price once given, and jumps nowhere", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ price: 500000 }));
+    renderPage();
+    expect(document.querySelector("[data-slot=answer-tag]")!.textContent).toBe("Based on your price, $500,000");
+    expect(document.querySelector("button[data-slot=answer-tag]")).toBeNull();
+  });
+
+  it("carries the id its head links to", () => {
+    renderPage();
+    expect(screen.getByRole("link", { name: "Adjust your numbers" })).toHaveAttribute("href", "#adjust");
+    expect(document.getElementById("adjust")!.querySelector("#price")).not.toBeNull();
+  });
+});
+
+describe("Down payment — the same thing is not said twice", () => {
+  it("prints no two identical totals in the trace when nothing is described", async () => {
+    // "Needed on closing day = $56,631" then "Still to find = $56,631", one line apart, over
+    // accounts nobody described.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    const values = [...document.getElementById("calc")!.querySelectorAll("dd")].map((d) => d.textContent);
+    expect(new Set(values).size).toBe(values.length);
+    expect(document.getElementById("calc")!.textContent).not.toMatch(/Still to find/);
+  });
+
+  it("still measures a described shortfall in the trace", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ fhsa: 1000 }));
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    expect(document.getElementById("calc")!.textContent).toMatch(/Still to find/);
+  });
+
+  it("gives each account's name to its field once, not to the row above it as well", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    const panel = document.getElementById("waterfall")!;
+    // "FHSA" as a whole label appears once in the account block (the field's own).
+    expect(within(panel).getAllByText("FHSA")).toHaveLength(1);
+    expect(within(panel).getByLabelText("FHSA")).toBeInTheDocument();
+  });
+
+  it("puts the FHSA's first-time caveat in the same paragraph as its description", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The funding order/);
+    const why = screen.getByText(/First Home Savings Account/);
+    expect(why.tagName).toBe("P");
+    expect(why.textContent).toMatch(/wherever in the world/);
+  });
+
+  it("does not repeat the hero's ask inside the glide path", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The savings glide path/);
+    const panel = document.getElementById("glide")!;
+    expect(within(panel).queryByText(/Add what you have in each account/)).not.toBeInTheDocument();
+  });
+});
+
+describe("Down payment — a realised gain is described the way it is taxed", () => {
+  // Only the non-registered account, holding a gain, so the waterfall must draw on it.
+  const seed = (jurId: string) =>
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId, nonreg: 900000, nonregGain: 300000, income: 100000 }),
+    );
+
+  it("Canada: a fraction of the gain, at the marginal rate", async () => {
+    seed("toronto");
+    const user = userEvent.setup();
+    renderPage("en-CA");
+    await open(user, /The funding order/);
+    expect(screen.getByText(/of capital gain, 50% of it taxable at/)).toBeInTheDocument();
+  });
+
+  it("US: the whole gain at the flat long-term rate, with no inclusion step", async () => {
+    // The page used to print "15% of it taxable at 22%" here — a tax the US engine never
+    // charges: it taxes the whole gain at 15%.
+    seed("houston");
+    const user = userEvent.setup();
+    renderPage("en-US");
+    await open(user, /The funding order/);
+    expect(screen.getByText(/of capital gain, taxed at 15%$/)).toBeInTheDocument();
+    expect(screen.queryByText(/of it taxable at/)).toBeNull();
+  });
+});
+
+describe("Down payment — French colons behind a stored balance", () => {
+  // locale-render.test.tsx checks French colons with nothing stored, so it never reaches this
+  // line: "Reste au compte" only renders once a balance is entered. It used to build its colon
+  // in JSX with an ordinary space.
+  it("puts U+00A0 before the colon in the balance-left line", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ cashSav: 900000 }));
+    const user = userEvent.setup();
+    renderPage("fr-CA");
+    await open(user, /L’ordre de financement|ordre de financement/i);
+    const text = document.getElementById("waterfall-panel")!.textContent ?? "";
+    expect(text).toContain("Reste au compte :");
+    expect(text).not.toMatch(/Reste au compte[  ]?:/);
   });
 });

@@ -73,6 +73,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026-01-01",
       url: "https://montreal.ca/articles/comment-sont-calcules-les-droits-sur-les-mutations-immobilieres-9279",
       note: "SCOPE: Ville de Montréal (agglomeration) only. Quebec's statutory schedule is three tranches — 0.5% / 1% / 1.5% — and a municipality may set a higher rate on the portion above $500,000, capped at 3% for everyone except Montreal. Tiers 3-7 here are Montreal's own and generalise to no other Quebec municipality. Thresholds are indexed annually to the Quebec CPI, so this table expires: the 2025 table began at 61,500 / 307,800. Verified against the City's own worked example, reproduced as a test — a $700,000 base gives 314.50 + 2,521.00 + 3,559.50 + 2,954.00 = $9,349.00. The duty base is the GREATER of consideration paid, consideration stipulated, and the roll value x the facteur comparatif (2026: 1.00; 2025: 1.08; 2024: 1.10); the engine computes on price alone, which is harmless only while the factor is 1.00.",
+      summary: "The City of Montréal's 2026 land transfer duty rates, each applied to the slice of the price in its band. Its higher bands are Montréal's own. Thresholds are indexed yearly, so this table expires. The model uses the price alone, which fits while the City's 2026 comparison factor is 1.00.",
     },
     "rebates.0.tiers": {
       conf: "high",
@@ -80,6 +81,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026-01-01",
       url: "https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/finances/publications-adm/Bulletins/FR/BI_Explication_technique.pdf",
       note: "Read in full, not from snippets: « 100 % des premiers 5 000 $ en droits de mutation payés; 25 % sur les 3 500 $ de droits de mutation payés qui excèdent ce premier 5 000 $ ». Applies to eligible homes acquired from 2026-01-01. Eligibility is four years of non-ownership by the buyer and spouse, not a price test.",
+      summary: "Quebec's first-time-buyer refundable credit, read in full from the Finance ministry's explanatory document: 100% of the first $5,000 of transfer duties plus 25% of the next $3,500, for homes acquired from 2026. Eligibility depends on four years without owning a home, not on price.",
     },
     "rebates.0.cap": {
       conf: "high",
@@ -87,6 +89,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026-01-01",
       url: "https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/finances/publications-adm/Bulletins/FR/BI_Explication_technique.pdf",
       note: "$5,875 maximum, and there is NO phase-out: the bulletin's « Admissibilité » section names no price ceiling and no reduction, and its own worked example has a Laval buyer at $616,000 paying $9,091 of duties and receiving the full $5,875 (65% of duties). The $750,000 on the ministry's chart is where the CAP is reached; the curve is flat above it. An earlier draft of this record specified phaseFrom 750,000 / phaseTo 1,000,000 — that provision does not exist. Advance payment starts October 2026 where the amount exceeds $1,000; deliberately not modelled, because the credit is still claimed on the return.",
+      summary: "The credit is capped at $5,875 and does not shrink at higher prices: the ministry's own example has a buyer at $616,000 receiving the full amount. It is claimed on the tax return, so it does not reduce the cash needed at closing.",
     },
     "premiumTax.rate": {
       conf: "high",
@@ -94,6 +97,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026",
       url: "https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/finances/publications-adm/Budget/2526/Budget2526_RenseignementsAdd.pdf",
       note: "« Le taux de cette taxe est actuellement de 9 % [...] la taxe sur les primes d'assurance au taux de 9,975 % s'appliquera aux primes d'assurance qui seront payées après le 31 décembre 2026. » So 0.09 is correct for 2026 and wrong from 2027-01-01, when it becomes 0.09975 to match the TVQ. The rate is duplicated in prose inside `label` — both need changing together, and a test asserts the label still says 9%. CMHC confirms only Ontario, Quebec and Saskatchewan tax the premium, and that the tax cannot be financed into the loan; the engine already marks the line cashOnly.",
+      summary: "Quebec's 9% tax on mortgage insurance premiums, from the province's 2025-2026 budget. It is correct for 2026 but rises to 9.975% for premiums paid after December 31, 2026. It is paid in cash at closing and cannot be added to the loan.",
     },
     "propTax.publishedRate": {
       conf: "assumption",
@@ -101,12 +105,14 @@ export const montreal: Jurisdiction = {
       asOf: "2026-01-01",
       url: "https://montreal.ca/articles/taux-de-taxes-pour-2026-106147",
       note: "Montreal publishes NO city-wide residential rate — it varies by borough. Every component here is official: city-level taxes applying to all residential property total 0.5556 per $100 (taxe foncière générale 0.4631 + ARTM 0.0070 + voirie 0.0024 + service de l'eau 0.0831), to which each borough adds its dettes des anciennes villes, services and investissements shares. The 19 boroughs' all-in residential rates run from 0.6229 (Ville-Marie) to 0.7403 (Anjou); their unweighted mean is 0.667932. The province-wide school tax of 0.07899 per $100 (set by the Ministère de l'Éducation, published in the Gazette officielle) is added on top, giving 0.746922 per $100 = 0.0074692. The ASSUMPTION is the aggregation — an unweighted borough mean including school tax — not the figures. Two known simplifications: the school tax exempts the first $25,000 of assessment, and Lachine adds a flat $57.91 per unit.",
+      summary: "A default we chose because Montréal publishes no single city-wide residential rate; it varies by borough. This is the average of the 19 boroughs' official 2026 rates plus the province-wide school tax, so your borough's actual rate will differ.",
     },
     "propTax.effective": {
       conf: "assumption",
-      src: "Derived: propTax.publishedRate x propTax.assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       asOf: "2026-01-01",
       note: "Equal to publishedRate because the ratio is 1. Carries the same assumption as publishedRate: no single Montreal residential rate exists, so this is the 19-borough mean plus school tax. The prototype's 0.00792 sat above the top of the credible band even including school tax.",
+      summary: "Equal to the rate above because the assessment ratio is 1. It rests on the same choice: an average of the borough rates plus school tax, since no single Montréal rate exists.",
     },
     "propTax.assessmentRatio": {
       conf: "medium",
@@ -114,6 +120,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026-01-01",
       url: "https://montreal.ca/articles/comment-sont-calcules-les-droits-sur-les-mutations-immobilieres-9279",
       note: "Quebec assesses on a three-year rôle d'évaluation foncière. The current roll covers 2026-2027-2028 and its reference date is 2024-07-01 — 18 months before it takes effect — so it is a base-year assessment, not a live one. The roll-to-market ratio IS published, as the facteur comparatif, and Montreal's for 2026 is 1.00: on the City's own reckoning the roll equals market value, which is why basis is `market` and the ratio is 1 rather than a guess. Two caveats a later revision should price in if a source appears: the 2026-2028 roll came in 12.6% above the previous one across the 19 boroughs, and Montreal spreads that increase over three years (mesure d'étalement), so the actual 2026 taxable base runs roughly 7% BELOW the roll value — this record therefore slightly overstates 2026 and 2027 tax. The facteur comparatif is also re-set annually (1.08 in 2025, 1.10 in 2024), so a ratio of 1 expires with the 2026 factor.",
+      summary: "Montréal's own 2026 comparison factor between assessed and market value is 1.00, so the model treats assessed value as the price. The assessment roll dates from July 2024 and the City phases in increases, so this slightly overstates 2026 and 2027 tax. The factor is reset every year.",
     },
     "bench.house": {
       conf: "high",
@@ -121,6 +128,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026-07",
       url: "https://apciqca-152af.kxcdn.com/wp-content/uploads/sites/4/2026/08/stats-202607-en.pdf",
       note: "METRIC: a median, read off the July 2026 table ($650,000 vs $625,000 a year earlier). This is NOT the same quantity the other records hold — Toronto, Vancouver, Calgary and Ottawa carry quality-constant MLS HPI benchmarks and Winnipeg carries board averages. A median, an average and a benchmark are not interchangeable, and `bench` currently holds all three across the dataset. Switching Montreal to another metric to match is a product decision, not a data fix. SCOPE: Montreal CMA. The Island of Montreal alone is $817,500 — 26% higher.",
+      summary: "The median single-family price for the Montréal area in July 2026 from QPAREB, $650,000. It is a median, not the price-benchmark measure used for some other cities, so the figures are not directly comparable. The Island of Montréal alone is higher, at $817,500.",
     },
     "bench.condo": {
       conf: "high",
@@ -128,12 +136,14 @@ export const montreal: Jurisdiction = {
       asOf: "2026-07",
       url: "https://apciqca-152af.kxcdn.com/wp-content/uploads/sites/4/2026/08/stats-202607-en.pdf",
       note: "METRIC: a median ($431,500 vs $425,000, +1.5%), same caveat as bench.house. SCOPE: Montreal CMA; the Island of Montreal is $480,000.",
+      summary: "The median condominium price for the Montréal area in July 2026 from QPAREB, $431,500. Like the house figure, it is a median rather than a benchmark. The Island of Montréal is higher, at $480,000.",
     },
     "rent": {
       conf: "high",
       src: "CMHC Rental Market Survey, Montréal CMA, two-bedroom purpose-built, reliability code a",
       asOf: "2025-10",
       note: "The prototype's $1,950 was ~45% high. CMHC reports the average rent of the EXISTING OCCUPIED stock, which runs below asking rents for units actually turning over — the survey's own definition, and the reason this cannot be dated later than October 2025.",
+      summary: "Average rent for a two-bedroom purpose-built apartment in the Montréal area, from CMHC's October 2025 survey. It reflects existing occupied units, which cost less than asking rents on units now turning over, so a new lease may cost more.",
     },
     "yoy": {
       conf: "high",
@@ -141,6 +151,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026-07",
       url: "https://apciqca-152af.kxcdn.com/wp-content/uploads/sites/4/2026/08/stats-202607-en.pdf",
       note: "Montreal is the one market of the eight in this dataset that is rising, and the sign is load-bearing for Rent vs Buy. A single scalar collapses a real spread: single-family +4%, plexes +6%, condominiums +2%.",
+      summary: "The year-over-year change in Montréal's single-family median price in July 2026, from QPAREB. Montréal's prices are rising. One figure hides a spread: single-family +4%, plexes +6%, condominiums +2%.",
     },
     "taxTime.0.amount": {
       conf: "high",
@@ -148,6 +159,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026",
       url: "https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/finances/publications-adm/Bulletins/FR/BI_Explication_technique.pdf",
       note: "The FEDERAL Home Buyers' Amount: $10,000 x the 2026 lowest federal rate of 14% = $1,400, replacing the prototype's $1,500 (which was the 15% figure). The bulletin lists the federal credit as $1,169 for a Quebec resident — $1,400 x 0.835 after the 16.5% Quebec abatement, which the bulletin states as an 11.69% effective rate. norma does not model the abatement, so it carries the gross $1,400; a Quebec filer's actual benefit is $1,169.",
+      summary: "The federal home buyers' credit: a $10,000 claim at the lowest federal rate of 14%, worth $1,400. A Quebec resident's actual federal benefit is $1,169 after a provincial abatement; the model does not apply it, so it shows the larger figure.",
     },
     "taxTime.1.amount": {
       conf: "high",
@@ -155,6 +167,7 @@ export const montreal: Jurisdiction = {
       asOf: "2026",
       url: "https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/finances/publications-adm/Bulletins/FR/BI_Explication_technique.pdf",
       note: "Quebec's own crédit d'impôt non remboursable pour l'achat d'une première habitation: « un montant de 10 000 $ converti au premier taux d'imposition au Québec, soit 14 % » = $1,400. It was $1,500 for 2022 only, when the rate was 15%. Separate from and additional to the new refundable credit — the bulletin adds all three to a maximum of $8,444.",
+      summary: "Quebec's own non-refundable first-time-buyer credit: $10,000 at Quebec's first tax rate of 14%, worth $1,400. It is separate from, and in addition to, the refundable credit.",
     },
   },
 };

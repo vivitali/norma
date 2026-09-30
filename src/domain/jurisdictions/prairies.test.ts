@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLines } from "../engine";
+import { affordability, buildLines, propertyTaxAnnual } from "../engine";
 import { ca } from "../rules/ca";
 import { getJurisdiction } from "./index";
 
@@ -126,10 +126,13 @@ describe("prairie market direction", () => {
     expect(yyc().bench).toEqual({ house: 743900, condo: 297600 });
   });
 
-  it("keeps Winnipeg's benchmarks exactly as the board published them", () => {
-    // The only benchmark figures in the dataset that were already correct, to the dollar.
-    expect(wpg().bench).toEqual({ house: 454264, condo: 290522 });
-    expect(wpg().yoy).toBeCloseTo(0.02, 6);
+  it("carries Winnipeg's August 2026 averages exactly as the board published them", () => {
+    // WinnipegREALTORS' release of 2026-09-03; re-verified 2026-09-28 (research dossier
+    // docs/superpowers/research/2026-09-28-winnipeg-figures.md). yoy is the year-to-date change,
+    // the one measure detached and condo agree on — see its provenance note.
+    expect(wpg().bench).toEqual({ house: 439216, condo: 283715 });
+    expect(wpg().yoy).toBeCloseTo(0.03, 6);
+    expect(wpg().provenance["bench.house"]!.asOf).toBe("2026-08");
   });
 
   it("carries CMHC's October 2025 two-bedroom rents", () => {
@@ -176,14 +179,28 @@ describe("prairie premium tax", () => {
 });
 
 describe("figures deliberately left alone", () => {
-  it("keeps Winnipeg's suspect utility setup fee, flagged rather than invented away", () => {
-    // 3000 against Saskatoon's 550 and Calgary's 600 for the same field. Almost certainly a
-    // prototype transcription error — and still not something to replace, because no source
-    // supports any particular substitute. The disclosure is the deliverable, so it is tested.
-    expect(wpg().fees.setup).toBe(3000);
+  it("derives Winnipeg's utility setup fee from published tariffs, and says how", () => {
+    // Was 3000 and flagged as a suspected transcription error. The 2026-09-28 re-verification
+    // found no published Manitoba Hydro/Centra account-opening fee or residential deposit; the
+    // contingent charges a buyer can meet sum to about $275. Still an assumption — nobody
+    // publishes the total — so the derivation is the deliverable and is tested.
+    expect(wpg().fees.setup).toBe(300);
     const p = wpg().provenance["fees.setup"]!;
     expect(p.conf).toBe("assumption");
-    expect(p.note).toMatch(/SUSPECTED TRANSCRIPTION ERROR/);
+    expect(p.note).toMatch(/Centra/);
+    expect(p.note).toMatch(/dropped-zero/);
+    expect(p.note).not.toMatch(/SUSPECTED/);
+  });
+
+  it("nets Manitoba's Homeowners Affordability Tax Credit off Winnipeg's property tax", () => {
+    const j = wpg();
+    expect(j.propTax.credit).toMatchObject({ kind: "cappedAgainstSlice", amount: 1600 });
+    expect(j.provenance["propTax.credit"]!.conf).toBe("high");
+    // At the benchmark the school tax (~$3,161) exceeds $1,600, so the full credit applies.
+    const price = j.bench.house!;
+    expect(propertyTaxAnnual(j, price)).toBeCloseTo(price * j.propTax.effective - 1600, 6);
+    // Below ~$222,000 the school tax itself is the cap.
+    expect(propertyTaxAnnual(j, 100_000)).toBeCloseTo(100_000 * (j.propTax.effective - 0.0071973), 6);
   });
 
   it("keeps Manitoba's confirmed land transfer tax schedule", () => {
@@ -204,3 +221,50 @@ describe("figures deliberately left alone", () => {
     expect(yyc().provenance["transfer.0.base"]?.src).toMatch(/64\.1\(2\)/);
   });
 });
+
+describe("Winnipeg's capped tax credit in the ceiling solves", () => {
+  const input = (comfortCeiling: number, income1: number) => ({
+    income1,
+    income2: 0,
+    otherIncome: 0,
+    haircut: 0,
+    debts: 0,
+    amortYears: 25,
+    comfortCeiling,
+    insuranceAnnual: 1200,
+    utilities: 200,
+    condoFee: 0,
+    contractRate: 4.29,
+    price: 300000,
+    dpPct: 10,
+    ftb: true,
+    ptype: "house" as const,
+    elsewhere: false,
+    residency: "resident" as const,
+    funds: null,
+    save: null,
+  });
+
+  it.each([
+    ["below the cap", 1100, 30000],
+    ["above the cap", 3200, 140000],
+  ])("solves exactly %s", (_case, comfortCeiling, income1) => {
+    const j = wpg();
+    const r = affordability(j, ca, input(comfortCeiling, income1));
+    // The monthly cost the comfort price implies, with the credit taken EXACTLY at that price,
+    // must equal the budget the reader set: nothing overstated where the school tax is under
+    // $1,600, nothing understated above it.
+    const perDollar = r.fc * financedFractionFor(r) + ca.maintenanceReserve / 12;
+    const base = comfortCeiling - 1200 / 12 - 200;
+    expect(r.comfort * perDollar + propertyTaxAnnual(j, r.comfort) / 12).toBeCloseTo(base, 4);
+    // And the reported budget is the one the printed derivation divides.
+    expect(r.budget).toBeCloseTo(base + r.comfortTaxCredit, 6);
+    if (_case === "below the cap") expect(r.comfortTaxCredit).toBeLessThan(1600 / 12);
+    else expect(r.comfortTaxCredit).toBeCloseTo(1600 / 12, 6);
+  });
+});
+
+/** The financed fraction the engine used, recovered from its own outputs (loan ÷ price at comfort). */
+function financedFractionFor(r: { comfortPI: number; comfort: number; fc: number }): number {
+  return r.comfortPI / (r.comfort * r.fc);
+}

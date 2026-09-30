@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { setRequestLocale } from "next-intl/server";
 import { renderWithIntl } from "@/test/render-with-intl";
+import { jurisdictionsOf } from "@/domain/jurisdictions";
+import en from "../../../messages/en.json";
 import HomePage from "./page";
 
 // getTranslations resolves REAL copy from messages/en.json, not the key name.
@@ -19,7 +21,13 @@ vi.mock("next-intl/server", async () => {
         (node, part) => (node as Record<string, unknown>)[part],
         messages,
       ) as Record<string, string>;
-      return (key: string) => scope[key] ?? key;
+      // Naive `{name}` substitution: enough for the plain-text placeholders (`{places}`) the
+      // FAQ answers carry, without pulling in an ICU formatter.
+      return (key: string, values?: Record<string, string>) =>
+        Object.entries(values ?? {}).reduce(
+          (text, [name, value]) => text.replaceAll(`{${name}}`, value),
+          scope[key] ?? key,
+        );
     }),
   };
 });
@@ -89,5 +97,25 @@ describe("Home page", () => {
 
     expect(markedUp.length).toBeGreaterThan(0);
     expect([...markedUp].sort()).toEqual([...rendered].sort());
+  });
+
+  it("names every modelled US market in the FAQPage answer, and never claims only one", async () => {
+    // The answer used to say Houston "is the only US market modelled" after Austin and Seattle
+    // shipped. It is built from the registry now, so a new metro cannot make it false again.
+    const tree = await HomePage({
+      params: Promise.resolve({ locale: "en-US" }),
+      searchParams: Promise.resolve({}),
+    });
+    const { container } = renderWithIntl(tree, { locale: "en-US" });
+    const faq = [...container.querySelectorAll('script[type="application/ld+json"]')]
+      .map((s) => JSON.parse(s.textContent ?? "{}"))
+      .find((d) => d["@type"] === "FAQPage");
+    const answer: string = faq.mainEntity.find((q: { name: string }) =>
+      /markets/i.test(q.name),
+    ).acceptedAnswer.text;
+    const names = en.Jurisdictions as unknown as Record<string, string>;
+    for (const j of jurisdictionsOf("us")) expect(answer, j.id).toContain(names[j.id]);
+    expect(answer).not.toMatch(/\bonly\b/i);
+    expect(answer).not.toContain("{places}");
   });
 });

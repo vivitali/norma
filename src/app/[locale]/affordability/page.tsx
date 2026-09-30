@@ -8,7 +8,12 @@ import { useRules } from "@/hooks/use-country";
 import { useSharedState } from "@/hooks/use-shared-state";
 import { useSections } from "@/hooks/use-sections";
 import { TOOL_DEFAULTS, TOOL_KEYS } from "@/lib/shared-inputs";
-import { isPersonalised, resolveInputs } from "@/lib/resolve-inputs";
+import {
+  assumedBudgetExceedsIncome,
+  isPersonalised,
+  resolveInputs,
+  unsetHeadlineAssumptions,
+} from "@/lib/resolve-inputs";
 import { AFFORDABILITY_SECTIONS, type AffordabilitySectionId } from "@/lib/sections";
 import {
   approvalState,
@@ -20,7 +25,7 @@ import {
 } from "@/lib/affordability-view";
 import { SCENARIO_PERCENTS } from "@/lib/scenarios-view";
 import type { Tone } from "@/lib/tone";
-import { useMoney, usePercent } from "@/lib/format";
+import { useDecimal, useMoney, usePercent } from "@/lib/format";
 import { countryKey } from "@/lib/country-key";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
 import { CrossLink, TraceLabel } from "@/components/cross-link";
@@ -49,6 +54,7 @@ export default function AffordabilityPage() {
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
   const pct = usePercent();
+  const dec = useDecimal();
 
   const resolved = useMemo(
     () => resolveInputs(stored, jurisdiction, rules),
@@ -64,7 +70,9 @@ export default function AffordabilityPage() {
   // each open whichever section their own figures make decisive.
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     AFFORDABILITY_SECTIONS,
-    decidingSectionId(result),
+    // A first-time visitor is not greeted by an open derivation built on inputs they
+    // never gave; the answer head and stats carry the verdict until they personalise.
+    isPersonalised(stored) ? decidingSectionId(result) : null,
   );
 
   /**
@@ -93,6 +101,16 @@ export default function AffordabilityPage() {
   const propTaxProv =
     jurisdiction.provenance["propTax.publishedRate"] ?? jurisdiction.provenance["propTax.effective"];
 
+  // The budget in use is the placeholder, not a figure the reader gave: every sentence
+  // that would say "your ceiling" must say so instead (PRODUCT.md Principle 2).
+  const budgetDefault = stored.comfortCeiling === null;
+  const budgetFmt = fmt(resolved.comfortCeiling);
+  const subComfortText = budgetDefault
+    ? t("subComfortDefault", { b: budgetFmt })
+    : t("subComfort");
+  const unsetAssumptions = unsetHeadlineAssumptions(stored);
+  const budgetOverIncome = assumedBudgetExceedsIncome(stored, resolved);
+
   const verdict = verdictKey(result);
   const approval = approvalState(result);
   const comfort = comfortState(result);
@@ -115,27 +133,72 @@ export default function AffordabilityPage() {
    * in all four locales. So both branches now open by naming the figure and then say
    * what is wrong with the target.
    */
+  // The lender's ceiling is below the comfort price: the lender, not the reader's own
+  // budget, is what limits them. The hero stays the comfort price (page.test.tsx pins
+  // it), so the sentence under it must NAME the lower limit rather than let the larger
+  // figure read as the answer. Where the ceiling is the higher one, nothing changes.
+  const lenderCaps = result.comfort > result.ceiling;
+  const cap = lenderCaps ? t("vCap", { c: fmt(result.ceiling), a: fmt(result.comfort) }) : null;
   const head =
-    verdict === "comfortable"
-      ? `${t("vComfort")} ${fmt(result.comfort)}.`
-      : verdict === "over"
-        ? t("vOver")
-        : verdict === "declined"
-          ? t("vDeclined", { a: fmt(result.comfort) })
-          : t("vShortCash", { a: fmt(result.comfort) });
+    cap !== null
+      ? verdict === "comfortable"
+        ? cap
+        : `${cap} ${
+            verdict === "over"
+              ? t("vCapOver")
+              : verdict === "declined"
+                ? // `stored.price === null` is the benchmark, not an entry: never say "you entered".
+                  t(stored.price === null ? "vCapDeclinedTypical" : "vCapDeclined")
+                : t("vCapShortCash")
+          }`
+      : verdict === "comfortable"
+        ? `${t("vComfort")} ${fmt(result.comfort)}.`
+        : verdict === "over"
+          ? t(stored.price === null ? "vOverTypical" : "vOver")
+          : verdict === "declined"
+            ? t(stored.price === null ? "vDeclinedTypical" : "vDeclined", { a: fmt(result.comfort) })
+            : t("vShortCash", { a: fmt(result.comfort) });
   const sub =
     verdict === "declined"
-      ? result.tdsBinds
-        ? t("ckTds")
-        : t("ckGds")
+      ? result.qualIncome <= 0
+        ? // No limit is binding when nothing qualifies; the approval row says why.
+          lenderCaps
+          ? undefined
+          : subComfortText
+        : result.tdsBinds
+          ? t("ckTds")
+          : t("ckGds")
       : verdict === "shortCash"
         ? result.monthsToClose === null
           ? t("ckCsNo")
           : t("vMonths", { n: result.monthsToClose })
-        : t("subComfort");
+        : lenderCaps
+          ? t("subCap")
+          : subComfortText;
+
+  // Jump to a field and put the caret in it. A hash link would scroll but not
+  // reliably focus an <input>, and the inputs are ~3,000px down at phone width.
+  const focusField = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.focus({ preventScroll: true });
+  };
+
+  const ceilingStat = {
+    label: t("stCeiling"),
+    value: fmt(result.ceiling),
+    // When it binds, this is the reader's limit and not merely a ceiling on paper.
+    note: lenderCaps ? t("stCeilingBinds") : t("stCeilingNote"),
+    mark: "rule" as const,
+    // The Approval section's tone, so one figure never wears two colours: red only
+    // when the lender actually declines the target, otherwise the same ink the
+    // sentence above prints it in.
+    ...(approval === "blocked" ? { tone: "blocked" as const } : {}),
+  };
 
   /** Comfort: positive means over the ceiling you set. */
-  const headroom = (n: number) => (n <= 0 ? `${fmt(-n)} ${t("headroom")}` : `${fmt(n)} ${t("over")}`);
+  const headroom = (n: number) => (n <= 0 ? `${fmt(-n)} ${t("headroom")}` : t("overBudget", { a: fmt(n) }));
   /**
    * Cash has its own word. A shortfall is money you do not have yet — "short" —
    * not money you are "over" by, which is what a comfort overrun means. Reusing
@@ -179,6 +242,25 @@ export default function AffordabilityPage() {
       value={stored.funds}
       min={0}
       onCommit={(funds) => update({ funds })}
+    />
+  );
+  const budgetField = (
+    <NumberField
+      id="comfortCeiling-inline"
+      label={t("cComfortCeiling")}
+      value={stored.comfortCeiling}
+      placeholder={resolved.comfortCeiling}
+      min={0}
+      onCommit={(comfortCeiling) => update({ comfortCeiling })}
+    />
+  );
+  const priceField = (
+    <NumberField
+      id="price-inline"
+      label={t("price")}
+      value={stored.price}
+      min={0}
+      onCommit={(price) => update({ price })}
     />
   );
   const condoFeeField = (
@@ -252,7 +334,11 @@ export default function AffordabilityPage() {
         eyebrow={t("aTitle")}
         figure={fmt(result.comfort)}
         pulseKey={hydrated && isPersonalised(stored) ? `${jurisdiction.id}:yours` : jurisdiction.id}
-        head={resolved.priceKnown ? head : `${t("vComfort")} ${fmt(result.comfort)}.`}
+        head={
+          resolved.priceKnown
+            ? head
+            : (cap ?? `${t("vComfort")} ${fmt(result.comfort)}.`)
+        }
         sub={
           resolved.priceKnown
             ? sub
@@ -279,27 +365,57 @@ export default function AffordabilityPage() {
           the assumption is the fix; removing the answer is not.
         */
         tag={
-          isPersonalised(stored)
+          unsetAssumptions.length === 0
             ? t("tagYours")
-            : t("tagTypical", {
-                income: fmt(resolved.income1),
-                budget: fmt(resolved.comfortCeiling),
-              })
+            : unsetAssumptions.length === 2
+              ? t("tagTypical", { income: fmt(resolved.income1), budget: budgetFmt })
+              : unsetAssumptions[0] === "comfortCeiling"
+                ? t("tagBudget", { budget: budgetFmt })
+                : t("tagIncome", { income: fmt(resolved.income1) })
         }
+        onTagActivate={
+          unsetAssumptions.length === 0
+            ? undefined
+            : () => focusField(budgetDefault ? "comfortCeiling" : "income1")
+        }
+        adjust
         stats={
           resolved.priceKnown
             ? [
-                { label: t("stCeiling"), value: fmt(result.ceiling), note: t("stCeilingNote"), mark: "rule" as const },
+                ceilingStat,
                 { label: t("stMonthly"), value: fmt(result.monthly.total), note: headroom(result.comfortGap), mark: "estimate" as const },
                 { label: t("stCash"), value: fmt(result.cc.net) },
               ]
             : // The lender ceiling is a price the reader's income supports, computed the
               // same way with no benchmark in it. The other two are the price's own
               // monthly cost and the cash to close on it, and both would read $0.
-              [{ label: t("stCeiling"), value: fmt(result.ceiling), note: t("stCeilingNote"), mark: "rule" as const }]
+              [ceilingStat]
         }
       />
       </PendingFigures>
+
+      {/*
+        The assumed budget is more than the reader's whole monthly income before tax:
+        the headline is then a price nobody could pay for, and the tag alone is too
+        quiet a disclosure. Say it, and ask for the budget right here rather than a
+        screen of scrolling away.
+      */}
+      {budgetOverIncome ? (
+        <div className="max-w-[560px]">
+          <NoteLine tone="caution">
+            {t("budgetAboveIncome", {
+              budget: budgetFmt,
+              income: fmt((resolved.income1 + resolved.income2 + resolved.otherIncome) / 12),
+            })}
+          </NoteLine>
+          <InlineAsk prompt={t("budgetAsk")}>{budgetField}</InlineAsk>
+        </div>
+      ) : null}
+      {!resolved.priceKnown ? (
+        <div className="max-w-[560px]">
+          <InlineAsk prompt={t("priceAsk", { place: tJur(`at.${jurisdiction.id}`) })}>{priceField}</InlineAsk>
+        </div>
+      ) : null}
 
       {resolved.priceKnown ? (
         <div className="pt-8 sm:pt-[34px]">
@@ -317,7 +433,9 @@ export default function AffordabilityPage() {
             // NOT `ckApNo + ckGds` — that was the head's first sentence plus the
             // sub-line verbatim, both a few hundred pixels above. The deciding
             // section's one always-visible line has to earn its place.
-            result.tdsBinds
+            result.qualIncome <= 0
+              ? t("noIncomeLine")
+              : result.tdsBinds
               ? t(countryKey("ckApTds", rules.country), { a: fmt(result.binding), d: fmt(resolved.debts) })
               : t(countryKey("ckApGds", rules.country), { a: fmt(result.binding) }),
             fmt(result.ceiling),
@@ -333,7 +451,7 @@ export default function AffordabilityPage() {
                 value={pct(result.qualRate, 2)}
                 provenance={<Provenance kind="rule" />}
               />
-              <PanelRow label={t("mFactor")} value={result.fq.toFixed(6)} />
+              <PanelRow label={t("mFactor")} value={dec(result.fq, 6)} />
               <PanelRow
                 label={`${t("mGdsAllow")} · ${t(countryKey("dtiFrontAbbr", rules.country))} ${pct(rules.gds)}`}
                 value={fmt(result.gdsAllow)}
@@ -418,9 +536,9 @@ export default function AffordabilityPage() {
                 through the conventional-loan math this page models.
               */}
               {rules.country === "us" ? (
-                <NoteLine tight>
-                  {t("fhaTip", { p: pct(rules.programs.fha.minDown * 100) })}
-                </NoteLine>
+                <div className="mt-[18px] max-w-[700px]">
+                  <NoteLine>{t("fhaTip", { p: pct(rules.programs.fha.minDown * 100) })}</NoteLine>
+                </div>
               ) : null}
               {/*
                 VERDICT. Declined only, and suppressed when the cash panel is
@@ -450,9 +568,15 @@ export default function AffordabilityPage() {
           {section(
             "comfort",
             TONE[comfort],
-            comfort === "pass" ? t("ckCfOk") : t("ckCfNo"),
+            comfort === "pass"
+              ? budgetDefault
+                ? t("ckCfOkDefault", { b: budgetFmt })
+                : t("ckCfOk")
+              : budgetDefault
+                ? t("ckCfNoDefault", { b: budgetFmt })
+                : t("ckCfNo"),
             headroom(result.comfortGap),
-            t("subComfort"),
+            subComfortText,
             <>
               {/*
                 TRACE, on the label. `monthly.pi` is `cc.fin.loan *
@@ -483,22 +607,22 @@ export default function AffordabilityPage() {
                 Houston-specific, not US-wide: the Tax Code s.23.23 homestead appraisal cap
                 (houston.ts's own `propTax.exemptions` provenance note) does not bind in the
                 purchase year, when the appraised value IS the purchase price — it only limits
-                growth from the next reassessment onward. Gated on the jurisdiction rather than
-                `rules.country === "us"` because this is a Texas statute, not a US-market fact;
-                Houston is the only US jurisdiction today, so the two happen to coincide, but a
-                second US jurisdiction must not inherit this note for free.
+                growth from the next reassessment onward. Gated on the STATE rather than
+                `rules.country === "us"`: this is a Texas statute (Tax Code §23.23), true for
+                Houston and Austin alike and for no Washington record — Seattle has no homestead
+                exemption at all.
               */}
-              {jurisdiction.id === "houston" ? (
+              {jurisdiction.country === "us" && jurisdiction.state === "TX" ? (
                 <NoteLine tight>{t("propTaxCapNote")}</NoteLine>
               ) : null}
-              <PanelRow label={t("cInsurance")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
+              <PanelRow label={t("insuranceMonthly")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
               {/*
-                Same scoping note as propTaxCapNote above: wind/hail exposure is a Texas fact,
-                not a US one. `fees.insurance` is `medium` confidence (houston.ts) — a statewide
-                TDI average, not Harris-County-specific — so this says shop around rather than
-                quoting the number the row above it already shows.
+                Same scoping as propTaxCapNote above: wind/hail exposure is a Texas fact, not a US
+                one, and both Texas records (houston.ts, austin.ts) carry the SAME statewide TDI
+                average, which is what "This figure is a statewide average" claims. Seattle's
+                insurance figure is a different, Washington-level assumption, so it gets no note.
               */}
-              {jurisdiction.id === "houston" ? (
+              {jurisdiction.country === "us" && jurisdiction.state === "TX" ? (
                 <NoteLine tight>{t("insuranceHighNote")}</NoteLine>
               ) : null}
               {/*
@@ -515,7 +639,11 @@ export default function AffordabilityPage() {
               ) : null}
               <PanelRow label={t("mMaint")} value={fmt(result.monthly.maintenance)} provenance={<Provenance kind="estimate" />} />
               <PanelRow label={t("mTotal")} value={fmt(result.monthly.total)} strong />
-              <PanelRow label={t("mStated")} value={fmt(resolved.comfortCeiling)} strong />
+              <PanelRow
+                label={t(budgetDefault ? "mStatedDefault" : "mStated")}
+                value={budgetFmt}
+                strong
+              />
               {/*
                 Reachable wherever a strata fee can exist, not only where we ask for
                 one. The prompt is still gated to an unanswered CONDO — "You picked a
@@ -594,28 +722,37 @@ export default function AffordabilityPage() {
             fmt(Math.abs(result.gap)),
             t("gapWhy"),
             <>
-              <GapBand result={result} price={resolved.price} />
+              <GapBand result={result} price={resolved.price} typical={stored.price === null} />
               <div className="max-w-[620px]">
                 <PanelRow label={t("stComfort")} value={fmt(result.comfort)} strong />
                 <PanelRow label={t("stCeiling")} value={fmt(result.ceiling)} />
-                <PanelRow label={t("gapTarget")} value={fmt(resolved.price)} />
+                <PanelRow label={t(stored.price === null ? "gapTargetTypical" : "gapTarget")} value={fmt(resolved.price)} />
               </div>
             </>,
           )}
 
           {section("math", "none", t("mLine"), "", t("mWhy"), (
-            <MathColumns result={result} resolved={resolved} />
+            <MathColumns
+              result={result}
+              resolved={resolved}
+              jurisdiction={jurisdiction}
+              comfortAssumed={budgetDefault}
+            />
           ))}
         </div>
       ) : null}
 
-      <InputGroups
-        stored={stored}
-        resolved={resolved}
-        result={result}
-        jurisdiction={jurisdiction}
-        update={update}
-      />
+      {/* In the ask state the sections block (which carries the page's top gap) is not
+          rendered, so the inputs' heading would butt against the hero's stat strip. */}
+      <div id="adjust" className="scroll-mt-4 pt-8 sm:pt-[34px]">
+        <InputGroups
+          stored={stored}
+          resolved={resolved}
+          result={result}
+          jurisdiction={jurisdiction}
+          update={update}
+        />
+      </div>
 
       {/*
         The property tax rate is the ONLY jurisdiction figure this page displays,
@@ -626,7 +763,7 @@ export default function AffordabilityPage() {
       <FigureFooter jurisdiction={jurisdiction}>
         {propTaxProv?.src ? (
           <p>
-            {t("propTaxSource")}: {propTaxProv.src}
+            {t("propTaxSource", { src: propTaxProv.src })}
             {propTaxProv.asOf ? ` (${propTaxProv.asOf})` : null}
           </p>
         ) : null}

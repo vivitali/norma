@@ -69,15 +69,17 @@ const PRICE_DERIVED_HEADLINE = new Set<string>([
  * Stored state a page needs before it will render an ANSWER at all.
  *
  * Rent vs buy weighs a purchase against a PUBLISHED rent, and every rent in this
- * dataset is a CMHC two-bedroom apartment average. That answers a condo purchase
- * and nothing else, so on the default `ptype: "house"` the page correctly asks
- * for a rent instead of printing a verdict — and a contract about sections, or
- * about figures inside them, then has nothing to inspect. Seeding a condo puts
- * the page in the state these contracts are actually about. The ask state has its
- * own tests, in the page's own file.
+ * dataset is a CMHC two-bedroom apartment average. On the default `ptype: "house"`
+ * the page now answers on that apartment rent, labelled as such, while asking for
+ * the reader's own in place; the seed keeps a condo, where the published rent is a
+ * like-for-like comparison and no label or ask is in play, so these contracts
+ * inspect the plain answering state. The labelled default and the ask where no rent
+ * is published at all have their own tests, in the page's own file.
  */
 const SEED: Record<string, Record<string, unknown>> = {
   "Rent vs buy": { ptype: "condo" },
+  // A new build is the only state that renders `omNewBuild`, which the vocabulary contract must reach.
+  "Closing costs": { ptype: "newbuild" },
 };
 
 function seed(name: string) {
@@ -108,6 +110,10 @@ describe("exactly one section opens on arrival", () => {
   for (const [name, Page] of PAGES) {
     it(name, () => {
       seed(name);
+      // A page opens its deciding section only once the reader has personalised (a first visit
+      // opens none — see the sweep below), so give every page one stated income.
+      const cur = JSON.parse(window.localStorage.getItem("norma.inputs.v2") ?? "{}");
+      window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ ...cur, income1: 75000 }));
       renderWithIntl(
         <JurisdictionProvider>
           <Page />
@@ -116,6 +122,21 @@ describe("exactly one section opens on arrival", () => {
       expect(screen.getAllByRole("button", { expanded: true })).toHaveLength(1);
     });
   }
+
+  it("opens none on a first visit, on any page", () => {
+    // A first-time visitor has given nothing, so must not land on an open derivation of figures
+    // they never entered: the answer head and its stats carry the verdict.
+    for (const [name, Page] of PAGES) {
+      seed(name);
+      const { unmount } = renderWithIntl(
+        <JurisdictionProvider>
+          <Page />
+        </JurisdictionProvider>,
+      );
+      expect(screen.queryAllByRole("button", { expanded: true }), name).toHaveLength(0);
+      unmount();
+    }
+  });
 
   it("offers to expand rather than to collapse, with one already open", () => {
     // Keyed off ALL sections, not any: an any-test made the bulk control read
@@ -492,7 +513,7 @@ describe("horizontal scroll stays inside the element that owns it", () => {
     const source = readFileSync("src/components/sources-content.tsx", "utf8");
     // Anchored on the `>` that ends the opening tag, so `key={note}` — an
     // attribute, not a rendered child — does not count as a third print.
-    const verbatim = [...source.matchAll(/>\s*\{(?:entry\.src|note)\}/g)];
+    const verbatim = [...source.matchAll(/>\s*\{(?:renderNote\((?:entry\.src|note)\)|entry\.src|note)\}/g)];
     // Two source-title branches (linked and plain) and the note paragraph.
     expect(verbatim.length, "the inventory stopped printing verbatim text").toBe(3);
     for (const match of verbatim) {
@@ -777,6 +798,9 @@ describe("US vocabulary contract", () => {
     "HBP",
     "TFSA",
     "renewal",
+    "statement of adjustments",
+    "agreement of purchase and sale",
+    "development levies",
     "Canad",
     "province",
     "provincial",

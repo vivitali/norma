@@ -21,7 +21,7 @@ import { WealthChart } from "@/components/rent-vs-buy/wealth-chart";
 import { NumberField } from "@/components/number-field";
 import { Provenance } from "@/components/provenance";
 import { PurchaseInputs } from "@/components/purchase-inputs";
-import { AnswerHead, FigureFooter, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
+import { AnswerHead, FigureFooter, InlineAsk, NoteLine, PendingFigures, SectionsHeader, ToolMain } from "@/components/tool-page";
 import { FAVOURS_BUYING, FAVOURS_RENTING } from "./omissions";
 import { CalcLedger, CalcTrace } from "@/components/calc/calc-trace";
 import { Label } from "@/components/ui/label";
@@ -43,9 +43,10 @@ export default function RentVsBuyPage() {
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const { isOpen, toggle, expanded, toggleAll } = useSections(
     RENT_VS_BUY_SECTIONS,
-    // Always the verdict: this page has exactly one question, and the break-even
-    // year is the only number that answers it.
-    "verdict",
+    // The verdict — but only once the reader has given something of their own. A first-time
+    // visitor is not greeted by an open derivation built on inputs they never gave; the answer
+    // head and its stats carry the verdict, and a hash arrival still opens its section.
+    isPersonalised(stored) ? "verdict" : null,
   );
   const fmt = useMoney();
   const pct = usePercent();
@@ -106,16 +107,49 @@ export default function RentVsBuyPage() {
 
   const hold = resolved.holding;
   const atHorizon = rowAt(result.rows, hold);
+  // US rows only, and only when owed: the tax on a gain above the home-sale exclusion.
+  const homeGainTax = atHorizon.homeGainTax ?? 0;
   const flatAtHorizon = rowAt(flat.rows, hold);
   const buyWins = atHorizon.adv > 0;
+  // The in-place rent ask is on screen (see below): it is then the only rent field.
+  const inlineRentAsk = resolved.rentBasisMismatch && resolved.priceKnown && resolved.rentKnown;
   const flatBuyWins = flatAtHorizon.adv > 0;
 
-  const head = buyWins ? t("vBuy") : t("vRent");
-  const sub = buyWins
-    ? t("vBuySub", { hold, cross: result.breakEven ?? hold, amt: fmt(atHorizon.adv) })
+  // "You plan to stay" only where the reader chose a horizon; otherwise the sentence says
+  // what the figures cover ("Over a 10-year stay") and asserts nothing about them.
+  const horizonSet = stored.holding !== TOOL_DEFAULTS.holding;
+  const head = buyWins ? t("vBuy", { hold }) : t("vRent", { hold });
+  const subBase = buyWins
+    ? t(horizonSet ? "vBuySub_set" : "vBuySub", { hold, cross: result.breakEven ?? hold, amt: fmt(atHorizon.adv) })
     : result.breakEven === null
-      ? t("vNeverSub", { hold, amt: fmt(-atHorizon.adv) })
-      : t("vRentSub", { hold, cross: result.breakEven, amt: fmt(-atHorizon.adv) });
+      ? t(horizonSet ? "vNeverSub_set" : "vNeverSub", { hold, amt: fmt(-atHorizon.adv) })
+      : t(horizonSet ? "vRentSub_set" : "vRentSub", { hold, cross: result.breakEven, amt: fmt(-atHorizon.adv) });
+  // Which rent "renting" means. While the default is a published two-bedroom APARTMENT rent
+  // and the home priced is a house, the verdict names it rather than leaving a reader to
+  // assume it is a house rent.
+  const sub = resolved.rentBasisMismatch
+    ? `${subBase} ${t(countryKey("vVersus", rules.country), { rent: fmt(resolved.rent) })}`
+    : subBase;
+
+  // Jump to a field and put the caret in it.
+  const focusField = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.focus({ preventScroll: true });
+  };
+  // The tag names the assumption the headline rests on and jumps to the field that replaces
+  // it. "Your figures" only when neither the rent nor the price is assumed.
+  const tagAssumption: { text: string; focus: string } | null = resolved.rentBasisMismatch
+    ? { text: t(countryKey("rentDefaultTag", rules.country)), focus: "rent-inline" }
+    : stored.price === null
+      ? {
+          text: t("tagPrice", { place: tJur(`at.${jurisdiction.id}`), price: fmt(resolved.price) }),
+          focus: "price",
+        }
+      : stored.rent === null
+        ? { text: t("tagRent", { rent: fmt(resolved.rent) }), focus: "rent" }
+        : null;
   // The counterweight the headline cannot carry: whether the verdict survives a
   // flat market. If it does not, the reader is betting on price growth.
   const caveat = buyWins ? (flatBuyWins ? t("vFlatGood") : t("vApprOnly")) : null;
@@ -174,7 +208,9 @@ export default function RentVsBuyPage() {
             pulseKey={jurisdiction.id}
             head={head}
             sub={caveat ? `${sub} ${caveat}` : sub}
-            tag={isPersonalised(stored) ? t("tagYours") : t("tagTypical")}
+            tag={tagAssumption ? tagAssumption.text : t("tagYours")}
+            onTagActivate={tagAssumption ? () => focusField(tagAssumption.focus) : undefined}
+            adjust
             stats={[
               {
                 label: t("crossLabel"),
@@ -198,6 +234,29 @@ export default function RentVsBuyPage() {
           />
           </PendingFigures>
 
+          {/*
+            The default is a published apartment rent standing in for a house rent. The
+            answer above is honest about that only if the reader can replace it where they
+            read it: same key as the field in the inputs below, so typing here changes both.
+          */}
+          {resolved.rentBasisMismatch ? (
+            <InlineAsk
+              prompt={t(countryKey("rentDefaultAsk", rules.country), {
+                city: tJur(`at.${jurisdiction.id}`),
+                rent: fmt(resolved.rent),
+              })}
+            >
+              <NumberField
+                id="rent-inline"
+                label={t("dRent")}
+                value={stored.rent}
+                placeholder={resolved.rent}
+                min={0}
+                onCommit={(rent) => update({ rent })}
+              />
+            </InlineAsk>
+          ) : null}
+
           <div className="pt-8 sm:pt-[34px]">
             <SectionsHeader
               label={t("breakdown")}
@@ -218,7 +277,15 @@ export default function RentVsBuyPage() {
               result.breakEven === null ? "" : t("crossYear", { n: result.breakEven }),
               t("verdictWhy"),
               <>
-                <WealthChart result={result} />
+                <WealthChart
+                  result={result}
+                  holding={hold}
+                  payoffLabel={
+                    result.payoffYear !== null
+                      ? t(countryKey("payoffLabel", rules.country), { n: result.payoffYear })
+                      : undefined
+                  }
+                />
                 <p className="pb-2 text-[12.5px] text-ink3">{t("byHorizonNote")}</p>
                 <div
                   // min-w-0 is load-bearing: this is a flex item, and `min-width: auto` is
@@ -227,14 +294,19 @@ export default function RentVsBuyPage() {
                   // sideways instead of the table. Only visible with the section open, which
                   // is why it survived a sweep that measured closed pages.
                   className="relative min-w-0 overflow-x-auto"
+                  tabIndex={0}
+                  role="region"
+                  aria-label={t("byHorizon")}
                 >
-                  <table className="w-full min-w-[480px] border-collapse text-[12.5px]">
+                  <table className="w-full border-collapse text-[12.5px] sm:min-w-[480px]">
                     <caption className="sr-only">{t("byHorizon")}</caption>
                     <thead>
                       <tr className="border-b border-border text-ink3">
                         <th scope="col" className="py-1.5 pr-3 text-left font-medium">{t("holdFor")}</th>
-                        <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("buyWealth")}</th>
-                        <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("rentWealth")}</th>
+                        {/* The two wealth columns drop below sm: the decisive columns are
+                            Advantage and Winner, and the table used to scroll them off-screen. */}
+                        <th scope="col" className="hidden py-1.5 pr-3 text-right font-medium sm:table-cell">{t("buyWealth")}</th>
+                        <th scope="col" className="hidden py-1.5 pr-3 text-right font-medium sm:table-cell">{t("rentWealth")}</th>
                         <th scope="col" className="py-1.5 pr-3 text-right font-medium">{t("advantage")}</th>
                         <th scope="col" className="py-1.5 font-medium">{t("winner")}</th>
                       </tr>
@@ -273,8 +345,8 @@ export default function RentVsBuyPage() {
                               column, and left-aligned currency puts the thousands
                               digit of one row over the hundreds of the next.
                             */}
-                            <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.buyW)}</td>
-                            <td className="py-1.5 pr-3 text-right tabular-nums">{fmt(row.rentW)}</td>
+                            <td className="hidden py-1.5 pr-3 text-right tabular-nums sm:table-cell">{fmt(row.buyW)}</td>
+                            <td className="hidden py-1.5 pr-3 text-right tabular-nums sm:table-cell">{fmt(row.rentW)}</td>
                             {/*
                               SIGNED, not Math.abs. The column is "Advantage of
                               buying" and it was printing the absolute value, so a
@@ -307,6 +379,10 @@ export default function RentVsBuyPage() {
                     </tbody>
                   </table>
                 </div>
+                {/* What the phone layout leaves out, said once — the contract in page-contracts.test.tsx. */}
+                <p className="mt-2 max-w-[560px] text-[11.5px] leading-[1.5] text-ink3 sm:hidden">
+                  {t("tablePhoneNote")}
+                </p>
               </>,
             )}
 
@@ -346,6 +422,7 @@ export default function RentVsBuyPage() {
                   These are this year's figures, like `cOwner` directly below
                   them, which is why they carry no year of their own.
                 */}
+                <p className="eyebrow pt-3 pb-1 text-ink3">{t(horizonSet ? "outlayYear_set" : "outlayYear", { n: hold })}</p>
                 <PanelRow label={t("cPropTax")} value={fmt(atHorizon.propTax)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cMaint")} value={fmt(atHorizon.maintenance)} provenance={<Provenance kind="estimate" />} />
                 {/*
@@ -363,7 +440,7 @@ export default function RentVsBuyPage() {
                 <PanelRow label={t("cBalance")} value={fmt(atHorizon.balance)} />
                 {result.payoffYear !== null ? (
                   <PanelRow
-                    label={t("payoffLabel", { n: result.payoffYear })}
+                    label={t("payoffOutlay", { n: result.payoffYear })}
                     value={fmt(rowAt(result.rows, result.payoffYear).ownerOutlay)}
                   />
                 ) : null}
@@ -411,6 +488,20 @@ export default function RentVsBuyPage() {
                   value={fmt(atHorizon.sellingCost)}
                   provenance={<Provenance kind="estimate" />}
                 />
+                {atHorizon.saleTax ? (
+                  <PanelRow
+                    label={t("cSaleTax")}
+                    value={fmt(atHorizon.saleTax)}
+                    provenance={<Provenance kind="rule" />}
+                  />
+                ) : null}
+                {homeGainTax > 0 ? (
+                  <PanelRow
+                    label={t("cHomeGainTax")}
+                    value={fmt(homeGainTax)}
+                    provenance={<Provenance kind="rule" />}
+                  />
+                ) : null}
                 <PanelRow label={t("cEquity")} value={fmt(atHorizon.equity)} provenance={<Provenance kind="estimate" />} />
                 <PanelRow label={t("cBuyW")} value={fmt(atHorizon.buyW)} strong />
                 <PanelRow label={t("cRentW")} value={fmt(atHorizon.rentW)} strong />
@@ -501,6 +592,12 @@ export default function RentVsBuyPage() {
                   lines={[
                     { label: t("cHomeValue"), value: fmt(atHorizon.homeValue) },
                     { label: t("cSelling"), value: fmt(atHorizon.sellingCost), op: "minus" },
+                    ...(atHorizon.saleTax
+                      ? [{ label: t("cSaleTax"), value: fmt(atHorizon.saleTax), op: "minus" as const }]
+                      : []),
+                    ...(homeGainTax > 0
+                      ? [{ label: t("cHomeGainTax"), value: fmt(homeGainTax), op: "minus" as const }]
+                      : []),
                     { label: t("cBalance"), value: fmt(atHorizon.balance), op: "minus" },
                     { label: t("cEquity"), value: fmt(atHorizon.equity), op: "equals", strong: true },
                     // Absent rather than zero when nothing applies, matching the
@@ -518,19 +615,30 @@ export default function RentVsBuyPage() {
                     ...(atHorizon.bp > 0
                       ? [{ label: t("calcInvestedBuy"), value: fmt(atHorizon.bp), op: "plus" as const }]
                       : []),
+                    // US only, present only when owed: the tax on the growth in the two lines
+                    // above, which `buyW` nets. Without it the subtotal is not their sum.
+                    ...(atHorizon.buyGainsTax
+                      ? [{ label: t("calcGainsTax"), value: fmt(atHorizon.buyGainsTax), op: "minus" as const }]
+                      : []),
                     { label: t("calcBuying"), value: fmt(atHorizon.buyW), op: "equals", rule: true, strong: true },
                     {
                       label: t("calcUpfrontGrown"),
-                      value: fmt(atHorizon.rentW - atHorizon.rp),
+                      value: fmt(atHorizon.upFrontGrown),
                       note: t("upFrontNote", { up: fmt(result.upFront) }),
                     },
                     ...(atHorizon.rp > 0
                       ? [{ label: t("calcInvestedRent"), value: fmt(atHorizon.rp), op: "plus" as const }]
                       : []),
-                    // `minus`, so the final `=` is followable: the difference IS
-                    // buying less renting, and two bare subtotals stacked above an
-                    // equals sign left the reader to guess which way round.
-                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), op: "minus", strong: true },
+                    ...(atHorizon.rentGainsTax
+                      ? [{ label: t("calcGainsTax"), value: fmt(atHorizon.rentGainsTax), op: "minus" as const }]
+                      : []),
+                    // Renting is its own subtotal (upfront + invested surplus), so
+                    // the last block is a real subtraction: Buying − Renting =
+                    // Difference, every line an operand of the sum shown. Both
+                    // subtotals read off the same result object as the headline.
+                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), op: "equals", rule: true, strong: true },
+                    { label: t("calcBuying"), value: fmt(atHorizon.buyW), rule: true },
+                    { label: t("calcRenting"), value: fmt(atHorizon.rentW), op: "minus" },
                     { label: t("calcDifference"), value: fmt(atHorizon.adv), op: "equals", rule: true, strong: true },
                   ]}
                 />
@@ -605,20 +713,6 @@ export default function RentVsBuyPage() {
           head={tInputs("noPriceHead", { place: tJur(`at.${jurisdiction.id}`) })}
           sub={tInputs("noPriceSub")}
         />
-      ) : resolved.rentBasisMismatch ? (
-        // A rent IS published here — it just measures a two-bedroom apartment while
-        // the price above is a detached house. That is a different sentence from
-        // "nobody publishes a rent for here", and the difference is what tells the
-        // reader the figure they type has to be for the home they would actually
-        // rent instead of this one.
-        <AnswerHead
-          eyebrow={t("title")}
-          head={t("mismatchHead")}
-          sub={t(countryKey("mismatchSub", rules.country), {
-            city: tJur(`at.${jurisdiction.id}`),
-            rent: fmt(jurisdiction.rent ?? 0),
-          })}
-        />
       ) : (
         <AnswerHead
           eyebrow={t("title")}
@@ -627,12 +721,13 @@ export default function RentVsBuyPage() {
         />
       )}
 
-      <section aria-labelledby="rvb-inputs" className="mt-8 flex flex-col gap-3">
+      <section id="adjust" aria-labelledby="rvb-inputs" className="mt-8 flex scroll-mt-4 flex-col gap-3">
         <h2 id="rvb-inputs" className="text-[13px] font-semibold">
           {t("adjust")}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <PurchaseInputs
+              taxArea
             price={stored.price}
             pricePlaceholder={resolved.priceKnown ? resolved.price : null}
             dpPct={stored.dpPct}
@@ -648,18 +743,34 @@ export default function RentVsBuyPage() {
           />
           <fieldset className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
             <legend className="micro px-1 text-ink3">{t("rentWord")}</legend>
-            <NumberField
-              id="rent"
-              label={t("dRent")}
-              value={stored.rent}
-              // DEFAULT_RENT is a national placeholder and nobody's rent. Offering it
-              // here as this city's suggested figure is the same claim the tag below
-              // used to make in words.
-              placeholder={resolved.rentKnown ? resolved.rent : undefined}
-              min={0}
-              onCommit={(rent) => update({ rent })}
-            />
-            {stored.rent === null ? (
+            {inlineRentAsk ? (
+              // The in-place ask near the answer is the ONE field for the rent while the
+              // default is an apartment's: a second field here would be two controls with the
+              // same name writing the same key. This is a summary with a way back to it.
+              <p className="text-[13px] leading-[1.5] text-ink2 text-pretty">
+                {t("rentSummary", { rent: fmt(resolved.rent) })}{" "}
+                <button
+                  type="button"
+                  onClick={() => focusField("rent-inline")}
+                  className="text-ac underline underline-offset-4"
+                >
+                  {t("rentSummaryAction")}
+                </button>
+              </p>
+            ) : (
+              <NumberField
+                id="rent"
+                label={t("dRent")}
+                value={stored.rent}
+                // DEFAULT_RENT is a national placeholder and nobody's rent. Offering it
+                // here as this city's suggested figure is the same claim the tag below
+                // used to make in words.
+                placeholder={resolved.rentKnown ? resolved.rent : undefined}
+                min={0}
+                onCommit={(rent) => update({ rent })}
+              />
+            )}
+            {stored.rent === null && !(inlineRentAsk) ? (
               <p className="-mt-1 text-[11.5px] leading-[1.5] text-ink3 text-pretty">
                 {/* Not `jurisdiction.city`, which is the lowercase record key — it rendered
                     "winnipeg" to the reader. `sources-content.tsx` already resolves this the
@@ -671,10 +782,10 @@ export default function RentVsBuyPage() {
                     Nunavut" for a figure CMHC never surveyed is the invented figure this
                     product exists not to ship, and it was the more specific for naming the
                     territory. Either a rent published for here, or no published rent at all. */}
-                {resolved.rentKnown
-                  ? t("rentTag", { city: tJur(`at.${jurisdiction.id}`) })
-                  : resolved.rentBasisMismatch
-                    ? t(countryKey("rentMismatchTag", rules.country), { rent: fmt(jurisdiction.rent ?? 0) })
+                {resolved.rentBasisMismatch
+                  ? t(countryKey("rentMismatchTag", rules.country), { rent: fmt(jurisdiction.rent ?? 0) })
+                  : resolved.rentKnown
+                    ? t("rentTag", { city: tJur(`at.${jurisdiction.id}`) })
                     : t("rentUnknownTag", { city: tJur(`at.${jurisdiction.id}`) })}
               </p>
             ) : null}
@@ -684,6 +795,10 @@ export default function RentVsBuyPage() {
               value={stored.rentInflation}
               min={0}
               max={20}
+              // The stored figure is used as typed (2.5 stays 2.5), so it is
+              // displayed as typed: one decimal, never rounded to a whole number.
+              dp={1}
+              suffix="%"
               onCommit={(next) => update({ rentInflation: next ?? 0 })}
             />
             <SegmentedGroup

@@ -151,6 +151,10 @@ const NAMESPACES = [
   // (`resultNote`, `rateNote`, `privacyLede`) had already shipped translated with no call site
   // before this line existed.
   "Legal", "Privacy", "Terms",
+  // Flat like the legal pages — no section registry, so it is named here rather than skipped.
+  "Changelog",
+  // Shared tool-page chrome (AnswerHead's adjust jump, SectionRow's spoken verdict).
+  "ToolPage",
 ] as const;
 
 describe("message coverage", () => {

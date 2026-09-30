@@ -19,6 +19,11 @@ export function Gauges({ result }: { result: AffordabilityResult }) {
   const pct = usePercent();
   const rules = useRules();
 
+  // With no qualifying income the engine reports 0% for both ratios, which is
+  // "not computable", not "a perfect ratio": rendered as a passing green 0.0% it
+  // sat beside a declined verdict. Presentation-only; the engine output is unchanged.
+  const computable = result.qualIncome > 0;
+
   const rows = [
     {
       code: t(countryKey("dtiFrontAbbr", rules.country)),
@@ -37,19 +42,20 @@ export function Gauges({ result }: { result: AffordabilityResult }) {
   return (
     <div className="mt-6 grid max-w-[820px] grid-cols-1 gap-7 sm:grid-cols-2">
       {rows.map((row) => {
-        const bar = gaugeBar(row.value, row.limit);
+        const bar = computable ? gaugeBar(row.value, row.limit) : { ...gaugeBar(0, row.limit), state: "none" as const };
+        const shown = computable ? pct(row.value, 1) : "—";
         return (
           <div key={row.code}>
             <div className="mb-[9px] flex items-baseline gap-2.5">
               <span className="text-[12.5px] font-semibold tracking-[0.04em]">{row.code}</span>
               <span className="min-w-0 flex-1 text-[12.5px] text-ink3">{row.short}</span>
               <span className={cn("text-[17px] font-semibold", figureClass(bar.state))}>
-                {pct(row.value, 1)}
+                {shown}
               </span>
             </div>
             <div
               role="img"
-              aria-label={`${row.code} ${pct(row.value, 1)}, ${pct(row.limit)} ${t("limitWord")}`}
+              aria-label={`${row.code} ${shown}, ${pct(row.limit)} ${t("limitWord")}`}
               className="relative h-2 overflow-hidden rounded-full bg-sunk"
             >
               <span

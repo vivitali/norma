@@ -1,9 +1,9 @@
 export type ProvinceCode =
   | "ON" | "QC" | "BC" | "AB" | "MB" | "SK" | "NS" | "NB" | "PE" | "NL" | "YT" | "NT" | "NU";
 
-/** US state codes this dataset has data for. Texas only today — one state at a time, per the
- * US-market spec's implementation order. */
-export type StateCode = "TX";
+/** US state codes this dataset has data for — one state at a time, per the US-market spec's
+ * implementation order. Texas (Houston, Austin), Washington (Seattle). */
+export type StateCode = "TX" | "WA";
 
 export type ProfessionalType =
   | "lawyer"
@@ -304,6 +304,41 @@ export interface PropertyTax {
    * exactly as Houston's single-entry case already behaved.
    */
   exemptions?: readonly PropertyTaxExemption[];
+  /**
+   * A principal-residence credit printed on the tax bill against ONE slice of the rate —
+   * Manitoba's Homeowners Affordability Tax Credit, which is "the lesser of $1,600 and the gross
+   * school taxes" (2026). Worth `min(amount, price × appliesToRate)`, where `appliesToRate` is
+   * the school portion of `effective`. The product models a purchase the buyer will live in, so
+   * a principal-residence credit always applies; `propertyTaxAnnual()` is the one place that
+   * reads it. Absent everywhere else.
+   */
+  credit?: PropertyTaxCredit;
+  /**
+   * Sub-jurisdictional tax areas that change the rate — Winnipeg's eight school divisions, each
+   * levying its own school mill rate on top of the one municipal rate. The record's own
+   * `publishedRate`/`effective` (and `credit.appliesToRate`) are the `default` area's;
+   * `withTaxArea()` in jurisdictions/index.ts swaps in another area's, so no engine function
+   * needs to know areas exist.
+   */
+  areas?: { default: string; list: readonly TaxArea[] };
+}
+
+export interface PropertyTaxCredit {
+  kind: "cappedAgainstSlice";
+  amount: number;
+  /** The slice of `effective` the credit is capped against (e.g. the school portion). */
+  appliesToRate: number;
+}
+
+/** One school division (or other sub-area): its rates, derived exactly as the record's own. */
+export interface TaxArea {
+  id: string;
+  /** Combined published rate (municipal + this area's school rate), per dollar of assessment. */
+  publishedRate: number;
+  /** `publishedRate × assessmentRatio` — against market price. */
+  effective: number;
+  /** This area's school portion against market price — the slice a `credit` is capped by. */
+  schoolEffective: number;
 }
 
 /**
@@ -348,6 +383,13 @@ export interface Provenance {
   asOf?: string;
   /** Why no source exists, or what the assumption rests on. Required for `assumption`. */
   note?: string;
+  /**
+   * The same record for a READER: one or two plain sentences — what the figure is, where it
+   * comes from, and the one caveat that matters. No code names, file paths, review history or
+   * internal shorthand. /sources shows this in place of `note`, which stays the maintainer's
+   * full verification record. Required wherever `note` is set (provenance-summaries.test.ts).
+   */
+  summary?: string;
 }
 
 /** Keyed by dotted field path on the record it annotates: "bench.house", "fees.lawyer". */
@@ -363,6 +405,13 @@ export interface JurisdictionCommon {
   id: string;
   city: string | null;
   cityData: boolean;
+  /**
+   * ISO date this record was last re-verified END TO END — every figure checked against its
+   * source in one pass, with a dossier under docs/superpowers/research/. Absent where no such pass
+   * is recorded; the footer then shows the newest source date instead, and never calls a source's
+   * publication date a verification date.
+   */
+  verified?: string;
   pro: ProfessionalType;
   /**
    * Monthly benchmark rent. `null` where the survey suppresses or does not cover the market
@@ -398,6 +447,14 @@ export interface JurisdictionCommon {
   bench: { house: number | null; condo: number | null };
   propTax: PropertyTax;
   transfer: readonly TransferLine[];
+  /**
+   * A tax the SELLER owes on the sale, netted off the sale price in Rent vs Buy's sale at the
+   * horizon alongside the generic selling cost. Washington's REET is the case: the seller's
+   * statutory obligation (RCW 82.45.080), so it is absent from the buyer's `transfer` stack.
+   * Absent for every jurisdiction where the buyer bears the transfer tax. Thresholds are
+   * NOMINAL — a scheduled adjustment (Washington's 2027-01-01) is not projected.
+   */
+  saleTax?: readonly (BracketTransferLine | FlatTransferLine)[];
   /**
    * Per-jurisdiction override of the combined marginal tax table. Only Winnipeg carries this
    * in the source data, and it does not match `federal.marginal.MB` — both are unverified
@@ -680,6 +737,13 @@ export interface CaRules extends CountryRulesBase {
   fhsa: { annual: number; lifetime: number };
   hbp: { max: number; repayYears: number; graceYears: number; ruleDays: number };
   rrspCap: number;
+  /**
+   * New RRSP room as a share of the previous year's earned income, before `rrspCap` — CRA's
+   * deduction limit is the lesser of the two. Read only for the RRSP-HBP contribution's derived
+   * default (resolveInputs), which applies it to the income the page has; the reader's own limit
+   * is on their notice of assessment.
+   */
+  rrspRoomRate: number;
   gstFthb: { rate: number; fullTo: number; zeroAt: number; cap: number };
   hba: number;
   /**

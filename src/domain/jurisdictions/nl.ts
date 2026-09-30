@@ -85,6 +85,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: "City of St. John's Budget 2026 — residential mill rate held at 9.1 — applied to a January 1, 2024 base-date assessment",
       url: "https://www.stjohns.ca/news/posts/city-of-st-john-s-releases-budget-2026/",
+      summary: "Modelled on St. John's 2026 residential rate of 9.1 mills ($9.10 per $1,000), not a province-wide figure. St. John's assesses at a January 2024 value, so we scale price to that with a ratio worked out from published benchmarks; other municipalities differ.",
       note: `${NL_PROP_TAX_NOTE} ${NL_RATIO_NOTE}`,
     },
     "propTax.publishedRate": {
@@ -92,6 +93,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: "City of St. John's Budget 2026: \"The residential mill rate will remain at 9.1\"",
       url: "https://www.stjohns.ca/news/posts/city-of-st-john-s-releases-budget-2026/",
+      summary: "St. John's 2026 residential mill rate, 9.1, meaning $9.10 per $1,000 of taxable assessment. Water tax is billed separately.",
       note: "9.1 mils = $9.10 per $1,000 of taxable assessment = 0.0091. Water tax is billed separately per unit and is not part of this rate.",
     },
     "propTax.assessmentRatio": {
@@ -99,6 +101,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: "City of St. John's, Property Assessments: \"The base date for 2026-2027 assessment notices is January 1, 2024\"",
       url: "https://www.stjohns.ca/resident-services/property-taxes-assessments/property-assessments/",
+      summary: "St. John's assesses at a January 1, 2024 base date rather than today's value, and publishes no ratio. This ratio, about 0.77, is worked out from the city's February 2024 and July 2026 composite benchmarks, assuming your home tracked that benchmark.",
       note: NL_RATIO_NOTE,
     },
     "bench.house": {
@@ -106,6 +109,7 @@ export const nl: Jurisdiction = {
       asOf: "2026-07",
       src: `${NLAR_HPI} single-family benchmark, PROVINCE-WIDE`,
       url: NLAR_HPI_URL,
+      summary: "The NLAR July 2026 single-family benchmark for the whole province, $362,100, up 9.1% over a year. St. John's alone is higher at $447,800, so the province-wide series is used to match the rest of the figures here.",
       note: "$362,100, +9.1% year over year. St. John's metro alone is $447,800, +10.1% — a 24% gap, which is why the geography is written down. This record is province-wide, so the province-wide series is the matching one.",
     },
     "bench.condo": {
@@ -113,6 +117,7 @@ export const nl: Jurisdiction = {
       asOf: "2026-07",
       src: `${NLAR_HPI} apartment benchmark, PROVINCE-WIDE`,
       url: NLAR_HPI_URL,
+      summary: "The NLAR July 2026 province-wide apartment benchmark, $275,300, up 8.8% over a year. St. John's apartments are almost the same, at $274,700.",
       note: "$275,300, +8.8% year over year. St. John's apartments are $274,700 — the one series where the city and the province barely differ.",
     },
     "transfer.0.base": {
@@ -120,6 +125,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: `${DEEDS_TARIFF}, para 2(1)(a)`,
       url: DEEDS_TARIFF_URL,
+      summary: "Newfoundland's deed registration tariff is $100 for the first $500 of value plus 40 cents for each further $100 or part of $100.",
       note: "\"$100.00 plus forty cents for each additional one hundred dollars or part of one hundred dollars\" where the value exceeds $500. The $100 base covers the first $500 of value, which is what `exempt: 500` expresses, and \"or part of one\" is why the unit count ceilings rather than floors.",
     },
     "transfer.1.on": {
@@ -127,6 +133,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: `${DEEDS_TARIFF}, para 2(1)(b) — the same tariff on registering a mortgage, computed on the amount secured`,
       url: DEEDS_TARIFF_URL,
+      summary: "Registering a mortgage is charged on the same tariff, on the amount borrowed: $1,256.80 at the provincial benchmark with 20% down, so a financed purchase pays both the deed and mortgage fees.",
       note: "$1,256.80 at the province single-family benchmark with 20% down; the model previously charged only the deed side, roughly halving this line item for a financed purchase. The verification report's $1,170 was the same sum at the old $335,000 placeholder benchmark.",
     },
     "transfer.1.max": {
@@ -134,6 +141,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: `${DEEDS_TARIFF}, s.2(2) — $5,000 maximum`,
       url: DEEDS_TARIFF_URL,
+      summary: "The mortgage registration fee is capped at $5,000, which applies above a loan of $1,225,500. The cap covers mortgages only, not the deed, although some calculators show it for the whole tariff.",
       note: "s.2(2) reads in full: \"A person is not liable to pay for the registration of a mortgage, charge, floating charge, or specific or floating mortgage or charge of chattels referred to in subsection (1) a fee of more than five thousand dollars.\" It names security instruments ONLY — the conveyance under para 2(1)(a) is not in the list, so li_titleReg is deliberately uncapped even though third-party calculators publish the cap as if it applied to the whole tariff. Binds above $1,225,500 of loan, where the uncapped tariff is 100 + 0.4 x 12,250 = $5,000 exactly.",
     },
     "rebates.0": {
@@ -141,6 +149,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: "No first-time-buyer rebate or exemption exists from the NL registration fee",
       url: "https://www.gov.nl.ca/gs/registries/deeds/deed-reg/",
+      summary: "Newfoundland and Labrador has no first-time-buyer exemption from the registration fee. It is a fee rather than a transfer tax, and the only exemptions are for the Crown and a non-profit airport authority.",
       note: "kind: none is the finding. The tariff's only exemptions, s.2(4) and s.2(5), are for instruments registered by or on behalf of the Crown and by a non-profit airport authority. noTax: true is also right in substance — this is a registration FEE, not a transfer tax, which is why there is no rebate authority to name in orgs.",
     },
     "taxTime.0.amount": {
@@ -148,6 +157,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: "CRA line 31270 Home buyers' amount ($10,000 claim) x the 2026 lowest federal rate of 14%",
       url: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/about-your-tax-return/tax-return/completing-a-tax-return/deductions-credits-expenses/line-31270-home-buyers-amount.html",
+      summary: "The federal Home Buyers' Amount: a $10,000 claim at the 2026 lowest federal rate of 14%, worth $1,400 at tax time. Newfoundland and Labrador adds no provincial first-time-buyer credit.",
       note: "1500 -> 1400. The $1,500 it replaces was the same credit at a 15% lowest rate. Newfoundland and Labrador levies no provincial first-time-buyer credit, so this is the whole of the tax-time relief here. Tracks federal.hba.",
     },
     premiumTax: {
@@ -155,6 +165,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: "CMHC: only Ontario, Quebec and Saskatchewan levy a provincial sales tax on mortgage default insurance premiums",
       url: "https://www.cmhc-schl.gc.ca/consumers/home-buying/mortgage-loan-insurance-for-consumers/mortgage-loan-insurance-costs",
+      summary: "Newfoundland and Labrador charges no sales tax on the mortgage default insurance premium; only Ontario, Quebec and Saskatchewan do, per CMHC. Insurance premiums fall outside HST.",
       note: "null is correct. Newfoundland and Labrador's sales tax is the harmonized HST, and insurance premiums are not within its base.",
     },
     "orgs.transfer": {
@@ -162,6 +173,7 @@ export const nl: Jurisdiction = {
       asOf: "2026",
       src: DEEDS_TARIFF,
       url: DEEDS_TARIFF_URL,
+      summary: "The fee schedule comes from the provincial Government Services department's Commercial Registrations Division; registrations run through Companies and Deeds Online.",
       note: "The tariff PDF is headed \"Commercial Registrations Division\" and \"Schedule of Fees Prescribed by the Minister of Government Services\", and gov.nl.ca/gs titles the department \"Government Services\". Registrations run through CADO, Companies and Deeds Online.",
     },
     "orgs.market": {

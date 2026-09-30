@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import { closingTotal } from "@/domain/engine";
@@ -82,22 +82,28 @@ beforeEach(() => {
 });
 
 describe("Closing costs — the answer comes first", () => {
-  it("leads with cash needed on closing day, before anyone types", () => {
+  it("leads with the closing costs, before anyone types, and keeps cash to close beside it", () => {
     renderPage();
-    // Scoped to the HEAD, not counted across the document. The same label now names
-    // the figure in three places — the head, the derivation's terminal line and its
-    // caption — so `getAllByText(...).length > 0` would have gone on passing with the
-    // head deleted outright, and this test is named for the lead.
+    // Scoped to the HEAD, not counted across the document, so the assertion cannot go on passing
+    // with the head deleted outright. The hero is the CLOSING COSTS — not the cash to close,
+    // which is Down Payment's hero to the dollar; the cash to close is the first stat.
     const figure = document.querySelector('[data-slot="answer-figure"]')!;
-    expect(figure.parentElement!.textContent).toContain("Cash needed on closing day");
+    expect(figure.parentElement!.textContent).toContain("Closing costs, after the credits applied that day");
+    expect(figure.parentElement!.textContent).not.toContain("Cash needed on closing day");
+    const stats = [...document.querySelectorAll('[data-slot="answer-stat"]')].map(
+      (el) => el.previousElementSibling?.textContent ?? "",
+    );
+    expect(stats[0]).toMatch(/^Cash needed on closing day/);
     expect(screen.getAllByText(/^\$[\d,]+$/).length).toBeGreaterThan(0);
   });
 
-  it("says the bill is separate from the down payment", () => {
-    // The single most common misunderstanding this page exists to correct.
+  it("describes the headline as the bill on top of the down payment, not as the cash to close", () => {
+    // The hero EXCLUDES the down payment; the sub-line says what to add to it to get the cash.
     renderPage();
     expect(
-      screen.getByText("Separate from the down payment, and due the same day."),
+      screen.getByText(
+        "The bill on top of the down payment. Add the two for the cash you need on closing day — shown beside it.",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -137,7 +143,7 @@ describe("Closing costs — the hero is the same figure as everything under it",
    */
   const digits = (value: string | null | undefined) => (value ?? "").replace(/[^\d]/g, "");
 
-  it("leads with net cash at closing, not the bill before credits", () => {
+  it("leads with the costs net of closing-day credits, and the cash to close is the net stat", () => {
     window.localStorage.setItem(
       "norma.inputs.v2",
       JSON.stringify({ jurId: "toronto", ftb: true }),
@@ -155,8 +161,16 @@ describe("Closing costs — the hero is the same figure as everything under it",
 
     renderPage();
     const hero = document.querySelector('[data-slot="answer-figure"]')?.textContent;
-    expect(digits(hero)).toBe(String(Math.round(expected.net)));
-    expect(digits(hero)).not.toBe(String(Math.round(expected.cash)));
+    // Costs after credits, excluding the down payment; neither the gross bill nor the cash.
+    expect(digits(hero)).toBe(String(Math.round(expected.net - expected.fin.down)));
+    expect(digits(hero)).not.toBe(String(Math.round(expected.total)));
+    expect(digits(hero)).not.toBe(String(Math.round(expected.net)));
+    // The cash to close — net, never gross — is the stat the cash check is measured against.
+    const cashStat = [...document.querySelectorAll('[data-slot="answer-stat"]')].find((el) =>
+      el.previousElementSibling?.textContent?.startsWith("Cash needed on closing day"),
+    )!;
+    expect(digits(cashStat.textContent)).toBe(String(Math.round(expected.net)));
+    expect(digits(cashStat.textContent)).not.toBe(String(Math.round(expected.cash)));
   });
 });
 
@@ -224,16 +238,18 @@ describe("Closing costs — the jurisdiction drives the bill", () => {
     await user.click(screen.getByRole("button", { name: "Expand all" }));
     // A "$0" line would assert the fee exists and happens to be nil, which is a
     // different and usually false claim than the fee not existing.
-    expect(screen.queryByText("$0")).not.toBeInTheDocument();
+    // A bracket band at 0% (e.g. the first $30,000) is a real row inside a fee, not a fee.
+    for (const el of screen.queryAllByText("$0")) {
+      expect(el.parentElement!.textContent).toMatch(/on the (first|portion)/);
+    }
   });
 
-  it("shows the bracket breakdown on demand, not by default", async () => {
+  it("shows the bracket breakdown inline, with no second show/hide toggle", async () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /Taxes and government fees/);
-    expect(screen.queryByText(/on the first/)).not.toBeInTheDocument();
-    await user.click(screen.getAllByRole("button", { name: "Bracket breakdown" })[0]);
     expect(screen.getAllByText(/on the first/).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /bracket breakdown|hide breakdown/i })).not.toBeInTheDocument();
   });
 });
 
@@ -418,5 +434,146 @@ describe("Closing costs — the residency question is on the page", () => {
     // but because it is not in the dataset, and asking a question no figure consumes
     // teaches the reader that this app's answers do not depend on its questions.
     expect(screen.queryByLabelText(/Resident of this province/)).not.toBeInTheDocument();
+  });
+});
+
+describe("Closing costs — explanations that must be true where they render", () => {
+  it("does not tell Manitoba it charges no transfer tax, and calls its registration fee flat", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "winnipeg" }));
+    renderPage();
+    expect(screen.queryByText(/charges no transfer tax/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No land transfer tax is charged here/)).not.toBeInTheDocument();
+    expect(screen.getAllByText(/A flat fee, the same at every price/).length).toBe(2);
+  });
+
+  it("prints no $0 mortgage where nobody publishes a price", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "nu" }));
+    renderPage();
+    expect(screen.queryByText("Mortgage amount")).not.toBeInTheDocument();
+    expect(screen.queryByText("$0")).not.toBeInTheDocument();
+  });
+});
+
+describe("Closing costs — nothing opens, and the assumption is named", () => {
+  it("opens no section on a first visit, and opens the government fees once personalised", () => {
+    renderPage();
+    expect(screen.queryAllByRole("button", { expanded: true })).toHaveLength(0);
+    cleanup();
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 90000 }));
+    renderPage();
+    expect(screen.getByRole("button", { name: /Taxes and government fees/ })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+  });
+
+  it("names the assumed price in the tag and jumps to the price field", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(
+      screen.getByRole("button", { name: /Assuming the typical price for Winnipeg, \$[\d,]+/ }),
+    );
+    expect(screen.getByLabelText("Purchase price")).toHaveFocus();
+  });
+
+  it("names the reader's price once given", () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ price: 500000 }));
+    renderPage();
+    expect(document.querySelector("[data-slot=answer-tag]")!.textContent).toBe(
+      "Based on your price, $500,000",
+    );
+  });
+
+  it("carries the id its head links to, around the inputs", () => {
+    renderPage();
+    expect(screen.getByRole("link", { name: "Adjust your numbers" })).toHaveAttribute("href", "#adjust");
+    expect(document.getElementById("adjust")!.querySelector("#price")).not.toBeNull();
+  });
+
+  it("gives the cash stat the colour of the cash check that judges it", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const cashStat = () =>
+      [...document.querySelectorAll('[data-slot="answer-stat"]')].find((el) =>
+        el.previousElementSibling?.textContent?.startsWith("Cash needed on closing day"),
+      )!;
+    expect(cashStat().querySelector(".text-blocked, .text-caution")).toBeNull();
+    const funds = screen.getByLabelText("Funds available for this purchase");
+    await user.type(funds, "1000");
+    await user.tab();
+    expect(cashStat().querySelector(".text-blocked")).not.toBeNull();
+  });
+});
+
+describe("Closing costs — the same thing is not said twice", () => {
+  it("does not open the cash panel by repeating the row's own line", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const row = screen.getByRole("button", { name: /Do you have the cash\?/ });
+    const line = "Measured against net cash at closing — after the credits that actually arrive that day.";
+    expect(row.textContent).toContain(line);
+    await open(user, /Do you have the cash\?/);
+    const why = document.querySelector("#cash-panel > p")!.textContent!;
+    expect(why).not.toBe(line);
+    expect(why).not.toMatch(/Measured against net cash at closing/);
+  });
+
+  it("does not print a 'Funds available' row over a field of the same name", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Do you have the cash\?/);
+    const panel = document.getElementById("cash-panel")!;
+    expect(within(panel).getAllByText("Funds available for this purchase")).toHaveLength(1);
+  });
+});
+
+describe("Closing costs — a US page names only what is true where it renders", () => {
+  const inCity = (jurId: string) =>
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId }));
+
+  it("does not say Texas on Seattle's page, and says the transfer tax is the seller's", async () => {
+    inCity("seattle");
+    const user = userEvent.setup();
+    renderPage("en-US");
+    await user.click(screen.getByRole("button", { name: "Expand all" }));
+    expect(document.body.textContent).not.toMatch(/Texas/);
+    // Washington's REET exists; the row and its explanation say it is the seller's.
+    expect(screen.getByText(/Real estate excise tax \(paid by the seller\)/)).toBeInTheDocument();
+    expect(screen.getByText(/By state law it is the seller's obligation/)).toBeInTheDocument();
+  });
+
+  it("keeps Houston's page free of Washington's tax, and free of a stray claim about it", async () => {
+    inCity("houston");
+    const user = userEvent.setup();
+    renderPage("en-US");
+    await user.click(screen.getByRole("button", { name: "Expand all" }));
+    expect(document.body.textContent).not.toMatch(/REET|excise/);
+  });
+
+  it("uses the US word for the money that cannot be a deposit: a CD, not a term deposit", () => {
+    inCity("seattle");
+    renderPage("en-US");
+    const deposit = screen.getByText(/The deposit\. Within days of an accepted offer/);
+    expect(deposit.textContent).toMatch(/certificate of deposit \(CD\)/);
+    expect(deposit.textContent).not.toMatch(/term deposit/);
+  });
+
+  it("keeps a Canadian page's term deposit", () => {
+    renderPage();
+    expect(screen.getByText(/The deposit\. Within days of an accepted offer/).textContent).toMatch(/term deposit/);
+  });
+});
+
+describe("Closing costs — a tax on the CMHC premium exists only where it is charged", () => {
+  it("prints no such row in Manitoba, and one where the province charges it", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: "Expand all" }));
+    expect(screen.queryByText("Provincial tax on the CMHC premium")).not.toBeInTheDocument();
+    cleanup();
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ jurId: "saskatoon", dpPct: 5 }));
+    renderPage();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Expand all" }));
+    expect(screen.getByText("Provincial tax on the CMHC premium")).toBeInTheDocument();
   });
 });

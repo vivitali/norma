@@ -30,10 +30,19 @@ describe("AppHeader", () => {
   it("renders the brand link, jurisdiction picker, country switcher, locale switcher, and theme toggle together", async () => {
     renderHeader();
     expect(screen.getByRole("link", { name: "AffordMath" })).toHaveAttribute("href", "/");
-    expect(await screen.findByRole("combobox", { name: "Change location" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Change country" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Change language" })).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: "Theme" })).toBeInTheDocument();
+    expect(await screen.findByRole("combobox", { name: /^Change location:/ })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /^Change country:/ })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /^Change language:/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /^Theme:/ })).toBeInTheDocument();
+  });
+
+  it("names each setting's current value, so the name contains whatever the trigger shows", async () => {
+    // WCAG 2.5.3: below sm the country trigger shows "CA" and a long place name truncates.
+    // A combobox takes no name from its content, so the value has to be in the label itself.
+    renderHeader();
+    expect(await screen.findByRole("combobox", { name: /^Change location: \S/ })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Change country: Canada (CA)" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Change language: EN" })).toBeInTheDocument();
   });
 
   it("keeps the settings in the header rather than inside the menu, at every width", async () => {
@@ -44,17 +53,17 @@ describe("AppHeader", () => {
     // DOM containment it depends on.
     renderHeader();
     const nav = document.querySelector("nav")!;
-    const picker = await screen.findByRole("combobox", { name: "Change location" });
+    const picker = await screen.findByRole("combobox", { name: /^Change location:/ });
     expect(nav.contains(picker)).toBe(false);
     // Every setting is a select for the same reason: none of them fit a 44px-per-option
     // segmented control beside the others at 320px.
-    expect(nav.contains(screen.getByRole("combobox", { name: "Change country" }))).toBe(false);
-    expect(nav.contains(screen.getByRole("combobox", { name: "Change language" }))).toBe(false);
+    expect(nav.contains(screen.getByRole("combobox", { name: /^Change country:/ }))).toBe(false);
+    expect(nav.contains(screen.getByRole("combobox", { name: /^Change language:/ }))).toBe(false);
 
     await userEvent.setup().click(screen.getByRole("button", { name: TRIGGER }));
-    expect(screen.getByRole("combobox", { name: "Change location" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Change country" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Change language" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Theme" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /^Change location:/ })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /^Change country:/ })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /^Change language:/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Theme:/ })).toBeInTheDocument();
   });
 });

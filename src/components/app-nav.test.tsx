@@ -167,13 +167,11 @@ describe("AppNav", () => {
     expect(screen.queryAllByRole("heading")).toHaveLength(0);
   });
 
-  it("lists Rent vs Buy under both of the groups that claim it", () => {
-    // Pins the registry fact the panel exists to communicate. Kept structural: it counts
-    // occurrences in NAV rather than naming Afford and Own.
-    const groupsClaiming = NAV.filter((g) =>
-      builtEntries(g).some((e) => e.route === "/rent-vs-buy"),
-    );
-    expect(groupsClaiming.length).toBe(2);
+  it("links each tool once", async () => {
+    renderWithIntl(<AppNav />);
+    await openMenu();
+    const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
+    expect(new Set(hrefs).size).toBe(hrefs.length);
   });
 
   it("reports its open state on the trigger and points it at the panel", async () => {

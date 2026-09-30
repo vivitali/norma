@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { AppFooter } from "./app-footer";
 import { FOOTER } from "@/lib/routes";
 import { CATALOGUES, leafPaths, type Tree } from "@/test/catalogues";
@@ -8,6 +9,10 @@ import { languageOf, countryOf } from "@/i18n/countries";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/lib/locales";
 import { countryKey } from "@/lib/country-key";
+import { NextIntlClientProvider } from "next-intl";
+import { JurisdictionProvider } from "@/hooks/use-jurisdiction";
+import { latestRelevant } from "@/lib/changelog";
+import { defaultJurisdictionOf } from "@/domain/jurisdictions";
 
 vi.mock("next/navigation", async () => (await import("@/test/navigation-mock")).nextNavigation);
 vi.mock("@/i18n/navigation", async () => (await import("@/test/navigation-mock")).intlNavigation);
@@ -51,7 +56,13 @@ const LOCALES = routing.locales;
 
 /** Awaited to a plain element before rendering — the shape the App Router uses for an async RSC. */
 async function renderFooter(locale: Locale) {
-  return render(await AppFooter({ locale }));
+  // The version note reads the reader's jurisdiction, exactly as it does under the root layout.
+  const footer = await AppFooter({ locale });
+  return render(
+    <NextIntlClientProvider locale={locale} messages={CATALOGUES[languageOf(locale)]}>
+      <JurisdictionProvider>{footer}</JurisdictionProvider>
+    </NextIntlClientProvider>,
+  );
 }
 
 describe("AppFooter", () => {
@@ -97,11 +108,59 @@ describe("AppFooter", () => {
     });
   }
 
-  it("ships no client JavaScript", () => {
-    // Chrome on all thirteen prerendered routes. A "use client" here would put the disclaimer and
-    // its two links into every page's bundle to render text that never changes.
+  for (const locale of LOCALES) {
+    it(`shows the newest release for this country, and links to the changelog, in ${locale}`, async () => {
+      const { container, unmount } = await renderFooter(locale);
+      const changelog = (CATALOGUES[languageOf(locale)] as { Changelog: Record<string, string> })
+        .Changelog;
+      // The newest release relevant to the country's default jurisdiction (what a first render shows).
+      const country = countryOf(locale);
+      const latest = latestRelevant(country, defaultJurisdictionOf(country).id)!;
+      expect(container.textContent).toContain(changelog[latest.summary]);
+      expect(container.textContent).toContain(changelog.updated.replace("{date}", ""));
+      // ONE link to the changelog, labelled from Legal (the note itself is plain text).
+      const links = screen.getAllByRole("link").filter((a) => a.getAttribute("href") === "/changelog");
+      expect(links).toHaveLength(1);
+      const legal = (CATALOGUES[languageOf(locale)] as { Legal: Record<string, string> }).Legal;
+      expect(links[0]).toHaveAccessibleName(legal.changelog);
+      const leaked = leafPaths(CATALOGUES.en.Changelog as Tree)
+        .map((path) => `Changelog.${path}`)
+        .filter((key) => (container.textContent ?? "").includes(key));
+      expect(leaked, `${locale}: Changelog keys rendered verbatim`).toEqual([]);
+      unmount();
+    });
+  }
+
+  it("offers Clear my numbers, confirming in the page and removing the stored blob", async () => {
+    const user = userEvent.setup();
+    const reload = vi.fn();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...window.location, reload },
+    });
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 90000 }));
+    window.localStorage.setItem("norma.inputs.v1", JSON.stringify({ income1: 90000 }));
+    await renderFooter("en-CA");
+    await user.click(screen.getByRole("button", { name: "Clear my numbers" }));
+    // Asked first, in the page; nothing is removed yet.
+    expect(screen.getByText("Remove the numbers saved in this browser?")).toBeTruthy();
+    expect(window.localStorage.getItem("norma.inputs.v2")).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByText("Remove the numbers saved in this browser?")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Clear my numbers" }));
+    await user.click(screen.getByRole("button", { name: "Yes, clear them" }));
+    expect(window.localStorage.getItem("norma.inputs.v2")).toBeNull();
+    expect(window.localStorage.getItem("norma.inputs.v1")).toBeNull();
+    expect(reload).toHaveBeenCalled();
+  });
+
+  it("keeps the footer itself server-rendered, with client islands only for browser state", () => {
+    // Chrome on every prerendered route. A "use client" here would put the disclaimer and its
+    // links into every page's bundle to render text that never changes; only the version note
+    // needs the browser (what this reader last saw), and it lives in its own file.
     const source = readFileSync("src/components/app-footer.tsx", "utf8");
     expect(source).not.toContain('"use client"');
+    expect(readFileSync("src/components/version-note.tsx", "utf8")).toContain('"use client"');
   });
 
   // The stronger, structural version of "is rendered by the locale layout" used to live here as a

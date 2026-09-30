@@ -10,7 +10,7 @@ export default function NotFound() {
   const t = useTranslations("Metadata.notFound");
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-16 sm:px-6">
+    <main id="main" tabIndex={-1} className="outline-none mx-auto w-full max-w-2xl flex-1 px-4 py-16 sm:px-6">
       <h1 className="text-[27px] leading-tight font-semibold tracking-tight">404</h1>
       <p className="mt-2 text-[12.5px] text-muted-foreground">{t("body")}</p>
       <p className="mt-6 text-[12.5px]">

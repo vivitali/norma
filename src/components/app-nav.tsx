@@ -32,9 +32,9 @@ import { cn } from "@/lib/utils";
  *      furniture for that visitor; the home directory is the browse surface, and it carries what
  *      each tool answers rather than nine bare labels.
  *   2. The flat row was illegible, not merely too wide — at 1440px it physically fitted. Group
- *      headings on a bar read as destinations, and Rent vs Buy in two groups read as a bug. A
- *      labelled list is the only shape in which that duplication is honest, and the duplication
- *      is a PRODUCT.md commitment: buyers and renters are co-equal.
+ *      headings on a bar read as destinations. Rent vs Buy is listed once (it used to sit in two
+ *      groups, which a screen reader announced as a ninth link); buyers and renters stay co-equal
+ *      because it heads the Afford group beside Affordability.
  *   3. A partial row ("3-4 primary tools, then More") would force a primacy ranking PRODUCT.md
  *      explicitly refuses, and would give the app two vocabularies for one set of tools.
  *

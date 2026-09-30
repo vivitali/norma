@@ -7,8 +7,10 @@ import { regionOf } from "@/domain/types";
 import { maxAmortYears } from "@/domain/engine";
 import { useRules } from "@/hooks/use-country";
 import { useMoney, usePercent } from "@/lib/format";
+import { countryKey } from "@/lib/country-key";
 import { NumberField } from "@/components/number-field";
 import { NoteLine } from "@/components/tool-page";
+import { TaxAreaPicker } from "@/components/tax-area-picker";
 import { SegmentedGroup } from "@/components/affordability/segmented-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -96,6 +98,12 @@ export interface PurchaseInputsProps {
    * the prop the product was missing.
    */
   residency?: Residency;
+  /**
+   * Show the school-division picker (`TaxAreaPicker`) where the record has divisions. Opt-in for
+   * the residency switch's reason above: a page that prices no property tax — /amortization —
+   * must not offer a control that moves nothing on its screen.
+   */
+  taxArea?: boolean;
   jurisdiction: Jurisdiction;
   onChange: (patch: {
     price?: number | null;
@@ -110,6 +118,11 @@ export interface PurchaseInputsProps {
 
 const DP_CHOICES = [5, 10, 20, 25] as const;
 const AMORT_CHOICES = [25, 30] as const;
+/**
+ * The US norm is a 15- or 30-year fixed term; there is no 25. Keyed by country, not by
+ * page, like every other fork in this file.
+ */
+const AMORT_CHOICES_US = [15, 30] as const;
 
 export function PurchaseInputs({
   price,
@@ -124,6 +137,7 @@ export function PurchaseInputs({
   ftbEffective,
   ptypeEffective,
   residency,
+  taxArea,
   jurisdiction,
   onChange,
 }: PurchaseInputsProps) {
@@ -173,6 +187,21 @@ export function PurchaseInputs({
    * extension to be eligible for. Branched on `rules.country`, never on which page
    * is rendering, so the same component answers correctly wherever it's mounted.
    */
+  const amortChoices: readonly number[] =
+    rules.country === "us" ? AMORT_CHOICES_US : AMORT_CHOICES;
+  /**
+   * The stored length is shared, app-wide state, so it can be one this country's control does
+   * not offer — a 25-year choice made on a Canadian page and then read on a US one (or 15 the
+   * other way). Left alone, NO option is checked, which is also no tab stop for the roving
+   * tabindex: the reader cannot reach the control by keyboard. The loan the page is actually
+   * modelling is shown as its own option and named in a note, rather than recomputed behind the
+   * reader's back to one of the two on offer.
+   */
+  const carriedAmort =
+    amortYears !== undefined && !amortChoices.includes(amortYears) ? amortYears : null;
+  const amortOptions = (
+    carriedAmort === null ? amortChoices : [...amortChoices, carriedAmort].sort((a, b) => a - b)
+  ) as readonly number[];
   const amortCap =
     rules.country === "ca"
       ? maxAmortYears(rules, {
@@ -215,6 +244,7 @@ export function PurchaseInputs({
       {effectivePrice === null ? (
         <NoteLine tight>{t("noPrice", { place: tJur(`at.${jurisdiction.id}`) })}</NoteLine>
       ) : null}
+      {taxArea ? <TaxAreaPicker /> : null}
 
       <SegmentedGroup
         label={
@@ -239,15 +269,20 @@ export function PurchaseInputs({
 
       {amortYears !== undefined ? (
         <SegmentedGroup
-          label={t("amortization")}
+          label={t(countryKey("amortization", rules.country))}
           value={amortYears}
           onChange={(next) => onChange({ amortYears: next })}
-          options={AMORT_CHOICES.map((v) => ({
+          options={amortOptions.map((v) => ({
             value: v,
             label: t("years", { n: v }),
             disabled: v > amortCap,
           }))}
         />
+      ) : null}
+      {carriedAmort !== null ? (
+        <NoteLine tone="caution" tight>
+          {t("loanTermCarried", { n: carriedAmort })}
+        </NoteLine>
       ) : null}
       {/*
         The eligibility rule the app has always held and never told anyone.

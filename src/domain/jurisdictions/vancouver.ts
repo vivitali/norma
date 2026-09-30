@@ -21,6 +21,7 @@ const BC_NEWBUILD: Provenance = {
   src: "gov.bc.ca, Newly built home exemption (and its published exemption-amount table)",
   url: "https://www2.gov.bc.ca/gov/content/taxes/property-taxes/property-transfer-tax/exemptions/newly-built-home-exemption",
   note: "Not first-time-buyer restricted, and not combinable with the first-time buyers' exemption — hence the shared group.",
+  summary: "BC's exemption from property transfer tax on newly built homes. Any buyer can use it, but it cannot be combined with the first-time buyers' exemption.",
 };
 
 /** GVR's July 2026 release, republished in full by CREA. Metro Vancouver, not the City. */
@@ -30,6 +31,7 @@ const GVR_JULY_2026: Provenance = {
   src: "Greater Vancouver REALTORS® July 2026 MLS® HPI release, via CREA Stats",
   url: "https://creastats.crea.ca/board/vanc/",
   note: "SCOPE: Metro Vancouver, not the City of Vancouver.",
+  summary: "From the Greater Vancouver REALTORS® July 2026 release. It covers Metro Vancouver as a whole, not just the City of Vancouver.",
 };
 
 const fees: JurisdictionFees = { lawyer: 1600, titleIns: 350, inspect: 700, appraisal: 450, statusCert: 60, moving: 1600, setup: 650 };
@@ -103,6 +105,7 @@ export const vancouver: Jurisdiction = {
       ...PTT_ACT,
       src: "gov.bc.ca, Property Transfer Tax — further 2% tax on residential property over $3,000,000",
       note: "The page states the further 2% applies to the residential portion only where the property is mixed class.",
+      summary: "BC's further 2% transfer tax on residential property above $3,000,000. Where a property is mixed use, it applies only to the residential part.",
     },
     "rebates.0.full": BC_FTHB,
     "rebates.0.partial": BC_FTHB,
@@ -112,6 +115,7 @@ export const vancouver: Jurisdiction = {
     "rebates.1.capBase": {
       ...BC_NEWBUILD,
       note: "Set to the top of the phase-out band, not the threshold: the published exemption-amount table reduces the tax on the actual fair market value proportionally, and this is the only capBase that reproduces it exactly.",
+      summary: "The new-build exemption phases out between $1,100,000 and $1,150,000. The model measures it against the top of that band because that is the only setting that reproduces BC's published exemption table exactly.",
     },
     "propTax.effective": {
       conf: "high",
@@ -119,6 +123,7 @@ export const vancouver: Jurisdiction = {
       src: "City of Vancouver, Council report RTS 18298 Appendix A — 2026 Property Tax Rates, Class 1 overall $3.36394 per $1,000",
       url: "https://council.vancouver.ca/20260505/documents/r2.pdf",
       note: "Sum of general purpose 1.93406, provincial school 0.98001, TransLink 0.35893, BC Assessment 0.03814, Metro Vancouver 0.05260 and Municipal Finance Authority 0.00020. EXCLUDES the provincial Additional School Tax (0.2% of residential value $3-4M, 0.4% above $4M), which is a surcharge on high-value homes rather than part of the general rate.",
+      summary: "The City of Vancouver's 2026 residential tax rate, $3.36394 per $1,000 of value, adding the city, school, TransLink, BC Assessment, Metro Vancouver and Municipal Finance Authority levies. It leaves out the extra school tax on homes worth over $3M.",
     },
     "propTax.publishedRate": {
       conf: "high",
@@ -131,6 +136,7 @@ export const vancouver: Jurisdiction = {
       src: "Assessment Act (RSBC 1996, c. 20) ss. 18-19",
       url: "https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/96020_01",
       note: "s.19 defines actual value as market value of the fee simple interest and s.18 fixes the valuation date at July 1 of the preceding year, so the assessment base IS market value. The ratio is 1 with a ~12-month lag, not a structural discount — deliberately unlike Ontario's frozen 2016 base.",
+      summary: "BC assesses homes at market value as of July 1 of the year before, so the tax rate applies to price almost directly. There is a lag of about a year, but no built-in discount.",
     },
     "bench.house": { ...GVR_JULY_2026, src: "Greater Vancouver REALTORS® July 2026 release, detached MLS® HPI benchmark ($1,822,900, -7.0% y/y), via CREA Stats" },
     "bench.condo": { ...GVR_JULY_2026, src: "Greater Vancouver REALTORS® July 2026 release, apartment MLS® HPI benchmark ($688,000, -7.5% y/y), via CREA Stats" },
@@ -146,12 +152,14 @@ export const vancouver: Jurisdiction = {
       asOf: "2026",
       src: "Federal Home Buyers' Amount: $10,000 claim at the lowest federal rate of 14%",
       note: "Replaces $1,500, which was the credit at the former 15% lowest rate. Cross-checked against Quebec's Ministere des Finances, which lists the federal credit at $1,169 = $1,400 x 0.835 after the Quebec abatement.",
+      summary: "The federal home buyers' tax credit: a $10,000 claim at the lowest federal rate of 14%, worth $1,400. In Quebec the credit is lower after a provincial abatement, which the model does not apply.",
     },
     "premiumTax": {
       conf: "medium",
       asOf: "2026",
       src: "BC levies no provincial sales tax on mortgage default insurance premiums",
       note: "Only ON, QC and SK tax the premium; MB repealed its charge in 2020. Consistent across industry sources but not confirmed against a BC government PST exemption schedule.",
+      summary: "BC charges no provincial sales tax on mortgage default insurance premiums. Only Ontario, Quebec and Saskatchewan do. This matches industry sources but was not checked against a BC government exemption schedule.",
     },
     "fees.statusCert": {
       // "assumption", not "low". Low means derived or inferred from something published; $60 is
@@ -161,12 +169,13 @@ export const vancouver: Jurisdiction = {
       // coverage split. Every other fee field in the dataset is an assumption for the same reason.
       conf: "assumption",
       note: "Neither figure matches reality: BC's Strata Property Regulation caps a Form B information certificate at $35, while strata management firms bill document packages of $150-$400. $60 matches neither, and a human has to decide which the model means.",
+      summary: "$60 is a placeholder we chose. BC caps an official strata information certificate at $35, while management firms bill $150-$400 for document packages; $60 matches neither, so your strata's bill will differ.",
     },
-    "fees.lawyer": { conf: "assumption", note: "No regulated conveyancing tariff exists in BC. Cited market range $1,200-$2,100 for a purchase with a mortgage; this sits mid-range." },
-    "fees.titleIns": { conf: "assumption", note: "No authoritative publisher; premiums are quoted per transaction. Cited market range $200-$400." },
-    "fees.inspect": { conf: "assumption", note: "No authoritative publisher. Cited market range $500-$800 for a condo and $700-$1,200 for a detached home, so this is low for a detached purchase." },
-    "fees.appraisal": { conf: "assumption", note: "No authoritative publisher. Cited market range $300-$500." },
-    "fees.moving": { conf: "assumption", note: "No authoritative 2026 Vancouver moving-cost source located." },
-    "fees.setup": { conf: "assumption", note: "No authoritative source located; BC Hydro and FortisBC connection charges are far below this, so the figure is a settling-in allowance rather than a utility fee." },
+    "fees.lawyer": { conf: "assumption", note: "No regulated conveyancing tariff exists in BC. Cited market range $1,200-$2,100 for a purchase with a mortgage; this sits mid-range.", summary: "A default we chose because BC has no regulated conveyancing fee. It sits mid-range in the commonly cited $1,200-$2,100 for a purchase with a mortgage; your own quote will differ." },
+    "fees.titleIns": { conf: "assumption", note: "No authoritative publisher; premiums are quoted per transaction. Cited market range $200-$400.", summary: "A default we chose because nobody publishes title insurance premiums. It sits within the commonly cited $200-$400; your own quote will differ." },
+    "fees.inspect": { conf: "assumption", note: "No authoritative publisher. Cited market range $500-$800 for a condo and $700-$1,200 for a detached home, so this is low for a detached purchase.", summary: "A default we chose because nobody publishes inspection prices. Commonly cited ranges are $500-$800 for a condo and $700-$1,200 for a detached home, so this is low for a detached purchase." },
+    "fees.appraisal": { conf: "assumption", note: "No authoritative publisher. Cited market range $300-$500.", summary: "A default we chose because nobody publishes appraisal prices. It sits within the commonly cited $300-$500; your own quote will differ." },
+    "fees.moving": { conf: "assumption", note: "No authoritative 2026 Vancouver moving-cost source located.", summary: "A default we chose because no reliable published source for 2026 Vancouver moving costs was found. Your own quote will differ." },
+    "fees.setup": { conf: "assumption", note: "No authoritative source located; BC Hydro and FortisBC connection charges are far below this, so the figure is a settling-in allowance rather than a utility fee.", summary: "A settling-in allowance we chose because nobody publishes one. BC Hydro and FortisBC connection charges are far lower, so this covers more than utility hookups; your own costs will differ." },
   },
 };

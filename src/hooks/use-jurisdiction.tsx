@@ -4,11 +4,20 @@ import { createContext, useCallback, useContext, useMemo, type ReactNode } from 
 import { useSharedState } from "./use-shared-state";
 import { useCountry } from "./use-country";
 import { JURISDICTION_KEYS, JURISDICTION_DEFAULTS } from "@/lib/shared-inputs";
-import { defaultJurisdictionOf, getJurisdiction } from "@/domain/jurisdictions";
+import { defaultJurisdictionOf, getJurisdiction, withTaxArea } from "@/domain/jurisdictions";
 import type { Country, Jurisdiction } from "@/domain/types";
 
-/** The resolved jurisdiction, and a setter taking a raw id. */
-export type JurisdictionContextValue = [Jurisdiction, (jurId: string) => void];
+/**
+ * The resolved jurisdiction — with the reader's tax area (Winnipeg's school division) already
+ * applied — a setter taking a raw id, a setter for the area (null = the record's default), and
+ * the area in effect (the record's default when none is chosen; null where the record has none).
+ */
+export type JurisdictionContextValue = [
+  Jurisdiction,
+  (jurId: string) => void,
+  (taxArea: string | null) => void,
+  string | null,
+];
 
 const JurisdictionContext = createContext<JurisdictionContextValue | null>(null);
 
@@ -43,11 +52,21 @@ export function pickJurisdiction(
 export function JurisdictionProvider({ children }: { children: ReactNode }) {
   const [state, update] = useSharedState(JURISDICTION_KEYS, JURISDICTION_DEFAULTS);
   const country = useCountry();
-  const jurisdiction = pickJurisdiction(getJurisdiction(state.jurId), country);
+  const picked = pickJurisdiction(getJurisdiction(state.jurId), country);
+  // Applied HERE, once, like the country fallback above: every page's engine calls and every
+  // provenance line then read the reader's own division without knowing areas exist.
+  const jurisdiction = useMemo(() => withTaxArea(picked, state.taxArea), [picked, state.taxArea]);
+  const areas = picked.propTax.areas;
+  const taxAreaId = !areas
+    ? null
+    : areas.list.some((a) => a.id === state.taxArea)
+      ? state.taxArea
+      : areas.default;
   const setJurId = useCallback((jurId: string) => update({ jurId }), [update]);
+  const setTaxArea = useCallback((taxArea: string | null) => update({ taxArea }), [update]);
   const value = useMemo<JurisdictionContextValue>(
-    () => [jurisdiction, setJurId],
-    [jurisdiction, setJurId],
+    () => [jurisdiction, setJurId, setTaxArea, taxAreaId],
+    [jurisdiction, setJurId, setTaxArea, taxAreaId],
   );
   return <JurisdictionContext.Provider value={value}>{children}</JurisdictionContext.Provider>;
 }

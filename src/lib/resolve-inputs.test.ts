@@ -8,13 +8,36 @@ import {
   benchmarkPrice,
   DEFAULT_COMFORT_CEILING,
   DEFAULT_RENT,
+  assumedBudgetExceedsIncome,
   isPersonalised,
+  unsetHeadlineAssumptions,
   resolveInputs,
 } from "./resolve-inputs";
 
 const winnipeg = getJurisdiction("winnipeg")!;
 const vancouver = getJurisdiction("vancouver")!;
 const untouched = TOOL_DEFAULTS;
+
+describe("resolveInputs — the RRSP-HBP contribution default", () => {
+  it("is the lower of the annual RRSP limit and 18% of the income the page uses", () => {
+    expect(resolveInputs(untouched, winnipeg, ca).hbpContribution).toBe(13500);
+    const rich = { ...untouched, income1: 400000 };
+    expect(resolveInputs(rich, winnipeg, ca).hbpContribution).toBe(ca.rrspCap);
+    // Follows the taxable-income field, which is what the page prints and uses.
+    expect(resolveInputs({ ...untouched, taxIncome: 50000 }, winnipeg, ca).hbpContribution).toBe(9000);
+  });
+
+  it("never exceeds the annual limit the same panel prints, and the withdrawal follows it", () => {
+    const r = resolveInputs(untouched, winnipeg, ca);
+    expect(r.hbpContribution).toBeLessThanOrEqual(ca.rrspCap);
+    expect(r.hbpWithdraw).toBe(r.hbpContribution);
+    expect(resolveInputs({ ...untouched, hbpContribution: 20000 }, winnipeg, ca).hbpWithdraw).toBe(20000);
+  });
+
+  it("keeps null meaning 'use the default' and lets the reader overwrite it", () => {
+    expect(resolveInputs({ ...untouched, hbpContribution: 40000 }, winnipeg, ca).hbpContribution).toBe(40000);
+  });
+});
 
 describe("resolveInputs", () => {
   it("derives price from the city benchmark for the chosen property type", () => {
@@ -136,16 +159,17 @@ describe("resolveInputs", () => {
     expect(r.rent).toBe(winnipeg.rent ?? DEFAULT_RENT);
   });
 
-  it("will not price a HOUSE against the apartment rent published for the city", () => {
-    // The published figure is real and correct for what it measures; it just does
-    // not measure this. `bench.house` beside it is a detached house, and running
-    // the comparison across that gap produced a verdict about two different lives
-    // — silently, on the page's default property type.
+  it("answers a HOUSE with the published apartment rent, flagged as a different dwelling", () => {
+    // PINNED ASSERTION CHANGED (decision 4): this used to require rentKnown false and the
+    // DEFAULT_RENT placeholder, so a house opened on an ask. The published figure is real
+    // for what it measures, so it is now the default — labelled via `rentBasisMismatch`,
+    // and replaced the moment the reader types their own. What stays false is `rentKnown`
+    // where NOTHING is published (next test).
     const r = resolveInputs(untouched, winnipeg, ca);
     expect(winnipeg.rent).toBeGreaterThan(0);
-    expect(r.rentKnown).toBe(false);
+    expect(r.rentKnown).toBe(true);
     expect(r.rentBasisMismatch).toBe(true);
-    expect(r.rent).toBe(DEFAULT_RENT);
+    expect(r.rent).toBe(winnipeg.rent);
   });
 
   it("tells a mismatch apart from a city nobody surveyed", () => {
@@ -156,6 +180,11 @@ describe("resolveInputs", () => {
     const r = resolveInputs({ ...untouched, ptype: "condo" }, yt, ca);
     expect(r.rentKnown).toBe(false);
     expect(r.rentBasisMismatch).toBe(false);
+    // And a HOUSE there: still nothing to compute around.
+    const house = resolveInputs(untouched, yt, ca);
+    expect(house.rentKnown).toBe(false);
+    expect(house.rentBasisMismatch).toBe(false);
+    expect(house.rent).toBe(DEFAULT_RENT);
   });
 
   it("takes the reader's own rent for any dwelling, mismatch or not", () => {
@@ -423,5 +452,30 @@ describe("benchmarkPrice", () => {
         expect(j.provenance[`bench.${field}`]?.conf, `${j.id}.${ptype} is null`).toBe("none");
       }
     }
+  });
+});
+
+describe("unsetHeadlineAssumptions / assumedBudgetExceedsIncome", () => {
+  const j = getJurisdiction("winnipeg")!;
+  const F = ca;
+
+  it("lists exactly the assumptions still in play", () => {
+    expect(unsetHeadlineAssumptions({ ...TOOL_DEFAULTS })).toEqual(["income1", "comfortCeiling"]);
+    expect(unsetHeadlineAssumptions({ ...TOOL_DEFAULTS, income1: 30000 })).toEqual(["comfortCeiling"]);
+    expect(unsetHeadlineAssumptions({ ...TOOL_DEFAULTS, comfortCeiling: 3000 })).toEqual(["income1"]);
+    expect(unsetHeadlineAssumptions({ ...TOOL_DEFAULTS, income1: 1, comfortCeiling: 1 })).toEqual([]);
+  });
+
+  it("flags a default budget at or above stated gross monthly income only", () => {
+    const at = (o: object) => {
+      const s = { ...TOOL_DEFAULTS, ...o };
+      return assumedBudgetExceedsIncome(s, resolveInputs(s, j, F));
+    };
+    expect(at({})).toBe(false); // nothing stated
+    expect(at({ income1: 30000 })).toBe(true); // 2,500 < 2,700
+    expect(at({ income1: 32400 })).toBe(true); // exactly 2,700
+    expect(at({ income1: 90000 })).toBe(false);
+    expect(at({ income1: 30000, comfortCeiling: 900 })).toBe(false); // the reader's own
+    expect(at({ income1: 20000, income2: 20000 })).toBe(false); // household income counts
   });
 });

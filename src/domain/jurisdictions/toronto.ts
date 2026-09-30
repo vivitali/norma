@@ -88,6 +88,7 @@ export const toronto: Jurisdiction = {
       src: ONTARIO_LTT,
       url: "https://www.ontario.ca/document/land-transfer-tax/calculating-land-transfer-tax",
       note: "The 2.5% top tier applies only where the land holds one or two single family residences; otherwise 2.0% continues above $2M. The bracket table cannot express that condition, so it is right for a house or a condo and over-charges 3+ unit residential above $2M.",
+      summary: "Ontario's provincial land transfer tax rates, checked against the ministry's own worked schedule. The top 2.5% rate applies only to one- or two-family homes, so the estimate is right for a house or condo but too high for larger buildings above $2M.",
     },
     "transfer.1.brackets": {
       conf: "high",
@@ -95,6 +96,7 @@ export const toronto: Jurisdiction = {
       src: "City of Toronto, MLTT & MNRST Rates & Fees",
       url: "https://www.toronto.ca/services-payments/property-taxes-utilities/municipal-land-transfer-tax-mltt/",
       note: "Read off the City's own rate page. Bands at or below $3M are unchanged; the five above it were raised from 3.5/4.5/5.5/6.5/7.5% effective 2026-04-01. Marginal, like the provincial table.",
+      summary: "The City of Toronto's own municipal land transfer tax rates, each applied to the slice of the price in its band. Rates on the bands above $3M were raised in April 2026; bands at or below $3M are unchanged.",
     },
     "rebates.0.cap": {
       conf: "high",
@@ -108,6 +110,7 @@ export const toronto: Jurisdiction = {
       src: "City of Toronto, MLTT rebate opportunities",
       url: "https://www.toronto.ca/services-payments/property-taxes-utilities/municipal-land-transfer-tax-mltt/municipal-land-transfer-tax-mltt-rebate-opportunities/",
       note: "$4,475, with no property-value threshold attached to the cap itself.",
+      summary: "The City of Toronto's first-time-buyer rebate on its municipal land transfer tax, up to $4,475, with no price limit on the rebate itself.",
     },
     "premiumTax.rate": {
       conf: "high",
@@ -121,18 +124,21 @@ export const toronto: Jurisdiction = {
       src: "City of Toronto, Property Tax Rates & Fees — city 0.605295% + education 0.153000% + city building fund 0.009016%",
       url: "https://www.toronto.ca/services-payments/property-taxes-utilities/property-tax/property-tax-rates-and-fees/",
       note: "The City states the rate applies to \"the current year phased-in property assessment value, as determined by MPAC\" — not to a sale price.",
+      summary: "The City of Toronto's 2026 combined residential tax rate. It is charged on the property's assessed value set by MPAC, not on the price you pay, which is why the model adjusts it.",
     },
     "propTax.assessmentRatio": {
       conf: "low",
       asOf: "2026-07",
       src: "Derived: TRREB MLS® HPI composite benchmark, City of Toronto, Jan 2016 over Jul 2026",
       note: TORONTO_RATIO_NOTE,
+      summary: "Worked out from published figures: Toronto's benchmark home price in January 2016 (the date MPAC's assessed values are based on) divided by its July 2026 price, both from TRREB. It assumes your home's price moved like the benchmark, so treat it as an estimate.",
     },
     "propTax.effective": {
       conf: "low",
       asOf: "2026",
-      src: "Derived: publishedRate x assessmentRatio",
+      src: "Derived: published rate × assessment ratio",
       note: "Inherits the confidence of the weaker half — a high-confidence published rate multiplied by a low-confidence estimated assessment ratio. Previously 0.00752, which was the published rate applied to a 2026 market price and overstated Toronto property tax by about half.",
+      summary: "Worked out by multiplying the City's published rate by the estimated assessment-to-price ratio, so it is only as reliable as the weaker of the two. It is an estimate of yearly tax as a share of today's price.",
     },
     "bench.house": {
       conf: "high",
@@ -140,6 +146,7 @@ export const toronto: Jurisdiction = {
       src: `${TRREB_MW} single family detached`,
       url: TRREB_MW_URL,
       note: "SCOPE: City of Toronto (416), read off pp. 25-26 of the PDF. All-TRREB-areas detached is $1,221,800 — a 19% difference, which moves the answer more than a month of price drift. A separate report gave $1,291,690 from a search snippet after its own PDF fetch failed; that figure matches no row in the publication and is discarded.",
+      summary: "TRREB's July 2026 benchmark price for a detached home in the City of Toronto. Detached homes across the wider Toronto region cost noticeably less, so the area matters; your own price will differ.",
     },
     "bench.condo": {
       conf: "high",
@@ -147,6 +154,7 @@ export const toronto: Jurisdiction = {
       src: `${TRREB_MW} apartment`,
       url: TRREB_MW_URL,
       note: "SCOPE: City of Toronto. All-TRREB-areas apartment is $535,200.",
+      summary: "TRREB's July 2026 benchmark price for an apartment condo in the City of Toronto. The wider Toronto region is lower, so the area matters.",
     },
     rent: {
       conf: "medium",
@@ -154,6 +162,7 @@ export const toronto: Jurisdiction = {
       src: "CMHC Rental Market Survey, Toronto CMA, 2-bedroom purpose-built apartment, reliability code a",
       url: "https://www.cmhc-schl.gc.ca/professionals/housing-markets-data-and-research/market-reports/rental-market-reports-major-centres",
       note: "Taken from the market-data verification report's read of CMHC's HMIP table rather than re-read here, hence medium. CMHC surveys once a year with an October reference month, so this can never be as fresh as the benchmarks beside it. The condo-apartment 2-bedroom average is $2,891 — a different and higher quantity, and what the old 2,850 placeholder was closer to.",
+      summary: "Average rent for a two-bedroom purpose-built apartment in the Toronto area, from CMHC's October 2025 rental survey. It comes from a secondary read of CMHC's table, and the survey is annual, so it lags current listings. Condo apartments rent for more on average.",
     },
     yoy: {
       conf: "high",
@@ -161,6 +170,7 @@ export const toronto: Jurisdiction = {
       src: `${TRREB_MW} composite`,
       url: TRREB_MW_URL,
       note: "A sign flip, not a drift: the old +0.008 told a buyer prices were rising in a market falling 3.8% a year. All-TRREB composite is -4.63%.",
+      summary: "The year-over-year change in Toronto's composite home price benchmark in July 2026, from TRREB. Prices are falling, not rising.",
     },
     "fees.statusCert": {
       conf: "high",
@@ -168,6 +178,7 @@ export const toronto: Jurisdiction = {
       src: "Condominium Act, 1998, O. Reg. 48/01 s. 18(4) — $100 inclusive of all applicable taxes",
       url: "https://www.condoauthorityontario.ca/status-certificates/",
       note: "A statutory maximum, not an estimate. The old 110 looked like $100 plus HST, but the cap is tax-inclusive, so no condo corporation may lawfully charge it.",
+      summary: "The most a condo corporation may legally charge for a status certificate: $100 including all taxes. It is a legal cap, not an estimate.",
     },
     "taxTime.0.amount": {
       conf: "medium",
@@ -175,6 +186,7 @@ export const toronto: Jurisdiction = {
       src: "CRA line 31270 Home buyers' amount ($10,000 claim) x the 2026 lowest federal rate of 14%",
       url: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/about-your-tax-return/tax-return/completing-a-tax-return/deductions-credits-expenses/line-31270-home-buyers-amount.html",
       note: "The $10,000 claim is confirmed on CRA's own page; the 14% lowest bracket rate is the half carried at medium, and it is what moves the credit from the $1,500 every third-party page still recites to $1,400. Tracks federal.hba.",
+      summary: "The federal home buyers' tax credit: a $10,000 claim at the lowest federal rate of 14%, worth $1,400. The $10,000 is confirmed on CRA's own page; the 14% rate is the less firmly confirmed half.",
     },
   },
 };

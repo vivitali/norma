@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithIntl } from "@/test/render-with-intl";
 import type { Locale } from "@/lib/locales";
@@ -32,10 +32,16 @@ const fmtCap = (n: number) => money(n, "en-CA", false);
 
 beforeEach(() => window.localStorage.clear());
 
+/** The head stat whose label starts with `label` (the section rows repeat the same words). */
+const statOf = (label: string) =>
+  [...document.querySelectorAll("[data-slot=answer-stat]")].find((el) =>
+    el.previousElementSibling?.textContent?.startsWith(label),
+  )!;
+
 describe("RRSP → HBP — the refund leads", () => {
   it("puts the refund at the scale of an answer", () => {
     renderPage();
-    expect(screen.getAllByText("Refund at your marginal rate").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Estimated refund on this contribution").length).toBeGreaterThan(0);
   });
 
   it("caps the contribution at the federal maximum", async () => {
@@ -122,9 +128,9 @@ describe("RRSP → HBP — the clamp is explained, not printed as $0", () => {
 
 describe("RRSP → HBP — the room the reader may not have", () => {
   it("shows the RRSP dollar limit beside the HBP maximum", async () => {
-    // The contribution field defaults to the $60,000 HBP maximum, which is 78%
-    // above the most anyone's room can grow in a year — a figure the app already
-    // held at conf `high` and no screen had ever displayed.
+    // The contribution default is now min(annual limit, 18% of income), so it never
+    // exceeds the annual limit printed here; the limit was once contradicted by a
+    // $60,000 default, 78% above what anyone's room can grow in a year.
     const user = userEvent.setup();
     renderPage();
     await open(user, /The refund/);
@@ -138,8 +144,9 @@ describe("RRSP → HBP — the room the reader may not have", () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /The refund/);
-    expect(screen.getByText(/Notice of Assessment/)).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/18%/);
+    // The NOTE types no rate. (The rate does appear elsewhere on the page — as the sourced
+    // `rrspRoomRate`, bound as an argument in the tag and the contribution label.)
+    expect(screen.getByText(/Notice of Assessment/).textContent).not.toMatch(/18%/);
   });
 });
 
@@ -157,6 +164,29 @@ describe("RRSP → HBP — the rules", () => {
     expect(screen.queryByText(/no exception and no appeal/)).not.toBeInTheDocument();
   });
 
+  it("says the 89-day rule once, without contradicting itself", async () => {
+    // The panel said "one of these steps has no exception", the step said "not an absolute rule with
+    // no exception", and a third line insisted on "89 days. Not approximately 89 days." Three
+    // statements of one rule, two of which disagreed.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The five steps/);
+    const panel = document.getElementById("rules")!;
+    expect(panel.textContent).not.toMatch(/no exception/);
+    expect(panel.textContent).not.toMatch(/Not approximately/);
+    expect(within(panel).getByText(/can lose its deduction/)).toBeInTheDocument();
+    expect(within(panel).getByText(/the order is what protects the refund/i)).toBeInTheDocument();
+  });
+
+  it("sets CRA's caveat as a quiet note, not in the blocked colour", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The five steps/);
+    const caveat = screen.getByText(/may not be able to deduct part or all/);
+    expect(caveat.closest("[data-slot=note]")).not.toBeNull();
+    expect(caveat.className).not.toMatch(/text-blocked/);
+  });
+
   it("discloses the 2022-2025 cohort's extra three years beside the grace note", async () => {
     // `graceYears` is 2 for everyone the engine computes for, and rules/ca.ts
     // records the exception. Disclosed rather than computed: deriving it needs
@@ -171,7 +201,9 @@ describe("RRSP → HBP — the rules", () => {
     const user = userEvent.setup();
     renderPage();
     await open(user, /The repayment/);
-    expect(screen.getByText(`Year ${ca.hbp.repayYears}`)).toBeInTheDocument();
+    expect(screen.getByText(`Repayment year ${ca.hbp.repayYears}`)).toBeInTheDocument();
+    // The note and the rows count the same thing: year 1 is the first repayment year.
+    expect(screen.getByText(/year 1 is your first repayment year/)).toBeInTheDocument();
   });
 });
 
@@ -185,5 +217,105 @@ describe("RRSP → HBP — French", () => {
     await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
     expect(document.body.textContent).not.toMatch(/RrspHbp\./);
     expect(screen.getAllByText(/Régime d’accession|RAP/).length).toBeGreaterThan(0);
+  });
+});
+
+describe("RRSP → HBP — the default contribution and the refund's method", () => {
+  it("opens on a contribution below the annual limit, not the $60,000 HBP maximum", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The refund/);
+    const field = document.getElementById("hbpContribution") as HTMLInputElement;
+    expect(field.value).toBe("");
+    expect(field.placeholder.replace(/[^\d]/g, "")).toBe("13500");
+  });
+
+  it("says in the calculation that the refund is an estimate from combined rates", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /How this was calculated/);
+    expect(screen.getByText(/worked out bracket by bracket/)).toBeInTheDocument();
+  });
+});
+
+describe("RRSP → HBP — nothing opens, and the assumptions are named", () => {
+  it("opens no section on a first visit, and one once the reader has given something", () => {
+    renderPage();
+    expect(screen.queryAllByRole("button", { expanded: true })).toHaveLength(0);
+    cleanup();
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ hbpContribution: 8000 }));
+    renderPage();
+    expect(screen.getByRole("button", { name: /The refund/ })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("names the assumed contribution in the tag and jumps to its field", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    const tag = screen.getByRole("button", {
+      name: /Assuming a \$13,500 contribution: 18% of income, up to the annual limit/,
+    });
+    await user.click(tag);
+    expect(screen.getByLabelText("Your RRSP contribution")).toHaveFocus();
+  });
+
+  it("names the assumed income once the contribution is given", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ hbpContribution: 8000 }));
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Assuming \$75,000 of taxable income/ }));
+    expect(screen.getByLabelText("Taxable income")).toHaveFocus();
+  });
+
+  it("says \"Your figures\" only when neither the contribution nor the income is assumed", () => {
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ hbpContribution: 8000, taxIncome: 90000 }),
+    );
+    renderPage();
+    expect(document.querySelector("[data-slot=answer-tag]")!.textContent).toBe("Your figures");
+  });
+
+  it("does not assert a contribution the reader never made", async () => {
+    // "Your RRSP contribution $13,500" claimed a fact the reader had not given.
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /The refund/);
+    const panel = document.getElementById("refund")!;
+    expect(
+      within(panel).getByText("Assumed contribution: 18% of income, up to the annual limit"),
+    ).toBeInTheDocument();
+    expect(within(panel).queryByText("Your RRSP contribution")).not.toBeInTheDocument();
+    cleanup();
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ hbpContribution: 8000 }));
+    renderPage();
+    await open(user, /The refund/);
+    expect(within(document.getElementById("refund")!).getByText("Your RRSP contribution")).toBeInTheDocument();
+  });
+
+  it("marks the withdrawn amount an estimate until the reader gives it, then a rule", () => {
+    renderPage();
+    const label = () => statOf("Amount withdrawn tax-free").previousElementSibling!;
+    expect(label().textContent).toMatch(/estimate/);
+    cleanup();
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ hbpContribution: 8000, hbpWithdraw: 8000 }),
+    );
+    renderPage();
+    expect(label().textContent).toMatch(/rule/);
+  });
+
+  it("keeps its inputs in the block the head jumps to, outside every section", () => {
+    renderPage();
+    expect(screen.getByRole("link", { name: "Adjust your numbers" })).toHaveAttribute("href", "#adjust");
+    const adjust = document.getElementById("adjust")!;
+    for (const id of ["hbpContribution", "hbpWithdraw", "taxIncome"]) {
+      expect(adjust.querySelector(`#${id}`)).not.toBeNull();
+    }
+  });
+
+  it("gives the repayment stat the caution tone of the section that owns it", () => {
+    renderPage();
+    expect(statOf("Repayment schedule").querySelector(".text-caution")).not.toBeNull();
   });
 });

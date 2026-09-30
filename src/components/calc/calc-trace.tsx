@@ -92,7 +92,7 @@ export function CalcTrace({
               )}
             >
               <span aria-hidden="true" className="text-ink3 tabular-nums">
-                {line.op ? GLYPH[line.op] : ""}
+                {line.op ? GLYPH[line.op] : "\u00A0"}
               </span>
               <span className="min-w-0">
                 {/*
@@ -168,7 +168,15 @@ export function CalcLedger({
     // (page-contracts.test.tsx), not decoration: without `min-w-0` a flex or grid
     // child defaults to `min-width: auto` and widens its parent instead of
     // scrolling, and `relative` is what the sr-only caption is positioned against.
-    <div className="relative max-h-[420px] min-w-0 overflow-x-auto overflow-y-auto rounded-md border border-hairline">
+    // A scroll container is a tab stop and a named region, so a keyboard reader can scroll it: a
+    // scrollable div is otherwise unreachable, and the wide ledgers are cut off on a phone. The
+    // caption that names the table for a screen reader names the region too.
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label={caption}
+      className="relative max-h-[420px] min-w-0 overflow-x-auto overflow-y-auto rounded-md border border-hairline"
+    >
       <table className="w-full border-collapse text-[12.5px]">
         <caption className="sr-only">{caption}</caption>
         <thead className="sticky top-0 z-10 bg-card">

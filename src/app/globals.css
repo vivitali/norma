@@ -44,9 +44,15 @@
   --color-caution: var(--caut);
   --color-blocked: var(--blk);
 
-  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  /*
+   * next/font appends a local Arial "Fallback" face to every variable it emits, and that face
+   * covers Cyrillic — so `var(--font-archivo), var(--font-golos)` never reaches Golos: Arial
+   * catches every Cyrillic glyph first. The real family names go first, then the variables as the
+   * graceful path should the names ever be hashed. Latin: Archivo. Cyrillic (Archivo has none):
+   * Golos Text. */
+  --font-sans: "Archivo", "Golos Text", var(--font-archivo, system-ui), var(--font-golos, system-ui), system-ui, sans-serif;
   --font-mono: var(--font-martian-mono), ui-monospace, monospace;
-  --font-heading: var(--font-archivo), system-ui, sans-serif;
+  --font-heading: "Archivo", "Golos Text", var(--font-archivo, system-ui), var(--font-golos, system-ui), system-ui, sans-serif;
 
   /* Pills and soft rectangles, not the hairline 1/2/3px of v1. */
   --radius-sm: 3px;
@@ -194,6 +200,25 @@
   }
   .control {
     font-size: var(--control-font-size);
+  }
+}
+
+/*
+ * The pre-paint guard (src/lib/pre-paint.ts). For a returning reader whose stored inputs change a
+ * tool page's shape, the page body and the footer below it stay invisible until useSharedState
+ * marks <html data-hydrated> in the commit the stored values land in — so nothing visible ever
+ * moves. `visibility` keeps every box and all the prerendered text. The delayed reveal is the
+ * failsafe: if hydration never happens, the page still appears after 3s. It is an animation
+ * DELAY, which the reduced-motion rule above does not zero (it zeroes durations).
+ */
+html[data-stored]:not([data-hydrated]) main[data-slot="tool-main"],
+html[data-stored]:not([data-hydrated]):has(main[data-slot="tool-main"]) footer {
+  visibility: hidden;
+  animation: norma-reveal 0s linear 3s forwards;
+}
+@keyframes norma-reveal {
+  to {
+    visibility: visible;
   }
 }
 

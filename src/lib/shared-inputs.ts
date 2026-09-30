@@ -1,5 +1,5 @@
 import type { PropertyType, Residency } from "@/domain/types";
-import { defaultJurisdiction, jurisdictions } from "@/domain/jurisdictions";
+import { defaultJurisdiction, jurisdictions, taxAreaIds } from "@/domain/jurisdictions";
 
 /**
  * Every input this app persists, in one place. Pages select the slice they need instead of
@@ -15,6 +15,13 @@ import { defaultJurisdiction, jurisdictions } from "@/domain/jurisdictions";
  */
 export type SharedInputs = {
   jurId: string;
+  /**
+   * The reader's property-tax AREA within the jurisdiction — Winnipeg's school division. null =
+   * the record's default (`PropertyTax.areas.default`). Kept beside `jurId` rather than per
+   * jurisdiction: an id only matches the record that carries it, so switching city and back
+   * restores the choice, and every other record ignores it (`withTaxArea`).
+   */
+  taxArea: string | null;
 
   // The purchase
   /** null = derive from the city benchmark for the chosen property type. */
@@ -113,10 +120,19 @@ export type SharedInputs = {
   retKey: "cash" | "balanced" | "growth";
   investDiff: boolean;
   appreciationOn: boolean;
+
+  // Reading state, not calculator input
+  /**
+   * The newest changelog release the reader has seen, as yyyymmdd. null = never recorded, which
+   * is a first visit: the footer's version note records the current latest without showing its
+   * "new" dot (src/components/version-note.tsx).
+   */
+  seenUpdate: number | null;
 };
 
 export const SHARED_INPUT_DEFAULTS: SharedInputs = {
   jurId: defaultJurisdiction.id,
+  taxArea: null,
   price: null,
   dpPct: 10,
   amortYears: 30,
@@ -158,6 +174,7 @@ export const SHARED_INPUT_DEFAULTS: SharedInputs = {
   retKey: "balanced",
   investDiff: true,
   appreciationOn: true,
+  seenUpdate: null,
 };
 
 /**
@@ -171,9 +188,15 @@ export type FieldSchema =
   | { kind: "enum"; values: readonly string[] }
   | { kind: "numberEnum"; values: readonly number[] };
 
+/** Upper bound for every money field: one billion. Beyond it a figure stops being a plan and starts overflowing layouts. */
+export const MAX_AMOUNT = 1_000_000_000;
+
 export const SHARED_INPUT_SCHEMA: Record<keyof SharedInputs, FieldSchema> = {
   jurId: { kind: "enum", values: jurisdictions.map((j) => j.id) },
-  price: { kind: "number", nullable: true, min: 0 },
+  // An enum has no null member: a stored null, like any id no record carries, is dropped on
+  // read and the key falls back to its null default.
+  taxArea: { kind: "enum", values: taxAreaIds() },
+  price: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
   dpPct: { kind: "number", nullable: false, min: 0, max: 100 },
   amortYears: { kind: "number", nullable: false, min: 1, max: 40 },
   ftb: { kind: "boolean" },
@@ -181,39 +204,40 @@ export const SHARED_INPUT_SCHEMA: Record<keyof SharedInputs, FieldSchema> = {
   elsewhere: { kind: "boolean" },
   residency: { kind: "enum", values: ["resident", "nonResident"] },
   contractRate: { kind: "number", nullable: true, min: 0, max: 30 },
-  income1: { kind: "number", nullable: true, min: 0 },
-  income2: { kind: "number", nullable: true, min: 0 },
-  otherIncome: { kind: "number", nullable: true, min: 0 },
+  income1: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  income2: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  otherIncome: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
   haircut: { kind: "number", nullable: false, min: 0, max: 50 },
-  car: { kind: "number", nullable: true, min: 0 },
-  student: { kind: "number", nullable: true, min: 0 },
-  cc: { kind: "number", nullable: true, min: 0 },
-  otherDebt: { kind: "number", nullable: true, min: 0 },
-  comfortCeiling: { kind: "number", nullable: true, min: 0 },
-  insuranceAnnual: { kind: "number", nullable: true, min: 0 },
-  utilities: { kind: "number", nullable: true, min: 0 },
-  condoFee: { kind: "number", nullable: true, min: 0 },
-  funds: { kind: "number", nullable: true, min: 0 },
-  save: { kind: "number", nullable: true, min: 0 },
-  fhsa: { kind: "number", nullable: true, min: 0 },
-  cashSav: { kind: "number", nullable: true, min: 0 },
-  rrsp: { kind: "number", nullable: true, min: 0 },
-  tfsa: { kind: "number", nullable: true, min: 0 },
-  gift: { kind: "number", nullable: true, min: 0 },
-  nonreg: { kind: "number", nullable: true, min: 0 },
-  nonregGain: { kind: "number", nullable: true, min: 0 },
-  taxIncome: { kind: "number", nullable: true, min: 0 },
-  hbpContribution: { kind: "number", nullable: true, min: 0 },
-  hbpWithdraw: { kind: "number", nullable: true, min: 0 },
+  car: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  student: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  cc: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  otherDebt: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  comfortCeiling: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  insuranceAnnual: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  utilities: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  condoFee: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  funds: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  save: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  fhsa: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  cashSav: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  rrsp: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  tfsa: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  gift: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  nonreg: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  nonregGain: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  taxIncome: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  hbpContribution: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
+  hbpWithdraw: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
   termYears: { kind: "numberEnum", values: [1, 2, 3, 4, 5, 7, 10] },
   renewalRate: { kind: "number", nullable: true, min: 0, max: 30 },
-  rent: { kind: "number", nullable: true, min: 0 },
+  rent: { kind: "number", nullable: true, min: 0, max: MAX_AMOUNT },
   rentInflation: { kind: "number", nullable: false, min: 0, max: 20 },
   holding: { kind: "number", nullable: false, min: 1, max: 40 },
   apprKey: { kind: "enum", values: ["inflation", "shelter", "flat"] },
   retKey: { kind: "enum", values: ["cash", "balanced", "growth"] },
   investDiff: { kind: "boolean" },
   appreciationOn: { kind: "boolean" },
+  seenUpdate: { kind: "number", nullable: true, min: 20200101, max: 99991231 },
 };
 
 function slice<K extends keyof SharedInputs>(keys: readonly K[]): Pick<SharedInputs, K> {
@@ -228,7 +252,7 @@ function slice<K extends keyof SharedInputs>(keys: readonly K[]): Pick<SharedInp
  * module-level constant satisfies that by construction and makes an inline literal impossible
  * to write by accident.
  */
-export const JURISDICTION_KEYS = ["jurId"] as const satisfies readonly (keyof SharedInputs)[];
+export const JURISDICTION_KEYS = ["jurId", "taxArea"] as const satisfies readonly (keyof SharedInputs)[];
 type JurisdictionState = Pick<SharedInputs, (typeof JURISDICTION_KEYS)[number]>;
 export const JURISDICTION_DEFAULTS: JurisdictionState = slice(JURISDICTION_KEYS);
 
@@ -254,3 +278,8 @@ export const TOOL_KEYS = [
 ] as const satisfies readonly (keyof SharedInputs)[];
 export type ToolFormState = Pick<SharedInputs, (typeof TOOL_KEYS)[number]>;
 export const TOOL_DEFAULTS: ToolFormState = slice(TOOL_KEYS);
+
+/** The footer version note's own slice — not a calculator input, so it is not in `TOOL_KEYS`. */
+export const SEEN_UPDATE_KEYS = ["seenUpdate"] as const satisfies readonly (keyof SharedInputs)[];
+type SeenUpdateState = Pick<SharedInputs, (typeof SEEN_UPDATE_KEYS)[number]>;
+export const SEEN_UPDATE_DEFAULTS: SeenUpdateState = slice(SEEN_UPDATE_KEYS);

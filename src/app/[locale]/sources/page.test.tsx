@@ -116,14 +116,102 @@ describe("SourcesContent", () => {
     });
     expect(mill).toHaveAttribute("href", expect.stringContaining("assessment.winnipeg.ca"));
     expect(mill).toHaveAttribute("rel", "noreferrer");
-    expect(screen.getAllByText(/as of 2026-07/).length).toBeGreaterThan(0);
+    // The board's August 2026 release, re-verified 2026-09-28.
+    expect(screen.getAllByText(/as of August 2026/).length).toBeGreaterThan(0);
   });
 
-  it("shows the note, which is usually the most useful sentence about a figure", async () => {
+  it("names the FIGURE each document backs, with its value, not only the document", async () => {
     const user = userEvent.setup();
     render();
     await openEverySection(user);
-    expect(screen.getByText(/29.366 = the 2026 municipal mill rate/)).toBeVisible();
+    const fees = document.getElementById("fees-panel")!;
+    // Winnipeg's lawyer fee default, with the number it is.
+    expect(within(fees).getByText(/Real estate lawyer fees and disbursements/)).toBeVisible();
+    expect(within(fees).getByText(/\$1,800/)).toBeVisible();
+    const propTax = document.getElementById("propTax-panel")!;
+    expect(within(propTax).getAllByText(/Property tax rate/).length).toBeGreaterThan(0);
+    expect(within(propTax).getByText(/1\.32%/)).toBeVisible();
+    // A schedule gets a label and no single number.
+    const charges = document.getElementById("charges-panel")!;
+    expect(within(charges).getAllByText(/land transfer tax/i).length).toBeGreaterThan(0);
+  });
+
+  it("renders backticked names as plain text and keeps series ids in <code>", async () => {
+    const { renderNote } = await import("@/components/sources-content");
+    const { container } = renderWithIntl(
+      <p>{renderNote("Uses `bench` and `propTax.effective`, series BROKER_AVERAGE_5YR_VRM.")}</p>,
+    );
+    expect(container.textContent).toBe("Uses bench and propTax.effective, series BROKER_AVERAGE_5YR_VRM.");
+    const codes = [...container.querySelectorAll("code")].map((c) => c.textContent);
+    expect(codes).toEqual(["propTax.effective", "BROKER_AVERAGE_5YR_VRM"]);
+    expect(container.querySelector("code")!.className).toContain("[overflow-wrap:anywhere]");
+  });
+
+  it("uses no text below 11.5px", () => {
+    const content = readFileSync("src/components/sources-content.tsx", "utf8");
+    expect(content).not.toMatch(/text-\[(10|10\.5|11)px\]/);
+  });
+
+  it("uses the tool pages' geometry and hairlines, not cards", () => {
+    render();
+    const main = document.getElementById("main")!;
+    expect(main.className).toContain("max-w-[1100px]");
+    expect(main.className).toContain("px-5");
+    expect(main.className).toContain("sm:px-10");
+    expect(main.querySelector(".bg-card")).toBeNull();
+  });
+
+  it("agrees with its noun in Ukrainian: one/few/many for the figure count", async () => {
+    const { default: uk } = await import("../../../../messages/uk.json");
+    const { createTranslator } = await import("next-intl");
+    const t = createTranslator({ locale: "uk", messages: uk, namespace: "Sources" } as never) as unknown as (
+      key: string,
+      values: Record<string, number>,
+    ) => string;
+    const at = (total: number) =>
+      t("coverage", { jurisdictions: 15, total, sourced: 5, assumed: 3, unknown: 2 });
+    expect(at(1)).toContain("має 1 цифра");
+    expect(at(3)).toContain("мають 3 цифри");
+    expect(at(301)).toContain("має 301 цифра");
+    expect(at(305)).toContain("мають 305 цифр");
+    expect(at(312)).toContain("мають 312 цифр");
+  });
+
+  it("shows the reader summary, not the maintainer note, under a figure", async () => {
+    const user = userEvent.setup();
+    render();
+    await openEverySection(user);
+    expect(screen.getByText(/so choose yours; the default is Winnipeg School Division/)).toBeVisible();
+    expect(screen.getByText(/^Winnipeg School Division: 29\.366 mills/)).toBeVisible();
+    // Eight divisions share the one document, so they fold into its row, a line each — and the
+    // levy sentence is said once, on the default, not repeated per division.
+    expect(screen.getByText(/^Pembina Trails School Division: 25\.223 mills/)).toBeVisible();
+    expect(screen.getAllByText(/no Education Support Levy/i)).toHaveLength(1);
+    // The note carries the verification trail (a stale PDF footer, the cross-check that dismissed
+    // it). It stays in src/domain for the next person to verify; a reader never needed it.
+    expect(screen.queryByText(/DEFAULT DIVISION/)).toBeNull();
+    expect(screen.queryByText(/page footer still reads/)).toBeNull();
+  });
+
+  it("keeps the division table's own paragraph for a reader who chose their division", async () => {
+    // `withTaxArea` swaps `propTax.publishedRate` for the chosen division's entry. The paragraph
+    // introducing all eight lives on `propTax.areas` so that swap cannot take it away.
+    window.localStorage.setItem(
+      "norma.inputs.v2",
+      JSON.stringify({ jurId: "winnipeg", taxArea: "pembina-trails" }),
+    );
+    const user = userEvent.setup();
+    render();
+    await openEverySection(user);
+    const tax = document.getElementById("propTax-panel")!;
+    // The swap happened: the published rate this row reports is Pembina Trails' 25.223 mills.
+    expect(tax.textContent).toContain("2.52%");
+    expect(tax.textContent).not.toContain("2.94%");
+    expect(within(tax).getByText(/so choose yours; the default is Winnipeg School Division/)).toBeVisible();
+    expect(within(tax).getAllByText(/no Education Support Levy/i)).toHaveLength(1);
+    // Each division once, the chosen one included — never twice because it was swapped in.
+    expect(within(tax).getAllByText(/^Pembina Trails School Division: 25\.223 mills/)).toHaveLength(1);
+    expect(within(tax).getAllByText(/School Division: \d/)).toHaveLength(8);
   });
 
   it("shows a gap as a gap, not as a missing row", async () => {
@@ -136,7 +224,7 @@ describe("SourcesContent", () => {
     await openEverySection(user);
     const market = document.getElementById("market-panel")!;
     expect(within(market).getAllByText("Not published").length).toBeGreaterThan(0);
-    expect(within(market).getByText(/No MLS® HPI covers Yukon/)).toBeVisible();
+    expect(within(market).getByText(/Nobody publishes a benchmark house price for Yukon/)).toBeVisible();
   });
 
   it("marks the fee defaults as ours, everywhere", async () => {
@@ -145,7 +233,7 @@ describe("SourcesContent", () => {
     await openEverySection(user);
     const fees = document.getElementById("fees-panel")!;
     expect(within(fees).getAllByText("Assumption").length).toBeGreaterThan(0);
-    expect(within(fees).getByText(/firms set their own/)).toBeVisible();
+    expect(within(fees).getAllByText(/so this is a default we chose for the region/).length).toBeGreaterThan(0);
   });
 
   it("says the figure disclosure in its mixed-state wording", () => {
@@ -155,14 +243,15 @@ describe("SourcesContent", () => {
         "Every figure that carries a sourcing record names where it came from: a dated published source, an estimate we disclose, or nothing at all where nothing is published.",
       ),
     ).toBeVisible();
-    expect(screen.getByText(/Rules last verified/)).toBeVisible();
+    expect(screen.getByText(/Federal rules verified/)).toBeVisible();
+    expect(screen.getByText(/Figures for Winnipeg verified/)).toBeVisible();
   });
 
-  it("says the notes are kept in English, rather than pretending otherwise", () => {
-    // The notes come out of src/domain verbatim. Left unexplained, a French
+  it("says the explanations are in English, rather than pretending otherwise", () => {
+    // The summaries come out of src/domain in English. Left unexplained, a French
     // reader reads an English paragraph as a translation that failed.
     render("fr-CA");
-    expect(screen.getByText(/conservées en anglais/)).toBeVisible();
+    expect(screen.getByText(/explication du chiffre en langage simple, en anglais/)).toBeVisible();
   });
 
   it("gives the French jurisdiction name its article after a preposition", () => {

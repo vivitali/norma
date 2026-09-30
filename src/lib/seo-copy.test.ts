@@ -15,6 +15,7 @@ const PAGES = [
   "sources",
   "privacy",
   "terms",
+  "changelog",
   "notFound",
 ] as const;
 

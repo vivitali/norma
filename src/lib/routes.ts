@@ -50,9 +50,11 @@ function entry(route: RouteKey, label: string): NavEntry {
 }
 
 /**
- * Grouped by the buyer's journey, in the NAVIGATION only — the URLs stay flat. Keeping grouping
- * out of the path is what lets Rent vs Buy appear under both `afford` and `own` honestly, and it
- * means regrouping later costs nothing while a nested URL would have been permanent.
+ * Grouped by the buyer's journey, in the NAVIGATION only — the URLs stay flat, so regrouping later
+ * costs nothing while a nested URL would have been permanent. Every destination is listed ONCE:
+ * Rent vs Buy answers a question for someone entering the market and another for someone already
+ * in it, but two links to one page made a screen reader announce nine links for eight tools, so it
+ * sits under `afford` only.
  */
 export const NAV: readonly NavGroup[] = [
   {
@@ -69,7 +71,7 @@ export const NAV: readonly NavGroup[] = [
   },
   {
     heading: "own",
-    entries: [entry("/amortization", "amortization"), entry("/rent-vs-buy", "rentVsBuy")],
+    entries: [entry("/amortization", "amortization")],
   },
   {
     heading: "utility",
@@ -117,4 +119,5 @@ export interface FooterEntry {
 export const FOOTER: readonly FooterEntry[] = [
   { route: "/privacy", label: "privacy" },
   { route: "/terms", label: "terms" },
+  { route: "/changelog", label: "changelog" },
 ];

@@ -13,8 +13,6 @@ import type { ToolFormState } from "./shared-inputs";
  * in a product whose whole thesis is that its numbers trace to something.
  */
 export const DEFAULT_INCOME_1 = 75000;
-/** Only written when the user adds a second applicant — never assumed. */
-export const DEFAULT_INCOME_2 = 45000;
 export const DEFAULT_COMFORT_CEILING = 2700;
 export const DEFAULT_INSURANCE_ANNUAL = 1500;
 export const DEFAULT_UTILITIES = 300;
@@ -141,7 +139,8 @@ export interface ResolvedInputs {
   rent: number;
   /**
    * Whether the rent being compared against is a real figure — the reader's own,
-   * or one this jurisdiction's record publishes. A stored **0** is not a rent,
+   * or one this jurisdiction's record publishes (of ANY dwelling basis: see
+   * `rentBasisMismatch`, which says when it is the wrong dwelling and must be labelled). A stored **0** is not a rent,
    * for the same reason a stored 0 is not a price.
    *
    * False for the six records that carry no rent. `rent` then falls back to
@@ -151,9 +150,11 @@ export interface ResolvedInputs {
    */
   rentKnown: boolean;
   /**
-   * True when a rent IS published here but measures a different dwelling than the
-   * one being priced — an apartment against a house. Distinct from `!rentKnown`
-   * alone, which is also true where nobody publishes anything.
+   * True when the rent in use is the one PUBLISHED here (the reader typed none) and it
+   * measures a different dwelling than the one being priced — an apartment against a
+   * house. `rentKnown` is true then: the page answers with it, labelled as an apartment
+   * rent, and asks for the reader's own in place. Nothing published at all is the
+   * `!rentKnown` case, and that still asks and does not answer.
    */
   rentBasisMismatch: boolean;
   /** Fraction, not a percentage — the engine takes fractions. */
@@ -234,14 +235,23 @@ export function resolveInputs(
   // same rungs a blank field does: the figure published for here, then DEFAULT_RENT, which
   // keeps the arithmetic defined while `rentKnown` stops the page printing anything from it.
   const storedRent = stored.rent !== null && stored.rent > 0 ? stored.rent : null;
-  // A published rent only counts when it describes the dwelling being priced. Every
-  // rent in the dataset is a CMHC two-bedroom APARTMENT average and `bench.house`
-  // beside it is a detached house, so for a house or a new build there is no
-  // comparable published figure and the page must ask rather than answer from the
-  // wrong series. See `rentComparable`.
+  // A published rent is a real figure whatever it measures, so it is always a usable
+  // DEFAULT — but it only describes the dwelling being priced when `rentComparable`. Every
+  // rent in the dataset is a two-bedroom APARTMENT average and `bench.house` beside it is a
+  // detached house, so for a house or a new build the figure is answered from and LABELLED as
+  // the wrong series (`rentBasisMismatch`), and the page asks for the reader's own rent in
+  // place beside it. What may never happen is computing around a figure nobody publishes:
+  // where `j.rent` is null there is no published rent, `rentKnown` stays false and the page
+  // asks instead of answering.
   const comparable = rentComparable(j, stored.ptype);
-  const publishedRent =
-    j.rent != null && j.rent > 0 && comparable ? j.rent : null;
+  const taxIncome = stored.taxIncome ?? income1 + income2 + otherIncome;
+  const hbpContribution =
+    stored.hbpContribution ??
+    // CRA's deduction-limit rule (rules/ca.ts `rrspRoomRate`, with its provenance): the lesser
+    // of the annual dollar limit and 18% of earned income — applied to the income the page has,
+    // as a default the reader overwrites, not a recommendation about how much to contribute.
+    (F.country === "ca" ? Math.round(Math.min(F.rrspCap, F.rrspRoomRate * taxIncome)) : 0);
+  const publishedRent = j.rent != null && j.rent > 0 ? j.rent : null;
 
   return {
     price,
@@ -284,17 +294,20 @@ export function resolveInputs(
     nonregGain: stored.nonregGain ?? 0,
     // The household income already given, rather than a second question asking
     // for the same fact in different words.
-    taxIncome: stored.taxIncome ?? income1 + income2 + otherIncome,
+    taxIncome,
 
-    // Contributing the federal maximum is the only non-arbitrary starting point:
-    // any smaller figure would be a recommendation about how much to put in. The HBP
-    // has no US analogue — RRSP-HBP is a Canada-only route (US-market spec) — so a
-    // US call has no honest maximum to fall back to; these two fields simply go
-    // unread on that branch rather than crash resolving inputs for every OTHER page,
-    // every one of which calls this same function.
-    hbpContribution: stored.hbpContribution ?? (F.country === "ca" ? F.hbp.max : 0),
-    hbpWithdraw:
-      stored.hbpWithdraw ?? stored.hbpContribution ?? (F.country === "ca" ? F.hbp.max : 0),
+    // The starting point is what one year of room can plausibly be: the lower of the
+    // annual RRSP dollar limit and 18% of the income the page itself uses. It used to be
+    // the HBP maximum ($60,000), which exceeds the annual dollar limit the same panel
+    // prints — a contribution almost no reader has room for. Still not a recommendation:
+    // it is a placeholder the reader overwrites, and null keeps meaning "use the default".
+    // The HBP has no US analogue — RRSP-HBP is a Canada-only route (US-market spec) — so a
+    // US call has no honest figure to fall back to; these two fields simply go unread on
+    // that branch rather than crash resolving inputs for every OTHER page.
+    hbpContribution,
+    // Withdrawing what was contributed is the only default that cannot exceed it
+    // (hbpPlay clamps the withdrawal to the contribution and to the HBP maximum anyway).
+    hbpWithdraw: stored.hbpWithdraw ?? hbpContribution,
 
     termYears: stored.termYears,
     renewalRate: stored.renewalRate,
@@ -350,6 +363,34 @@ export function anySourceGiven(stored: ToolFormState): boolean {
  */
 export function isPersonalised(stored: ToolFormState): boolean {
   return PERSONAL_KEYS.some((key) => stored[key] !== null);
+}
+
+/**
+ * The assumptions a hero figure still rests on: which of the two placeholders behind
+ * Affordability's comfortable price the reader has NOT replaced. `isPersonalised`
+ * flips on ANY personal key, so a reader who typed only an income of $30,000 was told
+ * "Your numbers" over a figure still built on an assumed $2,700 budget. This names
+ * exactly what is still in play, so a tag can say so.
+ */
+export function unsetHeadlineAssumptions(
+  stored: ToolFormState,
+): ("income1" | "comfortCeiling")[] {
+  const unset: ("income1" | "comfortCeiling")[] = [];
+  if (stored.income1 === null) unset.push("income1");
+  if (stored.comfortCeiling === null) unset.push("comfortCeiling");
+  return unset;
+}
+
+/**
+ * True when the assumed budget is at least what the reader says they gross a month:
+ * the default `DEFAULT_COMFORT_CEILING` ignores income by design, so for a low income
+ * it describes spending more than they earn. False while no income has been given,
+ * because then there is no stated figure to compare against.
+ */
+export function assumedBudgetExceedsIncome(stored: ToolFormState, r: ResolvedInputs): boolean {
+  if (stored.comfortCeiling !== null || stored.income1 === null) return false;
+  const grossMonthly = (r.income1 + r.income2 + r.otherIncome) / 12;
+  return r.comfortCeiling >= grossMonthly;
 }
 
 /**

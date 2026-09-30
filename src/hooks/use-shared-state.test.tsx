@@ -112,4 +112,20 @@ describe("useSharedState", () => {
     act(() => result.current[1]({ jurId: "halifax" }));
     expect(result.current[2]).toBe(true);
   });
+
+  it("lifts the pre-paint guard in the same commit the stored values land in", async () => {
+    // src/lib/pre-paint.ts hides a returning reader's tool page until <html data-hydrated>.
+    // It must not appear before the stored state has been applied, and must appear once it has.
+    document.documentElement.removeAttribute("data-hydrated");
+    window.localStorage.setItem(STORE_KEY_V2, JSON.stringify({ price: 700000 }));
+    const seen: Array<[number, boolean]> = [];
+    renderHook(() => {
+      const [state] = useSharedState(KEYS, DEFAULTS);
+      seen.push([state.price, document.documentElement.hasAttribute("data-hydrated")]);
+      return state;
+    });
+    await waitFor(() => expect(document.documentElement.hasAttribute("data-hydrated")).toBe(true));
+    // Every render that still carried the default price happened with the guard up.
+    expect(seen.filter(([price]) => price === 500000).every(([, lifted]) => !lifted)).toBe(true);
+  });
 });

@@ -17,21 +17,18 @@ describe("nav registry", () => {
     expect(NAV.map((g) => g.heading)).toEqual(["afford", "buy", "own", "utility"]);
   });
 
-  it("lists Rent vs Buy in two groups, deliberately", () => {
-    // It serves someone deciding whether to enter the market AND someone weighing staying put
-    // against selling. Flat URLs are what make this honest rather than ambiguous — a nested URL
-    // would have forced one answer. Guarded so a future "dedupe the nav" refactor has to argue
-    // with this test rather than silently collapse it.
+  it("lists every destination exactly once", () => {
+    // Rent vs Buy used to sit under both "afford" and "own": a screen reader heard nine links for
+    // eight tools. It lives under "afford" alone now.
+    const routes = NAV.flatMap(builtEntries).map((e) => e.route);
+    expect(new Set(routes).size).toBe(routes.length);
     const groups = NAV.filter((g) => g.entries.some((e) => e.route === "/rent-vs-buy"));
-    expect(groups.map((g) => g.heading)).toEqual(["afford", "own"]);
+    expect(groups.map((g) => g.heading)).toEqual(["afford"]);
   });
 
   it("exposes only routes whose page exists", () => {
     // Home is not a nav entry. Sources shipped with the interaction-model rebuild but had no
     // way in until pathnames existed — the provenance marks were its only entry point.
-    // Rent vs Buy appears TWICE, deliberately -- once under "afford" and once
-    // under "own". See the test above: flat URLs are what let one page answer
-    // two different questions honestly.
     expect(NAV.flatMap(builtEntries).map((e) => e.route)).toEqual([
       "/affordability",
       "/rent-vs-buy",
@@ -39,7 +36,6 @@ describe("nav registry", () => {
       "/down-payment",
       "/rrsp-hbp",
       "/amortization",
-      "/rent-vs-buy",
       "/scenarios",
       "/sources",
     ]);

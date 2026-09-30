@@ -25,7 +25,7 @@ afterEach(() => {
 describe("LocaleSwitcher", () => {
   it("shows the active locale on the trigger", () => {
     renderWithIntl(<LocaleSwitcher />);
-    expect(screen.getByRole("combobox", { name: "Change language" })).toHaveTextContent("EN");
+    expect(screen.getByRole("combobox", { name: /^Change language:/ })).toHaveTextContent("EN");
   });
 
   it("offers every locale of the CURRENT COUNTRY, and nothing else", async () => {

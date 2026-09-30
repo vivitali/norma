@@ -13,6 +13,8 @@ export interface MetricRow {
   value: (column: ScenarioResult) => string;
   mark?: ProvenanceKind;
   strong?: boolean;
+  /** The row a phone summary above the carousel reads: this panel's key metric. */
+  summary?: boolean;
   /** Highlights the column this metric most favours. */
   best?: (columns: readonly ScenarioResult[]) => number | null;
 }
@@ -130,6 +132,8 @@ export function CompareGrid({
 
   /** Resolved once per render, not once per card: `best` reads all four columns. */
   const bests = rows.map((row) => row.best?.(columns) ?? null);
+  const summaryRow = rows.find((row) => row.summary);
+  const summaryBest = summaryRow?.best?.(columns) ?? null;
 
   return (
     <>
@@ -155,9 +159,23 @@ export function CompareGrid({
         // display:none table leaves the accessibility tree, so the two never read
         // the same figures twice.
         className="relative hidden min-w-0 overflow-x-auto sm:block"
+        tabIndex={0}
+        role="region"
+        aria-label={caption}
       >
-        <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
+        {/*
+          table-fixed with one shared colgroup: the four comparison tables on this page are the
+          same four columns, and auto layout sized each to its own widest figure, so the reader's
+          column jumped between x 560, 700 and 632 as the sections were opened one after another.
+        */}
+        <table className="w-full min-w-[560px] table-fixed border-collapse text-[12.5px]">
           <caption className="sr-only">{caption}</caption>
+          <colgroup>
+            <col style={{ width: "36%" }} />
+            {columns.map((column) => (
+              <col key={column.dpPct} style={{ width: `${64 / columns.length}%` }} />
+            ))}
+          </colgroup>
           <thead>
             <tr className="border-b border-border">
               <th scope="col" className="py-1.5 pr-3 text-left font-medium text-ink3">
@@ -183,13 +201,13 @@ export function CompareGrid({
                 >
                   {t("column", { p: pct(column.dpPct) })}
                   {column.dpPct === yoursPct ? (
-                    <span className="block text-[10.5px] font-normal text-ac">{t("yours")}</span>
+                    <span className="block text-[11.5px] font-normal text-ac">{t("yours")}</span>
                   ) : null}
                   {column.dpPct === recommendedPct ? (
-                    <span className="block text-[10.5px] font-normal">{t("recommended")}</span>
+                    <span className="block text-[11.5px] font-normal">{t("recommended")}</span>
                   ) : null}
                   {column.belowMinimum ? (
-                    <span className="block text-[10.5px] font-normal text-caution">
+                    <span className="block text-[11.5px] font-normal text-caution">
                       {t("fMinimum", { p: pct(column.dpPctEff, 1) })}
                     </span>
                   ) : null}
@@ -245,6 +263,40 @@ export function CompareGrid({
         the cards are the flex item that must be allowed to shrink, and the
         sr-only markers inside them need a positioned ancestor to be clipped by.
       */}
+      {summaryRow ? (
+        <dl
+          // Below sm the four columns are four cards, one per swipe, and "side by side" is
+          // lost. This is the panel's key metric for every column at once, above the cards.
+          className="mb-3 rounded-lg border border-border bg-card px-3 py-1 sm:hidden"
+          aria-label={`${caption} · ${summaryRow.label}`}
+        >
+          {columns.map((column, i) => (
+            <div
+              key={column.dpPct}
+              className="flex items-baseline justify-between gap-3 border-b border-hairline py-1.5 last:border-b-0"
+            >
+              <dt
+                className={cn(
+                  "min-w-0 text-[12.5px]",
+                  column.dpPct === recommendedPct ? "font-semibold text-ac" : "text-ink2",
+                )}
+              >
+                {t("column", { p: pct(column.dpPct) })}
+                {column.dpPct === yoursPct ? <span className="text-ac"> · {t("yours")}</span> : null}
+              </dt>
+              <dd
+                className={cn(
+                  "text-right text-[13px] font-medium tabular-nums",
+                  i === summaryBest && "font-semibold text-pass",
+                )}
+              >
+                {summaryRow.value(column)}
+                {i === summaryBest ? <span className="sr-only"> · {t("bestHere")}</span> : null}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
       <ul
         ref={cardsRef}
         role="list"
@@ -252,7 +304,7 @@ export function CompareGrid({
         tabIndex={0}
         className="relative flex min-w-0 snap-x snap-mandatory gap-3 overflow-x-auto pb-1 sm:hidden"
       >
-        {columns.map((column) => {
+        {columns.map((column, ci) => {
           const isYours = column.dpPct === yoursPct;
           return (
             <li
@@ -260,7 +312,7 @@ export function CompareGrid({
               ref={isYours ? ownCardRef : undefined}
               aria-current={isYours ? "true" : undefined}
               className={cn(
-                "w-full shrink-0 snap-center rounded-lg border p-3",
+                "w-[85%] shrink-0 snap-center rounded-lg border p-3",
                 isYours ? "border-acbr bg-acbg" : "border-border bg-card",
               )}
             >
@@ -277,9 +329,12 @@ export function CompareGrid({
                 {column.dpPct === recommendedPct ? (
                   <span className="eyebrow text-ink2">{t("recommended")}</span>
                 ) : null}
+                <span className="micro ml-auto text-ink2">
+                  {t("cardOf", { n: ci + 1, total: columns.length })}
+                </span>
               </p>
               {column.belowMinimum ? (
-                <p className="micro pt-1 text-caution">
+                <p className="pt-1 text-[11.5px] text-caution">
                   {t("fMinimum", { p: pct(column.dpPctEff, 1) })}
                 </p>
               ) : null}

@@ -1,12 +1,24 @@
 "use client";
 
 import { useId, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { NoteLine } from "@/components/tool-page";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatLocaleNumber, parseLocaleNumber } from "@/lib/number-format";
 import { localeProfile } from "@/lib/locales";
 import { cn } from "@/lib/utils";
+import { MAX_AMOUNT } from "@/lib/shared-inputs";
+
+/** The most decimals a committed value is ever displayed with. */
+const MAX_DP = 4;
+
+/** Decimals `n` actually carries (to MAX_DP) — so a shown figure equals the one used. */
+function carriedDp(n: number): number {
+  const s = String(Number(n.toFixed(MAX_DP)));
+  const i = s.indexOf(".");
+  return i === -1 || s.includes("e") ? 0 : s.length - i - 1;
+}
 
 export interface NumberFieldProps {
   id: string;
@@ -23,6 +35,7 @@ export interface NumberFieldProps {
   suffix?: string;
   describedBy?: string;
   className?: string;
+  autoFocus?: boolean;
 }
 
 /**
@@ -40,16 +53,21 @@ export function NumberField({
   placeholder,
   onCommit,
   min,
-  max,
+  max = MAX_AMOUNT,
   dp = 0,
   suffix,
   describedBy,
   className,
+  autoFocus,
 }: NumberFieldProps) {
   const intlLocale = localeProfile(useLocale()).intl;
-  /** Non-null only while the field is being edited. */
+  const tTool = useTranslations("ToolPage");
+  /** Non-null while the field is being edited, and after a blur it could not read. */
   const [draft, setDraft] = useState<string | null>(null);
+  /** The reader's last blur left text that is not a number. Nothing is committed while true. */
+  const [invalid, setInvalid] = useState(false);
   const suffixId = useId();
+  const errorId = useId();
 
   /**
    * A derived value is shown as a PLACEHOLDER, never as the field's value.
@@ -62,32 +80,50 @@ export function NumberField({
    * empty.
    */
   const display =
-    draft !== null ? draft : value === null ? "" : formatLocaleNumber(value, intlLocale, dp);
+    draft !== null
+      ? draft
+      : value === null
+        ? ""
+        : formatLocaleNumber(value, intlLocale, Math.max(dp, carriedDp(value)));
   const hint =
-    placeholder === undefined ? undefined : formatLocaleNumber(placeholder, intlLocale, dp);
+    placeholder === undefined
+      ? undefined
+      : formatLocaleNumber(placeholder, intlLocale, dp);
 
   const commit = (raw: string) => {
-    setDraft(null);
     const parsed = parseLocaleNumber(raw, intlLocale);
     if (parsed === null) {
       // An empty box means "not told" and returns the field to its derived
       // default — but only if it was not already null, so tabbing through an
-      // untouched form writes nothing. A partial entry ("-", ".") means the user
-      // is not finished; neither of those is a 0, and neither may become one.
+      // untouched form writes nothing.
       if (raw.trim() === "") {
+        setDraft(null);
+        setInvalid(false);
         if (value !== null) onCommit(null);
+        return;
       }
+      // Anything else ("abc", "1e9", "1.5.5", a lone "-") is text we cannot read. It used to be
+      // cleared on blur without a word, so the reader saw their entry vanish and the old figure
+      // return. Keep what they typed, say so, and commit nothing: it is not a 0 and not a value.
+      setDraft(raw);
+      setInvalid(true);
       return;
     }
+    setDraft(null);
+    setInvalid(false);
     let next = parsed;
     if (min !== undefined) next = Math.max(min, next);
-    if (max !== undefined) next = Math.min(max, next);
+    next = Math.min(max, next);
     onCommit(next);
   };
 
+  const example = formatLocaleNumber(75000, intlLocale, 0);
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      <Label htmlFor={id} className="text-[11.5px] font-semibold text-muted-foreground">
+      <Label
+        htmlFor={id}
+        className="text-[11.5px] font-semibold text-muted-foreground"
+      >
         {label}
       </Label>
       <div className="flex items-baseline gap-1.5">
@@ -95,26 +131,46 @@ export function NumberField({
           id={id}
           type="text"
           inputMode="decimal"
-          className="text-right font-medium"
+          // A derived default shown as a placeholder must not read as something the reader typed:
+          // typed text is --ink at 500, the placeholder is --ink3 at 400.
+          className="text-right font-medium placeholder:font-normal placeholder:text-ink3"
+          autoFocus={autoFocus}
           value={display}
           placeholder={hint}
+          aria-invalid={invalid || undefined}
           aria-describedby={
-            [describedBy, suffix ? suffixId : null].filter(Boolean).join(" ") || undefined
+            [describedBy, suffix ? suffixId : null, invalid ? errorId : null]
+              .filter(Boolean)
+              .join(" ") || undefined
           }
-          onFocus={() => setDraft(value === null ? "" : String(value))}
-          onChange={(e) => setDraft(e.target.value)}
+          onFocus={() => {
+            // Refocusing an unreadable entry keeps it, so the reader can fix it rather than retype.
+            if (!invalid) setDraft(value === null ? "" : String(value));
+          }}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            setInvalid(false);
+          }}
           onBlur={(e) => commit(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") e.currentTarget.blur();
-            if (e.key === "Escape") setDraft(null);
+            if (e.key === "Escape") {
+              setDraft(null);
+              setInvalid(false);
+            }
           }}
         />
         {suffix ? (
-          <span id={suffixId} className="text-[10.5px] text-ink3">
+          <span id={suffixId} className="text-[11.5px] text-ink3">
             {suffix}
           </span>
         ) : null}
       </div>
+      {invalid ? (
+        <div id={errorId} role="alert">
+          <NoteLine tone="caution">{tTool("notANumber", { example })}</NoteLine>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -51,4 +51,4 @@ export const PRIVACY_OFFICER: LegalParty = {
  * the terms changed when they did not — and `Privacy.bodyChanges` promises that material changes
  * are described rather than made silently, which a churning date quietly breaks.
  */
-export const LEGAL_UPDATED = "2026-08-25";
+export const LEGAL_UPDATED = "2026-09-28";

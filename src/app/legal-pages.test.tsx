@@ -149,7 +149,9 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
       // country actually renders, not its country-forked sibling. See `appliesToCountry`.
       for (const [key, bodyText] of Object.entries(ns)) {
         if (!key.startsWith("body") || !appliesToCountry(key, ns, locale)) continue;
-        expect(screen.getByText(bodyText), key).toBeTruthy();
+        // getByText collapses whitespace in the DOM text but not in a string matcher, so French's
+        // narrow no-break spaces (U+202F, before : ; ? !) are collapsed here the same way.
+        expect(screen.getByText(bodyText.replace(/\s+/g, " ").trim()), key).toBeTruthy();
       }
 
       unmount();

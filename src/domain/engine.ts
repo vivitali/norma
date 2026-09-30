@@ -44,6 +44,19 @@ export function bracketTax(
   return { total, parts };
 }
 
+/**
+ * The seller's transfer tax on a sale at `price` — `j.saleTax`, summed. Zero for a
+ * jurisdiction that carries none (every Canadian record and Texas), so adding it to the sale
+ * changes nothing there. Nominal thresholds: a scheduled adjustment is not projected.
+ */
+export function saleTaxOn(j: Jurisdiction, price: number): number {
+  let total = 0;
+  for (const line of j.saleTax ?? []) {
+    total += line.kind === "brackets" ? bracketTax(price, line.brackets).total : price * line.rate;
+  }
+  return total;
+}
+
 /** Monthly payment per $1 of mortgage, Canadian semi-annual compounding. */
 export function payFactor(annualRate: number, years: number): number {
   const i = Math.pow(1 + annualRate / 2, 2 / 12) - 1;
@@ -78,6 +91,10 @@ export function payFactorMonthly(annualRate: number, years: number): number {
  * binds, which is everywhere this product's own benchmark prices reach.
  */
 export function propertyTaxAnnual(j: Jurisdiction, price: number): number {
+  return Math.max(0, grossPropertyTax(j, price) - billCredit(j, price));
+}
+
+function grossPropertyTax(j: Jurisdiction, price: number): number {
   const exemptions = j.propTax.exemptions;
   if (!exemptions || exemptions.length === 0) return price * j.propTax.effective;
   let coveredRate = 0;
@@ -90,6 +107,17 @@ export function propertyTaxAnnual(j: Jurisdiction, price: number): number {
   }
   const remainderRate = j.propTax.effective - coveredRate;
   return total + price * remainderRate;
+}
+
+/**
+ * The principal-residence credit printed on the bill (`PropertyTax.credit` — Manitoba's HATC):
+ * the lesser of its amount and the slice it is capped against. Exact per price, and
+ * `solveWithBillCredit()` inverts it exactly for the ceiling solves.
+ */
+function billCredit(j: Jurisdiction, price: number): number {
+  const credit = j.propTax.credit;
+  if (!credit) return 0;
+  return Math.min(credit.amount, Math.max(0, price) * credit.appliesToRate);
 }
 
 /**
@@ -124,6 +152,29 @@ export function propertyTaxCredit(j: Jurisdiction): number {
     (sum, ex) => sum + (ex.kind === "flatAmount" ? ex.amount * ex.appliesToRate : 0),
     0,
   );
+}
+
+/**
+ * Solves `denom × p − billCredit(p) / 12 = budget` for the price `p` — the ceiling equations of
+ * `affordability()`, where `budget` is the monthly dollars left for price-driven costs and
+ * `denom` the monthly cost per dollar of price (payment, property tax at the full rate,
+ * maintenance). Without a bill credit that is `budget / denom`.
+ *
+ * With one (Manitoba's HATC, `min(amount, price × slice)`) the cost is piecewise linear, so
+ * this solves exactly rather than taking the credit at its cap: first assume the cap binds;
+ * if the resulting price is too low for the slice to reach the cap, the credit is the slice
+ * itself and folds into the rate instead. The two branches meet at `amount / slice`, where
+ * both give the same price, so exactly one is consistent. Taking the full credit everywhere
+ * overstated a low-income ceiling by up to ~4% (~$43 a month at a $150,000 solve in Winnipeg
+ * School Division, where the cap binds only above ~$222,000).
+ */
+export function solveWithBillCredit(j: Jurisdiction, budget: number, denom: number): number {
+  if (budget <= 0) return 0;
+  const credit = j.propTax.credit;
+  if (!credit) return budget / denom;
+  const capped = (budget + credit.amount / 12) / denom;
+  if (capped * credit.appliesToRate >= credit.amount) return capped;
+  return budget / (denom - credit.appliesToRate / 12);
 }
 
 /**
@@ -442,6 +493,11 @@ export function buildLines(j: Jurisdiction, F: CountryRules, o: ClosingInput) {
   }
 
   const f = j.fees;
+  // US only. The county clerk's recording fee is a GOVERNMENT fee, so it belongs in the taxes-and-
+  // government-fees group with the transfer lines, not among the professional fees: Houston's
+  // `transfer: []` otherwise showed that group at $0 while its own copy says the clerk sets
+  // recording fees. Same amount, same total; only the group it is filed under changes.
+  if (f.recording != null) gov.push({ key: "li_recording", amount: f.recording });
   const pro: LineItem[] = [];
   pro.push({
     key:
@@ -470,7 +526,6 @@ export function buildLines(j: Jurisdiction, F: CountryRules, o: ClosingInput) {
   // US only — a survey and a county recording fee, neither of which any Canadian record
   // carries. Absent, not zero, on every record that lacks them (matches `locCert`/`titleIns`).
   if (f.survey != null) pro.push({ key: "li_survey", amount: f.survey });
-  if (f.recording != null) pro.push({ key: "li_recording", amount: f.recording });
 
   const adj: LineItem[] = [
     { key: "li_taxAdj", ex: "ex_taxAdj", amount: propertyTaxAnnual(j, o.price) / 4 },
@@ -884,13 +939,21 @@ export function affordability(j: Jurisdiction, F: CountryRules, o: Affordability
     // count — and the full fee two lines below, because that is what the household pays.
     // Both are correct and they are not the same figure; the screen has to say so, which is
     // why the share is a named federal rule with provenance rather than a bare 0.5.
-    return Math.max(0, (binds - heatAllowance - o.condoFee * F.condoFeeInclusion + propTaxCreditMonthly) / denomLender);
+    return solveWithBillCredit(
+      j,
+      binds - heatAllowance - o.condoFee * F.condoFeeInclusion + propTaxCreditMonthly,
+      denomLender,
+    );
   };
   const ceiling = ceilingCarrying(o.debts);
 
   const budget = o.comfortCeiling - o.insuranceAnnual / 12 - o.utilities - o.condoFee + propTaxCreditMonthly;
   const denomComfort = financed * fc + propertyTaxRate(j) / 12 + F.maintenanceReserve / 12;
-  const comfort = Math.max(0, budget) / denomComfort;
+  const comfort = solveWithBillCredit(j, budget, denomComfort);
+  // The bill credit actually earned at the comfort price, monthly. Reported, and added into
+  // `budget` below, so the printed derivation (budget ÷ cost per dollar = comfort) holds exactly
+  // on either side of the credit's cap — see solveWithBillCredit().
+  const comfortTaxCredit = billCredit(j, comfort) / 12;
 
   // The target price, actually financed at the actual down payment.
   const cc = closingTotal(j, F, {
@@ -958,7 +1021,8 @@ export function affordability(j: Jurisdiction, F: CountryRules, o: Affordability
     tdsBinds,
     ceiling,
     comfort,
-    budget,
+    budget: budget + comfortTaxCredit,
+    comfortTaxCredit,
     monthly,
     cc,
     gdsAtTarget,
@@ -1625,7 +1689,11 @@ export interface RentVsBuyRow {
   strata: number;
   /** The contract rate in force this year, as a fraction. Changes at renewal. */
   rate: number;
-  /** Tax-time rebates received in year 1, grown at the investment return. */
+  /**
+   * Canada: tax-time rebates received in year 1, grown at the investment return. US: every
+   * year's itemised-deduction benefit, invested as it arrives and grown — BEFORE tax on that
+   * growth, which `buyGainsTax` carries. Either way it is the operand `buyW` adds.
+   */
   taxTimeCredits: number;
   utilities: number;
   maintenance: number;
@@ -1648,11 +1716,33 @@ export interface RentVsBuyRow {
    * row silently stops describing the figure directly beneath it.
    */
   sellingCost: number;
+  /**
+   * The seller's transfer tax on this sale (`Jurisdiction.saleTax` — Washington's REET), netted
+   * off `equity` beside `sellingCost`. PRESENT ONLY WHEN NON-ZERO, so a jurisdiction with no
+   * such tax returns the same row shape as before.
+   */
+  saleTax?: number;
+  /**
+   * US only: tax on the home-sale gain above the federal exclusion, netted off `equity` beside
+   * `sellingCost`. PRESENT ONLY WHEN OWED, like `saleTax`, so the trace can show every term
+   * `equity` subtracts.
+   */
+  homeGainTax?: number;
   equity: number;
-  /** Terminal wealth if you bought. */
+  /** Terminal wealth if you bought: `equity + taxTimeCredits + bp − (buyGainsTax ?? 0)`. */
   buyW: number;
-  /** Terminal wealth if you rented. */
+  /** The up-front cash a renter keeps, grown at the investment return, before any tax on it. */
+  upFrontGrown: number;
+  /** Terminal wealth if you rented: `upFrontGrown + rp − (rentGainsTax ?? 0)`. */
   rentW: number;
+  /**
+   * US only: tax on the investment gains inside `buyW` (the grown deduction benefit and `bp`)
+   * and inside `rentW` (the grown up-front cash and `rp`), at the flat long-term rate. PRESENT
+   * ONLY WHEN NON-ZERO. Reported so the trace's subtotals add up: without them `buyW` and
+   * `rentW` net a tax no line shows.
+   */
+  buyGainsTax?: number;
+  rentGainsTax?: number;
   /** buyW − rentW. Positive means buying is ahead by this year. */
   adv: number;
   /**
@@ -1783,7 +1873,9 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
     // up to forty years while being structurally unreachable by /sources, which builds its
     // inventory from the rules' provenance and the jurisdiction maps.
     const infl = Math.pow(1 + F.nonShelterInflation, t - 1);
-    const propTax = o.price * Math.pow(1 + g, t - 1) * j.propTax.effective;
+    // Through the seam, not `price × effective`: a record with a bill credit (Winnipeg's HATC)
+    // or an exemption must be taxed the same way here as on every other page.
+    const propTax = propertyTaxAnnual(j, o.price * Math.pow(1 + g, t - 1));
     const insurance = o.insuranceAnnual * infl;
     // Split, because only ONE half of this is a cost the renter escapes. A strata
     // fee buys the building; a tenant's rent already buys it. In-suite services —
@@ -1814,7 +1906,8 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
 
     const homeValue = o.price * Math.pow(1 + g, t);
     const sellingCost = homeValue * F.sellingCost;
-    const equity = homeValue - sellingCost - bal;
+    const saleTax = saleTaxOn(j, homeValue);
+    const equity = homeValue - sellingCost - saleTax - bal;
     // Rebates that arrive at TAX TIME rather than at the closing table — the home
     // buyers' amount, and the GST rebate where it applies. `upFront` already nets
     // off the at-closing ones; dropping these was the same omission one step later,
@@ -1822,7 +1915,8 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
     // invested alongside everything else.
     const taxTimeCredits = cc.later * Math.pow(1 + ret, t - 1);
     const buyW = equity + taxTimeCredits + (o.investDiff ? bp : 0);
-    const rentW = upFront * Math.pow(1 + ret, t) + (o.investDiff ? rp : 0);
+    const upFrontGrown = upFront * Math.pow(1 + ret, t);
+    const rentW = upFrontGrown + (o.investDiff ? rp : 0);
 
     rows.push({
       t, opening, interest, paid, balance: bal, propTax, insurance, utilities, maintenance,
@@ -1830,7 +1924,7 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
-      homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
+      homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}), equity, buyW, upFrontGrown, rentW, adv: buyW - rentW,
     });
   }
 
@@ -1882,7 +1976,8 @@ export function rentVsBuy(j: Jurisdiction, F: CountryRules, o: RentVsBuyInput) {
  *    face the SAME flat rate on their accumulated gain when "sold" for the wealth comparison —
  *    tracked via a running CONTRIBUTED total per portfolio (`afterGainsTax()` below), a FIFO-
  *    blind approximation rather than a lot-by-lot cost-basis simulation, disclosed here as a
- *    simplification rather than left silent.
+ *    simplification rather than left silent. The home's gain is figured as IRS Pub. 523 does,
+ *    on the amount realized (sale price less selling costs), against the purchase price.
  */
 function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
   const years = Math.max(1, o.years);
@@ -1978,21 +2073,38 @@ function rentVsBuyToMaturity(j: Jurisdiction, F: UsRules, o: RentVsBuyInput) {
 
     const homeValue = o.price * Math.pow(1 + g, t);
     const sellingCost = homeValue * F.sellingCost;
-    const homeGain = Math.max(0, homeValue - o.price);
+    const saleTax = saleTaxOn(j, homeValue);
+    // IRS Pub. 523: the gain is the AMOUNT REALIZED — sale price less selling expenses ("a real
+    // estate agent's sales commission", "any other fees or costs to sell your home", which is
+    // where a seller's excise tax falls) — less the adjusted basis. Basis is the purchase price
+    // here; Pub. 523 also adds some purchase closing costs (owner's title insurance, recording
+    // and survey fees, transfer taxes), which this leaves out, so the taxed gain is slightly
+    // high rather than low.
+    const homeGain = Math.max(0, homeValue - sellingCost - saleTax - o.price);
     const taxableHomeGain = Math.max(0, homeGain - F.sec121.single);
     const homeGainTax = taxableHomeGain * flatGainsRate;
-    const equity = homeValue - sellingCost - bal - homeGainTax;
+    const equity = homeValue - sellingCost - saleTax - bal - homeGainTax;
 
+    const bpHeld = o.investDiff ? bp : 0;
+    const rpHeld = o.investDiff ? rp : 0;
+    const upFrontGrown = upFront * Math.pow(1 + ret, t);
     const buyW = equity + afterGainsTax(tbp, tbpContrib) + (o.investDiff ? afterGainsTax(bp, bpContrib) : 0);
-    const rentW = afterGainsTax(upFront * Math.pow(1 + ret, t), upFront) + (o.investDiff ? afterGainsTax(rp, rpContrib) : 0);
+    const rentW = afterGainsTax(upFrontGrown, upFront) + (o.investDiff ? afterGainsTax(rp, rpContrib) : 0);
+    // What `buyW`/`rentW` just netted, as their own operands: each subtotal is then a plain sum.
+    const buyGainsTax = equity + tbp + bpHeld - buyW;
+    const rentGainsTax = upFrontGrown + rpHeld - rentW;
 
     rows.push({
       t, opening, interest, paid, balance: bal, propTax, insurance, utilities, maintenance,
-      services, strata, rate: rate0, taxTimeCredits: deductionBenefit,
+      services, strata, rate: rate0, taxTimeCredits: tbp,
       ownerOutlay, renterOutlay, diff,
       rp: o.investDiff ? rp : 0,
       bp: o.investDiff ? bp : 0,
-      homeValue, sellingCost, equity, buyW, rentW, adv: buyW - rentW,
+      homeValue, sellingCost, ...(saleTax > 0 ? { saleTax } : {}),
+      ...(homeGainTax > 0 ? { homeGainTax } : {}),
+      equity, buyW, upFrontGrown, rentW, adv: buyW - rentW,
+      ...(buyGainsTax > 0.005 ? { buyGainsTax } : {}),
+      ...(rentGainsTax > 0.005 ? { rentGainsTax } : {}),
       deductionBenefit, itemizedBeatsStandard, pmi,
     });
   }
@@ -2075,7 +2187,9 @@ export function scenario(j: Jurisdiction, F: CountryRules, o: ScenarioInput) {
   const contractRate = insured ? F.rates.insured : F.rates.uninsured;
   const f = payFactor(contractRate, o.amortYears);
   const pi = totalMortgage * f;
-  const propTax = (o.price * j.propTax.effective) / 12;
+  // Through the seam — see `propertyTaxAnnual()` — so Scenarios taxes a price exactly as the
+  // other pages do.
+  const propTax = propertyTaxAnnual(j, o.price) / 12;
   const maintenance = (o.price * F.maintenanceReserve) / 12;
   const monthly = {
     pi,

@@ -99,6 +99,8 @@ Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS v4 · shadcn/ui
 - **Allowlists passed to `useSharedState` MUST be module-level constants** from
   `src/lib/shared-inputs.ts`. The hook keys an effect on the array's identity; an inline literal is
   an infinite render loop, not a type error. This has bitten twice.
+- **A change a reader would notice ships with its changelog entry** (`src/lib/changelog.ts` + the
+  `Changelog` keys in all four catalogues) — see the PR #54 paragraph under "Where the project is".
 - User-facing strings go in `messages/<locale>.json`, read via `useTranslations()` / `getTranslations()` from `next-intl` — no hardcoded UI copy. **English is the source**; a test keeps every other catalogue key-identical to it with the same ICU placeholders.
 - **Never interpolate a jurisdiction name into a sentence with `tJur(jurisdiction.id)`.** Use
   `` tJur(`at.${jurisdiction.id}`) `` — the `Jurisdictions.at.<id>` form is the name as it appears
@@ -232,7 +234,8 @@ restyled. The rulebook is `DESIGN.md`, written at the finish from the built worl
 registry), and `AppNav`.
 
 **ALL NINE PAGES ARE BUILT.** Home · Affordability · Closing Costs · Down Payment · RRSP-HBP ·
-Amortization · Rent vs Buy · Scenarios · Sources. Eleven routes, every one prerendered.
+Amortization · Rent vs Buy · Scenarios · Sources. Eleven routes, every one prerendered (fourteen
+page routes today, with /privacy, /terms and /changelog).
 
 **Four locales ship** — en, fr, uk, es — closing [#1](https://github.com/vivitali/norma/issues/1).
 The plumbing was generalized rather than doubled: `src/lib/locales.ts` holds the presentation facts
@@ -363,7 +366,7 @@ existed on no screen in any locale and Halifax's 10% non-resident deed transfer 
 fire. A component test supplies the prop the product is missing. When a control's whole purpose is
 to reach a figure, the assertion that it is REACHED belongs on the page.
 
-**Copy that names a source is domain data and is English.** `Provenance.src` and `.note` have no
+**Copy that names a source is domain data and is English.** `Provenance.src`, `.note` and `.summary` have no
 i18n mechanism, so they render untranslated on **three of the four** locales — the cost of this
 went up when uk and es shipped, and it is now the largest untranslated surface in the product.
 `/sources` discloses it in every locale, and the Affordability footer's label says its citation is
@@ -372,9 +375,19 @@ see the raised items). Machine-glossing a verification record would be worse tha
 translating them properly is real separate work. If you surface a `src` or `note` anywhere new,
 the disclosure has to travel with it.
 
-One consequence to watch: `/sources` prints those English notes verbatim, and one of them
-(`federal.ts`) discusses a message key by name. Any test that greps rendered output for a leaked
-key must therefore be scoped to the namespaces the page under test actually renders — see
+**`note` is for the next maintainer; `summary` is for the reader, and `/sources` shows only the
+summary.** A note is a verification log — which document, which fetch, which review finding it
+settled — and it stays in `src/domain` so the next person can re-verify without re-deriving.
+`summary` says the same figure in one or two plain sentences with no new facts and the same
+numbers. `src/domain/provenance-summaries.test.ts` requires a summary on every entry that has a
+note, caps it at 320 characters, rejects code, file, review and field-path jargon, and fails if
+any sentence repeats inside one `/sources` row: every figure citing one document folds into that
+document's row, so a caveat written once per field (Winnipeg's eight school divisions) reads eight
+times. Say it once, on one entry.
+
+One consequence to watch: `/sources` prints English domain text verbatim, and a note or summary
+can name a message key. Any test that greps rendered output for a leaked key must therefore be
+scoped to the namespaces the page under test actually renders — see
 `src/app/locale-render.test.tsx`.
 
 **Copy is mined from `design-reference/`, en and fr, never newly written.** (uk and es were
@@ -531,6 +544,43 @@ row-level sibling but not themselves. `locale-render.test.tsx`'s `LOCALES` is `r
 and garbage-value classes of defect; the vocabulary contract is the one check for wrong-but-present
 copy that renders without error.
 
+**PR [#54](https://github.com/vivitali/norma/pull/54) (UX pass + Winnipeg) added five mechanisms.
+Each has a reason recorded where it lives; do not "simplify" one away without reading it.**
+- **Tax areas and bill credits** (`PropertyTax.areas` / `.credit` in `src/domain/types.ts`).
+  Winnipeg carries all eight school divisions; `withTaxArea()` (`src/domain/jurisdictions/index.ts`)
+  swaps the reader's division — stored as `taxArea` in the JURISDICTION slice of the one blob — into
+  the record once, in `JurisdictionProvider`, so no engine function knows areas exist. Manitoba's
+  Homeowners Affordability Tax Credit is `credit: min(amount, price × school slice)`:
+  `propertyTaxAnnual()` nets it exactly, and `solveWithBillCredit()` inverts it exactly in both
+  ceiling solves (taking it at its cap everywhere overstated a low-income ceiling by ~4%). Every
+  property-tax figure goes through `propertyTaxAnnual()` — never `price × effective` — or a credit
+  silently stops reaching that page. `TaxAreaPicker` is opt-in on `PurchaseInputs` (`taxArea`), like
+  the residency switch: bind it only where the page prices property tax (not /amortization);
+  `src/app/tax-area-reach.test.tsx` proves it is REACHED.
+- **The pre-paint guard** (`src/lib/pre-paint.ts`, `globals.css`, `useSharedState`'s layout effect).
+  An inline script, first in `<body>`, marks `<html data-stored>` when the stored blob differs from
+  the prerendered defaults; the tool page's `<main data-slot="tool-main">` and the footer stay
+  invisible until `data-hydrated`, so a returning reader never sees the page jump (CLS ~0.5 → 0). A
+  3s animation DELAY reveals it if hydration fails; reduced motion zeroes durations, not delays. A
+  new key that changes a page's shape belongs in the script's defaults.
+- **The global 404** (`src/app/global-not-found.tsx`, `experimental.globalNotFound`). One static
+  document carrying every locale's copy; an inline script picks the block, `lang` and title from the
+  URL prefix. Verified on a Cloudflare preview Worker (404 status, styled) — re-verify there if the
+  adapter or Next is upgraded.
+- **The changelog** (`src/lib/changelog.ts`, `/changelog`, `VersionNote` in the footer). **A change a
+  reader would notice ships with its changelog entry** — one object plus its `Changelog` keys in all
+  four catalogues; `changelog.test.ts` checks keys, routes per country, section hashes and summary
+  length. Entries are per country: a US reader must never read about Canada (tested). Figures quoted
+  in an entry follow the `## Don't` rule on figures that leave the app — `conf: "high"` with `asOf`.
+- **Winnipeg was re-verified end to end on 2026-09-28**
+  (`docs/superpowers/research/2026-09-28-winnipeg-figures.md`): `fees.setup` 3000 → 300 (the old
+  figure matched no published charge), August 2026 prices, the HATC, all eight divisions, and the
+  "2027 LTT change" identified as Bill 53's bare-trust tax (the ordinary-purchase schedule is
+  unchanged). Rent vs Buy now answers a house on the published APARTMENT rent, labelled
+  (`rentBasisMismatch`) and asked for in place; `rentKnown` is false only where no rent is published.
+  The RRSP-HBP contribution defaults to `min(rrspCap, rrspRoomRate × income)` (CRA's rule, sourced in
+  `rules/ca.ts`).
+
 **Open issues:**
 - ~~[#1](https://github.com/vivitali/norma/issues/1)~~ — **closed by this branch.** Ukrainian and
   Spanish ship complete: 787 leaves each, key-identical to English, every route prerendered in all
@@ -651,8 +701,10 @@ beside a legitimately-estimated inspection fee, indistinguishable. Don't.
 - `federal.rates.insured` / `.uninsured` are `medium` and cannot do better: no official publisher
   exists for 5-year *fixed* contract rates. The Bank of Canada's only broker series is variable, and
   its "conventional mortgage: 5-year" is a *posted* rate near 6%, not comparable.
-- The verification notes in `src/domain` render in English on the French `/sources`. They are domain
-  data with no i18n mechanism; the page says so in French. Translating them is a real separate job.
+- The reader summaries in `src/domain` render in English on the French, Ukrainian and Spanish
+  `/sources`. They are domain data with no i18n mechanism; the page says so in each language.
+  Translating them is a real separate job — smaller now that a summary, not the verification
+  note, is what a reader sees.
 
 ## Open product decisions
 
@@ -711,6 +763,6 @@ pending in `design-reference/` for later phases.
   figures are now read off the issuing authority's own documents. It is **not** zero, and lifting
   the gate is a judgement call for the owner, not an automatic consequence — Halifax's benchmark is
   still `medium`, the fixed contract rates cannot be primary-sourced at all, and the `/sources`
-  notes are still English-only on the French page. Decide deliberately; do not treat "#5 landed" as
+  summaries are still English-only on the French, Ukrainian and Spanish pages. Decide deliberately; do not treat "#5 landed" as
   the answer. Gate and split recorded in
   [#12](https://github.com/vivitali/norma/issues/12).

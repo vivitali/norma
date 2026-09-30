@@ -66,6 +66,12 @@ describe("us rules data", () => {
     for (let i = 1; i < closed.length; i++) expect(closed[i]).toBeGreaterThan(closed[i - 1]);
   });
 
+  it("gives Washington the federal table itself: no state income tax to add (dossier WA A1)", () => {
+    expect(us.marginal.WA).toBe(us.marginal.TX);
+    // Hand check at $90,000 single: the 22% band ($50,400 to $105,700) applies.
+    expect(marginalRate(us, "WA", 90000)).toBe(0.22);
+  });
+
   it("names its own fallback key, and that key resolves to a real table", () => {
     expect(us.marginalFallbackKey).toBe("US");
     expect(us.marginal[us.marginalFallbackKey]).toBeDefined();
@@ -88,9 +94,9 @@ describe("marginalFallbackKey — an unknown region degrades to the country's ow
     expect(taxOnBand(us, "FL", 0, 90000)).toBeCloseTo(taxOnBand(us, "TX", 0, 90000), 6);
   });
 
-  it("ca: an unmodelled province still resolves via marginal.CA, unchanged by the US addition", () => {
+  it("ca: an unknown region code still resolves via marginal.CA, unchanged by the US addition", () => {
     const known = marginalRate(ca, "ON", 90000);
-    const unknown = marginalRate(ca, "NB", 90000);
+    const unknown = marginalRate(ca, "XX", 90000);
     expect(unknown).toBe(marginalRate(ca, "CA", 90000));
     expect(unknown).not.toBe(known);
   });

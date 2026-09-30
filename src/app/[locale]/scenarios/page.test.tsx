@@ -101,6 +101,32 @@ describe("Scenarios — four columns, one recommendation", () => {
   });
 });
 
+describe("Scenarios — the hero describes a column the reader can name", () => {
+  it("with no recommendation, leads with the reader's own 10% column and says so", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    const table = screen.getAllByRole("table")[0];
+    const row = within(table).getByRole("row", { name: /True all-in monthly/ });
+    // Cells: [5%, 10%, 20%, 25%] after the row header; 10% is the default choice.
+    const tenPct = (within(row).getAllByRole("cell")[1].textContent ?? "").replace(/ · .*/, "");
+    const heading = screen.getByRole("heading", { level: 1 });
+    // The h1 is the page name in every state; the column is captioned on the stat.
+    expect(heading.textContent).toBe("Down payment scenarios");
+    expect(document.body.textContent).toContain("True all-in monthly · 10% down");
+    expect(screen.getAllByText(tenPct).length).toBeGreaterThan(1);
+    const heroFigure = heading.parentElement!.textContent ?? "";
+    expect(heroFigure).toContain(tenPct);
+  });
+
+  it("prints the return-on-extra-cash ratio with the locale's decimal mark", async () => {
+    const user = userEvent.setup();
+    renderPage("fr-CA");
+    await user.click(screen.getByRole("button", { name: "Tout ouvrir" }));
+    expect(document.body.textContent).not.toMatch(/\d\.\d{2}×/);
+  });
+});
+
 describe("Scenarios — the recommendation", () => {
   it("withholds a verdict until funds are given", () => {
     // Fundability is unknowable without them, and guessing would put a verdict
@@ -267,6 +293,16 @@ describe("Scenarios — the phone layout is a carousel of cards, not a narrowed 
     expect(scroller.className).toContain("sm:block");
   });
 
+  it("shows a position cue and peeks the next card instead of hiding three of four", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    const cards = cardsFor(MONTHLY);
+    expect(cards[0].textContent).toContain("1 of 4");
+    expect(cards[3].textContent).toContain("4 of 4");
+    for (const card of cards) expect(card.className).toContain("w-[85%]");
+  });
+
   it("marks the reader's own scenario on the card, as the column already was", async () => {
     const user = userEvent.setup();
     renderPage();
@@ -358,6 +394,8 @@ describe("Scenarios — four columns of nothing is not a comparison", () => {
     await user.type(screen.getByLabelText("Purchase price"), "525000");
     await user.tab();
     expect(screen.queryByText(/Nobody publishes a benchmark price/)).not.toBeInTheDocument();
+    // Nothing opens itself on a first visit, and a price alone is not "personalised".
+    await open(user, /Monthly cost/);
     expect(screen.getAllByRole("table").length).toBeGreaterThan(0);
   });
 });
@@ -545,5 +583,83 @@ describe("Scenarios — the ledger shows a column only when it says something", 
       "20% down",
       "25% down",
     ]);
+  });
+});
+
+describe("Scenarios — round 3: the note and the row say what the numbers say", () => {
+  it("names housing cost as the constraint when the housing ratio is what fails", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 20000, otherDebt: 0 }));
+    renderPage();
+    expect(screen.getAllByText(/The constraint is housing cost against income/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/The constraint is all debts against income/)).not.toBeInTheDocument();
+  });
+
+  it("names all debts as the constraint when the total-debt ratio is what fails", async () => {
+    window.localStorage.setItem("norma.inputs.v2", JSON.stringify({ income1: 150000, otherDebt: 6000 }));
+    renderPage();
+    expect(screen.getAllByText(/The constraint is all debts against income/).length).toBeGreaterThan(0);
+  });
+
+  it("makes the 20% note follow the computed ratio and stops advising", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Lifetime cost/);
+    expect(screen.queryByText(/is the strong move/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/very hard to beat/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Fill tax-advantaged room first/)).not.toBeInTheDocument();
+    // Whichever side of 1.0 the table's own ratio lands on, the note agrees with it.
+    const returnCells = within(
+      screen.getByRole("row", { name: /Return on that extra cash/ }),
+    ).getAllByRole("cell");
+    const at20 = parseFloat(returnCells[2].textContent!);
+    expect(
+      screen.getByText(at20 >= 1 ? /more than the dollar it costs/ : /less than the dollar it costs/),
+    ).toBeInTheDocument();
+  });
+
+  it("labels the reader's budget as an assumption while it is the default", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    expect(screen.getByRole("row", { name: /Versus the \$[\d,]+ monthly budget assumed here/ })).toBeInTheDocument();
+    expect(screen.getByText(/which is not yours until you enter your own/)).toBeInTheDocument();
+  });
+
+  it("uses the Inputs wording for the budget, not 'comfort ceiling'", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Qualification/);
+    expect(screen.getByLabelText("Your real monthly housing budget")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Comfort ceiling")).not.toBeInTheDocument();
+  });
+
+  it("opens no section on a first visit", () => {
+    renderPage();
+    for (const name of [/Monthly cost/, /Can you fund it\?/, /Qualification/, /Lifetime cost/]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-expanded", "false");
+    }
+  });
+
+  it("puts a four-row summary above each carousel, and one shared colgroup under every table", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    const summary = document.querySelector<HTMLElement>('dl[aria-label*="True all-in monthly"]')!;
+    expect(summary).toHaveClass("sm:hidden");
+    expect(summary.querySelectorAll("dt")).toHaveLength(4);
+    // The four comparison tables; the calc section's ledger is a different table.
+    const grids = screen.getAllByRole("table", { hidden: true }).slice(0, 4);
+    for (const table of grids) {
+      expect(table).toHaveClass("table-fixed");
+      expect(table.querySelectorAll("col")).toHaveLength(5);
+    }
+  });
+
+  it("gives the table scroller a name and a tab stop", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await open(user, /Monthly cost/);
+    const region = screen.getByRole("region", { hidden: true, name: /Monthly cost/ });
+    expect(region).toHaveAttribute("tabindex", "0");
   });
 });

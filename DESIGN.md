@@ -32,6 +32,19 @@ Consequences that are load-bearing, not stylistic:
   disclosure type. A section *is* the disclosure.
 - **Inputs hide nothing behind a second gesture.** The advanced fields sit under a
   quiet label in the same column.
+- **A first visit opens no section.** The section whose check produced the verdict opens on
+  arrival only once the reader has given something (`isPersonalised`); before that, the answer
+  head and its stats carry the verdict. A red derivation open on arrival, built on inputs the
+  reader never gave, was the first thing every new visitor met — on a phone it also pushed the
+  inputs ~1,500px down. A hash arrival still opens its section.
+- **The way back to the inputs is part of the answer.** `AnswerHead`'s "Adjust your numbers"
+  jumps to the page's inputs block (`id="adjust"`) and focuses its first field, and the tag
+  under the answer names the assumption the figure rests on and jumps to the field that
+  replaces it. Neither is a disclosure: they reveal nothing, they move focus.
+- **Where inputs live.** A field the page's own question is about lives IN PLACE, where the
+  sentence that needs it is (§5.3's `InlineAsk`); the shared purchase inputs live together in
+  "Adjust your numbers" at the end of the page, reached by the jump above. A page does not grow
+  a second copy of a field it already asks for in place.
 
 ## 2. Colour
 
@@ -93,15 +106,37 @@ the last thing a headline figure can afford to do.
 | Hero stat value / gauge value | 22px / 17px | 600 | −0.02em |
 | Panel row | 13.5px | 400 / 600 strong | — |
 | Math row | 13px | 400 / 600 strong | — |
-| Micro (limit notes, stat labels, legends) | 11.5–12.5px | 400 | `.micro` |
-| Fine print (footnotes, unit suffixes, chart legends) | 10.5px | 400 | — |
+| Micro (limit notes, stat labels, legends, footnotes, unit suffixes, chart labels) | 11.5–12.5px | 400 | `.micro` |
 | Body base | 13.5px | 400 | — |
 
-The fine-print tier is documented rather than corrected: it is in use at twelve call sites
-across six files, which makes it a real tier the spec had simply never recorded. Ten carry
-`--ink3`, which clears 4.5:1 on every surface in both themes; two carry `--caution`, and
-one inherits its colour from the row it sits in. If the tier should not exist, the fix is to
-raise those call sites to 11.5px — not to leave the spec and the code disagreeing.
+**11.5px is the floor for text that carries meaning.** A 10.5px "fine print" tier existed and
+was retired in the second UX pass (PR #54): two independent reviews found dates, the selected
+column's label, chart annotations and field hints at 10.5px — sizes readers need, not
+decoration — and this document's own earlier note said the fix, if the tier should not exist,
+was to raise the call sites. The eyebrow stays 11px because it is uppercase, tracked and
+semibold, which reads larger than its size.
+
+**Cyrillic has its own face: Golos Text.** Archivo ships no Cyrillic, so Ukrainian used to fall
+back to Arial mid-sentence while its digits stayed in Archivo. Golos Text (Cyrillic subset, loaded
+through `next/font`, not preloaded) sits after Archivo in `--font-sans`/`--font-heading`: Latin and
+numerals stay Archivo, and unicode-range subsetting means only pages with Cyrillic download it. The
+stack names the FAMILIES first (`"Archivo", "Golos Text", var(--font-archivo, system-ui), …`)
+because next/font appends a local Arial fallback face to each variable, and that face would catch
+Cyrillic before Golos ever did; the production build emits the plain family names (checked in
+`.next/static/**/*.css`). The `var(…, system-ui)` fallbacks keep the declaration valid on the global
+404, which defines neither variable.
+
+**French spacing follows the Québec convention (OQLF)**, because the French reader here is
+Canadian: a non-breaking space (U+00A0) before the colon, no space before `; ? !`, and
+non-breaking spaces inside « guillemets ». Non-breaking, so a colon or a closing guillemet never
+wraps onto a line of its own at a phone width. `src/lib/french-typography.test.ts` enforces them on
+`messages/fr.json`: exactly U+00A0 before every colon (URLs and clock times exempt), no space of any kind
+before `; ? !`, and U+00A0 (not U+0020, not U+202F) after « and before ». `src/app/locale-render.test.tsx`
+applies the colon rule to the rendered text of every fr-CA page except `/sources` (English domain
+data) — in the DEFAULT state, with nothing stored, and to text content only, not attributes. A
+colon assembled in JSX behind a stored input or inside an `aria-label` can still slip past it, so
+the rule is the design, and the tests are a net: put the colon inside the message, as ICU with an
+argument, wherever it appears. (Numbers are Intl's business: fr-CA groups digits with U+202F, and that is correct.)
 
 **Form controls have a 16px floor** (`--control-font-size`), applied through `.control`.
 Below 16px iOS Safari zooms the viewport on focus, and this page has twelve fields. The
@@ -127,7 +162,7 @@ keep the sizes above.
 | `PanelRow` | A derivation row: hairline-separated, never boxed. |
 | `NumberField` | The one number input. `type="text"`, `inputMode="decimal"`, derived defaults as **placeholder**, empty commits `null`. |
 | `SegmentedGroup` | Radiogroup with roving tabindex for down payment, amortization, property type and the Rent vs Buy assumptions. A Select would hide four short options behind a popover — true while the options stay short, which is a translation constraint and not a given. Each button carries `min-w-0` and `text-center`: options sit in one row, so the control's minimum width is the sum of the longest single WORD in each label, and a flex item defaults to `min-width: auto`. Ukrainian exceeded the 256px budget at 320px on two of these controls before their labels were shortened. An option the purchase cannot have is **struck through at 55% opacity and marked `aria-disabled`**, never with the `disabled` attribute: the checked option is this radiogroup's only tab stop, and the engine gates rather than clamping, so the unavailable option can be the checked one. `line-through` is what says "not on offer" in that state, where a lower-opacity selected style is indistinguishable from the unselected style beside it. The component renders no reason — the caller does, as a `NoteLine`, and a struck option with nothing saying why is a dead end. |
-| `GapBand` | Two ceilings on one scale. Three markers at three heights; the lender ceiling is pinned right, not positioned by value. |
+| `GapBand` | Two ceilings on one scale. Three markers at three heights, every one positioned by its value on the scale (`ceilingPct` included). |
 | `Gauges` | GDS and TDS on a shared 60% axis with the limit ticked. `role="img"` with a full label. |
 | `MathColumns` | Both derivations. A row whose input is zero is **absent**, not a zero row. |
 | `Provenance` | The `rule` / `estimate` mark. Describes derivation, never verification. |
@@ -142,6 +177,9 @@ keep the sizes above.
 | `PendingFigures` | The one answer to "the stored inputs have not landed yet". Wraps `AnswerHead` and hides the figure, the stat values and the "whose figures" badge together, with `visibility: hidden` rather than a substituted string. Both halves are load-bearing: the box is kept, so nothing moves when the value arrives, and the TEXT is kept, so the prerendered document still carries the answer — which is the point of prerendering these routes. `figure={undefined}` is the wrong tool here and means something else entirely (§5.3). |
 | `CalcTrace` | The derivation behind a headline figure: one operand per line, in the order the engine does it, terminating in the answer. The operator lives in its own fixed gutter, not glued to the value — a minus inside the number column reads as a negative amount, a minus in the gutter reads as "subtract this", and those are different claims about the same digits. Knows **no copy and no formatting**: callers pass already-translated labels and already-formatted values, so a page's own `useMoney()` is the single place a figure becomes text and the trace cannot drift from the panel above it. A row whose operand is zero is absent **where the caller makes it conditional** — the pattern `buildLines` uses, applied per line rather than globally, because a $0 down payment on a page that is asking for a price is information and a $0 rebate is not. |
 | `CalcLedger` | The same disclosure for a figure that is a PROJECTION rather than a sum — a year per row, every column the model carries. Scrolls inside its own container on both axes with a sticky header, because forty rows is taller than a phone and sixteen money columns are wider than one, and a table that widens the page body is the worse failure. The reader's own horizon, or the recommended row, is marked. |
+| `TaxAreaPicker` | The reader's school division — Winnipeg's property tax differs ~14% across eight. A Select (eight proper names do not fit one row), with one `NoteLine` giving the range and the tax credit it is shown after. Renders nothing for a record without areas, and is bound only on pages that price property tax — a control that moves nothing on the screen is noise (the residency switch's rule). |
+| `VersionNote` | One fine-print footer line: "Updated {date} — {summary} · What changed". Not a banner and not a modal; its only colour is a 6px `--ac` dot when something new since the last visit concerns the reader's country and jurisdiction. The dot's box is always rendered, so nothing moves when it appears. The one client island in the otherwise server-rendered footer. |
+| `AnswerHead` tag | The "whose figures" pill. When the figures are assumptions, it is a `button` that scrolls to and focuses the field the headline rests on (the monthly budget) — the same pill, a dotted underline, its text as its name. "Your numbers" stays plain text. |
 
 ### 5.2 Cross-page links, and the rules that keep them from becoming ads
 
@@ -218,9 +256,13 @@ reader's life. Renters get a front door — Home's second CTA, and the nav's
 
 Comfort, ceiling and target routinely land within a few percent of one another. The
 previous version positioned all three labels by value in one band of pixels and they
-overlapped into unreadable text. Here comfort sits above the bar, target below it, and
-the ceiling is pinned to the right edge — the top of the scale by definition, so it can
-never collide with the two markers that move.
+overlapped into unreadable text. Here comfort sits above the bar, target just below it
+and the lender ceiling on its own third row, each at its own `left` percentage — so
+collisions are impossible by construction, whatever the values. The ceiling is **not**
+pinned to the right edge: the scale is `max(comfort, ceiling, price) x 1.03`, so the
+ceiling is the top of it only when it happens to be the largest, and in the default
+Winnipeg and Toronto states it is not. A marker near either end takes `markerAlign`, which
+moves its label onto the bar rather than off the end of it.
 
 ### 5.3 The ask, where there is no answer
 
@@ -285,11 +327,24 @@ externally (see PRODUCT.md).
 - Bars and gauges are `role="img"` with labels carrying the value and the limit.
 - A hash arrival moves focus to the section it names, not only the scroll position.
 
+## 7.1 Tables and charts on a phone
+
+- **Decisive columns first.** A table that scrolls on a phone leads with the columns that
+  answer the question (the winner, the advantage, the balance) and drops columns that are
+  constant down the table; everything else is reachable by scrolling.
+- **Scrollable means keyboard-reachable.** Every horizontally scrolling table wrapper is a
+  `role="region"` with `tabIndex={0}` and a label naming the table.
+- **Charts carry quiet axes** — a few gridlines and ticks in `--ink3` at the micro size — and
+  label their markers directly. Markers ("pulls ahead", "renewal", "paid off") are ink dash
+  styles, never state colours: §2 reserves pass/caution/blocked for state.
+
 ## 8. What this system will not do
 
 - **No filled semantic panels.** State is a dot and a figure colour.
 - **No second accent.** Indigo carries every non-state emphasis.
-- **No elevation.** If two things need separating, use a hairline or space.
+- **No elevation.** If two things need separating, use a hairline or space. The one exception
+  is a popover that floats OVER content — a Select's list — which keeps a light shadow and ring,
+  because a hairline cannot separate a surface from the one beneath it.
 - **No mono numerals.** Archivo tabular, hero to table row.
 - **No second disclosure mechanism.** If something needs to be reachable, it becomes a
   section or it lives inside one.
@@ -312,3 +367,6 @@ externally (see PRODUCT.md).
     from `src/lib/sections.ts`'s `SECTION_REGISTRIES`, with an explicit allowlist entry in
     `messages-coverage.test.ts` rather than a silent gap, so the orphan-key guard still
     covers their copy.
+  - **`/changelog` is flat for a plainer reason**: it is a dated list a reader scans, not a
+    computation with a derivation to open. No sections and no registry entry — the same allowlist
+    in `messages-coverage.test.ts` names its namespace.

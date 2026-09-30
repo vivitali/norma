@@ -6,6 +6,11 @@ import { faqPageSchema } from "@/components/json-ld";
 import en from "../../messages/en.json";
 import fr from "../../messages/fr.json";
 import { CATALOGUES } from "@/test/catalogues";
+import { affordability, money } from "@/domain/engine";
+import { defaultJurisdictionOf, jurisdictionsOf } from "@/domain/jurisdictions";
+import { rulesFor } from "@/domain/rules";
+import { resolveInputs } from "@/lib/resolve-inputs";
+import { TOOL_DEFAULTS } from "@/lib/shared-inputs";
 import { HOME_FAQ_KEYS, HomeContent } from "./home-content";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -320,5 +325,55 @@ describe("French", () => {
     renderWithIntl(<HomeContent />, { locale: "fr-CA" });
     expect(document.body.textContent).toContain(fr.Home.toolsHeading);
     expect(document.body.textContent).toContain(fr.Home.tool_closingCosts);
+  });
+});
+
+describe("worked example", () => {
+  afterEach(() => cleanup());
+
+  it("shows the two ceilings the engine computes at the default inputs, labelled an example", () => {
+    renderWithIntl(<HomeContent />);
+    const jur = defaultJurisdictionOf("ca");
+    const inputs = resolveInputs(TOOL_DEFAULTS, jur, rulesFor("ca"));
+    const r = affordability(jur, rulesFor("ca"), inputs);
+    const box = screen.getByTestId("home-example");
+    expect(box).toHaveTextContent("Worked example, not your numbers");
+    expect(box).toHaveTextContent(money(r.ceiling, "en-CA", false));
+    expect(box).toHaveTextContent(money(r.comfort, "en-CA", false));
+    expect(box).toHaveTextContent("Winnipeg");
+    expect(box.querySelector("a")).toHaveAttribute("href", "/affordability");
+  });
+
+  it("uses the US default market on a US locale", () => {
+    renderWithIntl(<HomeContent country="us" />, { locale: "en-US" });
+    expect(screen.getByTestId("home-example")).toHaveTextContent(
+      CATALOGUES.en.Jurisdictions[defaultJurisdictionOf("us").id as "houston"],
+    );
+  });
+
+  it("gives every tool title a link affordance", () => {
+    const { container } = renderWithIntl(<HomeContent />);
+    const link = container.querySelector('#tools a[href="/closing-costs"]')!;
+    expect(link.querySelector(".text-ac")).not.toBeNull();
+    expect(link.textContent).toContain("→");
+  });
+});
+
+describe("US home copy", () => {
+  afterEach(() => cleanup());
+
+  it("names every US market in the rules intro and the FAQ, never claiming one", () => {
+    renderWithIntl(<HomeContent country="us" />, { locale: "en-US" });
+    const text = document.body.textContent ?? "";
+    const rules = document.getElementById("rules")!.textContent ?? "";
+    const faq = document.getElementById("faq")!.textContent ?? "";
+    for (const j of jurisdictionsOf("us")) {
+      const name = (CATALOGUES.en.Jurisdictions as unknown as Record<string, string>)[j.id];
+      expect(rules, `rules ${j.id}`).toContain(name);
+      expect(faq, `faq ${j.id}`).toContain(name);
+    }
+    expect(text).not.toMatch(/only US market|is the only/i);
+    expect(text).not.toContain("Houston, TX");
+    expect(text).not.toContain("{places}");
   });
 });
