@@ -156,6 +156,10 @@ Implement → invoke `reviewer` subagent on the diff → fix → repeat until ap
 ## Deployment
 
 **Production is https://affordmath.com** — a custom domain on the `affordmath` Worker.
+`afordmath.com` (one `f`) is a typo-catcher that 301s to it, path and query preserved (curl,
+2026-09-29). The 301 comes from Cloudflare's edge, not the Worker; which kind of Cloudflare
+redirect serves it (a Redirect Rule, a Page Rule or a Bulk Redirect) is not recorded here. Nothing may depend on it: it is currently registered
+through 2027-08-25 (whois, 2026-09-29), and whether it is renewed is the owner's call.
 `workers.dev` is disabled for production (`workers_dev: false`); it serves PR previews only.
 
 **Security headers and the analytics beacon live at the Cloudflare edge and in the app
