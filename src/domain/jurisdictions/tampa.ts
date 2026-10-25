@@ -224,7 +224,7 @@ export const tampa: Jurisdiction = {
       src: FL_STAT_201_08,
       url: FL_STAT_201_08_URL,
       note: "Documentary stamp tax on the mortgage: 35 cents on each $100 or fraction thereof of the debt (s.201.08(1)(b), dossier A3), as 0.35 per unit of 100 rounded up. The $2,450 cap sits in the paragraphs for stand-alone and retail-charge notes, not the one for recorded mortgages, so none is applied (a reading of the statute's structure). The buyer's, per the contract's \"taxes and recording fees on notes and mortgages\" (dossier A5).",
-      summary: "Florida charges 35 cents per $100 of your mortgage, rounded up to the next $100. The $2,450 cap applies to other kinds of notes, not to a recorded home mortgage. The standard contract puts it on the buyer.",
+      summary: "Florida charges 35 cents per $100 of your mortgage, rounded up to the next $100. As we read the statute, its $2,450 cap applies to other kinds of notes, not to a recorded home mortgage. The standard contract puts it on the buyer.",
     },
     "transfer.2": {
       conf: "high",
@@ -240,7 +240,7 @@ export const tampa: Jurisdiction = {
       src: FL_STAT_201_02,
       url: FL_STAT_201_02_URL,
       note: "Documentary stamp tax on the SELLER's deed: 70 cents on each $100 of consideration (s.201.02(1)(a), dossier A2), as 0.007 of the sale price. Modelled flat, which drops the statute's round-up to the next $100: at most $0.70 on any sale.",
-      summary: "When you sell, Florida's deed stamp tax is 70 cents per $100 of the price, 0.7%, and the seller pays it. The real tax rounds up to the next $100; we don't, a difference of under a dollar.",
+      summary: "When you sell, Florida's deed stamp tax is 70 cents per $100 of the price, 0.7%, which the standard contract has the seller pay. The real tax rounds up to the next $100; we don't, a difference of under a dollar.",
     },
     "propTax.effective": {
       conf: "high",
@@ -263,7 +263,7 @@ export const tampa: Jurisdiction = {
       asOf: "2026-01 (DOR indexed amount)",
       src: FL_DOR_HOMESTEAD,
       url: FL_DOR_HOMESTEAD_URL,
-      note: "Florida's homestead exemption is $25,000 on every levy plus an additional amount on non-school levies only, indexed to inflation: $26,411 for 2026 (dossier A6). Slices are exclusive, so the school slice (6.3400 mills) takes $25,000 and the non-school slice (13.5028 mills) takes $25,000 + $26,411 = $51,411. The additional exemption is really a band on value above $50,000, modelled flat (it matters only below $76,411). Jan-1 rule (DOR PT-107): only the owner on January 1 qualifies, so the bill for the year of purchase still reflects the prior owner's exemption and assessment; the buyer's homestead starts the next January, after reassessment to just value. The record models that following year onward. Save Our Homes caps FUTURE growth only, not the first assessed value. Amendment 3 on the 2026-11-03 ballot would raise the non-school amount from 2027; it is pending and NOT modelled.",
+      note: "Florida's homestead exemption is $25,000 on every levy plus an additional amount on non-school levies only, indexed to inflation: $26,411 for 2026 (dossier A6). Slices are exclusive, so the school slice (6.3400 mills) takes $25,000 and the non-school slice (13.5028 mills) takes $25,000 + $26,411 = $51,411. The additional exemption is really a band on value above $50,000, modelled flat (it matters only below $76,411). The exemption requires the home to be the owner's permanent residence and an application to the property appraiser by March 1 (dossier A6); the record assumes both. Jan-1 rule (DOR PT-107): only the owner on January 1 qualifies, so the bill for the year of purchase still reflects the prior owner's exemption and assessment; the buyer's homestead starts the next January, after reassessment to just value. The record models that following year onward. Save Our Homes caps FUTURE growth only, not the first assessed value. Amendment 3 on the 2026-11-03 ballot would raise the non-school amount from 2027; it is pending and NOT modelled.",
       summary: "Florida exempts the first $25,000 of a home's value from every tax and, for non-school taxes, an additional $26,411 in 2026. Only the owner on January 1 qualifies, so in the year you buy, the bill still reflects the previous owner's exemption. A November 3 ballot measure on the exemption isn't counted.",
     },
     "propTax.exemptions.0": {

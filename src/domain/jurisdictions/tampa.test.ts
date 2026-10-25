@@ -53,6 +53,15 @@ describe("tampa — Florida's mortgage taxes are the buyer's, the deed's stamps 
     expect(byKey.li_intangibleTax).toBeCloseTo(755.82, 2);
   });
 
+  it("adds no rounding when the loan is an exact multiple of $100", () => {
+    // Loan = 500,000 x 0.9 = 450,000: 4,500 units of $100, no fraction to round up.
+    // Doc stamps: 4,500 x $0.35 = 1,575.00. Intangible tax: 450,000 x 0.002 = 900.00.
+    const lines = buildLines(tampa, us, { ...INPUT, price: 500000 });
+    const byKey = Object.fromEntries(lines.gov.map((l) => [l.key, l.amount]));
+    expect(byKey.li_docStampsNote).toBeCloseTo(1575.0, 2);
+    expect(byKey.li_intangibleTax).toBeCloseTo(900.0, 2);
+  });
+
   it("recording is a hand-computed 3-page deed plus 18-page mortgage", () => {
     // Deed: 10.00 + 2 x 8.50 = 27.00. Mortgage: 10.00 + 17 x 8.50 = 154.50. Combined 181.50.
     expect(27 + 154.5).toBe(181.5);
