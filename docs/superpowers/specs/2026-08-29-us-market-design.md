@@ -67,9 +67,10 @@ Rejected: `us.affordmath.com` / `ca.affordmath.com` as the primary structure. Fo
 order of weight:
 
 1. **Prerendering requires the country in the path.** CLAUDE.md's hardest infrastructure rule is
-   that every page route stays prerendered: Cloudflare serves those as free static assets and bills
-   dynamic routes as Worker invocations under a 10ms CPU cap. `generateStaticParams` can enumerate
-   country × locale. It cannot read a `Host` header. Country-by-hostname makes every page dynamic.
+   that every page route stays prerendered: every page request runs the Worker, and prerendering
+   keeps it an asset read instead of React SSR under a 10ms CPU cap (corrected 2026-10-25; this
+   said prerendered pages were free static assets, which they are not on this stack).
+   `generateStaticParams` can enumerate country × locale. It cannot read a `Host` header. Country-by-hostname makes every page dynamic.
 2. **The Workers cache is host-blind.** Cloudflare's own documentation: *"The cache key does not
    include the host, so a request to `/api/users/42` hits the same cached entry whether it came in
    through `api.example.com`, `api.example.net`, a service binding, or a workers.dev URL."* One

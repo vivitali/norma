@@ -3,10 +3,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# Every page route must be prerendered: Cloudflare serves static assets free and
-# unlimited, but bills on-demand rendering as Worker invocations under a 10ms CPU
-# cap. A page that loses its prerendering still renders correctly, so only a
-# build-time assertion catches it.
+# Every page route must be prerendered: every page request runs the Worker, and
+# prerendering is what keeps that invocation an asset read instead of React SSR
+# under the Free plan's 10ms CPU cap (see CLAUDE.md). A page that loses its
+# prerendering still renders correctly, so only a build-time assertion catches it.
 #
 # Separate from scripts/check because `next build` takes a per-project lock and
 # scripts/check runs from a post-edit hook — see the note there.

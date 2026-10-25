@@ -3,9 +3,9 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * Prerendering is a cost constraint, not a style rule: Cloudflare serves a
- * prerendered page as a free static asset and bills a dynamic route as a Worker
- * invocation under a 10ms CPU cap.
+ * Prerendering is a cost constraint, not a style rule: every page request runs
+ * the Worker, and a prerendered page makes that an asset read where a dynamic
+ * route runs React SSR under a 10ms CPU cap.
  *
  * `scripts/verify-prerender` is the real guard, but it needs a full `next build`.
  * This fails in two seconds instead, across EVERY page rather than the one

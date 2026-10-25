@@ -216,10 +216,14 @@ is NOT that prerendered pages skip the Worker. They do not: `staticAssetsIncreme
 read, so every page view, every middleware redirect and every 404 is a Worker invocation against
 the Free plan's 100k requests/day and 10 ms CPU. Only files served at their own URL —
 `/_next/static/*` and `public/` — bypass it. What prerendering buys is a cheap invocation: an asset
-read instead of React SSR. Measured 2026-10-25 over 30 days: ~24k invocations against 28.6k edge
-requests and zero `exceededCpu`, but daily CPU p99 of 240–690 ms and p50 up to 125 ms on quiet
-days — cold isolates booting the OpenNext server, which Cloudflare tolerates as infrequent
-overruns. A dynamic route would add SSR on top of that, on every request. The usual cause of a
+read instead of React SSR. Measured 2026-10-25 over 30 days: ~24k Worker invocations (GraphQL,
+sampled) against 28.9k edge requests — the gap is static files plus the zone-level redirects and
+WAF blocks that never reach the Worker. Daily CPU p99 ran 240–690 ms; p50 was ~3 ms on busy days
+and up to 125 ms on quiet ones, which looks like cold-isolate startup but was not measured. That is
+far over the 10 ms cap, yet no `exceededCpu` was recorded: Cloudflare documents per-isolate
+flexibility for infrequent overruns, and why this much is tolerated is not known. Do not rely on
+it — the first sign it stopped would be 1102 errors. A dynamic route would add SSR on top of that,
+on every request. The usual cause of a
 regression is a server component missing `setRequestLocale(locale)`. See
 `docs/superpowers/specs/2026-08-17-hosting-cicd-design.md`, whose "static assets are free" premise
 carries the same correction.

@@ -92,9 +92,9 @@ if (problems.length > 0) {
   console.error("prerender guard: FAILED");
   for (const problem of problems) console.error(`  ${problem.message}`);
   console.error("");
-  console.error("Every page route must be prerendered. Cloudflare serves static assets free");
-  console.error("and unlimited, but bills on-demand rendering as Worker invocations under a");
-  console.error("10ms CPU cap. The usual cause is a server component missing");
+  console.error("Every page route must be prerendered. Every page request runs the Worker;");
+  console.error("prerendering keeps it an asset read instead of React SSR under the Free");
+  console.error("plan's 10ms CPU cap. The usual cause is a server component missing");
   console.error("setRequestLocale(locale) — see");
   console.error("docs/superpowers/specs/2026-08-17-hosting-cicd-design.md");
   process.exit(1);
