@@ -263,8 +263,8 @@ export const tampa: Jurisdiction = {
       asOf: "2026-01 (DOR indexed amount)",
       src: FL_DOR_HOMESTEAD,
       url: FL_DOR_HOMESTEAD_URL,
-      note: "Florida's homestead exemption is $25,000 on every levy plus an additional amount on non-school levies only, indexed to inflation: $26,411 for 2026 (dossier A6). Slices are exclusive, so the school slice (6.3400 mills) takes $25,000 and the non-school slice (13.5028 mills) takes $25,000 + $26,411 = $51,411. The additional exemption is really a band on value above $50,000, modelled flat (it matters only below $76,411). Jan-1 rule: only the owner on January 1 qualifies, so a first-year bill is the prior owner's and homestead starts the next January, after reassessment to just value. Save Our Homes caps FUTURE growth only, not the first assessed value. Amendment 3 on the 2026-11-03 ballot would raise the non-school amount from 2027; it is pending and NOT modelled.",
-      summary: "Florida exempts the first $25,000 of a home's value from every tax and, for non-school taxes, an additional $26,411 in 2026. Only the owner on January 1 qualifies, so your first bill is usually the previous owner's. A November 3 ballot measure on the exemption isn't counted.",
+      note: "Florida's homestead exemption is $25,000 on every levy plus an additional amount on non-school levies only, indexed to inflation: $26,411 for 2026 (dossier A6). Slices are exclusive, so the school slice (6.3400 mills) takes $25,000 and the non-school slice (13.5028 mills) takes $25,000 + $26,411 = $51,411. The additional exemption is really a band on value above $50,000, modelled flat (it matters only below $76,411). Jan-1 rule (DOR PT-107): only the owner on January 1 qualifies, so the bill for the year of purchase still reflects the prior owner's exemption and assessment; the buyer's homestead starts the next January, after reassessment to just value. The record models that following year onward. Save Our Homes caps FUTURE growth only, not the first assessed value. Amendment 3 on the 2026-11-03 ballot would raise the non-school amount from 2027; it is pending and NOT modelled.",
+      summary: "Florida exempts the first $25,000 of a home's value from every tax and, for non-school taxes, an additional $26,411 in 2026. Only the owner on January 1 qualifies, so in the year you buy, the bill still reflects the previous owner's exemption. A November 3 ballot measure on the exemption isn't counted.",
     },
     "propTax.exemptions.0": {
       conf: "high",
@@ -277,8 +277,8 @@ export const tampa: Jurisdiction = {
     "propTax.exemptions.1": {
       conf: "high",
       asOf: "2026-01 (DOR indexed amount)",
-      src: "Florida Department of Revenue, guide PT-113 (R. 08/25), homestead exemption",
-      url: "https://floridarevenue.com/property/Documents/pt113.pdf",
+      src: FL_DOR_HOMESTEAD,
+      url: FL_DOR_HOMESTEAD_URL,
       note: "Non-school slice: $25,000 + the 2026 indexed additional $26,411 = $51,411 (dossier A6, D2), on levies other than school district levies.",
       summary: "Every other tax gets that $25,000 plus the extra indexed amount.",
     },
