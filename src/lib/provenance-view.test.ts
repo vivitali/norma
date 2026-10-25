@@ -233,8 +233,8 @@ describe("coverageOf", () => {
       ) + Object.keys(ca.provenance).filter((p) => isFigure(ca.provenance, p)).length;
 
     expect(coverage.total).toBe(expected);
-    // 14 Canadian + Houston + Austin + Seattle (US).
-    expect(coverage.jurisdictions).toBe(17);
+    // 14 Canadian + Houston + Austin + Seattle + Tampa (US).
+    expect(coverage.jurisdictions).toBe(18);
   });
 
   it("actually excludes something — the exclusions are not vacuous", () => {
@@ -354,12 +354,12 @@ describe("FIGURE_GROUPS", () => {
       // recording tax; no federal/state rebate exists — see engine.ts's credits()
       // and its cr_noRebateUs omission), so "charges" and "credits" are
       // legitimately empty there rather than a hole in the data.
-      // Seattle carries a "charges" entry (the seller-paid REET line's own provenance) but, like
+      // Seattle and Tampa carry a "charges" entry (the seller-paid tax line's own provenance) but, like
       // Texas, no rebate or credit.
       const expectEmpty =
         jurisdiction.id === "houston" || jurisdiction.id === "austin"
           ? ["charges", "credits"]
-          : jurisdiction.id === "seattle"
+          : jurisdiction.id === "seattle" || jurisdiction.id === "tampa"
             ? ["credits"]
             : [];
       expect(

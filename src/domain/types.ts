@@ -2,8 +2,8 @@ export type ProvinceCode =
   | "ON" | "QC" | "BC" | "AB" | "MB" | "SK" | "NS" | "NB" | "PE" | "NL" | "YT" | "NT" | "NU";
 
 /** US state codes this dataset has data for — one state at a time, per the US-market spec's
- * implementation order. Texas (Houston, Austin), Washington (Seattle). */
-export type StateCode = "TX" | "WA";
+ * implementation order. Texas (Houston, Austin), Washington (Seattle), Florida (Tampa). */
+export type StateCode = "TX" | "WA" | "FL";
 
 export type ProfessionalType =
   | "lawyer"
