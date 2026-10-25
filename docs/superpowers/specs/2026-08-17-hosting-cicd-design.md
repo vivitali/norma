@@ -90,6 +90,13 @@ opts the request into dynamic rendering because `setRequestLocale` is never call
 every page view would be a Worker invocation counting against the 100k/day cap *and* would run
 full React SSR under the 10 ms CPU limit — the tightest constraint on the free tier.
 
+> **Correction (2026-10-25).** The premise that prerendered pages are served as free static assets
+> does not hold on this stack. `staticAssetsIncrementalCache` keeps the HTML under
+> `cdn-cgi/_next_cache/`, which only the Worker can read, so every page view is a Worker invocation
+> whether or not it is prerendered. Prerendering is still required — it replaces React SSR with an
+> asset read — but the 100k/day cap applies to all page traffic, not only to dynamic routes.
+> Measured figures are in `CLAUDE.md` under "Every page route must stay prerendered".
+
 This was verified empirically, not assumed. Adding `setRequestLocale(locale)` to the locale layout
 and the Home page flips the route table to:
 
