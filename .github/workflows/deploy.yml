@@ -33,14 +33,22 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # The Web Analytics site tag. Not a secret — it is served in the page
-          # source to every visitor by design; a secret here would only add a
-          # silent-failure mode when it is missing. Inlined at build time, so it
-          # has to be present for this step, not at runtime.
+          # The Web Analytics site TOKEN — the `token` in the dashboard's JS
+          # snippet, not the site TAG. The tag (67df29e1…) is what the dashboard
+          # URL and GraphQL's `siteTag` show, so it is the one that gets copied;
+          # the beacon accepts it, POSTs every pageview, and cloudflareinsights.com
+          # answers 503. That shipped from 2026-08-26 (3a3a21a) to 2026-10-25 and
+          # recorded zero pageviews. Verify a change here in the browser's network tab: the
+          # POST to /cdn-cgi/rum must return 204.
+          #
+          # Not a secret — it is served in the page source to every visitor by
+          # design; a secret here would only add a silent-failure mode when it is
+          # missing. Inlined at build time, so it has to be present for this
+          # step, not at runtime.
           #
           # Set only on production: preview builds would report into the same
           # dataset and make the numbers meaningless.
-          NEXT_PUBLIC_CF_BEACON_TOKEN: 67df29e1c24f486a92b2bddc8cbddc26
+          NEXT_PUBLIC_CF_BEACON_TOKEN: 0d96c384aaa54172b19abc103556eb04
 
       # Production is affordmath.com; workers.dev is disabled for this Worker.
       #
