@@ -55,7 +55,7 @@ const TONE: Record<CheckState, Tone> = {
  * - FL: Save Our Homes (§193.155), which resets on a sale (§193.155(3)(a), DOR PT-107); and the
  *   Citizens county average, which includes wind and excludes flood. "Wind cover is a large part
  *   of a Florida premium" rests on OIR's statewide averages with and without wind ($3,736 vs
- *   $2,124, Florida dossier A10). Tampa is the only Florida record; a second one must also carry a
+ *   $2,124, and $3,757 vs $2,586 — two sets OIR publishes on one page; Florida dossier A10). Tampa is the only Florida record; a second one must also carry a
  *   Citizens county average, or this note's wording no longer holds for it.
  */
 const STATE_NOTES: Partial<
