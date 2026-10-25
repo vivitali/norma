@@ -70,7 +70,7 @@ serves at `/`, `/affordability`, `/sources`; French keeps `/fr/...`.
 
 - `localeDetection: false` is not optional here. With detection on, next-intl redirects by
   `Accept-Language`, which makes `/` a redirect for a French-browser visitor and puts a dynamic
-  decision on the most important URL. Off, `/` is a static asset for everyone.
+  decision on the most important URL. Off, `/` is the same prerendered page for everyone.
 - English is the primary locale by the user's explicit ranking, so it gets the shortest URLs.
 - The canonical becomes the apex, which is what people link to anyway.
 

@@ -21,9 +21,9 @@ import { ROUTE_COUNTRIES, type IndexableRoute } from "./seo";
  * paint) rather than `page.tsx` itself, so the 404 is decided before any client
  * bundle for the excluded route ships. Called during static generation (every
  * locale × route pair `generateStaticParams` enumerates), `notFound()` here is
- * what makes the excluded pair a build-time 404 rather than a page Cloudflare
- * would otherwise serve as a free static asset — see CLAUDE.md, "Every page route
- * must stay prerendered."
+ * what makes the excluded pair a build-time 404 rather than a prerendered page
+ * the Worker would otherwise serve — see CLAUDE.md, "Every page route must stay
+ * prerendered."
  */
 export function assertRouteAvailable(locale: string, route: IndexableRoute): void {
   const countries = ROUTE_COUNTRIES[route];

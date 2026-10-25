@@ -210,10 +210,23 @@ also requires the Worker to exist, so the first production deploy must land on `
 preview can work.
 
 **Every page route must stay prerendered.** `scripts/verify-prerender` fails if any page route is
-server-rendered on demand, and CI runs it on every PR. This is not a style rule: Cloudflare serves
-prerendered pages as free static assets, but bills dynamic routes as Worker invocations under a
-10ms CPU cap. The usual cause of a regression is a server component missing
-`setRequestLocale(locale)`. See `docs/superpowers/specs/2026-08-17-hosting-cicd-design.md`.
+server-rendered on demand, and CI runs it on every PR. This is not a style rule — but the reason
+is NOT that prerendered pages skip the Worker. They do not: `staticAssetsIncrementalCache`
+(`open-next.config.ts`) keeps the HTML under `cdn-cgi/_next_cache/`, which only the Worker can
+read, so every page view, every middleware redirect and every 404 is a Worker invocation against
+the Free plan's 100k requests/day and 10 ms CPU. Only files served at their own URL —
+`/_next/static/*` and `public/` — bypass it. What prerendering buys is a cheap invocation: an asset
+read instead of React SSR. Measured 2026-10-25 over 30 days: ~24k Worker invocations (GraphQL,
+sampled) against 28.9k edge requests — the gap is static files plus the zone-level redirects and
+WAF blocks that never reach the Worker. Daily CPU p99 ran 240–690 ms; p50 was ~3 ms on busy days
+and up to 125 ms on quiet ones, which looks like cold-isolate startup but was not measured. That is
+far over the 10 ms cap, yet no `exceededCpu` was recorded: Cloudflare documents per-isolate
+flexibility for infrequent overruns, and why this much is tolerated is not known. Do not rely on
+it — the first sign it stopped would be 1102 errors. A dynamic route would add SSR on top of that,
+on every request. The usual cause of a
+regression is a server component missing `setRequestLocale(locale)`. See
+`docs/superpowers/specs/2026-08-17-hosting-cicd-design.md`, whose "static assets are free" premise
+carries the same correction.
 
 ## Where the project is (read this first)
 
@@ -509,8 +522,9 @@ field, and the design spec calls it out by name: "RRSP-HBP is absent from the US
 "absent from this country" into a build-time 404 rather than a page Cloudflare would otherwise
 serve: `notFound()` during static generation produces a prerendered 404 (`status: 404` in that
 path's `.meta` file, verified against `next start`, not just the build log — the build's own
-summary line still lists the path, so the manifest is not where this gets checked), never a
-Worker invocation. `src/lib/routes.ts`'s `NAV` filters by the same table, so a US reader is never
+summary line still lists the path, so the manifest is not where this gets checked), never an
+on-demand render. (The request is still a Worker invocation, as every page request is — see
+"Every page route must stay prerendered".) `src/lib/routes.ts`'s `NAV` filters by the same table, so a US reader is never
 offered a card that would 404.
 
 **Pages branch on `rules.country` or `rules.mortgage.renews`, never on a hardcoded country

@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 /**
  * The hash names exactly one disclosure or section. Read in an effect rather
  * than with useSearchParams: useSearchParams opts the route out of static
- * rendering, and every page route in this app must stay prerendered —
- * Cloudflare serves prerendered pages as free static assets and bills dynamic
- * routes as Worker invocations under a 10ms CPU cap.
+ * rendering, and every page route in this app must stay prerendered — a
+ * dynamic route runs React SSR in the Worker on every request, under a 10ms CPU
+ * cap, where a prerendered one only reads its HTML.
  *
  * Returns null on the server and on the first client render, so the prerendered
  * HTML and the hydrated tree agree.

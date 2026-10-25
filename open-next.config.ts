@@ -7,8 +7,10 @@ import staticAssetsIncrementalCache from "@opennextjs/cloudflare/overrides/incre
 //
 // staticAssetsIncrementalCache serves that HTML from the same Workers static-assets
 // binding, which is exactly right here: norma has no ISR and no revalidation, so
-// there is nothing to write back. It also needs no R2 bucket or KV namespace, so
-// prerendered pages stay free static-asset reads.
+// there is nothing to write back. It also needs no R2 bucket or KV namespace. The
+// request is still a Worker invocation: the cache lives under `cdn-cgi/_next_cache/`,
+// which only the Worker can read, so the HTML is an asset read inside the invocation.
+// Prerendering makes each invocation cheap, not free — see CLAUDE.md.
 export default defineCloudflareConfig({
   incrementalCache: staticAssetsIncrementalCache,
 });
