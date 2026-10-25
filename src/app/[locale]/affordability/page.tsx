@@ -25,6 +25,7 @@ import {
 } from "@/lib/affordability-view";
 import { SCENARIO_PERCENTS } from "@/lib/scenarios-view";
 import type { Tone } from "@/lib/tone";
+import type { StateCode } from "@/domain/types";
 import { useDecimal, useMoney, usePercent } from "@/lib/format";
 import { countryKey } from "@/lib/country-key";
 import { PanelRow, SectionRow } from "@/components/affordability/section-row";
@@ -45,11 +46,31 @@ const TONE: Record<CheckState, Tone> = {
   unanswered: "none",
 };
 
+/**
+ * Notes that state ONE STATE's law or market, never a US-wide fact — keyed by the record's
+ * `state`, so a state with no entry (Washington: no homestead exemption, an insurance figure with
+ * nothing state-specific to add) shows neither note.
+ * - TX: the Tax Code §23.23 homestead appraisal cap, which does not bind in the purchase year;
+ *   wind/hail exposure, and the SAME statewide TDI average both Texas records carry.
+ * - FL: Save Our Homes (§193.155), which resets on a sale (§193.155(3)(a), DOR PT-107); and the
+ *   Citizens county average, which includes wind and excludes flood. "Wind cover is a large part
+ *   of a Florida premium" rests on OIR's statewide averages with and without wind ($3,736 vs
+ *   $2,124, Florida dossier A10). Tampa is the only Florida record; a second one must also carry a
+ *   Citizens county average, or this note's wording no longer holds for it.
+ */
+const STATE_NOTES: Partial<
+  Record<StateCode, { propTax: "propTaxCapNote" | "sohCapNote"; insurance: "insuranceHighNote" | "insuranceFloodNote" }>
+> = {
+  TX: { propTax: "propTaxCapNote", insurance: "insuranceHighNote" },
+  FL: { propTax: "sohCapNote", insurance: "insuranceFloodNote" },
+};
+
 export default function AffordabilityPage() {
   const t = useTranslations("Affordability");
   // The reader-facing place name; `jurisdiction.city` is the lowercase record key.
   const tJur = useTranslations("Jurisdictions");
   const [jurisdiction] = useJurisdiction();
+  const stateNotes = jurisdiction.country === "us" ? STATE_NOTES[jurisdiction.state] : undefined;
   const rules = useRules();
   const [stored, update, hydrated] = useSharedState(TOOL_KEYS, TOOL_DEFAULTS);
   const fmt = useMoney();
@@ -603,28 +624,10 @@ export default function AffordabilityPage() {
                 value={fmt(result.monthly.pi)}
               />
               <PanelRow label={t("mPropTax")} value={fmt(result.monthly.propTax)} provenance={<Provenance kind="estimate" />} />
-              {/*
-                Houston-specific, not US-wide: the Tax Code s.23.23 homestead appraisal cap
-                (houston.ts's own `propTax.exemptions` provenance note) does not bind in the
-                purchase year, when the appraised value IS the purchase price — it only limits
-                growth from the next reassessment onward. Gated on the STATE rather than
-                `rules.country === "us"`: this is a Texas statute (Tax Code §23.23), true for
-                Houston and Austin alike and for no Washington record — Seattle has no homestead
-                exemption at all.
-              */}
-              {jurisdiction.country === "us" && jurisdiction.state === "TX" ? (
-                <NoteLine tight>{t("propTaxCapNote")}</NoteLine>
-              ) : null}
+              {/* Gated on the STATE, not `rules.country === "us"` — see STATE_NOTES. */}
+              {stateNotes ? <NoteLine tight>{t(stateNotes.propTax)}</NoteLine> : null}
               <PanelRow label={t("insuranceMonthly")} value={fmt(result.monthly.insurance)} provenance={<Provenance kind="estimate" />} />
-              {/*
-                Same scoping as propTaxCapNote above: wind/hail exposure is a Texas fact, not a US
-                one, and both Texas records (houston.ts, austin.ts) carry the SAME statewide TDI
-                average, which is what "This figure is a statewide average" claims. Seattle's
-                insurance figure is a different, Washington-level assumption, so it gets no note.
-              */}
-              {jurisdiction.country === "us" && jurisdiction.state === "TX" ? (
-                <NoteLine tight>{t("insuranceHighNote")}</NoteLine>
-              ) : null}
+              {stateNotes ? <NoteLine tight>{t(stateNotes.insurance)}</NoteLine> : null}
               {/*
                 PMI — zero on every Canadian record (CMHC's premium is financed into
                 the loan, not billed monthly; see financing()'s own doc comment), so

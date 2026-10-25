@@ -47,6 +47,7 @@ export const RELEASES: readonly Release[] = [
       { key: "tampaLoanTaxes", href: { pathname: "/closing-costs", hash: "government" } },
       { key: "tampaSaleTax", href: { pathname: "/rent-vs-buy", hash: "wealth" } },
       { key: "tampaBallot", href: { pathname: "/sources" } },
+      { key: "tampaNotes", href: { pathname: "/affordability", hash: "comfort" } },
     ],
   },
   {
