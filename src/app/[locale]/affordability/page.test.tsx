@@ -938,4 +938,25 @@ describe("Affordability — a default budget is never presented as the reader's 
     expect(screen.getByText(/Texas caps how much a home's appraised value can rise/)).toBeInTheDocument();
     expect(screen.getByText(/Texas homeowners insurance tends to run high/)).toBeInTheDocument();
   });
+
+  it("shows the Florida notes on tampa, and no Texas ones", async () => {
+    // Save Our Homes resets on a sale (§193.155(3)(a)); the insurance figure is a Citizens county
+    // average that excludes flood. Both are Florida facts, so both reach the Florida record.
+    const user = userEvent.setup();
+    seed({ jurId: "tampa", income1: 75000 });
+    renderPage("en-US");
+    await user.click(screen.getByRole("button", { name: /Comfort/ }));
+    expect(screen.getByText(/Save Our Homes rule caps how much/)).toBeInTheDocument();
+    expect(screen.getByText(/covers wind but not flood/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Texas/);
+  });
+
+  it("shows no Florida note on a Texas or Washington page", () => {
+    for (const jurId of ["houston", "seattle"]) {
+      seed({ jurId });
+      const { unmount } = renderPage("en-US");
+      expect(document.body.textContent).not.toMatch(/Save Our Homes|covers wind but not flood/);
+      unmount();
+    }
+  });
 });

@@ -37,6 +37,20 @@ export interface Release {
 
 export const RELEASES: readonly Release[] = [
   {
+    id: "2026-10-25-tampa",
+    date: "2026-10-25",
+    countries: ["us"],
+    jurisdictions: ["tampa"],
+    summary: "sumTampa",
+    items: [
+      { key: "tampaAdded", href: { pathname: "/affordability" } },
+      { key: "tampaLoanTaxes", href: { pathname: "/closing-costs", hash: "government" } },
+      { key: "tampaSaleTax", href: { pathname: "/rent-vs-buy", hash: "wealth" } },
+      { key: "tampaBallot", href: { pathname: "/sources" } },
+      { key: "tampaNotes", href: { pathname: "/affordability", hash: "comfort" } },
+    ],
+  },
+  {
     id: "2026-09-29-plain-sources",
     date: "2026-09-29",
     countries: ["ca", "us"],
