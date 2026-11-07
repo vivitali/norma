@@ -159,8 +159,11 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
         // The link splits that sentence across nodes, so match the paragraph by its whole text.
         expect(
           bodyText.includes("{name}")
-            ? screen.getByText((_, el) => el?.tagName === "P" && el.textContent?.replace(/\s+/g, " ").trim() === want)
-            : screen.getByText(want),
+            ? screen.getByText((_, el) => el?.tagName === "P" && !!el.textContent?.replace(/\s+/g, " ").trim().endsWith(want))
+            : key === "bodyIp" && namespace === "Terms"
+              ? // The operator sentence follows it in the same paragraph.
+                screen.getByText((_, el) => el?.tagName === "P" && !!el.textContent?.replace(/\s+/g, " ").trim().startsWith(want))
+              : screen.getByText(want),
           key,
         ).toBeTruthy();
       }

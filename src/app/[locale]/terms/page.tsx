@@ -86,8 +86,8 @@ export default async function TermsPage({
       </LegalSection>
 
       <LegalSection heading={t("secIp")}>
-        <p>{t("bodyIp")}</p>
         <p>
+          {t("bodyIp")}{" "}
           {t.rich("bodyOperator", {
             name: OPERATOR.name,
             email: OPERATOR.email,
