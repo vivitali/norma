@@ -90,7 +90,7 @@ export default async function TermsPage({
         <p>{t("bodyIp")}</p>
       </LegalSection>
 
-      <LegalSection heading={t("secContact")}>
+      <LegalSection heading={t("secContact")} quiet>
         <p>{t("bodyContact")}</p>
         <LegalContact
           role={tl("operatorRole")}
@@ -99,6 +99,7 @@ export default async function TermsPage({
           emailLabel={tl("emailLabel")}
           name={OPERATOR.name}
           email={OPERATOR.email}
+          quiet
         />
       </LegalSection>
     </LegalMain>
