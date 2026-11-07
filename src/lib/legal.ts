@@ -37,10 +37,10 @@ export const OPERATOR: LegalParty = {
   email: "hello@affordmath.com",
 };
 
-/** Named on /privacy under Private Sector Act s. 3.1. The same person, while this stays a sole
- * proprietorship — kept as its own constant so incorporating means editing OPERATOR alone. */
-export const PRIVACY_OFFICER: LegalParty = {
-  name: "Vitalii Vasinkevych",
+/** Published on /privacy under Private Sector Act s. 3.1, which asks for the officer's title and
+ * contact details, not a name. Whoever answers this mailbox is the officer (PIPEDA cl. 4.1.2:
+ * identity is given on request). Its own constant so incorporating means editing OPERATOR alone. */
+export const PRIVACY_OFFICER: Pick<LegalParty, "email"> = {
   email: "privacy@affordmath.com",
 };
 

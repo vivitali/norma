@@ -183,13 +183,13 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
 });
 
 describe("the named parties", () => {
-  it("publishes the privacy officer's title, name and address — Private Sector Act s. 3.1", async () => {
+  it("publishes the privacy officer's title and address, not a name — Private Sector Act s. 3.1", async () => {
     const { container, unmount } = await renderPage(PrivacyPage, "fr-CA");
     const list = container.querySelector("dl");
     expect(list).toBeTruthy();
     // The title is a translated role; the name and address are data from src/lib/legal.ts.
     expect(within(list!).getByText(fr.Legal.officerTitle)).toBeTruthy();
-    expect(within(list!).getByText(PRIVACY_OFFICER.name)).toBeTruthy();
+    expect(list!.textContent).not.toContain(OPERATOR.name);
     const mail = within(list!).getByRole("link", { name: PRIVACY_OFFICER.email });
     expect(mail.getAttribute("href")).toBe(`mailto:${PRIVACY_OFFICER.email}`);
     unmount();
@@ -204,12 +204,12 @@ describe("the named parties", () => {
   });
 
   it("gives the contact list working term/description pairs", async () => {
-    // The <dt>s are "Role"/"Name"/"Email", not the values repeated. The first version put the
+    // The <dt>s are "Role"/"Email", not the values repeated. The first version put the
     // role in both halves, so a screen reader announced it twice and the <dl> had no working
     // term/description relationship at all.
     const { container, unmount } = await renderPage(PrivacyPage, "fr-CA");
     const terms = [...container.querySelectorAll("dt")].map((node) => node.textContent);
-    expect(terms).toEqual([fr.Legal.roleLabel, fr.Legal.nameLabel, fr.Legal.emailLabel]);
+    expect(terms).toEqual([fr.Legal.roleLabel, fr.Legal.emailLabel]);
     expect(terms).not.toContain(fr.Legal.officerTitle);
     unmount();
   });

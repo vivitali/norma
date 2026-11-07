@@ -128,9 +128,10 @@ export function LegalContact({
   /** The <dt> TERMS. Translated, because sr-only text is user-facing copy like any other — an
    *  English "Name" announced inside a lang="fr" document is mispronounced, not merely untidy. */
   roleLabel: string;
-  nameLabel: string;
+  nameLabel?: string;
   emailLabel: string;
-  name: string;
+  /** Absent when only the role and address are published (the privacy officer). */
+  name?: string;
   email: string;
 }) {
   /*
@@ -143,7 +144,7 @@ export function LegalContact({
    */
   const rows = [
     { term: roleLabel, value: role, className: "text-ink3" },
-    { term: nameLabel, value: name, className: "font-medium" },
+    ...(name && nameLabel ? [{ term: nameLabel, value: name, className: "font-medium" }] : []),
   ];
 
   return (
