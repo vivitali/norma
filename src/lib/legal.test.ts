@@ -30,8 +30,8 @@ describe("the legal contact addresses", () => {
     expect(["privacy", "hello", "contact", "legal", "info"]).toContain(local);
   });
 
-  it.each(parties)("%s is named, because a contract needs an identifiable party", (_role, party) => {
-    expect(party.name.trim().length).toBeGreaterThan(0);
+  it("the operator is named, because a contract needs an identifiable party", () => {
+    expect(OPERATOR.name.trim().length).toBeGreaterThan(0);
   });
 
   it("carries an ISO-8601 last-updated date", () => {

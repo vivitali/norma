@@ -151,7 +151,21 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
         if (!key.startsWith("body") || !appliesToCountry(key, ns, locale)) continue;
         // getByText collapses whitespace in the DOM text but not in a string matcher, so French's
         // narrow no-break spaces (U+202F, before : ; ? !) are collapsed here the same way.
-        expect(screen.getByText(bodyText.replace(/\s+/g, " ").trim()), key).toBeTruthy();
+        // The operator sentence interpolates the operator and wraps the address in a link tag.
+        const shown = bodyText
+          .replace("{name}", OPERATOR.name)
+          .replace(/<mail>\{email\}<\/mail>/, OPERATOR.email);
+        const want = shown.replace(/\s+/g, " ").trim();
+        // The link splits that sentence across nodes, so match the paragraph by its whole text.
+        expect(
+          bodyText.includes("{name}")
+            ? screen.getByText((_, el) => el?.tagName === "P" && !!el.textContent?.replace(/\s+/g, " ").trim().endsWith(want))
+            : key === "bodyIp" && namespace === "Terms"
+              ? // The operator sentence follows it in the same paragraph.
+                screen.getByText((_, el) => el?.tagName === "P" && !!el.textContent?.replace(/\s+/g, " ").trim().startsWith(want))
+              : screen.getByText(want),
+          key,
+        ).toBeTruthy();
       }
 
       unmount();
@@ -183,13 +197,13 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
 });
 
 describe("the named parties", () => {
-  it("publishes the privacy officer's title, name and address — Private Sector Act s. 3.1", async () => {
+  it("publishes the privacy officer's title and address, not a name — Private Sector Act s. 3.1", async () => {
     const { container, unmount } = await renderPage(PrivacyPage, "fr-CA");
     const list = container.querySelector("dl");
     expect(list).toBeTruthy();
     // The title is a translated role; the name and address are data from src/lib/legal.ts.
     expect(within(list!).getByText(fr.Legal.officerTitle)).toBeTruthy();
-    expect(within(list!).getByText(PRIVACY_OFFICER.name)).toBeTruthy();
+    expect(list!.textContent).not.toContain(OPERATOR.name);
     const mail = within(list!).getByRole("link", { name: PRIVACY_OFFICER.email });
     expect(mail.getAttribute("href")).toBe(`mailto:${PRIVACY_OFFICER.email}`);
     unmount();
@@ -197,19 +211,20 @@ describe("the named parties", () => {
 
   it("names who operates the site on /terms", async () => {
     const { container, unmount } = await renderPage(TermsPage, "en-CA");
-    const list = container.querySelector("dl");
-    expect(within(list!).getByText(OPERATOR.name)).toBeTruthy();
-    expect(within(list!).getByRole("link", { name: OPERATOR.email })).toBeTruthy();
+    // One sentence in the running text, not a section of its own: the name appears here only.
+    expect(container.querySelector("dl")).toBeNull();
+    expect(container.textContent).toContain(OPERATOR.name);
+    expect(within(container).getByRole("link", { name: OPERATOR.email })).toBeTruthy();
     unmount();
   });
 
   it("gives the contact list working term/description pairs", async () => {
-    // The <dt>s are "Role"/"Name"/"Email", not the values repeated. The first version put the
+    // The <dt>s are "Role"/"Email", not the values repeated. The first version put the
     // role in both halves, so a screen reader announced it twice and the <dl> had no working
     // term/description relationship at all.
     const { container, unmount } = await renderPage(PrivacyPage, "fr-CA");
     const terms = [...container.querySelectorAll("dt")].map((node) => node.textContent);
-    expect(terms).toEqual([fr.Legal.roleLabel, fr.Legal.nameLabel, fr.Legal.emailLabel]);
+    expect(terms).toEqual([fr.Legal.roleLabel, fr.Legal.emailLabel]);
     expect(terms).not.toContain(fr.Legal.officerTitle);
     unmount();
   });

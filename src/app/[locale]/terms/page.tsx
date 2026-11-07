@@ -4,7 +4,6 @@ import {
   LegalMain,
   LegalHead,
   LegalSection,
-  LegalContact,
 } from "@/components/legal-page";
 import { buildMetadata } from "@/lib/seo";
 import { OPERATOR, LEGAL_UPDATED } from "@/lib/legal";
@@ -87,19 +86,18 @@ export default async function TermsPage({
       </LegalSection>
 
       <LegalSection heading={t("secIp")}>
-        <p>{t("bodyIp")}</p>
-      </LegalSection>
-
-      <LegalSection heading={t("secContact")}>
-        <p>{t("bodyContact")}</p>
-        <LegalContact
-          role={tl("operatorRole")}
-          roleLabel={tl("roleLabel")}
-          nameLabel={tl("nameLabel")}
-          emailLabel={tl("emailLabel")}
-          name={OPERATOR.name}
-          email={OPERATOR.email}
-        />
+        <p>
+          {t("bodyIp")}{" "}
+          {t.rich("bodyOperator", {
+            name: OPERATOR.name,
+            email: OPERATOR.email,
+            mail: (chunks) => (
+              <a href={`mailto:${OPERATOR.email}`} className="underline underline-offset-2">
+                {chunks}
+              </a>
+            ),
+          })}
+        </p>
       </LegalSection>
     </LegalMain>
   );

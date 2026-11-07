@@ -95,9 +95,7 @@ export default async function PrivacyPage({
         <LegalContact
           role={tl("officerTitle")}
           roleLabel={tl("roleLabel")}
-          nameLabel={tl("nameLabel")}
           emailLabel={tl("emailLabel")}
-          name={PRIVACY_OFFICER.name}
           email={PRIVACY_OFFICER.email}
         />
       </LegalSection>

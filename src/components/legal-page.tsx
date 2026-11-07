@@ -118,9 +118,7 @@ export function LegalSection({
 export function LegalContact({
   role,
   roleLabel,
-  nameLabel,
   emailLabel,
-  name,
   email,
 }: {
   /** The party's role as the reader sees it, e.g. the s. 3.1 officer title. */
@@ -128,9 +126,7 @@ export function LegalContact({
   /** The <dt> TERMS. Translated, because sr-only text is user-facing copy like any other — an
    *  English "Name" announced inside a lang="fr" document is mispronounced, not merely untidy. */
   roleLabel: string;
-  nameLabel: string;
   emailLabel: string;
-  name: string;
   email: string;
 }) {
   /*
@@ -143,7 +139,6 @@ export function LegalContact({
    */
   const rows = [
     { term: roleLabel, value: role, className: "text-ink3" },
-    { term: nameLabel, value: name, className: "font-medium" },
   ];
 
   return (

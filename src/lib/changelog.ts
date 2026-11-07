@@ -37,6 +37,16 @@ export interface Release {
 
 export const RELEASES: readonly Release[] = [
   {
+    id: "2026-11-07-legal-jurisdiction",
+    date: "2026-11-07",
+    countries: ["ca", "us"],
+    summary: "sumLegalJurisdiction",
+    items: [
+      { key: "legalJurisdiction", href: { pathname: "/terms" } },
+      { key: "legalOfficer", href: { pathname: "/privacy" } },
+    ],
+  },
+  {
     id: "2026-10-25-tampa",
     date: "2026-10-25",
     countries: ["us"],
