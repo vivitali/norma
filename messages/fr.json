@@ -1279,9 +1279,7 @@
     "footerDisclaimer": "AffordMath est un outil d’information. Il ne constitue ni un conseil financier, hypothécaire, fiscal ou juridique, ni une offre de crédit. Chaque résultat est une estimation calculée à partir des données que vous saisissez et de règles publiées, dont la date figure à la page Sources. Vos chiffres réels sont établis par votre prêteur, votre notaire ou votre comptable. Vérifiez toute information avant de vous y fier.",
     "footerDisclaimer_us": "AffordMath est un outil d’information. Il ne constitue ni un conseil financier, hypothécaire, fiscal ou juridique, ni une offre de crédit. Chaque résultat est une estimation calculée à partir des données que vous saisissez et de règles publiées, dont la date figure à la page Sources. Vos chiffres réels sont établis par votre prêteur, votre compagnie de titres ou votre avocat. Vérifiez toute information avant de vous y fier.",
     "legal": "Mentions légales",
-    "operatorRole": "Exploitant",
     "roleLabel": "Rôle",
-    "nameLabel": "Nom",
     "emailLabel": "Courriel",
     "updatedLong": "7 novembre 2026"
   },
@@ -1333,8 +1331,7 @@
     "bodyLaw_us": "Les présentes conditions sont régies par le droit du Manitoba, ainsi que par les lois applicables du Canada — la province depuis laquelle ce site est exploité, et non celle où vous résidez. Les recours peuvent être portés devant les tribunaux du Manitoba. Il n’y a aucune clause d’arbitrage obligatoire, ni aucune renonciation à votre droit de participer à une action collective.",
     "secIp": "À qui appartient quoi",
     "bodyIp": "Le moteur de calcul, l’interface et les textes sont les nôtres. Les lois, les taux et les chiffres publiés que le moteur applique ne le sont pas — ils appartiennent aux gouvernements et aux organismes qui les publient, et chacun est crédité à la page Sources. Les chiffres que vous saisissez sont les vôtres, et ils ne nous parviennent jamais.",
-    "secContact": "Qui exploite ce site",
-    "bodyContact": "Ce site est exploité par :"
+    "bodyOperator": "« Nous » désigne, dans les présentes, {name}, exploitant de ce site. Écrivez à <mail>{email}</mail>."
   },
   "Changelog": {
     "sumLegalJurisdiction": "Conditions et confidentialité corrigées",

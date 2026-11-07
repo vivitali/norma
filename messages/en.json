@@ -1279,9 +1279,7 @@
     "footerDisclaimer": "AffordMath is an information tool. It is not financial, mortgage, tax or legal advice, and it is not an offer of credit. Every result is an estimate computed from figures you enter and from published rules, each dated on the Sources page. Your lender, notary or accountant establishes your actual numbers. Verify anything you are about to rely on.",
     "footerDisclaimer_us": "AffordMath is an information tool. It is not financial, mortgage, tax or legal advice, and it is not an offer of credit. Every result is an estimate computed from figures you enter and from published rules, each dated on the Sources page. Your lender, title company or attorney establishes your actual numbers. Verify anything you are about to rely on.",
     "legal": "Legal",
-    "operatorRole": "Operator",
     "roleLabel": "Role",
-    "nameLabel": "Name",
     "emailLabel": "Email",
     "updatedLong": "7 November 2026"
   },
@@ -1333,8 +1331,7 @@
     "bodyLaw_us": "These terms are governed by the laws of Manitoba, together with the applicable laws of Canada — the province this site is operated from, not where you reside. Disputes may be brought before the courts of Manitoba. There is no mandatory arbitration clause, and no waiver of your right to take part in a class action.",
     "secIp": "What belongs to whom",
     "bodyIp": "The calculation engine, the interface and the writing are ours. The statutes, rates and published figures the engine applies are not — they belong to the governments and organizations that publish them, and each is credited on the Sources page. The figures you enter are yours, and we never receive them.",
-    "secContact": "Who operates this site",
-    "bodyContact": "This site is operated by:"
+    "bodyOperator": "“We” in these terms is {name}, the operator of this site. Write to <mail>{email}</mail>."
   },
   "Changelog": {
     "sumLegalJurisdiction": "Terms and Privacy corrected",

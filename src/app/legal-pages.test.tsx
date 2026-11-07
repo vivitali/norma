@@ -151,7 +151,18 @@ describe.each(PAGES)("/$name", ({ Page, namespace }) => {
         if (!key.startsWith("body") || !appliesToCountry(key, ns, locale)) continue;
         // getByText collapses whitespace in the DOM text but not in a string matcher, so French's
         // narrow no-break spaces (U+202F, before : ; ? !) are collapsed here the same way.
-        expect(screen.getByText(bodyText.replace(/\s+/g, " ").trim()), key).toBeTruthy();
+        // The operator sentence interpolates the operator and wraps the address in a link tag.
+        const shown = bodyText
+          .replace("{name}", OPERATOR.name)
+          .replace(/<mail>\{email\}<\/mail>/, OPERATOR.email);
+        const want = shown.replace(/\s+/g, " ").trim();
+        // The link splits that sentence across nodes, so match the paragraph by its whole text.
+        expect(
+          bodyText.includes("{name}")
+            ? screen.getByText((_, el) => el?.tagName === "P" && el.textContent?.replace(/\s+/g, " ").trim() === want)
+            : screen.getByText(want),
+          key,
+        ).toBeTruthy();
       }
 
       unmount();
@@ -197,9 +208,10 @@ describe("the named parties", () => {
 
   it("names who operates the site on /terms", async () => {
     const { container, unmount } = await renderPage(TermsPage, "en-CA");
-    const list = container.querySelector("dl");
-    expect(within(list!).getByText(OPERATOR.name)).toBeTruthy();
-    expect(within(list!).getByRole("link", { name: OPERATOR.email })).toBeTruthy();
+    // One sentence in the running text, not a section of its own: the name appears here only.
+    expect(container.querySelector("dl")).toBeNull();
+    expect(container.textContent).toContain(OPERATOR.name);
+    expect(within(container).getByRole("link", { name: OPERATOR.email })).toBeTruthy();
     unmount();
   });
 

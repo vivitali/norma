@@ -90,28 +90,17 @@ export function LegalHead({
 export function LegalSection({
   heading,
   children,
-  quiet = false,
 }: {
   heading: string;
   children: ReactNode;
-  /** A colophon, not a clause: small and muted, still a real h2 and real text. */
-  quiet?: boolean;
 }) {
   return (
-    <section className={quiet ? "mt-9 border-t border-border pt-4" : "mt-9 border-t border-border pt-6"}>
-      <h2
-        className={`${MEASURE} ${
-          quiet
-            ? "text-[12.5px] leading-[1.3] font-medium text-ink3"
-            : "text-[17px] leading-[1.3] font-semibold tracking-[-0.015em]"
-        }`}
-      >
+    <section className="mt-9 border-t border-border pt-6">
+      <h2 className={`${MEASURE} text-[17px] leading-[1.3] font-semibold tracking-[-0.015em]`}>
         {heading}
       </h2>
       <div
-        className={`${MEASURE} mt-2.5 flex flex-col gap-3 leading-[1.65] text-pretty ${
-          quiet ? "text-[12.5px] text-ink3" : "text-[15px] text-ink2"
-        }`}
+        className={`${MEASURE} mt-2.5 flex flex-col gap-3 text-[15px] leading-[1.65] text-ink2 text-pretty`}
       >
         {children}
       </div>
@@ -129,23 +118,15 @@ export function LegalSection({
 export function LegalContact({
   role,
   roleLabel,
-  nameLabel,
   emailLabel,
-  name,
   email,
-  quiet = false,
 }: {
-  /** Small, muted and on one line, for the operator colophon. Same <dl>, same text. */
-  quiet?: boolean;
   /** The party's role as the reader sees it, e.g. the s. 3.1 officer title. */
   role: string;
   /** The <dt> TERMS. Translated, because sr-only text is user-facing copy like any other — an
    *  English "Name" announced inside a lang="fr" document is mispronounced, not merely untidy. */
   roleLabel: string;
-  nameLabel?: string;
   emailLabel: string;
-  /** Absent when only the role and address are published (the privacy officer). */
-  name?: string;
   email: string;
 }) {
   /*
@@ -158,17 +139,10 @@ export function LegalContact({
    */
   const rows = [
     { term: roleLabel, value: role, className: "text-ink3" },
-    ...(name && nameLabel ? [{ term: nameLabel, value: name, className: quiet ? "" : "text-[13px] text-ink3" }] : []),
   ];
 
   return (
-    <dl
-      className={
-        quiet
-          ? "-mt-1 flex flex-wrap gap-x-3 text-[12.5px] leading-[1.6] text-ink3"
-          : "mt-4 flex flex-col gap-1 border-l-2 border-acbr pl-4 text-[15px] leading-[1.6]"
-      }
-    >
+    <dl className="mt-4 flex flex-col gap-1 border-l-2 border-acbr pl-4 text-[15px] leading-[1.6]">
       {rows.map((row) => (
         <div key={row.term} className="flex flex-wrap gap-x-2">
           <dt className="sr-only">{row.term}</dt>
@@ -178,10 +152,7 @@ export function LegalContact({
       <div className="flex flex-wrap gap-x-2">
         <dt className="sr-only">{emailLabel}</dt>
         <dd>
-          <a
-            href={`mailto:${email}`}
-            className={quiet ? "underline underline-offset-2" : "text-ac underline underline-offset-2"}
-          >
+          <a href={`mailto:${email}`} className="text-ac underline underline-offset-2">
             {email}
           </a>
         </dd>

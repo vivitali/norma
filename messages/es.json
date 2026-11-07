@@ -1279,9 +1279,7 @@
     "footerDisclaimer": "AffordMath es una herramienta informativa. No constituye asesoría financiera, hipotecaria, fiscal ni legal, y no es una oferta de crédito. Cada resultado es una estimación calculada a partir de las cifras que usted ingresa y de reglas publicadas, cada una fechada en la página Fuentes. Su prestamista, notario o contador establece sus cifras reales. Verifique cualquier información antes de basarse en ella.",
     "footerDisclaimer_us": "AffordMath es una herramienta informativa. No constituye asesoría financiera, hipotecaria, fiscal ni legal, y no es una oferta de crédito. Cada resultado es una estimación calculada a partir de las cifras que usted ingresa y de reglas publicadas, cada una fechada en la página Fuentes. Su prestamista, compañía de títulos o abogado establece sus cifras reales. Verifique cualquier información antes de basarse en ella.",
     "legal": "Aviso legal",
-    "operatorRole": "Operador",
     "roleLabel": "Rol",
-    "nameLabel": "Nombre",
     "emailLabel": "Correo electrónico",
     "updatedLong": "7 de noviembre de 2026"
   },
@@ -1333,8 +1331,7 @@
     "bodyLaw_us": "Estos términos se rigen por el derecho de Manitoba, junto con las leyes aplicables de Canadá — la provincia desde la que opera este sitio, no aquella donde usted reside. Los recursos pueden presentarse ante los tribunales de Manitoba. No hay cláusula de arbitraje obligatorio, ni renuncia a su derecho a participar en una acción colectiva.",
     "secIp": "A quién pertenece qué",
     "bodyIp": "El motor de cálculo, la interfaz y los textos son nuestros. Las leyes, tasas y cifras publicadas que aplica el motor no lo son — pertenecen a los gobiernos y organizaciones que las publican, y cada una se acredita en la página Fuentes. Las cifras que usted ingresa son suyas, y nunca llegan a nosotros.",
-    "secContact": "Quién opera este sitio",
-    "bodyContact": "Este sitio es operado por:"
+    "bodyOperator": "«Nosotros» en estos términos es {name}, operador de este sitio. Escriba a <mail>{email}</mail>."
   },
   "Changelog": {
     "sumLegalJurisdiction": "Términos y privacidad corregidos",
