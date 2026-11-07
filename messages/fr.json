@@ -1310,7 +1310,7 @@
     "bodyRetention": "Les statistiques de Cloudflare sont agrégées et conservées selon leur calendrier; nous ne gardons aucun journal brut de votre visite. Vos données de calcul demeurent dans votre navigateur jusqu’à ce que vous les effaciez. Tout renseignement personnel que nous viendrions à détenir est détruit ou anonymisé une fois la fin pour laquelle il a été recueilli accomplie.",
     "secBreach": "En cas d’incident",
     "bodyBreach": "Nous tenons un registre des incidents de confidentialité. Lorsqu’un incident présente un risque de préjudice sérieux, nous en avisons la Commission d’accès à l’information du Québec ainsi que les personnes concernées et, lorsque le seuil fédéral d’un risque réel de préjudice grave est atteint, le Commissariat à la protection de la vie privée du Canada.",
-    "bodyBreach_us": "Nous tenons un registre des incidents de confidentialité. Si un incident vous concerne, adressez-vous d’abord à la personne responsable de la protection des renseignements personnels nommée ci-dessous. Selon l’incident, il peut aussi être signalé à la Federal Trade Commission des États-Unis ou au procureur général de votre État.",
+    "bodyBreach_us": "Nous tenons un registre des incidents de confidentialité. Si un incident vous concerne, adressez-vous d’abord à la personne responsable de la protection des renseignements personnels indiquée ci-dessous. Selon l’incident, il peut aussi être signalé à la Federal Trade Commission des États-Unis ou au procureur général de votre État.",
     "secChanges": "Modifications",
     "bodyChanges": "La date ci-dessus indique la dernière modification de cette page. Toute modification importante y sera décrite plutôt qu’apportée en silence."
   },

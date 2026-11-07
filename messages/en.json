@@ -1310,7 +1310,7 @@
     "bodyRetention": "Cloudflare's analytics are aggregated and retained on their schedule; we keep no raw log of your visit. Your calculator inputs persist in your browser until you clear them. Any personal information we do come to hold is destroyed or anonymised once the purpose it was collected for is fulfilled.",
     "secBreach": "If something goes wrong",
     "bodyBreach": "We keep a register of confidentiality incidents. Where an incident presents a risk of serious injury we will notify the Commission d'accès à l'information du Québec and the people affected, and where the federal threshold of a real risk of significant harm is met, the Office of the Privacy Commissioner of Canada.",
-    "bodyBreach_us": "We keep a register of confidentiality incidents. If one affects you, the privacy officer named below is the first place to raise it. Depending on the incident, it may also be reportable to the US Federal Trade Commission or to your state Attorney General.",
+    "bodyBreach_us": "We keep a register of confidentiality incidents. If one affects you, the privacy officer listed below is the first place to raise it. Depending on the incident, it may also be reportable to the US Federal Trade Commission or to your state Attorney General.",
     "secChanges": "Changes",
     "bodyChanges": "The date above is when this page last changed. Material changes will be described here rather than made silently."
   },
