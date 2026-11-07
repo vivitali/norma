@@ -38,6 +38,7 @@ const halifax = getJurisdiction("halifax")!;
 const houston = getJurisdiction("houston")!;
 const austin = getJurisdiction("austin")!;
 const seattle = getJurisdiction("seattle")!;
+const tampa = getJurisdiction("tampa")!;
 
 describe("golden: closingTotal", () => {
   it.each([
@@ -505,6 +506,118 @@ describe("golden: US (seattle)", () => {
       elsewhere: false,
       residency: "resident",
       insuranceAnnual: 1600,
+      utilities: 180,
+      condoFee: 0,
+      comfortCeiling: 3200,
+      qualIncome: 130000,
+      debts: 350,
+      funds: 45000,
+      save: 800,
+    });
+    expect(result).toMatchSnapshot();
+  });
+});
+
+/**
+ * The regression net for the add-state skill's first record in a THIRD state: Tampa (Hillsborough
+ * County), Florida — a $0 buyer-side deed-stamp line (seller-paid), two real mortgage taxes, a
+ * two-slice homestead exemption. `price: 419900` is the record's own Hillsborough STAR
+ * single-family median (`tampa.bench.house`).
+ */
+describe("golden: US (tampa)", () => {
+  it("closingTotal", () => {
+    const result = closingTotal(tampa, us, {
+      price: 419900,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("affordability", () => {
+    const result = affordability(tampa, us, {
+      income1: 95000,
+      income2: 45000,
+      otherIncome: 0,
+      haircut: 0,
+      debts: 350,
+      amortYears: 30,
+      comfortCeiling: 3200,
+      insuranceAnnual: 2918,
+      utilities: 180,
+      condoFee: 0,
+      contractRate: 6.66,
+      price: 419900,
+      dpPct: 10,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      funds: 45000,
+      save: 800,
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("amortization — payment is constant to maturity, no renewal fields", () => {
+    const result = amortization(us, {
+      price: 419900,
+      dpPct: 10,
+      amortYears: 30,
+      contractRate: 6.66,
+      // Ignored on the toMaturity path — see amortizationToMaturity()'s own doc comment.
+      renewalRate: 5.75,
+      termYears: 5,
+    });
+    expect(result).toMatchSnapshot();
+    const payments = new Set(result.rows.map((r) => r.payment));
+    expect(payments.size).toBe(1);
+    expect(result.rows.every((r) => !r.renewed)).toBe(true);
+    expect(result.shock).toBe(0);
+    expect(result.paymentAfterRenewal).toBe(result.firstPayment);
+  });
+
+  it("rentVsBuy", () => {
+    const result = rentVsBuy(tampa, us, {
+      price: 419900,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      insuranceAnnual: 2918,
+      utilities: 180,
+      condoFee: 0,
+      rent: 1917,
+      rentInflation: 0.03,
+      appreciation: 0.04,
+      appreciationOn: true,
+      investReturn: 0.046,
+      // Ignored on the toMaturity path.
+      termYears: 5,
+      renewalRate: 5.75,
+      investDiff: true,
+      years: 10,
+      taxableIncome: 95000,
+    });
+    expect(result).toMatchSnapshot();
+  });
+
+  it("scenario", () => {
+    const result = scenario(tampa, us, {
+      price: 419900,
+      dpPct: 10,
+      amortYears: 30,
+      ftb: true,
+      ptype: "house",
+      elsewhere: false,
+      residency: "resident",
+      insuranceAnnual: 2918,
       utilities: 180,
       condoFee: 0,
       comfortCeiling: 3200,

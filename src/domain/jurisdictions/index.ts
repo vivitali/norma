@@ -16,11 +16,12 @@ import { nu } from "./nu";
 import { houston } from "./houston";
 import { austin } from "./austin";
 import { seattle } from "./seattle";
+import { tampa } from "./tampa";
 
 export const jurisdictions: readonly Jurisdiction[] = [
   toronto, ottawa, vancouver, halifax, winnipeg, montreal, calgary, saskatoon,
   nb, nl, pe, yt, nt, nu,
-  houston, austin, seattle,
+  houston, austin, seattle, tampa,
 ];
 
 export function getJurisdiction(id: string): Jurisdiction | undefined {

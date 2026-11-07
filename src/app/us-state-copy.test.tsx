@@ -45,6 +45,7 @@ const PAGES = [
 const STATE_WORDS: Record<string, string[]> = {
   TX: ["Texas", "Harris County", "Travis County", "HISD"],
   WA: ["Washington", "King County"],
+  FL: ["Florida", "Hillsborough County"],
 };
 
 const SEED: Record<string, Record<string, unknown>> = {

@@ -140,6 +140,9 @@ export const us: UsRules = {
     // 2028 (SB 6346) is out of scope: it starts 2028-01-01 and this app does not model AGI that
     // high. The 7% capital-gains excise tax exempts real estate by name and is not modelled.
     WA: US_FEDERAL_SINGLE_2026,
+    // Florida levies no personal income tax (Constitution Art. VII s.5(a), Florida dossier A1), so
+    // its table IS the federal one, the same object as TX and WA.
+    FL: US_FEDERAL_SINGLE_2026,
     // The fallback every region-less US state degrades to (marginalFallbackKey below) — see
     // US_FEDERAL_SINGLE_2026's own comment for why this is the real federal table, not a
     // placeholder.
@@ -306,8 +309,8 @@ export const us: UsRules = {
       conf: "high",
       asOf: "2025-10-09",
       src: IRS_2026,
-      note: "2026 federal single-filer brackets (dossier A2), fetched directly off the IRS release with one transcription glitch corrected in the dossier (MFJ's 22% threshold is $100,800, confirmed by the $50,400 x 2 doubling pattern and an independent secondary source). The table itself — the single-filer brackets used here — is high; see the field's own top-level comment for why MFJ is not modelled. The same table serves Washington (marginal.WA): dor.wa.gov states \"Washington does not currently have a state personal income tax on individuals\" (Washington dossier A1, fetched 2026-09-17); the 9.9% tax on AGI over $1 million starting 2028-01-01 (SB 6346) is not modelled.",
-      summary: "The 2026 federal income tax brackets for a single filer, from the IRS's October 2025 release. Washington has no state personal income tax, so the same table serves it. Married filers are not modelled.",
+      note: "2026 federal single-filer brackets (dossier A2), fetched directly off the IRS release with one transcription glitch corrected in the dossier (MFJ's 22% threshold is $100,800, confirmed by the $50,400 x 2 doubling pattern and an independent secondary source). The table itself — the single-filer brackets used here — is high; see the field's own top-level comment for why MFJ is not modelled. The same table serves Washington (marginal.WA): dor.wa.gov states \"Washington does not currently have a state personal income tax on individuals\" (Washington dossier A1, fetched 2026-09-17); the 9.9% tax on AGI over $1 million starting 2028-01-01 (SB 6346) is not modelled. Florida also levies no personal income tax: Constitution Art. VII s.5(a) caps any such tax at the federal-credit amount, i.e. nothing net (Florida dossier A1).",
+      summary: "The 2026 federal income tax brackets for a single filer, from the IRS's October 2025 release. Washington and Florida have no state personal income tax, so the same table serves them. Married filers are not modelled.",
     },
     stressTest: {
       conf: "high",

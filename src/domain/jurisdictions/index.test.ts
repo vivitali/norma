@@ -12,13 +12,13 @@ import {
 const VALID_PROVINCES = new Set([
   "ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "PE", "NL", "YT", "NT", "NU",
 ]);
-const VALID_STATES = new Set(["TX", "WA"]);
+const VALID_STATES = new Set(["TX", "WA", "FL"]);
 
 describe("jurisdictions", () => {
-  it("has exactly 17 jurisdictions", () => {
+  it("has exactly 18 jurisdictions", () => {
     // 14 Canadian + Houston + Austin (US) — Houston was the country seam's step 4;
-    // Austin is the second US metro, added by the add-state skill; Seattle is the first in a second state (WA).
-    expect(jurisdictions).toHaveLength(17);
+    // Austin is the second US metro, added by the add-state skill; Seattle is the first in a second state (WA); Tampa the first in a third (FL).
+    expect(jurisdictions).toHaveLength(18);
   });
 
   it("has unique ids", () => {

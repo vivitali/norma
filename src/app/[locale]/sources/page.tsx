@@ -23,9 +23,9 @@ export default async function SourcesPage({ params }: PageProps<"/[locale]/sourc
   // every route carries so a route later restricted to fewer countries gets it for
   // free. See src/lib/route-guard.ts.
   assertRouteAvailable(locale, "/sources");
-  // Without this the route drops out of static rendering, and Cloudflare bills
-  // it as a Worker invocation under a 10ms CPU cap instead of serving it as a
-  // free static asset. scripts/verify-prerender fails the build if it goes
+  // Without this the route drops out of static rendering, and every request
+  // runs React SSR in the Worker under a 10ms CPU cap instead of reading the
+  // prerendered HTML. scripts/verify-prerender fails the build if it goes
   // missing, and page.test.tsx fails in two seconds.
   setRequestLocale(locale);
 

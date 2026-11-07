@@ -63,6 +63,17 @@ Verified free-tier figures that make this effectively free for norma indefinitel
 | Workers KV | 100k reads/day, 1k writes/day, 1 GB |
 | D1 | 5M rows read/day, 100k rows written/day, 5 GB |
 
+> **Correction (2026-10-25) — applies to the rest of this document.** "Static asset requests: free
+> and unlimited" is true, but norma's pages are not static asset requests on this stack.
+> `staticAssetsIncrementalCache` keeps prerendered HTML under `cdn-cgi/_next_cache/`, which only the
+> Worker can read, so every page view, middleware redirect and 404 is a Worker invocation against
+> the 100k/day cap, prerendered or not. Only `/_next/static/*` and `public/` files are served
+> without one. Read every claim below that prerendered pages are free, that static assets are
+> "nearly all of norma's traffic", or that the middleware is "the only remaining dynamic surface"
+> in that light. Prerendering is still required: it is what makes each invocation an asset read
+> instead of React SSR. Measured figures are in `CLAUDE.md` under "Every page route must stay
+> prerendered".
+
 There is no commercial-use restriction on any of these, so monetization never forces a plan change
 or a migration.
 
