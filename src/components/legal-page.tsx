@@ -144,7 +144,7 @@ export function LegalContact({
    */
   const rows = [
     { term: roleLabel, value: role, className: "text-ink3" },
-    ...(name && nameLabel ? [{ term: nameLabel, value: name, className: "font-medium" }] : []),
+    ...(name && nameLabel ? [{ term: nameLabel, value: name, className: "text-[13px] text-ink3" }] : []),
   ];
 
   return (
